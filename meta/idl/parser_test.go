@@ -489,16 +489,17 @@ func TestParseSimpleIDL(t *testing.T) {
 }
 
 func TestParseEnum(t *testing.T) {
-	idl := `
+	input := `
 	enum EnumType0
 		valueA = 1
 		valueB = 2
 	end
 	`
-	typeList, err := ParseIDL2(strings.NewReader(idl))
+	declarations, err := ParseIDL2(strings.NewReader(input))
 	if err != nil {
 		t.Fatalf("Failed to parse input: %s", err)
 	}
+	typeList := declarations.Types
 	if len(typeList) != 1 {
 		t.Fatalf("missing enum (%d)", len(typeList))
 	}
@@ -522,5 +523,16 @@ func TestParseEnum(t *testing.T) {
 		}
 	} else {
 		t.Fatalf("invalide type %#v", typeList[0])
+	}
+}
+
+func TestPackageName(t *testing.T) {
+	input := `package bla_bla.te-st // comment test `
+	declarations, err := ParseIDL2(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("Failed to parse input: %s", err)
+	}
+	if declarations.Package != "bla_bla.te-st" {
+		t.Fatalf("Package name invalid: %s", declarations.Package)
 	}
 }

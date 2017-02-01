@@ -232,22 +232,47 @@ func declaration() parsec.Parser {
 	)
 }
 
-func definitions() parsec.Parser {
-	return parsec.Many(
+func declarations2() parsec.Parser {
+	return parsec.Kleene(
 		nodifyDefinitionList,
 		declaration(),
 	)
 }
 
 func declarations() parsec.Parser {
-	return parsec.Many(
+	return parsec.Kleene(
 		nodifyDeclarationList,
 		declaration(),
 	)
 }
 
-func parse2(input []byte) ([]Type, error) {
-	root, scanner := definitions()(parsec.NewScanner(input).TrackLineno())
+func packageName() parsec.Parser {
+	return parsec.And(nodifyPackageName,
+		parsec.Maybe(nodifyPackageNameMaybe,
+			parsec.And(nodifyPackageNameAnd,
+				parsec.Atom("package", "package"),
+				parsec.Token(`[_A-Za-z][0-9a-zA-Z-._]*`, "IDENT"),
+				comments(),
+			),
+		),
+	)
+}
+
+func idl() parsec.Parser {
+	return parsec.And(nodifyIdl,
+		packageName(),
+		// imports(),
+		declarations2(),
+	)
+}
+
+type Declaration2 struct {
+	Package string
+	Types   []Type
+}
+
+func parse2(input []byte) (*Declaration2, error) {
+	root, scanner := idl()(parsec.NewScanner(input).TrackLineno())
 	_, scanner = scanner.SkipWS()
 	if !scanner.Endof() {
 		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
@@ -255,20 +280,20 @@ func parse2(input []byte) ([]Type, error) {
 	if root == nil {
 		return nil, fmt.Errorf("cannot parse input:\n%s", input)
 	}
-
-	if typeList, ok := root.([]Type); ok {
-		return typeList, nil
-	} else if err, ok := root.(error); ok {
-		return nil, err
+	definitions, ok := root.(*Declaration2)
+	if !ok {
+		if err, ok := root.(error); ok {
+			return nil, err
+		}
+		return nil, fmt.Errorf("cannot parse IDL: %+v", reflect.TypeOf(root))
 	}
-	return nil, fmt.Errorf("parsing error (%s): %v",
-		reflect.TypeOf(root), root)
+	return definitions, nil
 }
 
 
 // ParseIDL read an IDL definition from a reader and returns the
 // MetaObject associated with the IDL.
-func ParseIDL2(reader io.Reader) ([]Type, error) {
+func ParseIDL2(reader io.Reader) (*Declaration2, error) {
 	input, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read input: %s", err)
@@ -276,11 +301,7 @@ func ParseIDL2(reader io.Reader) ([]Type, error) {
 
 	unregsterTypeNames()
 	// first pass needed to generate the TypeStruct correctly.
-	typeList, err := parse2(input)
-	if err != nil {
-		return nil, err
-	}
-	return typeList, nil
+	return parse2(input)
 }
 
 func parse(input []byte) (*Declarations, error) {
@@ -418,6 +439,41 @@ func nodifyDefinitionList(nodes []Node) Node {
 	return typeList
 }
 
+func nodifyPackageNameAnd(nodes []Node) Node {
+	return nodes[1].(*parsec.Terminal).GetValue()
+}
+
+func nodifyPackageNameMaybe(nodes []Node) Node {
+	return nodes[0]
+}
+
+func nodifyPackageName(nodes []Node) Node {
+	if _, ok := nodes[0].(parsec.MaybeNone); ok {
+		return ""
+	}
+	if name, ok := nodes[0].(string); ok {
+		return name
+	}
+	return fmt.Errorf("Expecting package name, got %+v: %+v",
+		reflect.TypeOf(nodes[0]), nodes[0])
+}
+
+func nodifyIdl(nodes []Node) Node {
+	var packageName = ""
+	packageNode := nodes[0]
+	definitions := nodes[1]
+	packageName = packageNode.(string)
+	if typeList, ok := definitions.([]Type); !ok {
+		return fmt.Errorf("Expecting type list, got %+v: %+v",
+			reflect.TypeOf(definitions), definitions)
+	} else {
+		return &Declaration2{
+			Package: packageName,
+			Types: typeList,
+		}
+	}
+}
+
 // nodifyDeclarationList returns a Declarations structure holding a
 // list of MetaObject and StructType.
 func nodifyDeclarationList(nodes []Node) Node {
@@ -435,8 +491,11 @@ func nodifyDeclarationList(nodes []Node) Node {
 			interfaces = append(interfaces, *metaObj)
 		} else if s, ok := node.(*StructType); ok {
 			struc = append(struc, *s)
+		} else if _, ok := node.(*EnumType); ok {
+			continue
 		} else {
-			return fmt.Errorf("Expecting MetaObject, got %+v: %+v", reflect.TypeOf(node), node)
+			return fmt.Errorf("Expecting type declaration, got %+v: %+v",
+				reflect.TypeOf(node), node)
 		}
 	}
 	return &Declarations{
