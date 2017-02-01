@@ -11,7 +11,7 @@ var types *TypeSet = nil
 // RefType represents a struct.
 type RefType struct {
 	Name string
-	ref  Type
+	Ref  Type
 }
 
 // NewRefType is a contructor for the representation of a type reference to be
@@ -27,17 +27,29 @@ func NewRefType(name string, ref Type) (*RefType, error) {
 }
 
 func (r *RefType) Signature() string {
-	if r.ref == nil {
-		return NewUnknownType().Signature()
+	if r.Ref != nil {
+		return r.Ref.Signature()
+	} else if types != nil {
+		r.resolve(types)
+		if r.Ref != nil {
+			return r.Ref.Signature()
+		}
 	}
-	return r.ref.Signature()
+	r.Ref = NewUnknownType()
+	return r.Signature()
 }
 
 func (r *RefType) SignatureIDL() string {
-	if r.ref == nil {
-		return NewUnknownType().SignatureIDL()
+	if r.Ref != nil {
+		return r.Ref.SignatureIDL()
+	} else if types != nil {
+		r.resolve(types)
+		if r.Ref != nil {
+			return r.Ref.SignatureIDL()
+		}
 	}
-	return r.ref.SignatureIDL()
+	r.Ref = NewUnknownType()
+	return r.SignatureIDL()
 }
 
 func (r *RefType) TypeName() *Statement {
@@ -45,20 +57,20 @@ func (r *RefType) TypeName() *Statement {
 }
 
 func (r *RefType) RegisterTo(set *TypeSet) {
-	if r.ref != nil {
-		r.ref.RegisterTo(set)
+	if r.Ref != nil {
+		r.Ref.RegisterTo(set)
 	}
 }
 
 func (r *RefType) TypeDeclaration(file *jen.File) {
-	if r.ref != nil {
-		r.ref.TypeDeclaration(file)
+	if r.Ref != nil {
+		r.Ref.TypeDeclaration(file)
 	}
 }
 
 func (r *RefType) Marshal(id string, writer string) *Statement {
-	if r.ref != nil {
-		return r.ref.Marshal(id, writer)
+	if r.Ref != nil {
+		return r.Ref.Marshal(id, writer)
 	}
 	return jen.Qual("fmt", "Errorf").Call(
 		jen.Lit("reference type serialization not implemented: %v"), jen.Id(id),
@@ -66,8 +78,8 @@ func (r *RefType) Marshal(id string, writer string) *Statement {
 }
 
 func (r *RefType) Unmarshal(reader string) *Statement {
-	if r.ref != nil {
-		return r.ref.Unmarshal(reader)
+	if r.Ref != nil {
+		return r.Ref.Unmarshal(reader)
 	}
 	return jen.Return(
 		jen.Nil(),
@@ -79,17 +91,13 @@ func (r *RefType) resolve(set *TypeSet) error {
 	if sig, ok := set.Signatures[r.Name]; ok {
 		for _, typ := range set.Types {
 			if typ.Signature() == sig {
-				fmt.Printf("resolved: %s => %s\n", r.Name, typ.Signature())
-				r.ref = typ
+				r.Ref = typ
 				return nil
 			}
 		}
-		for _, typ := range set.Types {
-			fmt.Printf("signature %s\n", typ.Signature())
-		}
 		return fmt.Errorf("%s: failed to find signature %s", r.Name, sig)
 	}
-	return fmt.Errorf("%s: ref not found in typeset (size: %d).", r.Name, len(set.Types))
+	return fmt.Errorf("%s: Ref not found in typeset (size: %d).", r.Name, len(set.Types))
 }
 
 // Register associates the StructType of declarations into a global
@@ -102,12 +110,6 @@ func registerTypeNames(declarations *Declarations) {
 	types = NewTypeSet()
 	for _, struc := range declarations.Struct {
 		struc.RegisterTo(types)
-	}
-	for i, _ := range types.Types {
-		fmt.Printf("register 3: %s\n", types.Types[i].Signature())
-	}
-	for k, v := range types.Signatures {
-		fmt.Printf("register 4: %s => %s\n", k, v)
 	}
 }
 

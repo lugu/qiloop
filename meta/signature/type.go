@@ -660,9 +660,9 @@ func (s *StructType) RegisterTo(set *TypeSet) {
 	for i := 0; i < 100; i++ {
 		if sgn, ok := set.Signatures[s.Name]; !ok {
 			// name not yet used
-			fmt.Printf("register 0: %s => %s\n", s.Name, s.Signature())
 			set.Signatures[s.Name] = s.Signature()
-			set.Types = append(set.Types, s)
+			// FIXME: here is a work around
+			set.Types = append(set.Types, NewStructType(s.Name, s.Members))
 			break
 		} else if sgn == s.Signature() {
 			// same name and same signatures
