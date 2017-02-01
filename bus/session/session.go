@@ -98,7 +98,9 @@ func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err
 	return o, fmt.Errorf("Not yet implemented")
 }
 
-func (d *staticSession) Register(name string, meta object.MetaObject, wrapper bus.Wrapper) (bus.Service, error) {
+func (d *staticSession) Register(name string, meta object.MetaObject,
+	wrapper bus.Wrapper) (bus.Service, error) {
+
 	return nil, fmt.Errorf("not yet implemented")
 }
 

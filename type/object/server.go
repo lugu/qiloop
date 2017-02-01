@@ -4,11 +4,13 @@ import (
 	"github.com/lugu/qiloop/meta/signature"
 )
 
+const AuthenticateActionID = 8
+
 var MetaService0 MetaObject = MetaObject{
 	Description: "Server",
 	Methods: map[uint32]MetaMethod{
-		0x8: MetaMethod{
-			Uid:                 0x8,
+		AuthenticateActionID: MetaMethod{
+			Uid:                 AuthenticateActionID,
 			ReturnSignature:     "{sm}",
 			Name:                "authenticate",
 			ParametersSignature: "({sm})",

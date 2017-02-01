@@ -35,9 +35,7 @@ type Session interface {
 }
 
 type ActionWrapper func(Service, []byte) ([]byte, error)
-type Wrapper interface {
-	Actions() map[uint32]ActionWrapper
-}
+type ServiceWrapper map[uint32]ActionWrapper
 
 type Service interface {
 	Unregister() error
