@@ -7,7 +7,7 @@ import (
 )
 
 type passiveService struct {
-	wrapper  bus.ServiceWrapper
+	wrapper  bus.Wrapper
 	endpoint net.EndPoint
 	handler  int
 	service  uint32
@@ -81,7 +81,8 @@ func (w *passiveService) ObjectID() uint32 {
 }
 
 func NewService(service, object uint32, endpoint net.EndPoint,
-	wrapper bus.ServiceWrapper) bus.Service {
+	wrapper bus.Wrapper) bus.Service {
+
 	s := &passiveService{
 		endpoint: endpoint,
 		service:  service,

@@ -88,11 +88,7 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int
 	return stream, nil
 }
 
-func NewClient(addr string) (bus.Client, error) {
-	endpoint, err := net.DialEndPoint(addr)
-	if err != nil {
-		return nil, fmt.Errorf("client failed to connect %s: %s", endpoint, err)
-	}
+func NewClient(endpoint net.EndPoint) (bus.Client, error) {
 	return &client{
 		endpoint:  endpoint,
 		messageID: 1,

@@ -37,6 +37,9 @@ type EndPoint interface {
 	// RemoveHandler must not be called from within the Filter: use
 	// the Filter returned value keep for this purpose.
 	RemoveHandler(id int) error
+
+	// Close close the underlying connection
+	Close() error
 }
 
 type endPoint struct {
@@ -172,4 +175,9 @@ func (e *endPoint) ReceiveAny() (*Message, error) {
 	_ = e.AddHandler(filter, consumer)
 	msg := <-found
 	return msg, nil
+}
+
+func NewPipe() (EndPoint, EndPoint) {
+	a, b := gonet.Pipe()
+	return NewEndPoint(a), NewEndPoint(b)
 }

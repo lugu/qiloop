@@ -21,7 +21,3 @@ func MetaObject(client Client, serviceID uint32, objectID uint32) (m object.Meta
 	}
 	return m, nil
 }
-
-func NewService(meta object.MetaObject, wrapper Wrapper) (Service, error) {
-	return nil, fmt.Errorf("not yet implemented")
-}
