@@ -532,7 +532,7 @@ func TestPackageName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse input: %s", err)
 	}
-	if declarations.Package != "bla_bla.te-st" {
-		t.Fatalf("Package name invalid: %s", declarations.Package)
+	if declarations.Name != "bla_bla.te-st" {
+		t.Fatalf("Package name invalid: %s", declarations.Name)
 	}
 }

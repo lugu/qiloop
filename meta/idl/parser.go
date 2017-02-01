@@ -2,13 +2,13 @@ package idl
 
 import (
 	"fmt"
-	"strconv"
 	. "github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	parsec "github.com/prataprc/goparsec"
 	"io"
 	"io/ioutil"
 	"reflect"
+	"strconv"
 )
 
 func basicType() parsec.Parser {
@@ -232,16 +232,16 @@ func declaration() parsec.Parser {
 	)
 }
 
-func declarations2() parsec.Parser {
+func declarationsList() parsec.Parser {
 	return parsec.Kleene(
-		nodifyDefinitionList,
+		nodifyDeclarationList,
 		declaration(),
 	)
 }
 
-func declarations() parsec.Parser {
+func declarationStruct() parsec.Parser {
 	return parsec.Kleene(
-		nodifyDeclarationList,
+		nodifyDeclarationStruct,
 		declaration(),
 	)
 }
@@ -258,21 +258,21 @@ func packageName() parsec.Parser {
 	)
 }
 
-func idl() parsec.Parser {
-	return parsec.And(nodifyIdl,
+func packageParser() parsec.Parser {
+	return parsec.And(nodifyPackage,
 		packageName(),
 		// imports(),
-		declarations2(),
+		declarationsList(),
 	)
 }
 
-type Declaration2 struct {
-	Package string
-	Types   []Type
+type PackageDeclaration struct {
+	Name  string
+	Types []Type
 }
 
-func parse2(input []byte) (*Declaration2, error) {
-	root, scanner := idl()(parsec.NewScanner(input).TrackLineno())
+func parse2(input []byte) (*PackageDeclaration, error) {
+	root, scanner := packageParser()(parsec.NewScanner(input).TrackLineno())
 	_, scanner = scanner.SkipWS()
 	if !scanner.Endof() {
 		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
@@ -280,7 +280,7 @@ func parse2(input []byte) (*Declaration2, error) {
 	if root == nil {
 		return nil, fmt.Errorf("cannot parse input:\n%s", input)
 	}
-	definitions, ok := root.(*Declaration2)
+	definitions, ok := root.(*PackageDeclaration)
 	if !ok {
 		if err, ok := root.(error); ok {
 			return nil, err
@@ -290,10 +290,9 @@ func parse2(input []byte) (*Declaration2, error) {
 	return definitions, nil
 }
 
-
 // ParseIDL read an IDL definition from a reader and returns the
 // MetaObject associated with the IDL.
-func ParseIDL2(reader io.Reader) (*Declaration2, error) {
+func ParseIDL2(reader io.Reader) (*PackageDeclaration, error) {
 	input, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read input: %s", err)
@@ -305,7 +304,7 @@ func ParseIDL2(reader io.Reader) (*Declaration2, error) {
 }
 
 func parse(input []byte) (*Declarations, error) {
-	root, scanner := declarations()(parsec.NewScanner(input).TrackLineno())
+	root, scanner := declarationStruct()(parsec.NewScanner(input).TrackLineno())
 	_, scanner = scanner.SkipWS()
 	if !scanner.Endof() {
 		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
@@ -417,11 +416,11 @@ func nodifyReturns(nodes []Node) Node {
 type Declarations struct {
 	Interfaces []object.MetaObject
 	Struct     []StructType
-	Types	   []Type
+	Types      []Type
 }
 
-// nodifyDefinitionList returns a list of signature.Type.
-func nodifyDefinitionList(nodes []Node) Node {
+// nodifyDeclarationList returns a list of signature.Type.
+func nodifyDeclarationList(nodes []Node) Node {
 	if err, ok := checkError(nodes); ok {
 		return err
 	}
@@ -458,7 +457,8 @@ func nodifyPackageName(nodes []Node) Node {
 		reflect.TypeOf(nodes[0]), nodes[0])
 }
 
-func nodifyIdl(nodes []Node) Node {
+// nodifyPackage returns a package structure.
+func nodifyPackage(nodes []Node) Node {
 	var packageName = ""
 	packageNode := nodes[0]
 	definitions := nodes[1]
@@ -467,16 +467,16 @@ func nodifyIdl(nodes []Node) Node {
 		return fmt.Errorf("Expecting type list, got %+v: %+v",
 			reflect.TypeOf(definitions), definitions)
 	} else {
-		return &Declaration2{
-			Package: packageName,
+		return &PackageDeclaration{
+			Name:  packageName,
 			Types: typeList,
 		}
 	}
 }
 
-// nodifyDeclarationList returns a Declarations structure holding a
+// nodifyDeclarationStruct returns a Declarations structure holding a
 // list of MetaObject and StructType.
-func nodifyDeclarationList(nodes []Node) Node {
+func nodifyDeclarationStruct(nodes []Node) Node {
 	interfaces := make([]object.MetaObject, 0)
 	struc := make([]StructType, 0)
 	types := make([]Type, 0)
