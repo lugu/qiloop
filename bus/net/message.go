@@ -203,6 +203,9 @@ func (m *Message) Read(r io.Reader) error {
 	// Filter messages larger than 10 MB
 	if m.Header.Size > 10*1024*1024 {
 		return fmt.Errorf("won't process message this large: %d", m.Header.Size)
+	} else if m.Header.Size == 0 {
+		m.Payload = make([]byte, 0)
+		return nil
 	}
 	m.Payload = make([]byte, m.Header.Size)
 	size, err := r.Read(m.Payload)

@@ -54,8 +54,8 @@ type endPoint struct {
 func NewEndPoint(conn gonet.Conn) EndPoint {
 	e := &endPoint{
 		conn:      conn,
-		filters:   make([]Filter, 10),
-		consumers: make([]Consumer, 10),
+		filters:   make([]Filter, 0, 10),
+		consumers: make([]Consumer, 0, 10),
 	}
 	go e.process()
 	return e
