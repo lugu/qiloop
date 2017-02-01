@@ -1,0 +1,39 @@
+unsorted to do list:
+- idl management:
+    - put all IDL files into ./bus/services/<idl>
+    - add a command ./bus/services/cmd/generate/main.go
+    - add a generate file ./bus/services/generate.go
+    - generate command takes as parameters:
+        - the IDL directory
+        - the base package name
+    - generate command creates:
+        - sub-directories (if required)
+        - the interfaces
+        - the proxies
+        - the stub
+- meta: allow for unresolved meta object
+- meta: generate proxy using type set information
+- meta: generate enum types
+- meta: generate proxy with enum types
+- meta: generate proxy with object reference
+- server: implement serrvice directory to validate the approach
+- NOTES.md: authentication sequence + document values
+- NOTES.md: machine id discussion
+- NOTES.md: sequence diagram with multiple process
+- NODES.md: document the capability event type
+- client: an API to make cancellable call (not the default way?)
+- server: handle cancel message types
+- net: add tcps
+- authentication: implement tokens
+- tests: use passive service to complement proxy test
+- session: replace staticSesssion with dynamicSession
+- doc: restore the bootstrap discussion
+- example: fuzzy tester
+- example: firewall messaging level
+- NOTES.md: document properties (semantic, messages)
+- client: add properties
+- service: hide generic object methods
+- service: handle properties
+- service: signals registration
+- session: refactor session namespace with minimal deps
+- session: extract basic implementation from fully functionnal
