@@ -142,7 +142,9 @@ func GenerateInterfaces(metaObjList []object.MetaObject, packageName string, w i
 func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
 	file, set := newFileAndSet(packageName)
 
-	generateProxyObject(metaObj, serviceName, set, file)
+	if err := generateProxyObject(metaObj, serviceName, set, file); err != nil {
+		return fmt.Errorf("failed to render %s: %s", serviceName, err)
+	}
 	set.Declare(file)
 
 	if err := file.Render(w); err != nil {
@@ -154,8 +156,10 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
 func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
 	file, set := newFileAndSet(packageName)
 
-	for _, metaObj := range metaObjList {
-		generateProxyObject(metaObj, metaObj.Description, set, file)
+	for i, metaObj := range metaObjList {
+		if err := generateProxyObject(metaObj, metaObj.Description, set, file); err != nil {
+			return fmt.Errorf("failed to render %s (%d): %s", metaObj.Description, i, err)
+		}
 	}
 	set.Declare(file)
 

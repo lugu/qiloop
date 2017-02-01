@@ -18,6 +18,7 @@ Please install [Go 1.10](https://golang.org/dl/).
 go get -d -t github.com/lugu/qiloop/...
 go generate github.com/lugu/qiloop/type/object
 go generate github.com/lugu/qiloop/meta/stage2
+go generate github.com/lugu/qiloop/bus/services
 ```
 
 Proxy generation

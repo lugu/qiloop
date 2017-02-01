@@ -1,67 +1,66 @@
 package main
 
 import (
-	"github.com/lugu/qiloop/bus/session/basic"
+	"flag"
 	"github.com/lugu/qiloop/meta/idl"
-	"io"
+	"github.com/lugu/qiloop/meta/proxy"
+	"github.com/lugu/qiloop/type/object"
 	"log"
 	"os"
-	"strings"
+	"path"
 )
 
 func main() {
-	var output io.Writer
-	var addr string
 
-	if len(os.Args) > 1 {
-		addr = os.Args[1]
-	} else {
-		addr = ":9559"
-	}
+	var directory string
+	var goBasePackageName string
+	flag.StringVar(&directory, "directory", ".", "directory containing the IDL files")
+	flag.StringVar(&goBasePackageName, "package", "", "go base package name")
+	flag.Parse()
+	metas := make([]object.MetaObject, 0)
 
-	if len(os.Args) > 2 {
-		filename := os.Args[2]
-		file, err := os.Create(filename)
-		if err != nil {
-			log.Fatalf("failed to open %s: %s", filename, err)
-			return
-		}
-		defer file.Close()
-		output = file
-	} else {
-		output = os.Stdout
-	}
-
-	// directoryServiceID := 1
-	// directoryObjectID := 1
-	dir, err := basic.NewServiceDirectory(addr, 1, 1, 101)
+	dir, err := os.Open(directory)
 	if err != nil {
-		log.Fatalf("failed to create directory: %s", err)
+		log.Fatalf("failed to open directory: %s", directory)
 	}
-
-	serviceInfoList, err := dir.Services()
+	defer dir.Close()
+	files, err := dir.Readdirnames(-1)
 	if err != nil {
-		log.Fatalf("failed to list services: %s", err)
+		log.Fatalf("failed to open %s: %s", directory, err)
+	}
+	for _, entry := range files {
+		file := path.Join(directory, entry)
+		f, err := os.Open(file)
+		if err != nil {
+			log.Printf("failed to open %s: %s", file, err)
+			continue
+		}
+		objects, err := idl.ParseIDL(f)
+		f.Close()
+		if err != nil {
+			log.Printf("failed to parse %s: %s", file, err)
+			continue
+		}
+		for _, meta := range objects {
+			metas = append(metas, meta)
+		}
 	}
 
-	for i, s := range serviceInfoList {
+	proxies, err := os.Create("proxies.go")
+	defer proxies.Close()
+	if err != nil {
+		log.Fatalf("failed to create proxies.go: %s", err)
+	}
+	if err := proxy.GenerateProxys(metas, goBasePackageName, proxies); err != nil {
+		log.Printf("failed to generate proxies: %s", err)
+	}
 
-		// FIXME: change me to 100
-		if i > 1 {
-			continue
-		}
-
-		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
-		obj, err := basic.NewObject(addr, s.ServiceId, 1, 2)
-		if err != nil {
-			log.Printf("failed to create servinceof %s: %s", s.Name, err)
-			continue
-		}
-		meta, err := obj.MetaObject(1)
-		if err != nil {
-			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
-			continue
-		}
-		idl.GenerateIDL(output, s.Name, meta)
+	interfaces, err := os.Create("services.go")
+	defer interfaces.Close()
+	if err != nil {
+		log.Fatalf("failed to create services.go: %s", err)
+	}
+	if err := proxy.GenerateInterfaces(metas, goBasePackageName, interfaces); err != nil {
+		log.Printf("failed to generate interfaces: %s", err)
 	}
 }

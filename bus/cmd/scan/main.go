@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/lugu/qiloop/bus/session/basic"
-	"github.com/lugu/qiloop/meta/idl"
+	"github.com/lugu/qiloop/meta/proxy"
+	"github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
 	"os"
@@ -10,26 +11,42 @@ import (
 )
 
 func main() {
-	var output io.Writer
+	var outputImplementation io.Writer
+	var outputInterface io.Writer
 	var addr string
 
 	if len(os.Args) > 1 {
-		addr = os.Args[1]
-	} else {
-		addr = ":9559"
-	}
+		filename := os.Args[1]
 
-	if len(os.Args) > 2 {
-		filename := os.Args[2]
 		file, err := os.Create(filename)
 		if err != nil {
 			log.Fatalf("failed to open %s: %s", filename, err)
 			return
 		}
+		outputInterface = file
 		defer file.Close()
-		output = file
 	} else {
-		output = os.Stdout
+		outputInterface = os.Stdout
+	}
+
+	if len(os.Args) > 2 {
+		filename := os.Args[2]
+
+		file, err := os.Create(filename)
+		if err != nil {
+			log.Fatalf("failed to open %s: %s", filename, err)
+			return
+		}
+		outputImplementation = file
+		defer file.Close()
+	} else {
+		outputImplementation = os.Stdout
+	}
+
+	if len(os.Args) > 3 {
+		addr = os.Args[3]
+	} else {
+		addr = ":9559"
 	}
 
 	// directoryServiceID := 1
@@ -44,12 +61,11 @@ func main() {
 		log.Fatalf("failed to list services: %s", err)
 	}
 
-	for i, s := range serviceInfoList {
+	objects := make([]object.MetaObject, 0)
+	objects = append(objects, object.MetaService0)
+	objects = append(objects, object.ObjectMetaObject)
 
-		// FIXME: change me to 100
-		if i > 1 {
-			continue
-		}
+	for _, s := range serviceInfoList {
 
 		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
 		obj, err := basic.NewObject(addr, s.ServiceId, 1, 2)
@@ -62,9 +78,9 @@ func main() {
 			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
 			continue
 		}
-		if err := idl.GenerateIDL(output, s.Name, meta); err != nil {
-			log.Printf("failed to generate IDL of %s: %s", s.Name, err)
-			continue
-		}
+		meta.Description = s.Name
+		objects = append(objects, meta)
 	}
+	proxy.GenerateInterfaces(objects, "services", outputInterface)
+	proxy.GenerateProxys(objects, "services", outputImplementation)
 }

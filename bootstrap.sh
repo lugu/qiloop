@@ -8,14 +8,18 @@ rm -f \
     meta/stage2/services.go    \
     meta/stage3/interfaces.go  \
     meta/stage3/services.go    \
-    bus/services/interfaces.go \
+    meta/stage4/proxies.go     \
+    meta/stage4/services.go    \
+    bus/services/proxies.go    \
     bus/services/services.go   \
-    type/object/metaobject.go
+    type/object/metaobject.go  \
+
 
 go get -d -t github.com/lugu/qiloop/...
 go generate github.com/lugu/qiloop/type/object
 go generate github.com/lugu/qiloop/meta/stage2
 go generate github.com/lugu/qiloop/meta/stage3
+cp meta/stage3/*.idl bus/services/idl
 go generate github.com/lugu/qiloop/bus/services
 go get github.com/lugu/qiloop/bus/cmd/info
 
