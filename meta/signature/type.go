@@ -27,7 +27,7 @@ func (s *TypeSet) Declare(f *jen.File) {
 // the same name and signature is already present it does nothing.
 // otherwise it adds the type and search for a new which does not
 // conflict with the names already present. The new name is returned.
-func (s *TypeSet) Register(originalName string, typ *StructType) string {
+func (s *TypeSet) RegisterStructType(originalName string, typ *StructType) string {
 	name := originalName
 	for i := 0; i < 100; i++ {
 		ok := true // can use the name
@@ -695,7 +695,7 @@ func (s *StructType) RegisterTo(set *TypeSet) {
 		v.Value.RegisterTo(set)
 	}
 
-	s.Name = set.Register(s.Name, s)
+	s.Name = set.RegisterStructType(s.Name, s)
 	return
 }
 

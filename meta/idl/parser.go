@@ -2,6 +2,7 @@ package idl
 
 import (
 	"fmt"
+	"strconv"
 	. "github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	parsec "github.com/prataprc/goparsec"
@@ -184,6 +185,32 @@ func member() parsec.Parser {
 	)
 }
 
+func constValue() parsec.Parser {
+	return parsec.Int()
+}
+
+func enumConst() parsec.Parser {
+	return parsec.And(
+		nodifyEnumConst,
+		Ident(),
+		parsec.Atom("=", "="),
+		constValue(),
+		comments(),
+	)
+}
+
+func enum() parsec.Parser {
+	return parsec.And(
+		nodifyEnum,
+		parsec.Atom("enum", "enumm"),
+		Ident(),
+		comments(),
+		parsec.Kleene(nodifyEnumMembers, enumConst()),
+		parsec.Atom("end", "end"),
+		comments(),
+	)
+}
+
 func structure() parsec.Parser {
 	return parsec.And(
 		nodifyStructure,
@@ -200,7 +227,15 @@ func declaration() parsec.Parser {
 	return parsec.OrdChoice(
 		nodifyDeclaration,
 		structure(),
+		enum(),
 		interfaceParser(),
+	)
+}
+
+func definitions() parsec.Parser {
+	return parsec.Many(
+		nodifyDefinitionList,
+		declaration(),
 	)
 }
 
@@ -209,6 +244,43 @@ func declarations() parsec.Parser {
 		nodifyDeclarationList,
 		declaration(),
 	)
+}
+
+func parse2(input []byte) ([]Type, error) {
+	root, scanner := definitions()(parsec.NewScanner(input).TrackLineno())
+	_, scanner = scanner.SkipWS()
+	if !scanner.Endof() {
+		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
+	}
+	if root == nil {
+		return nil, fmt.Errorf("cannot parse input:\n%s", input)
+	}
+
+	if typeList, ok := root.([]Type); ok {
+		return typeList, nil
+	} else if err, ok := root.(error); ok {
+		return nil, err
+	}
+	return nil, fmt.Errorf("parsing error (%s): %v",
+		reflect.TypeOf(root), root)
+}
+
+
+// ParseIDL read an IDL definition from a reader and returns the
+// MetaObject associated with the IDL.
+func ParseIDL2(reader io.Reader) ([]Type, error) {
+	input, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read input: %s", err)
+	}
+
+	unregsterTypeNames()
+	// first pass needed to generate the TypeStruct correctly.
+	typeList, err := parse2(input)
+	if err != nil {
+		return nil, err
+	}
+	return typeList, nil
 }
 
 func parse(input []byte) (*Declarations, error) {
@@ -324,6 +396,26 @@ func nodifyReturns(nodes []Node) Node {
 type Declarations struct {
 	Interfaces []object.MetaObject
 	Struct     []StructType
+	Types	   []Type
+}
+
+// nodifyDefinitionList returns a list of signature.Type.
+func nodifyDefinitionList(nodes []Node) Node {
+	if err, ok := checkError(nodes); ok {
+		return err
+	}
+	typeList := make([]Type, 0)
+	for i, node := range nodes {
+		if err, ok := checkError([]Node{node}); ok {
+			return fmt.Errorf("failed to parse parameter %d: %s", i, err)
+		} else if typ, ok := node.(Type); ok {
+			typeList = append(typeList, typ)
+		} else {
+			return fmt.Errorf("failed to parse type %d: got %+v: %+v",
+				i, reflect.TypeOf(node), node)
+		}
+	}
+	return typeList
 }
 
 // nodifyDeclarationList returns a Declarations structure holding a
@@ -331,9 +423,13 @@ type Declarations struct {
 func nodifyDeclarationList(nodes []Node) Node {
 	interfaces := make([]object.MetaObject, 0)
 	struc := make([]StructType, 0)
+	types := make([]Type, 0)
 	for _, node := range nodes {
 		if err, ok := node.(error); ok {
 			return err
+		}
+		if typ, ok := node.(Type); ok {
+			types = append(types, typ)
 		}
 		if metaObj, ok := node.(*object.MetaObject); ok {
 			interfaces = append(interfaces, *metaObj)
@@ -346,6 +442,7 @@ func nodifyDeclarationList(nodes []Node) Node {
 	return &Declarations{
 		Interfaces: interfaces,
 		Struct:     struc,
+		Types:      types,
 	}
 }
 
@@ -358,6 +455,48 @@ func nodifyTypeReference(nodes []Node) Node {
 		return err
 	} else {
 		return ref
+	}
+}
+
+func nodifyEnum(nodes []Node) Node {
+	nameNode := nodes[1]
+	enumNode := nodes[3]
+	if enum, ok := enumNode.(*EnumType); ok {
+		enum.Name = nameNode.(*parsec.Terminal).GetValue()
+		return enum
+	} else if err, ok := enumNode.(error); ok {
+		return err
+	} else {
+		return fmt.Errorf("unexpected enum value: %v", enumNode)
+	}
+}
+
+func nodifyEnumMembers(nodes []Node) Node {
+	var enum EnumType
+	enum.Values = make(map[string]int)
+	for _, node := range nodes {
+		if member, ok := node.(EnumMember); ok {
+			enum.Values[member.Const] = member.Value
+		} else if err, ok := node.(error); ok {
+			return err
+		} else {
+			fmt.Errorf("unexpected member node: %v", node)
+		}
+	}
+	return &enum
+}
+
+func nodifyEnumConst(nodes []Node) Node {
+	nameNode := nodes[0]
+	constNode := nodes[2]
+	valueStr := constNode.(*parsec.Terminal).GetValue()
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return fmt.Errorf("Integer expected in enum definition: %s", valueStr)
+	}
+	return EnumMember{
+		Const: nameNode.(*parsec.Terminal).GetValue(),
+		Value: value,
 	}
 }
 

@@ -98,3 +98,52 @@ func registerTypeNames(declarations *Declarations) {
 func unregsterTypeNames() {
 	types = nil
 }
+
+// EnumType represents a const.
+type EnumType struct {
+	Name string
+	Values map[string]int
+}
+
+type EnumMember struct {
+	Const string
+	Value int
+}
+
+func NewEnumType(name string, values map[string]int) Type {
+	return &EnumType{
+		Name: name,
+		Values: values,
+	}
+}
+
+func (e *EnumType) Signature() string {
+	return NewIntType().Signature()
+}
+
+func (e *EnumType) SignatureIDL() string {
+	return NewIntType().Signature()
+}
+
+func (e *EnumType) TypeName() *Statement {
+	return jen.Id(e.Name)
+}
+
+func (e *EnumType) RegisterTo(set *TypeSet) {
+	// TODO: implement me
+}
+
+func (e *EnumType) TypeDeclaration(file *jen.File) {
+	file.Id(`type ` + e.Name + ` int
+	cont (
+		XX = YY
+	)`)
+}
+
+func (e *EnumType) Marshal(id string, writer string) *Statement {
+	return NewIntType().Marshal(id, writer)
+}
+
+func (e *EnumType) Unmarshal(reader string) *Statement {
+	return NewIntType().Unmarshal(reader)
+}

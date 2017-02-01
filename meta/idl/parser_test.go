@@ -487,3 +487,40 @@ func TestParseSimpleIDL(t *testing.T) {
 		t.Fatalf("\nexpected: %#v\nobserved: %#v", expected, metaObj)
 	}
 }
+
+func TestParseEnum(t *testing.T) {
+	idl := `
+	enum EnumType0
+		valueA = 1
+		valueB = 2
+	end
+	`
+	typeList, err := ParseIDL2(strings.NewReader(idl))
+	if err != nil {
+		t.Fatalf("Failed to parse input: %s", err)
+	}
+	if len(typeList) != 1 {
+		t.Fatalf("missing enum (%d)", len(typeList))
+	}
+	if enum, ok := typeList[0].(*EnumType); ok {
+		if enum.Name != "EnumType0" {
+			t.Errorf("invalide name %s", enum.Name)
+		}
+		if val, ok := enum.Values["valueB"]; ok {
+			if val != 2 {
+				t.Errorf("incorrect value %d", val)
+			}
+		} else {
+			t.Errorf("missing const %s", "valueB")
+		}
+		if val, ok := enum.Values["valueA"]; ok {
+			if val != 1 {
+				t.Errorf("incorrect value %d", val)
+			}
+		} else {
+			t.Errorf("missing const %s", "valueA")
+		}
+	} else {
+		t.Fatalf("invalide type %#v", typeList[0])
+	}
+}
