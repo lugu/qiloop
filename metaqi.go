@@ -1,7 +1,9 @@
 package metaqi
 
 import (
+    "encoding/binary"
     "fmt"
+    "io"
     parsec "github.com/prataprc/goparsec"
 )
 
@@ -40,6 +42,153 @@ type (
         Description string
     }
 )
+
+type ValueConstructor interface {
+    Signature() string
+    TypeName() string
+    TypeDeclaration() string
+    ReadFrom(r io.Reader) error
+    WriteTo(w io.Writer) error
+}
+
+type IntValue struct {
+    value uint32
+}
+
+func (i *IntValue) Signature() string {
+    return "I"
+}
+
+func (i *IntValue) TypeName() string {
+    return "uint32"
+}
+
+func (i *IntValue) TypeDeclaration() string {
+    return ""
+}
+
+func (i *IntValue) ReadFrom(r io.Reader) error {
+        buf := []byte{0, 0, 0, 0}
+        bytes, err := r.Read(buf)
+        if (err != nil) {
+            return err
+        } else if (bytes != 4) {
+            return fmt.Errorf("IntValue read %d instead of 4", bytes)
+        }
+        i.value = binary.BigEndian.Uint32(buf)
+        return nil
+}
+
+func (i *IntValue) WriteTo(r io.Writer) error {
+        buf := []byte{0, 0, 0, 0}
+        binary.BigEndian.PutUint32(buf, i.value)
+        bytes, err := r.Write(buf)
+        if (err != nil) {
+            return err
+        } else if (bytes != 4) {
+            return fmt.Errorf("IntValue write %d instead of 4", bytes)
+        }
+        return nil
+}
+
+type StringValue struct {
+    value string
+}
+
+func (i *StringValue) Signature() string {
+    return "s"
+}
+
+func (i *StringValue) TypeName() string {
+    return "string"
+}
+
+func (i *StringValue) TypeDeclaration() string {
+    return ""
+}
+
+func (i *StringValue) ReadFrom(r io.Reader) error {
+        var size IntValue
+        if err := size.ReadFrom(r); err != nil {
+            return fmt.Errorf("StringValue failed to read size: %s", err)
+        }
+        buf := make([]byte, size.value, size.value + 1)
+        bytes, err := r.Read(buf)
+        if (err != nil) {
+            return err
+        } else if (bytes != int(size.value)) {
+            return fmt.Errorf("StringValue read %d instead of %d", bytes, size.value)
+        }
+        buf[size.value] = 0
+        i.value = string(buf)
+        return nil
+}
+
+func (i *StringValue) WriteTo(r io.Writer) error {
+        size := IntValue{ uint32(len(i.value)) }
+        if err := size.WriteTo(r); err != nil {
+            return fmt.Errorf("StringValue failed to write size: %s", err)
+        }
+        bytes, err := r.Write([]byte(i.value))
+        if (err != nil) {
+            return err
+        } else if (bytes != 4) {
+            return fmt.Errorf("StringValue write %d instead of %d", bytes, size.value)
+        }
+        return nil
+}
+
+type MapValue struct {
+    key ValueConstructor
+    value ValueConstructor
+    values map[ValueConstructor]ValueConstructor
+}
+
+func (m *MapValue) Signature() string {
+    return fmt.Sprintf("{%s%s}", m.key.Signature(), m.value.Signature())
+}
+
+func (m *MapValue) TypeName() string {
+    return fmt.Sprintf("map[%s] %s", m.key.TypeName(), m.value.TypeName())
+}
+
+func (m *MapValue) TypeDeclaration() string {
+    return fmt.Sprintf("%s\n%s\n", m.key.TypeDeclaration(), m.value.TypeDeclaration())
+}
+
+func (m *MapValue) ReadFrom(r io.Reader) error {
+        var size IntValue
+        if err := size.ReadFrom(r); err != nil {
+            return err
+        }
+        m.values = make(map[ValueConstructor]ValueConstructor, size.value)
+        for i := 0; i < int(size.value); i++ {
+            if err := m.key.ReadFrom(r); err != nil {
+                return fmt.Errorf("failed to read key %d: %s", i, err)
+            }
+            if err := m.value.ReadFrom(r); err != nil {
+                return fmt.Errorf("failed to value key %d: %s", i, err)
+            }
+            m.values[m.key] = m.value
+        }
+        return nil
+}
+
+func (m *MapValue) WriteTo(w io.Writer) error {
+        size := IntValue{ uint32(len(m.values)) }
+        if err := size.WriteTo(w); err != nil {
+            return fmt.Errorf("StringValue failed to write size: %s", err)
+        }
+        for k,v := range m.values {
+            if err := k.WriteTo(w); err != nil {
+                return fmt.Errorf("failed to write key: %s", err)
+            }
+            if err := v.WriteTo(w); err != nil {
+                return fmt.Errorf("failed to write value: %s", err)
+            }
+        }
+        return nil
+}
 
 func String() parsec.Parser {
     return parsec.Atom("s", "string")
