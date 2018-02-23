@@ -5,7 +5,44 @@ import (
     "fmt"
     "io"
     parsec "github.com/prataprc/goparsec"
+    "strings"
 )
+
+/*
+Bootstrap stages:
+
+    1. Extract the MetaObject signature using wireshark
+    2. Generate the code of MetaObject type and MetaObject constructor:
+        type MetaObject struct { ... }
+        func NewMetaObject(io.Reader) MetaObject { ... }
+    3. Extract the MetaObject data using wireshark
+    4. Parse the MetaObject binary data and generate the ServiceDirectory proxy
+        type ServiceDirectory { ... }
+        func NewServiceDirectory(...) ServiceDirectory
+    5. Construct the MetaObject of each services declared in the ServiceDirectory
+    6. Parse the MetaObject of each service and generate the associated proxy
+        type ServiceXXX { ... }
+        func NewServiceXXX(...) ServiceXXX
+
+interface Type {
+    func writeTo(io.Writer)
+}
+
+interface TypeConstructor {
+    func readFrom(io.Reader) Type
+}
+
+interface TypeDeclarator {
+    func typeName() string
+    // Generates code for a Type and a TypeConstructor
+    func declareType(io.Writer)
+}
+
+func parseSignature(string) TypeDeclaration
+func readMetaObject(io.Reader) MetaObject
+
+*/
+
 
 type (
     MetaMethodParameter struct {
@@ -49,6 +86,18 @@ type ValueConstructor interface {
     TypeDeclaration() string
     ReadFrom(r io.Reader) error
     WriteTo(w io.Writer) error
+}
+
+func NewIntValue() IntValue {
+    return IntValue{ 0 }
+}
+
+func NewStringValue() StringValue {
+    return StringValue{ "" }
+}
+
+func MapStringValue(key, value ValueConstructor) MapValue {
+    return MapValue{ key, value, nil}
 }
 
 type IntValue struct {
@@ -153,7 +202,8 @@ func (m *MapValue) TypeName() string {
 }
 
 func (m *MapValue) TypeDeclaration() string {
-    return fmt.Sprintf("%s\n%s\n", m.key.TypeDeclaration(), m.value.TypeDeclaration())
+    return fmt.Sprintf("%s\n%s\n",
+        m.key.TypeDeclaration(), m.value.TypeDeclaration())
 }
 
 func (m *MapValue) ReadFrom(r io.Reader) error {
@@ -188,6 +238,55 @@ func (m *MapValue) WriteTo(w io.Writer) error {
             }
         }
         return nil
+}
+
+type MemberValue struct {
+    name string
+    value ValueConstructor
+}
+
+func (m* MemberValue) fieldDeclaration() string {
+    return fmt.Sprintf("%s %s\n", m.name, m.value.TypeName())
+}
+
+type StructValue struct {
+    name string
+    members []MemberValue
+}
+
+func (s *StructValue) Signature() string {
+    return fmt.Sprintf("(%s)<%s,%s", s.membersType(),
+        s.TypeName(), s.membersName())
+}
+
+func (s *StructValue) membersType() string {
+    types := ""
+    for _, v := range s.members {
+        types += v.value.TypeName()
+    }
+    return types
+}
+
+func (s *StructValue) membersName() string {
+    names := make([]string, 0, len(s.members))
+    for _, v := range s.members {
+        names = append(names, v.value.TypeName())
+    }
+    return strings.Join(names, ", ")
+}
+
+func (s *StructValue) TypeName() string {
+    return s.name
+}
+
+func (s *StructValue) TypeDeclaration() string {
+    fields := ""
+    for _, v := range s.members {
+        fields += v.fieldDeclaration()
+    }
+    return fmt.Sprintf("type %s struct {\n%s\n}",
+        s.TypeName(),
+        fields)
 }
 
 func String() parsec.Parser {
