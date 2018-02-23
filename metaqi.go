@@ -3,7 +3,9 @@ package metaqi
 import (
     "encoding/binary"
     "fmt"
+    "reflect"
     "io"
+    "log"
     parsec "github.com/prataprc/goparsec"
     "strings"
 )
@@ -88,16 +90,24 @@ type ValueConstructor interface {
     WriteTo(w io.Writer) error
 }
 
-func NewIntValue() IntValue {
-    return IntValue{ 0 }
+func NewIntValue() *IntValue {
+    return &IntValue{ 0 }
 }
 
-func NewStringValue() StringValue {
-    return StringValue{ "" }
+func NewStringValue() *StringValue {
+    return &StringValue{ "" }
 }
 
-func MapStringValue(key, value ValueConstructor) MapValue {
-    return MapValue{ key, value, nil}
+func NewMapValue(key, value ValueConstructor) *MapValue {
+    return &MapValue{ key, value, nil}
+}
+
+func NewMemberValue(name string, value ValueConstructor) MemberValue {
+    return MemberValue{ name, value }
+}
+
+func NewStrucValue(name string, members []MemberValue) *StructValue {
+    return &StructValue{ name, members }
 }
 
 type IntValue struct {
@@ -255,14 +265,18 @@ type StructValue struct {
 }
 
 func (s *StructValue) Signature() string {
-    return fmt.Sprintf("(%s)<%s,%s", s.membersType(),
+    return fmt.Sprintf("(%s)<%s,%s>", s.membersTypeSignature(),
         s.TypeName(), s.membersName())
 }
 
-func (s *StructValue) membersType() string {
+func (s *StructValue) membersTypeSignature() string {
     types := ""
     for _, v := range s.members {
-        types += v.value.TypeName()
+        if s, ok := v.value.(*StructValue); ok {
+            types += "[" + s.Signature() + "]"
+        } else {
+            types += v.value.Signature()
+        }
     }
     return types
 }
@@ -270,9 +284,9 @@ func (s *StructValue) membersType() string {
 func (s *StructValue) membersName() string {
     names := make([]string, 0, len(s.members))
     for _, v := range s.members {
-        names = append(names, v.value.TypeName())
+        names = append(names, v.name)
     }
-    return strings.Join(names, ", ")
+    return strings.Join(names, ",")
 }
 
 func (s *StructValue) TypeName() string {
@@ -289,20 +303,143 @@ func (s *StructValue) TypeDeclaration() string {
         fields)
 }
 
-func String() parsec.Parser {
-    return parsec.Atom("s", "string")
+func (s *StructValue) ReadFrom(r io.Reader) error {
+    return fmt.Errorf("not yet implemented")
 }
-func Int() parsec.Parser {
-    return parsec.Atom("I", "uint32")
+
+func (s *StructValue) WriteTo(w io.Writer) error {
+    return fmt.Errorf("not yet implemented")
 }
+
 func BasicType() parsec.Parser {
-    return parsec.OrdChoice(nil, Int(), String())
+    return parsec.OrdChoice(nodifyBasicType,
+        parsec.Atom("I", "uint32"),
+        parsec.Atom("s", "string"))
 }
+
 func TypeName() parsec.Parser {
     return parsec.Ident()
 }
 
-func parse(input string) string {
+type Node = parsec.ParsecNode
+
+func nodifyBasicType(nodes []Node) Node {
+    if len(nodes) != 1 {
+        log.Panicf("wrong basic arguments %+v\n", nodes)
+    }
+    signature := nodes[0].(*parsec.Terminal).GetValue()
+    switch signature {
+        case "I": return NewIntValue()
+        case "s": return NewStringValue()
+        default: log.Panicf("wrong signature %s", signature)
+    }
+    return nil
+}
+
+func extractValue(object interface{}) (ValueConstructor, error) {
+    nodes, ok := object.([]Node)
+    if !ok {
+        return nil, fmt.Errorf("extraction failed: %+v", reflect.TypeOf(object))
+    }
+    value, ok := nodes[0].(ValueConstructor)
+    if !ok {
+        return nil, fmt.Errorf("extraction failed bis: %+v", reflect.TypeOf(nodes[0]))
+    }
+    return value, nil
+}
+
+func nodifyMap(nodes []Node) Node {
+    if len(nodes) != 4 {
+        fmt.Printf("wrong map arguments %+v\n", nodes)
+    }
+    key, err := extractValue(nodes[1])
+    if err != nil {
+        log.Panicf("key conversion failed: %s", err)
+    }
+    value, err := extractValue(nodes[2])
+    if err != nil {
+        log.Panicf("value conversion failed: %s", err)
+    }
+    return NewMapValue(key, value)
+}
+
+func nodifyEmbeddedType(nodes []Node) Node {
+    if len(nodes) != 3 {
+        log.Panicf("wrong arguments %+v", nodes)
+    }
+    subnode, ok := nodes[1].([]Node)
+    if !ok {
+        log.Panicf("embedded extraction failed %+v", reflect.TypeOf(nodes[1]))
+    }
+    return subnode[0]
+}
+
+func extractMembersTypes(node Node) []ValueConstructor {
+    typeList, ok := node.([]Node)
+    if !ok {
+        log.Panicf("member type list is not a list: %s", reflect.TypeOf(node))
+    }
+    types := make([]ValueConstructor, len(typeList))
+    for i, _ := range typeList {
+        memberType, err := extractValue(typeList[i])
+        if err != nil {
+            log.Panicf("member type value conversion failed: %s", err)
+        }
+        types[i] = memberType
+    }
+    return types
+}
+
+func extractMembersName(node Node) []string {
+    baseList, ok := node.([]Node)
+    if !ok {
+        log.Panicf("member name list is not a list: %s", reflect.TypeOf(node))
+    }
+    membersList, ok := baseList[0].([]Node)
+    if !ok {
+        log.Panicf("member name list is not a list: %s", reflect.TypeOf(node))
+    }
+    names := make([]string, len(membersList))
+    for i, n := range membersList {
+        memberName, ok := n.(*parsec.Terminal)
+        if !ok {
+            log.Panicf("failed to convert member names %s", reflect.TypeOf(n))
+        }
+        names[i] = memberName.GetValue()
+    }
+    return names
+}
+
+func extractMembers(typesNode, namesNode Node) []MemberValue {
+
+    types := extractMembersTypes(typesNode)
+    names := extractMembersName(namesNode)
+
+    if len(types) != len(names) {
+        log.Panicf("member types and names of different size: %+v, %+v", types, names)
+    }
+
+    members := make([]MemberValue, len(names))
+
+    for i := range types {
+        members[i] = NewMemberValue(names[i], types[i])
+    }
+    return members
+}
+
+func nodifyTypeDefinition(nodes []Node) Node {
+
+    terminal, ok := nodes[4].(*parsec.Terminal)
+    if !ok {
+        log.Panicf("wrong name %s", reflect.TypeOf(nodes[4]))
+    }
+    name := terminal.GetValue()
+    members := extractMembers(nodes[1], nodes[6])
+
+    return NewStrucValue(name, members)
+}
+
+func parse(input string) (ValueConstructor, error) {
     text := []byte(input)
 
     var embeddedType parsec.Parser
@@ -312,7 +449,7 @@ func parse(input string) string {
     var declarationType = parsec.OrdChoice(nil,
         BasicType(), &mapType, &embeddedType, &typeDefinition)
 
-    embeddedType = parsec.And(nil,
+    embeddedType = parsec.And(nodifyEmbeddedType,
         parsec.Atom("[", "MapStart"),
         &declarationType,
         parsec.Atom("]", "MapClose"))
@@ -322,7 +459,7 @@ func parse(input string) string {
     var typeMemberList = parsec.Maybe(nil,
         parsec.Many(nil, TypeName(), parsec.Atom(",", "Separator")))
 
-    typeDefinition = parsec.And(nil,
+    typeDefinition = parsec.And(nodifyTypeDefinition,
         parsec.Atom("(", "TypeParameterStart"),
         &listType,
         parsec.Atom(")", "TypeParameterClose"),
@@ -332,21 +469,27 @@ func parse(input string) string {
         &typeMemberList,
         parsec.Atom(">", "TypeDefinitionClose"))
 
-    mapType = parsec.And(nil,
+    mapType = parsec.And(nodifyMap,
         parsec.Atom("{", "MapStart"),
         &declarationType, &declarationType,
         parsec.Atom("}", "MapClose"))
 
     var typeSignature = declarationType
 
-    root, scanner := typeSignature(parsec.NewScanner(text))
+    root, _ := typeSignature(parsec.NewScanner(text))
     if (root == nil) {
-        fmt.Println("failed to parse signature")
-    } else if constructor, ok := root.(ValueConstructor); ok {
-        fmt.Println(constructor.TypeName())
-    } else {
-        fmt.Println("failed to convert value")
+        return nil, fmt.Errorf("failed to parse signature")
     }
-    fmt.Println(scanner.GetCursor())
-    return "not recognized"
+    types, ok := root.([]Node)
+    if !ok {
+        return nil, fmt.Errorf("failed to convert array: %+v", reflect.TypeOf(root))
+    }
+    if len(types) != 1 {
+        return nil, fmt.Errorf("did not parse only one type: %+v", root)
+    }
+    constructor, ok := types[0].(ValueConstructor)
+    if !ok {
+        return nil, fmt.Errorf("failed to convert value: %+v", reflect.TypeOf(types[0]))
+    }
+    return constructor, nil
 }
