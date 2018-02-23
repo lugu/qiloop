@@ -295,55 +295,57 @@ func String() parsec.Parser {
 func Int() parsec.Parser {
     return parsec.Atom("I", "uint32")
 }
-func BasicType(ast *parsec.AST) parsec.Parser {
-    return ast.OrdChoice("BasicType", nil, Int(), String())
+func BasicType() parsec.Parser {
+    return parsec.OrdChoice(nil, Int(), String())
 }
-func TypeName(ast *parsec.AST) parsec.Parser {
+func TypeName() parsec.Parser {
     return parsec.Ident()
 }
 
 func parse(input string) string {
     text := []byte(input)
-    ast := parsec.NewAST("signature", 100)
 
     var embeddedType parsec.Parser
     var mapType parsec.Parser
     var typeDefinition parsec.Parser
 
-    var declarationType = ast.OrdChoice("DeclarationType", nil,
-        BasicType(ast), &mapType, &embeddedType, &typeDefinition)
+    var declarationType = parsec.OrdChoice(nil,
+        BasicType(), &mapType, &embeddedType, &typeDefinition)
 
-    embeddedType = ast.And("EmbeddedType", nil,
+    embeddedType = parsec.And(nil,
         parsec.Atom("[", "MapStart"),
         &declarationType,
         parsec.Atom("]", "MapClose"))
 
-    var listType = ast.Kleene("ListType", nil, &declarationType)
+    var listType = parsec.Kleene(nil, &declarationType)
 
-    var typeMemberList = ast.Maybe("MaybeMemberList", nil,
-        ast.Many("TypeMemberList", nil,
-        TypeName(ast), parsec.Atom(",", "Separator")))
+    var typeMemberList = parsec.Maybe(nil,
+        parsec.Many(nil, TypeName(), parsec.Atom(",", "Separator")))
 
-    typeDefinition = ast.And("TypeDefinition", nil,
+    typeDefinition = parsec.And(nil,
         parsec.Atom("(", "TypeParameterStart"),
         &listType,
         parsec.Atom(")", "TypeParameterClose"),
         parsec.Atom("<", "TypeDefinitionStart"),
-        TypeName(ast),
+        TypeName(),
         parsec.Atom(",", "TypeName"),
         &typeMemberList,
         parsec.Atom(">", "TypeDefinitionClose"))
 
-    mapType = ast.And("MapType", nil,
+    mapType = parsec.And(nil,
         parsec.Atom("{", "MapStart"),
         &declarationType, &declarationType,
         parsec.Atom("}", "MapClose"))
 
     var typeSignature = declarationType
 
-    root, scanner := ast.Parsewith(typeSignature, parsec.NewScanner(text))
-    if (root != nil) {
-        return root.GetName()
+    root, scanner := typeSignature(parsec.NewScanner(text))
+    if (root == nil) {
+        fmt.Println("failed to parse signature")
+    } else if constructor, ok := root.(ValueConstructor); ok {
+        fmt.Println(constructor.TypeName())
+    } else {
+        fmt.Println("failed to convert value")
     }
     fmt.Println(scanner.GetCursor())
     return "not recognized"
