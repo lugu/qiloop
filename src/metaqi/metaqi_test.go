@@ -3,7 +3,7 @@ package metaqi
 import "testing"
 
 func testUtil(t *testing.T, input string, expected ValueConstructor) {
-    result, err := parse(input)
+    result, err := Parse(input)
     if (err != nil) {
         t.Error(err)
     } else if result == nil {
@@ -12,8 +12,9 @@ func testUtil(t *testing.T, input string, expected ValueConstructor) {
         t.Error("invalid type: " + result.TypeName())
     }
 }
+
 func testSignature(t *testing.T, signature string) {
-    result, err := parse(signature)
+    result, err := Parse(signature)
     if (err != nil) {
         t.Error(err)
     } else if result == nil {
@@ -47,15 +48,6 @@ func TestParseMap(t *testing.T) {
     testUtil(t, "{II}", NewMapValue(NewIntValue(), NewIntValue()))
 }
 
-/* FIXME
-func TestParseEmbedded(t *testing.T) {
-    testUtil(t, "[s]", "EmbeddedType")
-    testUtil(t, "[I]", "EmbeddedType")
-    testUtil(t, "[{ss}]", "EmbeddedType")
-    testUtil(t, "[{Is}]", "EmbeddedType")
-}
-*/
-
 func TestParseDefinition(t *testing.T) {
     testUtil(t, "(s)<test,a>", NewStrucValue("test", []MemberValue{ NewMemberValue("a", NewStringValue())}))
     testUtil(t, "(ss)<test,a,a>", NewStrucValue("test", []MemberValue{
@@ -67,7 +59,6 @@ func TestParseDefinition(t *testing.T) {
         NewMemberValue("a", NewStringValue()),
         NewMemberValue("a", NewStringValue()),
     }))
-
 }
 
 func TestParseEmbeddedDefinition(t *testing.T) {

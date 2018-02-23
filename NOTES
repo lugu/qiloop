@@ -9,8 +9,7 @@ serialized like this:
 
 ================================================================================
 TODO:
-        - signature parser: 
-                parse_signature(String): TypeDefinition
+        - error handling in the parser
         - create type from definition: 
                 create_type(TypeDefinition): String
 ================================================================================

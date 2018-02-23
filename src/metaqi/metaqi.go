@@ -298,7 +298,12 @@ func (s *StructValue) TypeDeclaration() string {
     for _, v := range s.members {
         fields += v.fieldDeclaration()
     }
-    return fmt.Sprintf("type %s struct {\n%s\n}",
+    membersDeclaration := ""
+    for _, v := range s.members {
+        membersDeclaration += v.value.TypeDeclaration()
+    }
+    return fmt.Sprintf("%s\ntype %s struct {\n%s}\n",
+        membersDeclaration,
         s.TypeName(),
         fields)
 }
@@ -439,7 +444,7 @@ func nodifyTypeDefinition(nodes []Node) Node {
     return NewStrucValue(name, members)
 }
 
-func parse(input string) (ValueConstructor, error) {
+func Parse(input string) (ValueConstructor, error) {
     text := []byte(input)
 
     var embeddedType parsec.Parser
