@@ -13,7 +13,7 @@ func main() {
         if err != nil {
             fmt.Printf("parsing error: %s\n", err)
         }
-        fmt.Printf(typeDescription.TypeDeclaration())
+        typeDescription.TypeDeclaration().Render(os.Stdout)
     } else {
         fmt.Printf("missing signature argument\n")
     }

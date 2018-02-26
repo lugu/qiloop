@@ -1,6 +1,9 @@
 package metaqi
 
-import "testing"
+import (
+    "bytes"
+    "testing"
+)
 
 func testUtil(t *testing.T, input string, expected ValueConstructor) {
     result, err := Parse(input)
@@ -8,8 +11,10 @@ func testUtil(t *testing.T, input string, expected ValueConstructor) {
         t.Error(err)
     } else if result == nil {
         t.Error("wrong return")
-    } else if result.TypeName() != expected.TypeName() {
-        t.Error("invalid type: " + result.TypeName())
+    } else if Print(result) != Print(expected) {
+        buf := bytes.NewBufferString("")
+        result.TypeName().Render(buf)
+        t.Error("invalid type: " + buf.String())
     }
 }
 

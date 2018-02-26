@@ -1,12 +1,14 @@
 package metaqi
 
 import (
+    "bytes"
     "encoding/binary"
     "fmt"
     "reflect"
     "io"
     "log"
     parsec "github.com/prataprc/goparsec"
+    "github.com/dave/jennifer/jen"
     "strings"
 )
 
@@ -82,12 +84,20 @@ type (
     }
 )
 
+type Statement = jen.Statement
+
 type ValueConstructor interface {
     Signature() string
-    TypeName() string
-    TypeDeclaration() string
+    TypeName() *Statement
+    TypeDeclaration() *Statement
     ReadFrom(r io.Reader) error
     WriteTo(w io.Writer) error
+}
+
+func Print(v ValueConstructor) string {
+    buf := bytes.NewBufferString("")
+    v.TypeName().Render(buf)
+    return buf.String()
 }
 
 func NewIntValue() *IntValue {
@@ -118,12 +128,12 @@ func (i *IntValue) Signature() string {
     return "I"
 }
 
-func (i *IntValue) TypeName() string {
-    return "uint32"
+func (i *IntValue) TypeName() *Statement {
+    return jen.Uint32()
 }
 
-func (i *IntValue) TypeDeclaration() string {
-    return ""
+func (i *IntValue) TypeDeclaration() *Statement {
+    return jen.Empty()
 }
 
 func (i *IntValue) ReadFrom(r io.Reader) error {
@@ -158,12 +168,12 @@ func (i *StringValue) Signature() string {
     return "s"
 }
 
-func (i *StringValue) TypeName() string {
-    return "string"
+func (i *StringValue) TypeName() *Statement {
+    return jen.String()
 }
 
-func (i *StringValue) TypeDeclaration() string {
-    return ""
+func (i *StringValue) TypeDeclaration() *Statement {
+    return jen.Empty()
 }
 
 func (i *StringValue) ReadFrom(r io.Reader) error {
@@ -207,13 +217,12 @@ func (m *MapValue) Signature() string {
     return fmt.Sprintf("{%s%s}", m.key.Signature(), m.value.Signature())
 }
 
-func (m *MapValue) TypeName() string {
-    return fmt.Sprintf("map[%s] %s", m.key.TypeName(), m.value.TypeName())
+func (m *MapValue) TypeName() *Statement {
+    return jen.Map(m.key.TypeName()).Add(m.value.TypeName())
 }
 
-func (m *MapValue) TypeDeclaration() string {
-    return fmt.Sprintf("%s\n%s\n",
-        m.key.TypeDeclaration(), m.value.TypeDeclaration())
+func (m *MapValue) TypeDeclaration() *Statement {
+    return jen.Empty().Add(m.key.TypeDeclaration()).Add(m.value.TypeDeclaration())
 }
 
 func (m *MapValue) ReadFrom(r io.Reader) error {
@@ -255,57 +264,38 @@ type MemberValue struct {
     value ValueConstructor
 }
 
-func (m* MemberValue) fieldDeclaration() string {
-    return fmt.Sprintf("%s %s\n", m.name, m.value.TypeName())
-}
-
 type StructValue struct {
     name string
     members []MemberValue
 }
 
 func (s *StructValue) Signature() string {
-    return fmt.Sprintf("(%s)<%s,%s>", s.membersTypeSignature(),
-        s.TypeName(), s.membersName())
-}
-
-func (s *StructValue) membersTypeSignature() string {
     types := ""
+    names := make([]string, 0, len(s.members))
     for _, v := range s.members {
+        names = append(names, v.name)
         if s, ok := v.value.(*StructValue); ok {
             types += "[" + s.Signature() + "]"
         } else {
             types += v.value.Signature()
         }
     }
-    return types
+    return fmt.Sprintf("(%s)<%s,%s>", types,
+        s.name, strings.Join(names, ","))
 }
 
-func (s *StructValue) membersName() string {
-    names := make([]string, 0, len(s.members))
-    for _, v := range s.members {
-        names = append(names, v.name)
-    }
-    return strings.Join(names, ",")
+func (s *StructValue) TypeName() *Statement {
+    return jen.Id(s.name)
 }
 
-func (s *StructValue) TypeName() string {
-    return s.name
-}
-
-func (s *StructValue) TypeDeclaration() string {
-    fields := ""
-    for _, v := range s.members {
-        fields += v.fieldDeclaration()
+func (s *StructValue) TypeDeclaration() *Statement {
+    declarations := jen.Line()
+    fields := make([]jen.Code, len(s.members))
+    for i, v := range s.members {
+        declarations = declarations.Add(v.value.TypeDeclaration())
+        fields[i] = jen.Id(v.name).Add(v.value.TypeName())
     }
-    membersDeclaration := ""
-    for _, v := range s.members {
-        membersDeclaration += v.value.TypeDeclaration()
-    }
-    return fmt.Sprintf("%s\ntype %s struct {\n%s}\n",
-        membersDeclaration,
-        s.TypeName(),
-        fields)
+    return jen.Type().Id(s.name).Struct(fields...).Add(declarations)
 }
 
 func (s *StructValue) ReadFrom(r io.Reader) error {
