@@ -8,6 +8,11 @@ A call to ServiceDirectory.metaObject(0) will return a MetaObject
 serialized like this:
 
 ================================================================================
+cp qim.lua $HOME/.config/wireshark/plugins/
+sudo tcpdump -i lo -w call-_SemanticEngine.getLanguage.pcap port 9559
+wireshark call-_SemanticEngine.getLanguage.pcap
+================================================================================
+
 TODO:
         - error handling in the parser
         - create type from definition: 
@@ -562,3 +567,75 @@ int: 4 // size of string
 00000810: 0000 0e00 0000 7365 7276 6963 6552 656d  ......serviceRem
 00000820: 6f76 6564 0400 0000 2849 7329 0000 0000  oved....(Is)....
 00000830: 0000 0000 0a                             .....
+
+================================================================================
+env GOPATH=`pwd` go run src/metaqi/cmd/sign.go "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]"
+
+type ServiceInfo struct {
+    name string
+    serviceId uint32
+    machineId string
+    processId uint32
+    endpoints string
+    sessionId string
+}
+
+================================================================================
+TCP chat: Scenario:
+
+    $ qicli info
+
+Client:47358 <-> Server:9559 : TCP three way handshake: SYN,SYN/ACK,ACK: Connection established
+Client:47358 <-> Server:9559 : QIM call to Service[0:ServiceServcer].Object[0].Call[8:authenticate].Id[3]
+Server:9559 <-> Client:47358 : QIM reply to Service[0:ServiceServcer].Object[0].Call[8:authenticate].Id[3]
+Client:47358 <-> Server:9559 : QIM call to Service[1:ServiceDirectory].Object[1].Call[2:metaObject].Id[5]
+Server:9559 <-> Client:47358 : QIM reply to Service[1:ServiceDirectory].Object[1].Call[2:metaObject].Id[5]
+Client:47358 <-> Server:9559 : QIM call to Service[1:ServiceDirectory].Object[1].Call[0:registerEvent].Id[11]
+Client:47358 <-> Server:9559 : QIM call to Service[1:ServiceDirectory].Object[1].Call[0:registerEvent].Id[13]
+Server:9559 <-> Client:47358 : QIM reply to Service[1:ServiceDirectory].Object[1].Call[0:registerEvent].Id[11]
+Server:9559 <-> Client:47358 : QIM reply to Service[1:ServiceDirectory].Object[1].Call[0:registerEvent].Id[13]
+Client:47358 <-> Server:9559 : QIM call to Service[1:ServiceDirectory].Object[1].Call[108:machineId].Id[19]
+Server:9559 <-> Client:47358 : QIM reply to Service[1:ServiceDirectory].Object[1].Call[108:machineId].Id[19]
+Client:47358 <-> Server:9559 : QIM call to Service[1:ServiceDirectory].Object[1].Call[101:services].Id[23]
+Server:9559 <-> Client:47358 : QIM reply to Service[1:ServiceDirectory].Object[1].Call[101:services].Id[23]
+Client:47358 <-> Server:9559 : TCP three way handshake: FIN,FIN/ACK,ACK: Connection closed
+
+
+type Header struct {
+    Magic       uint32      // qiMessaging message magic number (0x42dead42)
+    Id          uint32      // id of the message
+    Size        uint32      // size of the payload
+    Version     uint16      // protocol version
+    Type        uint16      // type of the message
+    Service     uint32      // id of the service
+    Object      uint32      // id of the object
+    Action      uint32      // id of the function or event
+}
+
+func (h Header) withSize(size uint32) Header
+func NewHeader(type uint16, service uint32, object uint32, action uint32, id uint32) Header
+
+type Message struct {
+    Header Header
+    Payload []byte
+}
+
+func NewMessage(header Header, payload []byte) {
+    return Message {
+        header.WithSize(len(payload)),
+        payload,
+    }
+}
+
+type EndPoint struct {
+    connection net.Conn
+}
+
+func (e EndPoint) Send(message Message) error
+func (e EndPoint) Receive() (Message, error)
+
+type Client struct {
+    Connections map[???]EndPoint 
+}
+
+funct NewClient(serverName string, port string) Client
