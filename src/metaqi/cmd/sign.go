@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "github.com/dave/jennifer/jen"
     "metaqi"
     "os"
 )
@@ -13,7 +14,9 @@ func main() {
         if err != nil {
             fmt.Printf("parsing error: %s\n", err)
         }
-        typeDescription.TypeDeclaration().Render(os.Stdout)
+        var file *jen.File = jen.NewFile("metatype")
+        typeDescription.TypeDeclaration(file)
+        file.Render(os.Stdout)
     } else {
         fmt.Printf("missing signature argument\n")
     }

@@ -28,68 +28,14 @@ Bootstrap stages:
         type ServiceXXX { ... }
         func NewServiceXXX(...) ServiceXXX
 
-interface Type {
-    func writeTo(io.Writer)
-}
-
-interface TypeConstructor {
-    func readFrom(io.Reader) Type
-}
-
-interface TypeDeclarator {
-    func typeName() string
-    // Generates code for a Type and a TypeConstructor
-    func declareType(io.Writer)
-}
-
-func parseSignature(string) TypeDeclaration
-func readMetaObject(io.Reader) MetaObject
-
 */
-
-
-type (
-    MetaMethodParameter struct {
-        Name string
-        Description string
-    }
-
-    MetaMethod struct {
-        Uuid uint32
-        ReturnSignature string
-        Name string
-        ParametersSignature string
-        Description string
-        Parameters MetaMethodParameter
-        ReturnDescription string
-    }
-
-    MetaSignal struct {
-        Uuid uint32
-        Name string
-        Signature string
-    }
-
-    MetaProperty struct {
-        Uuid uint32
-        Name string
-        Signature string
-    }
-
-    MetaObject struct {
-        Methods map[int] MetaMethod
-        Signals map[int] MetaSignal
-        Properties map[int] MetaProperty
-        Description string
-    }
-)
 
 type Statement = jen.Statement
 
 type ValueConstructor interface {
     Signature() string
     TypeName() *Statement
-    TypeDeclaration() *Statement
+    TypeDeclaration(*jen.File)
     ReadFrom(r io.Reader) error
     WriteTo(w io.Writer) error
 }
@@ -132,8 +78,8 @@ func (i *IntValue) TypeName() *Statement {
     return jen.Uint32()
 }
 
-func (i *IntValue) TypeDeclaration() *Statement {
-    return jen.Empty()
+func (i *IntValue) TypeDeclaration(file *jen.File) {
+    return
 }
 
 func (i *IntValue) ReadFrom(r io.Reader) error {
@@ -172,8 +118,8 @@ func (i *StringValue) TypeName() *Statement {
     return jen.String()
 }
 
-func (i *StringValue) TypeDeclaration() *Statement {
-    return jen.Empty()
+func (i *StringValue) TypeDeclaration(file *jen.File) {
+    return
 }
 
 func (i *StringValue) ReadFrom(r io.Reader) error {
@@ -221,8 +167,9 @@ func (m *MapValue) TypeName() *Statement {
     return jen.Map(m.key.TypeName()).Add(m.value.TypeName())
 }
 
-func (m *MapValue) TypeDeclaration() *Statement {
-    return jen.Empty().Add(m.key.TypeDeclaration()).Add(m.value.TypeDeclaration())
+func (m *MapValue) TypeDeclaration(file *jen.File) {
+    m.key.TypeDeclaration(file)
+    m.value.TypeDeclaration(file)
 }
 
 func (m *MapValue) ReadFrom(r io.Reader) error {
@@ -288,14 +235,13 @@ func (s *StructValue) TypeName() *Statement {
     return jen.Id(s.name)
 }
 
-func (s *StructValue) TypeDeclaration() *Statement {
-    declarations := jen.Line()
+func (s *StructValue) TypeDeclaration(file *jen.File) {
     fields := make([]jen.Code, len(s.members))
     for i, v := range s.members {
-        declarations = declarations.Add(v.value.TypeDeclaration())
+        v.value.TypeDeclaration(file)
         fields[i] = jen.Id(v.name).Add(v.value.TypeName())
     }
-    return jen.Type().Id(s.name).Struct(fields...).Add(declarations)
+    file.Type().Id(s.name).Struct(fields...)
 }
 
 func (s *StructValue) ReadFrom(r io.Reader) error {
