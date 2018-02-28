@@ -2,11 +2,11 @@ package metaqi
 
 import (
     "bytes"
-    "encoding/binary"
     "fmt"
     "reflect"
     "io"
     "log"
+    "metaqi/basic"
     parsec "github.com/prataprc/goparsec"
     "github.com/dave/jennifer/jen"
     "strings"
@@ -82,28 +82,13 @@ func (i *IntValue) TypeDeclaration(file *jen.File) {
     return
 }
 
-func (i *IntValue) ReadFrom(r io.Reader) error {
-        buf := []byte{0, 0, 0, 0}
-        bytes, err := r.Read(buf)
-        if (err != nil) {
-            return err
-        } else if (bytes != 4) {
-            return fmt.Errorf("IntValue read %d instead of 4", bytes)
-        }
-        i.value = binary.BigEndian.Uint32(buf)
-        return nil
+func (i *IntValue) ReadFrom(r io.Reader) (err error) {
+    i.value, err = basic.ReadUint32(r)
+    return err
 }
 
-func (i *IntValue) WriteTo(r io.Writer) error {
-        buf := []byte{0, 0, 0, 0}
-        binary.BigEndian.PutUint32(buf, i.value)
-        bytes, err := r.Write(buf)
-        if (err != nil) {
-            return err
-        } else if (bytes != 4) {
-            return fmt.Errorf("IntValue write %d instead of 4", bytes)
-        }
-        return nil
+func (i *IntValue) WriteTo(w io.Writer) error {
+    return basic.WriteUint32(i.value, w)
 }
 
 type StringValue struct {
@@ -122,35 +107,13 @@ func (i *StringValue) TypeDeclaration(file *jen.File) {
     return
 }
 
-func (i *StringValue) ReadFrom(r io.Reader) error {
-        var size IntValue
-        if err := size.ReadFrom(r); err != nil {
-            return fmt.Errorf("StringValue failed to read size: %s", err)
-        }
-        buf := make([]byte, size.value, size.value + 1)
-        bytes, err := r.Read(buf)
-        if (err != nil) {
-            return err
-        } else if (bytes != int(size.value)) {
-            return fmt.Errorf("StringValue read %d instead of %d", bytes, size.value)
-        }
-        buf[size.value] = 0
-        i.value = string(buf)
-        return nil
+func (i *StringValue) ReadFrom(r io.Reader) (err error) {
+    i.value, err = basic.ReadString(r)
+    return err
 }
 
-func (i *StringValue) WriteTo(r io.Writer) error {
-        size := IntValue{ uint32(len(i.value)) }
-        if err := size.WriteTo(r); err != nil {
-            return fmt.Errorf("StringValue failed to write size: %s", err)
-        }
-        bytes, err := r.Write([]byte(i.value))
-        if (err != nil) {
-            return err
-        } else if (bytes != 4) {
-            return fmt.Errorf("StringValue write %d instead of %d", bytes, size.value)
-        }
-        return nil
+func (i *StringValue) WriteTo(w io.Writer) error {
+    return basic.WriteString(i.value, w)
 }
 
 type MapValue struct {
@@ -173,37 +136,37 @@ func (m *MapValue) TypeDeclaration(file *jen.File) {
 }
 
 func (m *MapValue) ReadFrom(r io.Reader) error {
-        var size IntValue
-        if err := size.ReadFrom(r); err != nil {
-            return err
+    size, err := basic.ReadUint32(r)
+    if err != nil {
+        return fmt.Errorf("failed to read map size: %s", err)
+    }
+    m.values = make(map[ValueConstructor]ValueConstructor, size)
+    for i := 0; i < int(size); i++ {
+        if err := m.key.ReadFrom(r); err != nil {
+            return fmt.Errorf("failed to read key %d: %s", i, err)
         }
-        m.values = make(map[ValueConstructor]ValueConstructor, size.value)
-        for i := 0; i < int(size.value); i++ {
-            if err := m.key.ReadFrom(r); err != nil {
-                return fmt.Errorf("failed to read key %d: %s", i, err)
-            }
-            if err := m.value.ReadFrom(r); err != nil {
-                return fmt.Errorf("failed to value key %d: %s", i, err)
-            }
-            m.values[m.key] = m.value
+        if err := m.value.ReadFrom(r); err != nil {
+            return fmt.Errorf("failed to value key %d: %s", i, err)
         }
-        return nil
+        m.values[m.key] = m.value
+    }
+    return nil
 }
 
 func (m *MapValue) WriteTo(w io.Writer) error {
-        size := IntValue{ uint32(len(m.values)) }
-        if err := size.WriteTo(w); err != nil {
-            return fmt.Errorf("StringValue failed to write size: %s", err)
+    if err := basic.WriteUint32(uint32(len(m.values)), w); err != nil {
+        return fmt.Errorf("failed to write map size: %s", err)
+    }
+    for k,v := range m.values {
+        if err := k.WriteTo(w); err != nil {
+            return fmt.Errorf("failed to write key: %s", err)
         }
-        for k,v := range m.values {
-            if err := k.WriteTo(w); err != nil {
-                return fmt.Errorf("failed to write key: %s", err)
-            }
-            if err := v.WriteTo(w); err != nil {
-                return fmt.Errorf("failed to write value: %s", err)
-            }
+        if err := v.WriteTo(w); err != nil {
+            return fmt.Errorf("failed to write value: %s", err)
         }
-        return nil
+    }
+    return nil
+}
 }
 
 type MemberValue struct {
