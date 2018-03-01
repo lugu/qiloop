@@ -38,6 +38,8 @@ type ValueConstructor interface {
     TypeDeclaration(*jen.File)
     ReadFrom(r io.Reader) error
     WriteTo(w io.Writer) error
+    Marshal(id string, writer string) *Statement // returns an error
+    Unmarshal(writer string) *Statement // returns (type, err)
 }
 
 func Print(v ValueConstructor) string {
@@ -82,6 +84,14 @@ func (i *IntValue) TypeDeclaration(file *jen.File) {
     return
 }
 
+func (i *IntValue) Marshal(id string, writer string) *Statement {
+    return jen.Qual("metaqi/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+}
+
+func (i *IntValue) Unmarshal(writer string) *Statement {
+    return jen.Id("basic.ReadUint32").Call(jen.Id(writer))
+}
+
 func (i *IntValue) ReadFrom(r io.Reader) (err error) {
     i.value, err = basic.ReadUint32(r)
     return err
@@ -105,6 +115,14 @@ func (i *StringValue) TypeName() *Statement {
 
 func (i *StringValue) TypeDeclaration(file *jen.File) {
     return
+}
+
+func (i *StringValue) Marshal(id string, writer string) *Statement {
+    return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
+}
+
+func (i *StringValue) Unmarshal(writer string) *Statement {
+    return jen.Id("basic.ReadString").Call(jen.Id(writer))
 }
 
 func (i *StringValue) ReadFrom(r io.Reader) (err error) {
@@ -154,7 +172,8 @@ func (m *MapValue) ReadFrom(r io.Reader) error {
 }
 
 func (m *MapValue) WriteTo(w io.Writer) error {
-    if err := basic.WriteUint32(uint32(len(m.values)), w); err != nil {
+    err := basic.WriteUint32(uint32(len(m.values)), w)
+    if err != nil {
         return fmt.Errorf("failed to write map size: %s", err)
     }
     for k,v := range m.values {
@@ -167,6 +186,38 @@ func (m *MapValue) WriteTo(w io.Writer) error {
     }
     return nil
 }
+
+func (m *MapValue) Marshal(mapId string, writer string) *Statement {
+    return jen.Func().Params().Params(jen.Error()).Block(
+        jen.Id("err := basic.WriteUint32").Call(jen.Id("uint32").Call(
+            jen.Id("len").Call(jen.Id(mapId))),
+            jen.Id(writer)),
+        jen.For(
+            jen.Id("k, v := range " + mapId),
+        ).Block( // FIXME: check errors
+            m.key.Marshal("k", writer),
+            m.value.Marshal("v", writer),
+        ),
+        jen.Return(jen.Err()),
+    ).Call()
+}
+
+func (m *MapValue) Unmarshal(reader string) *Statement {
+    return jen.Func().Params().Params(
+        jen.Map(m.key.TypeName()).Add(m.value.TypeName()),
+        jen.Error(),
+    ).Block(
+        jen.Id("var").Id("m").Add(m.TypeName()),
+        jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
+        jen.For(
+            jen.Id("i := 0; i < int(size); i++"),
+        ).Block( // FIXME: check errors
+            jen.Id("k, _ :=").Add(m.key.Unmarshal(reader)),
+            jen.Id("v, _ :=").Add(m.value.Unmarshal(reader)),
+            jen.Id("m[k] = v"),
+        ),
+        jen.Return(jen.Id("m"),jen.Err()),
+    ).Call()
 }
 
 type MemberValue struct {
@@ -205,6 +256,26 @@ func (s *StructValue) TypeDeclaration(file *jen.File) {
         fields[i] = jen.Id(v.name).Add(v.value.TypeName())
     }
     file.Type().Id(s.name).Struct(fields...)
+
+
+    readFields := make([]jen.Code, len(s.members) + 1)
+    writeFields := make([]jen.Code, len(s.members) + 1)
+    for i, v := range s.members {
+        readFields[i] = jen.Id("s." + v.name + ", err =").Add(v.value.Unmarshal("r"))
+        writeFields[i] = jen.Id("err =").Add(v.value.Marshal("s." + v.name, "w"))
+    }
+    readFields[len(s.members)] = jen.Return(jen.Id("s"), jen.Nil())
+    writeFields[len(s.members)] = jen.Return(jen.Err())
+
+    file.Func().Id("Read" + s.name).Params(
+        jen.Id("r").Id("io.Reader"),
+    ).Params(
+        jen.Id("s").Id(s.name),jen.Err().Error(),
+    ).Block(readFields...)
+    file.Func().Id("Write" + s.name).Params(
+        jen.Id("s").Id(s.name),
+        jen.Id("w").Qual("io", "Writer"),
+    ).Params(jen.Err().Error()).Block(writeFields...)
 }
 
 func (s *StructValue) ReadFrom(r io.Reader) error {
@@ -213,6 +284,14 @@ func (s *StructValue) ReadFrom(r io.Reader) error {
 
 func (s *StructValue) WriteTo(w io.Writer) error {
     return fmt.Errorf("not yet implemented")
+}
+
+func (s *StructValue) Marshal(strucId string, writer string) *Statement {
+    return jen.Id("Write" + s.name).Call(jen.Id(strucId), jen.Id(writer))
+}
+
+func (s *StructValue) Unmarshal(reader string) *Statement {
+    return jen.Id("Read" + s.name).Call(jen.Id(reader))
 }
 
 func BasicType() parsec.Parser {
