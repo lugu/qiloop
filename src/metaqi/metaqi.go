@@ -4,9 +4,7 @@ import (
     "bytes"
     "fmt"
     "reflect"
-    "io"
     "log"
-    "metaqi/basic"
     parsec "github.com/prataprc/goparsec"
     "github.com/dave/jennifer/jen"
     "strings"
@@ -36,8 +34,6 @@ type ValueConstructor interface {
     Signature() string
     TypeName() *Statement
     TypeDeclaration(*jen.File)
-    ReadFrom(r io.Reader) error
-    WriteTo(w io.Writer) error
     Marshal(id string, writer string) *Statement // returns an error
     Unmarshal(writer string) *Statement // returns (type, err)
 }
@@ -92,15 +88,6 @@ func (i *IntValue) Unmarshal(writer string) *Statement {
     return jen.Id("basic.ReadUint32").Call(jen.Id(writer))
 }
 
-func (i *IntValue) ReadFrom(r io.Reader) (err error) {
-    i.value, err = basic.ReadUint32(r)
-    return err
-}
-
-func (i *IntValue) WriteTo(w io.Writer) error {
-    return basic.WriteUint32(i.value, w)
-}
-
 type StringValue struct {
     value string
 }
@@ -125,15 +112,6 @@ func (i *StringValue) Unmarshal(writer string) *Statement {
     return jen.Id("basic.ReadString").Call(jen.Id(writer))
 }
 
-func (i *StringValue) ReadFrom(r io.Reader) (err error) {
-    i.value, err = basic.ReadString(r)
-    return err
-}
-
-func (i *StringValue) WriteTo(w io.Writer) error {
-    return basic.WriteString(i.value, w)
-}
-
 type MapValue struct {
     key ValueConstructor
     value ValueConstructor
@@ -151,40 +129,6 @@ func (m *MapValue) TypeName() *Statement {
 func (m *MapValue) TypeDeclaration(file *jen.File) {
     m.key.TypeDeclaration(file)
     m.value.TypeDeclaration(file)
-}
-
-func (m *MapValue) ReadFrom(r io.Reader) error {
-    size, err := basic.ReadUint32(r)
-    if err != nil {
-        return fmt.Errorf("failed to read map size: %s", err)
-    }
-    m.values = make(map[ValueConstructor]ValueConstructor, size)
-    for i := 0; i < int(size); i++ {
-        if err := m.key.ReadFrom(r); err != nil {
-            return fmt.Errorf("failed to read key %d: %s", i, err)
-        }
-        if err := m.value.ReadFrom(r); err != nil {
-            return fmt.Errorf("failed to value key %d: %s", i, err)
-        }
-        m.values[m.key] = m.value
-    }
-    return nil
-}
-
-func (m *MapValue) WriteTo(w io.Writer) error {
-    err := basic.WriteUint32(uint32(len(m.values)), w)
-    if err != nil {
-        return fmt.Errorf("failed to write map size: %s", err)
-    }
-    for k,v := range m.values {
-        if err := k.WriteTo(w); err != nil {
-            return fmt.Errorf("failed to write key: %s", err)
-        }
-        if err := v.WriteTo(w); err != nil {
-            return fmt.Errorf("failed to write value: %s", err)
-        }
-    }
-    return nil
 }
 
 func (m *MapValue) Marshal(mapId string, writer string) *Statement {
@@ -276,14 +220,6 @@ func (s *StructValue) TypeDeclaration(file *jen.File) {
         jen.Id("s").Id(s.name),
         jen.Id("w").Qual("io", "Writer"),
     ).Params(jen.Err().Error()).Block(writeFields...)
-}
-
-func (s *StructValue) ReadFrom(r io.Reader) error {
-    return fmt.Errorf("not yet implemented")
-}
-
-func (s *StructValue) WriteTo(w io.Writer) error {
-    return fmt.Errorf("not yet implemented")
 }
 
 func (s *StructValue) Marshal(strucId string, writer string) *Statement {
