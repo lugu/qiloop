@@ -3,18 +3,35 @@
 #
 #
 
+# qi::messagin: the missing specification
 
-# Overview:
+qi::messaging is a network protocol for remote procedure calls. An
+open source implementation is developped by SoftBank Robotics as part
+of the libqi framework.
 
-qi::messaging is a software bus over the network. It is an open source
-project developped by SoftBank Robotics. qi::messaging is to NAO and
-Pepper what D-Bus to a Linux Desktop or what Binder to Android.
-qi::messaging interconnect the different services and application.
+https://github.com/aldebaran/libqi
 
-Github repo: https://github.com/aldebaran/libqi
+qi::messaging defines an serialisation format as well as a typed
+signature format to describe the serialized data.
 
-This project aims to shed some light on binary interfaces of the
-services composing the SDK (NAOqi).
+qi::messaging exposes a software bus (just like D-Bus) where services
+can be registered. A services is composed of:
+- a name associated with a number and a description
+- a list of method to be called
+- a list of signals to be watched
+- a list of properties to be query
+
+The bus can be introspected thanks to the service directory (which is
+a service) to know the list of the services. Each service exposes the
+list its methods, signal and properties.
+
+This project aims to shed some light on qi::messaging by describing
+the inner details of the protocol.
+
+with the starting poing of capturing packets and analysing them. One
+can also browse the source code of libqi to extract those informatins.
+I explicitly decided not to do that in order to have a clean room
+implementation of the protocol free of copyright obligations.
 
 To explore qi::messaging, the easiest way is to download choregraphe
 and run the desktop version of NAOqi.
