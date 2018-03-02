@@ -34,14 +34,13 @@ func ReadString(r io.Reader) (string, error) {
     if err != nil {
         return "", fmt.Errorf("failed to read string size: %s", err)
     }
-    buf := make([]byte, size, size+1)
+    buf := make([]byte, size, size)
     bytes, err := r.Read(buf)
     if (err != nil) {
         return "", err
     } else if (uint32(bytes) != size) {
         return "", fmt.Errorf("failed to read string data (%d instead of %d)", bytes, size)
     }
-    buf[size] = 0
     return string(buf), nil
 }
 
