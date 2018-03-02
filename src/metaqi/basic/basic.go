@@ -51,7 +51,7 @@ func WriteString(s string, w io.Writer) error {
     bytes, err := w.Write([]byte(s))
     if (err != nil) {
         return err
-    } else if (bytes != 4) {
+    } else if (bytes != len(s)) {
         return fmt.Errorf("failed to write string data (%d instead of %d)", bytes, len(s))
     }
     return nil
