@@ -14,7 +14,7 @@ func main() {
         if err != nil {
             fmt.Printf("parsing error: %s\n", err)
         }
-        var file *jen.File = jen.NewFile("metatype")
+        var file *jen.File = jen.NewFile("object")
         typeDescription.TypeDeclaration(file)
         file.Render(os.Stdout)
     } else {
