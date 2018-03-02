@@ -151,19 +151,19 @@ func (m *MapValue) Marshal(mapId string, writer string) *Statement {
 
 func (m *MapValue) Unmarshal(reader string) *Statement {
     return jen.Func().Params().Params(
-        jen.Map(m.key.TypeName()).Add(m.value.TypeName()),
-        jen.Error(),
+        jen.Id("m").Map(m.key.TypeName()).Add(m.value.TypeName()),
+        jen.Err().Error(),
     ).Block(
-        jen.Id("var").Id("m").Add(m.TypeName()),
         jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
-        jen.If(jen.Id("err != nil")).Block(jen.Return(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Id("\"failed to read map size: %s\", err")))),
+        jen.If(jen.Id("err != nil")).Block(jen.Return(jen.Id("m"), jen.Qual("fmt", "Errorf").Call(jen.Id("\"failed to read map size: %s\", err")))),
+        jen.Id("m").Op("=").Id("make").Call(m.TypeName(), jen.Id("size")),
         jen.For(
             jen.Id("i := 0; i < int(size); i++"),
         ).Block( // FIXME: check errors
             jen.Id("k, err :=").Add(m.key.Unmarshal(reader)),
-            jen.Id("if (err != nil) { \nreturn nil, fmt.Errorf(\"failed to read map key: %s\", err)\n}"),
+            jen.Id("if (err != nil) { \nreturn m, fmt.Errorf(\"failed to read map key: %s\", err)\n}"),
             jen.Id("v, err :=").Add(m.value.Unmarshal(reader)),
-            jen.Id("if (err != nil) { \nreturn nil, fmt.Errorf(\"failed to read map value: %s\", err)\n}"),
+            jen.Id("if (err != nil) { \nreturn m, fmt.Errorf(\"failed to read map value: %s\", err)\n}"),
             jen.Id("m[k] = v"),
         ),
         jen.Return(jen.Id("m"),jen.Nil()),
@@ -211,11 +211,20 @@ func (s *StructValue) TypeDeclaration(file *jen.File) {
     readFields := make([]jen.Code, len(s.members) + 1)
     writeFields := make([]jen.Code, len(s.members) + 1)
     for i, v := range s.members {
-        readFields[i] = jen.Id("s." + v.name + ", err =").Add(v.value.Unmarshal("r"))
-        writeFields[i] = jen.Id("err =").Add(v.value.Marshal("s." + v.name, "w"))
+        readFields[i] = jen.If(
+            jen.Id("s." + v.name + ", err =").Add(v.value.Unmarshal("r")),
+            jen.Id("err != nil"),).Block(
+                jen.Id("return s, fmt.Errorf(\"failed to read " + v.name + " field: %s\", err)"),
+            )
+        writeFields[i] = jen.If(
+            jen.Id("err :=").Add(v.value.Marshal("s." + v.name, "w")),
+            jen.Err().Op("!=").Nil(),
+        ).Block(
+            jen.Id("return fmt.Errorf(\"failed to write " + v.name + " field: %s\", err)"),
+        )
     }
     readFields[len(s.members)] = jen.Return(jen.Id("s"), jen.Nil())
-    writeFields[len(s.members)] = jen.Return(jen.Err())
+    writeFields[len(s.members)] = jen.Return(jen.Nil())
 
     file.Func().Id("Read" + s.name).Params(
         jen.Id("r").Id("io.Reader"),
