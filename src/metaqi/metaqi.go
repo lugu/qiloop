@@ -136,13 +136,16 @@ func (m *MapValue) Marshal(mapId string, writer string) *Statement {
         jen.Id("err := basic.WriteUint32").Call(jen.Id("uint32").Call(
             jen.Id("len").Call(jen.Id(mapId))),
             jen.Id(writer)),
+        jen.Id("if (err != nil) { \nreturn fmt.Errorf(\"failed to write map size: %s\", err)\n}"),
         jen.For(
             jen.Id("k, v := range " + mapId),
         ).Block( // FIXME: check errors
-            m.key.Marshal("k", writer),
-            m.value.Marshal("v", writer),
+            jen.Err().Op("=").Add(m.key.Marshal("k", writer)),
+            jen.Id("if (err != nil) { \nreturn fmt.Errorf(\"failed to write map key: %s\", err)\n}"),
+            jen.Err().Op("=").Add(m.value.Marshal("v", writer)),
+            jen.Id("if (err != nil) { \nreturn fmt.Errorf(\"failed to write map value: %s\", err)\n}"),
         ),
-        jen.Return(jen.Err()),
+        jen.Return(jen.Nil()),
     ).Call()
 }
 
@@ -153,14 +156,17 @@ func (m *MapValue) Unmarshal(reader string) *Statement {
     ).Block(
         jen.Id("var").Id("m").Add(m.TypeName()),
         jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
+        jen.If(jen.Id("err != nil")).Block(jen.Return(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Id("\"failed to read map size: %s\", err")))),
         jen.For(
             jen.Id("i := 0; i < int(size); i++"),
         ).Block( // FIXME: check errors
-            jen.Id("k, _ :=").Add(m.key.Unmarshal(reader)),
-            jen.Id("v, _ :=").Add(m.value.Unmarshal(reader)),
+            jen.Id("k, err :=").Add(m.key.Unmarshal(reader)),
+            jen.Id("if (err != nil) { \nreturn nil, fmt.Errorf(\"failed to read map key: %s\", err)\n}"),
+            jen.Id("v, err :=").Add(m.value.Unmarshal(reader)),
+            jen.Id("if (err != nil) { \nreturn nil, fmt.Errorf(\"failed to read map value: %s\", err)\n}"),
             jen.Id("m[k] = v"),
         ),
-        jen.Return(jen.Id("m"),jen.Err()),
+        jen.Return(jen.Id("m"),jen.Nil()),
     ).Call()
 }
 
