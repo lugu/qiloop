@@ -14,12 +14,12 @@ func ReadUint32(r io.Reader) (uint32, error) {
     } else if (bytes != 4) {
         return 0, fmt.Errorf("failed to read uint32 (%d instead of 4)", bytes)
     }
-    return binary.BigEndian.Uint32(buf), nil
+    return binary.LittleEndian.Uint32(buf), nil
 }
 
 func WriteUint32(i uint32, w io.Writer) error {
     buf := []byte{0, 0, 0, 0}
-    binary.BigEndian.PutUint32(buf, i)
+    binary.LittleEndian.PutUint32(buf, i)
     bytes, err := w.Write(buf)
     if (err != nil) {
         return err
