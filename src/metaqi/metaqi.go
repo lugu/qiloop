@@ -4,29 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/dave/jennifer/jen"
-	parsec "github.com/prataprc/goparsec"
+	"io"
 	"log"
 	"reflect"
 	"strings"
+	parsec "github.com/prataprc/goparsec"
 )
-
-/*
-Bootstrap stages:
-
-    1. Extract the MetaObject signature using wireshark
-    2. Generate the code of MetaObject type and MetaObject constructor:
-        type MetaObject struct { ... }
-        func NewMetaObject(io.Reader) MetaObject { ... }
-    3. Extract the MetaObject data using wireshark
-    4. Parse the MetaObject binary data and generate the ServiceDirectory proxy
-        type ServiceDirectory { ... }
-        func NewServiceDirectory(...) ServiceDirectory
-    5. Construct the MetaObject of each services declared in the ServiceDirectory
-    6. Parse the MetaObject of each service and generate the associated proxy
-        type ServiceXXX { ... }
-        func NewServiceXXX(...) ServiceXXX
-
-*/
 
 type Statement = jen.Statement
 
@@ -439,4 +422,13 @@ func Parse(input string) (ValueConstructor, error) {
 		return nil, fmt.Errorf("failed to convert value: %+v", reflect.TypeOf(types[0]))
 	}
 	return constructor, nil
+}
+
+func GenerateType(v ValueConstructor, packageName string, w io.Writer) error {
+    var file *jen.File = jen.NewFile(packageName)
+	v.TypeDeclaration(file)
+    if err := file.Render(w); err != nil {
+        return fmt.Errorf("failed to render %s: %s", v.Signature(), err)
+    }
+    return nil
 }
