@@ -85,7 +85,7 @@ func (h Header) Read(r io.Reader) (err error) {
 	if h.Magic, err = basic.ReadUint32(r); err != nil {
 		return fmt.Errorf("failed to read message magic: %s", err)
 	} else if h.Magic != Magic {
-		return fmt.Errorf("invalid message magic: %s", h.Magic)
+		return fmt.Errorf("invalid message magic: %d", h.Magic)
 	}
 	if h.Id, err = basic.ReadUint32(r); err != nil {
 		return fmt.Errorf("failed to read message id: %s", err)
@@ -96,12 +96,12 @@ func (h Header) Read(r io.Reader) (err error) {
 	if h.Version, err = basic.ReadUint16(r); err != nil {
 		return fmt.Errorf("failed to read message version: %s", err)
 	} else if h.Version != Version {
-		return fmt.Errorf("invalid message version: %s", h.Version)
+		return fmt.Errorf("invalid message version: %d", h.Version)
 	}
 	if h.Type, err = basic.ReadUint8(r); err != nil {
 		return fmt.Errorf("failed to read message type: %s", err)
 	} else if h.Type == Unknown || h.Type > Cancelled {
-		return fmt.Errorf("invalid message type: %s", h.Type)
+		return fmt.Errorf("invalid message type: %d", h.Type)
 	}
 	if h.Flags, err = basic.ReadUint8(r); err != nil {
 		return fmt.Errorf("failed to read message flags: %s", err)
