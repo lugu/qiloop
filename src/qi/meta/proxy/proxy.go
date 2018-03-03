@@ -39,25 +39,48 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret sign
     length := 20 + len(params.Members())
 	writing := make([]jen.Code, length)
     writing[i] = jen.Var().Err().Error(); i++
-    writing[i] = jen.Var().Id("ret").Add(ret.TypeName()); i++
+    if _, ok := ret.(signature.VoidValue); !ok {
+        writing[i] = jen.Var().Id("ret").Add(ret.TypeName()); i++
+    }
     writing[i] = jen.Var().Id("buf").Op("*").Qual("bytes", "Buffer"); i++
     writing[i] = jen.Id("buf = bytes.NewBuffer(make([]byte, 0))"); i++
 	for _, v := range params.Members() {
-        writing[i] = jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
-            jen.Id(`return ret, fmt.Errorf("failed to serialize ` + v.Name + `: %s", err)`),
-        )
-        i++
+        if _, ok := ret.(signature.VoidValue); !ok {
+            writing[i] = jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
+                jen.Id(`return ret, fmt.Errorf("failed to serialize ` + v.Name + `: %s", err)`),
+            )
+            i++
+        } else {
+            writing[i] = jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
+                jen.Id(`return fmt.Errorf("failed to serialize ` + v.Name + `: %s", err)`),
+            )
+            i++
+        }
 	}
-    writing[i] = jen.Id(fmt.Sprintf(`response, err := p.Call(%d, buf.Bytes())`, m.Uid)); i++
-    writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
-        jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
-    ); i++
-    writing[i] = jen.Id("buf = bytes.NewBuffer(response)"); i++
-    writing[i] = jen.Id("ret, err =").Add(ret.Unmarshal("buf")); i++
-    writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
-        jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("failed to parse %s response: %s", err)`, m.Name, "%s")),
-    ); i++
-    writing[i] = jen.Return(jen.Id("ret"), jen.Nil()); i++
+    if _, ok := ret.(signature.VoidValue); !ok {
+        writing[i] = jen.Id(fmt.Sprintf(`response, err := p.Call(%d, buf.Bytes())`, m.Uid)); i++
+    } else {
+         writing[i] = jen.Id(fmt.Sprintf(`_, err = p.Call(%d, buf.Bytes())`, m.Uid)); i++
+    }
+    if _, ok := ret.(signature.VoidValue); !ok {
+        writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
+            jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
+        ); i++
+    } else {
+        writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
+            jen.Id(fmt.Sprintf(`return fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
+        ); i++
+    }
+    if _, ok := ret.(signature.VoidValue); !ok {
+        writing[i] = jen.Id("buf = bytes.NewBuffer(response)"); i++
+        writing[i] = jen.Id("ret, err =").Add(ret.Unmarshal("buf")); i++
+        writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
+            jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("failed to parse %s response: %s", err)`, m.Name, "%s")),
+        ); i++
+        writing[i] = jen.Return(jen.Id("ret"), jen.Nil()); i++
+    } else {
+        writing[i] = jen.Return(jen.Nil()); i++
+    }
 
     return jen.Block(
         writing...
@@ -85,11 +108,16 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
     if err != nil {
         return fmt.Errorf("failed to generate body: %s", err)
     }
+
+    retType := jen.Params(ret.TypeName(), jen.Error())
+    if _, ok := ret.(signature.VoidValue); ok {
+        retType = jen.Error()
+    }
+
     file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id(strings.Title(m.Name)).Add(
         params.Params(),
-    ).Params(
-        ret.TypeName(),
-        jen.Error(),
+    ).Add(
+        retType,
     ).Add(
         body,
     )

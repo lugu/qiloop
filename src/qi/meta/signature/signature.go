@@ -64,6 +64,10 @@ func NewStringValue() *StringValue {
 	return &StringValue{""}
 }
 
+func NewVoidValue() VoidValue {
+	return VoidValue{}
+}
+
 func NewMapValue(key, value ValueConstructor) *MapValue {
 	return &MapValue{key, value, nil}
 }
@@ -134,6 +138,33 @@ func (i *LongValue) Marshal(id string, writer string) *Statement {
 
 func (i *LongValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadUint64").Call(jen.Id(writer))
+}
+
+type VoidValue struct {
+}
+
+func (i VoidValue) Signature() string {
+	return "v"
+}
+
+func (v VoidValue) TypeName() *Statement {
+	return jen.Empty()
+}
+
+func (v VoidValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (v VoidValue) typeDeclaration(file *jen.File) {
+	return
+}
+
+func (v VoidValue) Marshal(id string, writer string) *Statement {
+	return jen.Nil()
+}
+
+func (v VoidValue) Unmarshal(writer string) *Statement {
+	return jen.Empty()
 }
 
 type StringValue struct {
@@ -382,7 +413,8 @@ func BasicType() parsec.Parser {
 	return parsec.OrdChoice(nodifyBasicType,
 		parsec.Atom("I", "uint32"),
 		parsec.Atom("s", "string"),
-		parsec.Atom("L", "uint64"))
+		parsec.Atom("L", "uint64"),
+		parsec.Atom("v", "void"))
 }
 
 func TypeName() parsec.Parser {
@@ -403,6 +435,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewLongValue()
 	case "s":
 		return NewStringValue()
+	case "v":
+		return NewVoidValue()
 	default:
 		log.Panicf("wrong signature %s", signature)
 	}
