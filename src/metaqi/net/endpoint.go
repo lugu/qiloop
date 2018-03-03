@@ -29,21 +29,6 @@ func (e EndPoint) Receive() (m message.Message, err error) {
 	return
 }
 
-type Proxy struct {
-	client      Client
-	service     uint32
-	object      uint32
-	description string
-}
-
-func (p Proxy) Call(action uint32, payload []byte) ([]byte, error) {
-	return p.client.Call(p.service, p.object, action, payload)
-}
-
-func NewProxy(c Client, service, object uint32, description string) Proxy {
-	return Proxy{c, service, object, description}
-}
-
 type Client interface {
 	Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error)
 }
