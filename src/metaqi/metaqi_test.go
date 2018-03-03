@@ -1,121 +1,121 @@
 package metaqi
 
 import (
-    "bytes"
-    "testing"
+	"bytes"
+	"testing"
 )
 
 func testUtil(t *testing.T, input string, expected ValueConstructor) {
-    result, err := Parse(input)
-    if (err != nil) {
-        t.Error(err)
-    } else if result == nil {
-        t.Error("wrong return")
-    } else if Print(result) != Print(expected) {
-        buf := bytes.NewBufferString("")
-        result.TypeName().Render(buf)
-        t.Error("invalid type: " + buf.String())
-    }
+	result, err := Parse(input)
+	if err != nil {
+		t.Error(err)
+	} else if result == nil {
+		t.Error("wrong return")
+	} else if Print(result) != Print(expected) {
+		buf := bytes.NewBufferString("")
+		result.TypeName().Render(buf)
+		t.Error("invalid type: " + buf.String())
+	}
 }
 
 func testSignature(t *testing.T, signature string) {
-    result, err := Parse(signature)
-    if (err != nil) {
-        t.Error(err)
-    } else if result == nil {
-        t.Error("wrong return")
-    } else if result.Signature() != signature {
-        t.Error("invalid signature: " + result.Signature())
-    }
+	result, err := Parse(signature)
+	if err != nil {
+		t.Error(err)
+	} else if result == nil {
+		t.Error("wrong return")
+	} else if result.Signature() != signature {
+		t.Error("invalid signature: " + result.Signature())
+	}
 }
 
 func TestParseInt(t *testing.T) {
-    testUtil(t, "I", NewIntValue())
+	testUtil(t, "I", NewIntValue())
 }
 
 func TestParseString(t *testing.T) {
-    testUtil(t, "s", NewStringValue())
+	testUtil(t, "s", NewStringValue())
 }
 
 func TestParseMultipleString(t *testing.T) {
-    testUtil(t, "ss", NewStringValue())
+	testUtil(t, "ss", NewStringValue())
 }
 
 func TestParseEmpty(t *testing.T) {
-    t.SkipNow()
-    testUtil(t, "", nil)
+	t.SkipNow()
+	testUtil(t, "", nil)
 }
 
 func TestParseMap(t *testing.T) {
-    testUtil(t, "{ss}", NewMapValue(NewStringValue(), NewStringValue()))
-    testUtil(t, "{sI}", NewMapValue(NewStringValue(), NewIntValue()))
-    testUtil(t, "{Is}", NewMapValue(NewIntValue(), NewStringValue()))
-    testUtil(t, "{II}", NewMapValue(NewIntValue(), NewIntValue()))
+	testUtil(t, "{ss}", NewMapValue(NewStringValue(), NewStringValue()))
+	testUtil(t, "{sI}", NewMapValue(NewStringValue(), NewIntValue()))
+	testUtil(t, "{Is}", NewMapValue(NewIntValue(), NewStringValue()))
+	testUtil(t, "{II}", NewMapValue(NewIntValue(), NewIntValue()))
 }
 
 func TestParseDefinition(t *testing.T) {
-    testUtil(t, "(s)<test,a>", NewStrucValue("test", []MemberValue{ NewMemberValue("a", NewStringValue())}))
-    testUtil(t, "(ss)<test,a,a>", NewStrucValue("test", []MemberValue{
-        NewMemberValue("a", NewStringValue()),
-        NewMemberValue("a", NewStringValue()),
-    }))
-    testUtil(t, "(sss)<test,a,a,a>", NewStrucValue("test", []MemberValue{
-        NewMemberValue("a", NewStringValue()),
-        NewMemberValue("a", NewStringValue()),
-        NewMemberValue("a", NewStringValue()),
-    }))
+	testUtil(t, "(s)<test,a>", NewStrucValue("test", []MemberValue{NewMemberValue("a", NewStringValue())}))
+	testUtil(t, "(ss)<test,a,a>", NewStrucValue("test", []MemberValue{
+		NewMemberValue("a", NewStringValue()),
+		NewMemberValue("a", NewStringValue()),
+	}))
+	testUtil(t, "(sss)<test,a,a,a>", NewStrucValue("test", []MemberValue{
+		NewMemberValue("a", NewStringValue()),
+		NewMemberValue("a", NewStringValue()),
+		NewMemberValue("a", NewStringValue()),
+	}))
 }
 
 func TestParseEmbeddedDefinition(t *testing.T) {
-    testUtil(t, "([s])<test,a>", NewStrucValue("test", []MemberValue{
-        NewMemberValue("a", NewStringValue()) }))
+	testUtil(t, "([s])<test,a>", NewStrucValue("test", []MemberValue{
+		NewMemberValue("a", NewStringValue())}))
 }
 
 func TestParseMapMap(t *testing.T) {
-    testSignature(t, "{{II}I}")
-    testSignature(t, "{I{II}}")
-    testSignature(t, "{{ss}{II}}")
-    testSignature(t, "{{{sI}s}{II}}")
+	testSignature(t, "{{II}I}")
+	testSignature(t, "{I{II}}")
+	testSignature(t, "{{ss}{II}}")
+	testSignature(t, "{{{sI}s}{II}}")
 }
 
 func TestParseDefinitionSignature(t *testing.T) {
-    testSignature(t, "(s)<test,a>")
-    testSignature(t, "(sI)<test,a,b>")
-    testSignature(t, "(III)<test,a,b,c>")
-    testSignature(t, "(s{II})<test,a,b>")
-    testSignature(t, "({ss})<test,a>")
+	testSignature(t, "(s)<test,a>")
+	testSignature(t, "(sI)<test,a,b>")
+	testSignature(t, "(III)<test,a,b,c>")
+	testSignature(t, "(s{II})<test,a,b>")
+	testSignature(t, "({ss})<test,a>")
 }
 
 func TestParseEmbeddedDefinitionSignature(t *testing.T) {
-    testSignature(t, "([(s)<test2,b>])<test,a>")
-    testSignature(t, "(s[(s)<test2,b>])<test,a,b>")
-    testSignature(t, "([(s)<test2,b>]s)<test,a,b>")
+	testSignature(t, "([(s)<test2,b>])<test,a>")
+	testSignature(t, "(s[(s)<test2,b>])<test,a,b>")
+	testSignature(t, "([(s)<test2,b>]s)<test,a,b>")
 }
 
 func TestParseMetaSignal(t *testing.T) {
-    testSignature(t, "(Iss)<MetaSignal,uid,name,signature>")
+	testSignature(t, "(Iss)<MetaSignal,uid,name,signature>")
 }
 func TestParseMetaProperty(t *testing.T) {
-    testSignature(t, "(Iss)<MetaProperty,uid,name,signature>")
+	testSignature(t, "(Iss)<MetaProperty,uid,name,signature>")
 }
 func TestParseMetaMethodParameter(t *testing.T) {
-    testSignature(t, "(ss)<MetaMethodParameter,name,description>")
+	testSignature(t, "(ss)<MetaMethodParameter,name,description>")
 }
 func TestParseMetaMethod(t *testing.T) {
-    testSignature(t, "(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>")
+	testSignature(t, "(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>")
 }
 func TestParseMetaSignalMap2(t *testing.T) {
-    testSignature(t, "{(Iss)<MetaSignal,uid,name,signature>I}")
+	testSignature(t, "{(Iss)<MetaSignal,uid,name,signature>I}")
 }
 func TestParseMetaSignalMap(t *testing.T) {
-    testSignature(t, "{I(Iss)<MetaSignal,uid,name,signature>}")
+	testSignature(t, "{I(Iss)<MetaSignal,uid,name,signature>}")
 }
 func TestParseMetaPropertyMap(t *testing.T) {
-    testSignature(t, "{I(Iss)<MetaProperty,uid,name,signature>}")
+	testSignature(t, "{I(Iss)<MetaProperty,uid,name,signature>}")
 }
 func TestParseMetaMethodMap(t *testing.T) {
-    testSignature(t, "{I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}")
+	testSignature(t, "{I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}")
 }
 func TestParseMetaObject(t *testing.T) {
-    testSignature(t, "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>")
+	testSignature(t, "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>")
 }
