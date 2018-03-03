@@ -52,20 +52,20 @@ func Print(v ValueConstructor) string {
 	return buf.String()
 }
 
-func NewLongValue() *LongValue {
-	return &LongValue{0}
+func NewLongValue() LongValue {
+	return LongValue{}
 }
 
-func NewFloatValue() *FloatValue {
-	return &FloatValue{0.0}
+func NewFloatValue() FloatValue {
+	return FloatValue{}
 }
 
-func NewIntValue() *IntValue {
-	return &IntValue{0}
+func NewIntValue() IntValue {
+	return IntValue{}
 }
 
-func NewStringValue() *StringValue {
-	return &StringValue{""}
+func NewStringValue() StringValue {
+	return StringValue{}
 }
 
 func NewVoidValue() VoidValue {
@@ -93,86 +93,83 @@ func NewTupleValue(values []ValueConstructor) *TupleValue {
 }
 
 type IntValue struct {
-	value uint32
 }
 
-func (i *IntValue) Signature() string {
+func (i IntValue) Signature() string {
 	return "I"
 }
 
-func (i *IntValue) TypeName() *Statement {
+func (i IntValue) TypeName() *Statement {
 	return jen.Uint32()
 }
 
-func (i *IntValue) RegisterTo(s *TypeSet) {
+func (i IntValue) RegisterTo(s *TypeSet) {
 	return
 }
 
-func (i *IntValue) typeDeclaration(file *jen.File) {
+func (i IntValue) typeDeclaration(file *jen.File) {
 	return
 }
 
-func (i *IntValue) Marshal(id string, writer string) *Statement {
+func (i IntValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("qi/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (i *IntValue) Unmarshal(writer string) *Statement {
+func (i IntValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadUint32").Call(jen.Id(writer))
 }
 
 type LongValue struct {
-	value uint64
 }
 
-func (i *LongValue) Signature() string {
+func (i LongValue) Signature() string {
 	return "L"
 }
 
-func (i *LongValue) TypeName() *Statement {
+func (i LongValue) TypeName() *Statement {
 	return jen.Uint64()
 }
 
-func (i *LongValue) RegisterTo(s *TypeSet) {
+func (i LongValue) RegisterTo(s *TypeSet) {
 	return
 }
 
-func (i *LongValue) typeDeclaration(file *jen.File) {
+func (i LongValue) typeDeclaration(file *jen.File) {
 	return
 }
 
-func (i *LongValue) Marshal(id string, writer string) *Statement {
+func (i LongValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("qi/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (i *LongValue) Unmarshal(writer string) *Statement {
+func (i LongValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadUint64").Call(jen.Id(writer))
 }
 
 type FloatValue struct {
-	value float32
 }
 
-func (f *FloatValue) Signature() string {
+func (f FloatValue) Signature() string {
 	return "f"
 }
 
-func (f *FloatValue) TypeName() *Statement {
+func (f FloatValue) TypeName() *Statement {
 	return jen.Float32()
 }
 
-func (f *FloatValue) RegisterTo(s *TypeSet) {
+func (f FloatValue) RegisterTo(s *TypeSet) {
 	return
 }
 
-func (f *FloatValue) typeDeclaration(file *jen.File) {
+func (f FloatValue) typeDeclaration(file *jen.File) {
 	return
 }
 
-func (f *FloatValue) Marshal(id string, writer string) *Statement {
+func (f FloatValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("qi/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (f *FloatValue) Unmarshal(writer string) *Statement {
+func (f FloatValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadFloat32").Call(jen.Id(writer))
 }
 
@@ -231,30 +228,29 @@ func (v VoidValue) Unmarshal(writer string) *Statement {
 }
 
 type StringValue struct {
-	value string
 }
 
-func (i *StringValue) Signature() string {
+func (s StringValue) Signature() string {
 	return "s"
 }
 
-func (i *StringValue) TypeName() *Statement {
+func (s StringValue) TypeName() *Statement {
 	return jen.String()
 }
 
-func (i *StringValue) RegisterTo(s *TypeSet) {
+func (s StringValue) RegisterTo(set *TypeSet) {
 	return
 }
 
-func (i *StringValue) typeDeclaration(file *jen.File) {
+func (s StringValue) typeDeclaration(file *jen.File) {
 	return
 }
 
-func (i *StringValue) Marshal(id string, writer string) *Statement {
+func (s StringValue) Marshal(id string, writer string) *Statement {
 	return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (i *StringValue) Unmarshal(writer string) *Statement {
+func (s StringValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadString").Call(jen.Id(writer))
 }
 
