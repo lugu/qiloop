@@ -11,12 +11,37 @@ import (
 	parsec "github.com/prataprc/goparsec"
 )
 
+type TypeSet struct {
+    signatures map[string]bool
+    types []ValueConstructor
+}
+
+func (s *TypeSet) Register(v ValueConstructor) {
+    if _, ok := s.signatures[v.Signature()]; !ok {
+        s.signatures[v.Signature()] = true
+        s.types = append(s.types, v)
+    }
+}
+
+func (s *TypeSet) Declare(f *jen.File) {
+    for _, v := range s.types {
+        v.typeDeclaration(f)
+    }
+}
+
+func NewTypeSet() *TypeSet {
+    sig := make(map[string]bool)
+    typ := make([]ValueConstructor,0)
+    return &TypeSet { sig, typ }
+}
+
 type Statement = jen.Statement
 
 type ValueConstructor interface {
 	Signature() string
 	TypeName() *Statement
-	TypeDeclaration(*jen.File)
+	typeDeclaration(*jen.File)
+	RegisterTo(s *TypeSet)
 	Marshal(id string, writer string) *Statement // returns an error
 	Unmarshal(writer string) *Statement          // returns (type, err)
 }
@@ -67,7 +92,11 @@ func (i *IntValue) TypeName() *Statement {
 	return jen.Uint32()
 }
 
-func (i *IntValue) TypeDeclaration(file *jen.File) {
+func (i *IntValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (i *IntValue) typeDeclaration(file *jen.File) {
 	return
 }
 
@@ -91,7 +120,11 @@ func (i *LongValue) TypeName() *Statement {
 	return jen.Uint64()
 }
 
-func (i *LongValue) TypeDeclaration(file *jen.File) {
+func (i *LongValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (i *LongValue) typeDeclaration(file *jen.File) {
 	return
 }
 
@@ -115,7 +148,11 @@ func (i *StringValue) TypeName() *Statement {
 	return jen.String()
 }
 
-func (i *StringValue) TypeDeclaration(file *jen.File) {
+func (i *StringValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (i *StringValue) typeDeclaration(file *jen.File) {
 	return
 }
 
@@ -141,9 +178,14 @@ func (m *MapValue) TypeName() *Statement {
 	return jen.Map(m.key.TypeName()).Add(m.value.TypeName())
 }
 
-func (m *MapValue) TypeDeclaration(file *jen.File) {
-	m.key.TypeDeclaration(file)
-	m.value.TypeDeclaration(file)
+func (m *MapValue) RegisterTo(s *TypeSet) {
+    m.key.RegisterTo(s)
+    m.value.RegisterTo(s)
+	return
+}
+
+func (m *MapValue) typeDeclaration(file *jen.File) {
+    return
 }
 
 func (m *MapValue) Marshal(mapId string, writer string) *Statement {
@@ -197,12 +239,12 @@ func (m *MapValue) Unmarshal(reader string) *Statement {
 }
 
 type MemberValue struct {
-	name  string
-	value ValueConstructor
+	Name  string
+	Value ValueConstructor
 }
 
-func (m MemberValue) Name() string {
-    return strings.Title(m.name)
+func (m MemberValue) Title() string {
+    return strings.Title(m.Name)
 }
 
 type TupleValue struct {
@@ -234,11 +276,18 @@ func (t *TupleValue) Params() *Statement {
 	return jen.Params(arguments...)
 }
 
-func (s *TupleValue) TypeName() *Statement {
+func (t *TupleValue) TypeName() *Statement {
 	return jen.Id("...interface{}")
 }
 
-func (s *TupleValue) TypeDeclaration(*jen.File) {
+func (t *TupleValue) RegisterTo(s *TypeSet) {
+    for _, v := range t.values {
+        v.RegisterTo(s)
+    }
+    return
+}
+
+func (s *TupleValue) typeDeclaration(*jen.File) {
     return
 }
 
@@ -262,11 +311,11 @@ func (s *StructValue) Signature() string {
 	types := ""
 	names := make([]string, 0, len(s.members))
 	for _, v := range s.members {
-		names = append(names, v.name)
-		if s, ok := v.value.(*StructValue); ok {
+		names = append(names, v.Name)
+		if s, ok := v.Value.(*StructValue); ok {
 			types += "[" + s.Signature() + "]"
 		} else {
-			types += v.value.Signature()
+			types += v.Value.Signature()
 		}
 	}
 	return fmt.Sprintf("(%s)<%s,%s>", types,
@@ -277,11 +326,18 @@ func (s *StructValue) TypeName() *Statement {
 	return jen.Id(s.name)
 }
 
-func (s *StructValue) TypeDeclaration(file *jen.File) {
+func (t *StructValue) RegisterTo(s *TypeSet) {
+    for _, v := range t.members {
+        v.Value.RegisterTo(s)
+    }
+    s.Register(t)
+    return
+}
+
+func (s *StructValue) typeDeclaration(file *jen.File) {
 	fields := make([]jen.Code, len(s.members))
 	for i, v := range s.members {
-		v.value.TypeDeclaration(file)
-		fields[i] = jen.Id(v.Name()).Add(v.value.TypeName())
+		fields[i] = jen.Id(v.Title()).Add(v.Value.TypeName())
 	}
 	file.Type().Id(s.name).Struct(fields...)
 
@@ -289,15 +345,15 @@ func (s *StructValue) TypeDeclaration(file *jen.File) {
 	writeFields := make([]jen.Code, len(s.members)+1)
 	for i, v := range s.members {
 		readFields[i] = jen.If(
-			jen.Id("s." + v.Name() + ", err =").Add(v.value.Unmarshal("r")),
+			jen.Id("s." + v.Title() + ", err =").Add(v.Value.Unmarshal("r")),
 			jen.Id("err != nil")).Block(
-			jen.Id(`return s, fmt.Errorf("failed to read ` + v.Name() + ` field: %s", err)`),
+			jen.Id(`return s, fmt.Errorf("failed to read ` + v.Title() + ` field: %s", err)`),
 		)
 		writeFields[i] = jen.If(
-			jen.Id("err :=").Add(v.value.Marshal("s."+ v.Name(), "w")),
+			jen.Id("err :=").Add(v.Value.Marshal("s."+ v.Title(), "w")),
 			jen.Err().Op("!=").Nil(),
 		).Block(
-			jen.Id(`return fmt.Errorf("failed to write ` + v.Name() + ` field: %s", err)`),
+			jen.Id(`return fmt.Errorf("failed to write ` + v.Title() + ` field: %s", err)`),
 		)
 	}
 	readFields[len(s.members)] = jen.Return(jen.Id("s"), jen.Nil())
@@ -526,7 +582,9 @@ func Parse(input string) (ValueConstructor, error) {
 
 func GenerateType(v ValueConstructor, packageName string, w io.Writer) error {
     var file *jen.File = jen.NewFile(packageName)
-	v.TypeDeclaration(file)
+    set := NewTypeSet()
+    v.RegisterTo(set)
+    set.Declare(file)
     if err := file.Render(w); err != nil {
         return fmt.Errorf("failed to render %s: %s", v.Signature(), err)
     }
