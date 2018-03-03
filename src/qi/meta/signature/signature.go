@@ -169,6 +169,10 @@ type MemberValue struct {
 	value ValueConstructor
 }
 
+func (m MemberValue) Name() string {
+    return strings.Title(m.name)
+}
+
 type StructValue struct {
 	name    string
 	members []MemberValue
@@ -197,7 +201,7 @@ func (s *StructValue) TypeDeclaration(file *jen.File) {
 	fields := make([]jen.Code, len(s.members))
 	for i, v := range s.members {
 		v.value.TypeDeclaration(file)
-		fields[i] = jen.Id(v.name).Add(v.value.TypeName())
+		fields[i] = jen.Id(v.Name()).Add(v.value.TypeName())
 	}
 	file.Type().Id(s.name).Struct(fields...)
 
@@ -205,15 +209,15 @@ func (s *StructValue) TypeDeclaration(file *jen.File) {
 	writeFields := make([]jen.Code, len(s.members)+1)
 	for i, v := range s.members {
 		readFields[i] = jen.If(
-			jen.Id("s."+v.name+", err =").Add(v.value.Unmarshal("r")),
+			jen.Id("s." + v.Name() + ", err =").Add(v.value.Unmarshal("r")),
 			jen.Id("err != nil")).Block(
-			jen.Id(`return s, fmt.Errorf("failed to read ` + v.name + ` field: %s", err)`),
+			jen.Id(`return s, fmt.Errorf("failed to read ` + v.Name() + ` field: %s", err)`),
 		)
 		writeFields[i] = jen.If(
-			jen.Id("err :=").Add(v.value.Marshal("s."+v.name, "w")),
+			jen.Id("err :=").Add(v.value.Marshal("s."+ v.Name(), "w")),
 			jen.Err().Op("!=").Nil(),
 		).Block(
-			jen.Id(`return fmt.Errorf("failed to write ` + v.name + ` field: %s", err)`),
+			jen.Id(`return fmt.Errorf("failed to write ` + v.Name() + ` field: %s", err)`),
 		)
 	}
 	readFields[len(s.members)] = jen.Return(jen.Id("s"), jen.Nil())

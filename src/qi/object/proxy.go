@@ -2,7 +2,6 @@ package object
 
 import (
     "qi/net"
-    "fmt"
 )
 
 type Proxy struct {
@@ -36,24 +35,3 @@ type Object interface {
     RegisterEventWithSignature(uint32,uint32,uint64,string) (uint64, error)
 }
 
-type ObjectProxy struct {
-    Proxy
-}
-
-// warning: always add an error to the signature
-// TODO:
-// - create a type which inherited from Object
-// - for each method, construct the method like:
-//      - generate the method signature
-//      - generate the parameter serialisation: func(a, b uint) []byte { }
-//      - generate the Proxy call
-//      - generate the deserialization func(p []byte) uint32 { }
-func (p *ObjectProxy) RegisterEvent(a, b uint32, c uint64) (uint64, error) {
-    var parameterBytes []byte // TODO: serialized params
-    _, err := p.Call(0, parameterBytes)
-    if err != nil {
-        return 0, fmt.Errorf("call to Register event failed: %s", err)
-    }
-    var returned uint64 // TODO unserialize response
-    return returned, nil
-}
