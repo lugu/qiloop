@@ -56,6 +56,10 @@ func NewLongValue() *LongValue {
 	return &LongValue{0}
 }
 
+func NewFloatValue() *FloatValue {
+	return &FloatValue{0.0}
+}
+
 func NewIntValue() *IntValue {
 	return &IntValue{0}
 }
@@ -142,6 +146,34 @@ func (i *LongValue) Marshal(id string, writer string) *Statement {
 
 func (i *LongValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadUint64").Call(jen.Id(writer))
+}
+
+type FloatValue struct {
+	value float32
+}
+
+func (f *FloatValue) Signature() string {
+	return "f"
+}
+
+func (f *FloatValue) TypeName() *Statement {
+	return jen.Float32()
+}
+
+func (f *FloatValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (f *FloatValue) typeDeclaration(file *jen.File) {
+	return
+}
+
+func (f *FloatValue) Marshal(id string, writer string) *Statement {
+	return jen.Qual("qi/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
+}
+
+func (f *FloatValue) Unmarshal(writer string) *Statement {
+	return jen.Id("basic.ReadFloat32").Call(jen.Id(writer))
 }
 
 type BoolValue struct {
@@ -446,6 +478,7 @@ func BasicType() parsec.Parser {
 		parsec.Atom("s", "string"),
 		parsec.Atom("L", "uint64"),
 		parsec.Atom("b", "bool"),
+		parsec.Atom("f", "float32"),
 		parsec.Atom("v", "void"))
 }
 
@@ -469,6 +502,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewStringValue()
 	case "b":
 		return NewBoolValue()
+	case "f":
+		return NewFloatValue()
 	case "v":
 		return NewVoidValue()
 	default:

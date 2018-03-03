@@ -3,6 +3,7 @@ package basic
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"io"
 )
 
@@ -88,6 +89,31 @@ func ReadUint64(r io.Reader) (uint64, error) {
 func WriteUint64(i uint64, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
 	binary.LittleEndian.PutUint64(buf, i)
+	bytes, err := w.Write(buf)
+	if err != nil {
+		return err
+	} else if bytes != 8 {
+		return fmt.Errorf("failed to write uint32 (%d instead of 8)", bytes)
+	}
+	return nil
+}
+
+func ReadFloat32(r io.Reader) (float32, error) {
+	buf := []byte{0, 0, 0, 0}
+	bytes, err := r.Read(buf)
+	if err != nil {
+		return 0, err
+	} else if bytes != 8 {
+		return 0, fmt.Errorf("failed to read uint32 (%d instead of 8)", bytes)
+	}
+    bits := binary.LittleEndian.Uint32(buf)
+    return math.Float32frombits(bits), nil
+}
+
+func WriteFloat32(f float32, w io.Writer) error {
+	buf := []byte{0, 0, 0, 0}
+    bits := math.Float32bits(f)
+    binary.LittleEndian.PutUint32(buf, bits)
 	bytes, err := w.Write(buf)
 	if err != nil {
 		return err
