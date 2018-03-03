@@ -12,9 +12,6 @@ import (
 type Statement = jen.Statement
 
 func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
-    // type ObjectProxy struct {
-    //     Proxy
-    // }
     file.Type().Id(typ).Struct(jen.Id("Proxy"))
 }
 
@@ -24,7 +21,9 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
     generateProxyType(file, serviceName, metaObj)
     for k, m := range metaObj.Methods {
         if err := generateMethod(file, k, serviceName, m); err != nil {
-            return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
+            // FIXME
+            // return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
+            fmt.Printf("failed to render method %s of %s: %s\n", m.Name, serviceName, err)
         }
     }
     if err := file.Render(w); err != nil {
@@ -34,26 +33,42 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
 }
 
 func generateMethodArguments(m object.MetaMethod) (*Statement, error) {
-    _, err := signature.Parse(m.ParametersSignature)
+    argument, err := signature.Parse(m.ParametersSignature)
     if err != nil {
-        fmt.Printf("failed to parse argument signature %s: %s\n", m.ParametersSignature, err)
-        // return nil, fmt.Errorf("failed to parse signature %s: %s", m.ParametersSignature, err)
+        return nil, fmt.Errorf("failed to parse signature %s: %s", m.ParametersSignature, err)
     }
-    return jen.Empty(), nil
+    tupleType, ok := argument.(*signature.TupleValue)
+    if !ok {
+        return nil, fmt.Errorf("failed to parse method parameters: expected a tuple, got %#v", argument)
+    }
+    return tupleType.Params(), nil
 }
 
 func generateMethodReturnType(m object.MetaMethod) (*Statement, error) {
-    _, err := signature.Parse(m.ReturnSignature)
+    typ, err := signature.Parse(m.ReturnSignature)
     if err != nil {
-        fmt.Printf("failed to parse return signature %s: %s\n", m.ReturnSignature, err)
-        // return nil, fmt.Errorf("failed to parse signature %s: %s", m.ParametersSignature, err)
+        return nil, fmt.Errorf("failed to parse signature %s: %s", m.ParametersSignature, err)
     }
-    return jen.Error(), nil
+    return jen.Params(typ.TypeName(), jen.Error()), nil
 }
 
 func generateMethodBody(m object.MetaMethod) (*Statement, error) {
-    return jen.Empty(), nil
+    return jen.Block(
+        jen.Var().Err().Error(),
+        jen.Var().Id("ret").Error(),
+        jen.Return(jen.Id("ret"), jen.Err()),
+    ), nil
 }
+
+// func (p *object.Proxy) RegisterEvent(a, b uint32, c uint64) (uint64, error) {
+//     var parameterBytes []byte // TODO: serialized params
+//     _, err := p.Call(0, parameterBytes)
+//     if err != nil {
+//         return 0, fmt.Errorf("call to Register event failed: %s", err)
+//     }
+//     var returned uint64 // TODO unserialize response
+//     return returned, nil
+// }
 
 func generateMethod(file *jen.File, id uint32, typ string, m object.MetaMethod) error {
     arguments, err := generateMethodArguments(m)
@@ -68,32 +83,13 @@ func generateMethod(file *jen.File, id uint32, typ string, m object.MetaMethod) 
     if err != nil {
         return fmt.Errorf("failed to generate body: %s", err)
     }
-    file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id(strings.Title(m.Name)).Params(
+    file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id(strings.Title(m.Name)).Add(
         arguments,
-    ).Params(
+    ).Add(
         returnedType,
-    ).Block(
+    ).Add(
         body,
     )
     return nil
 }
 
-
-// warning: always add an error to the signature
-// TODO:
-// - create a type which inherited from Object
-// - for each method, construct the method like:
-//      - generate the method signature
-//      - generate the parameter serialisation: func(a, b uint) []byte { }
-//      - generate the Proxy call
-//      - generate the deserialization func(p []byte) uint32 { }
-
-// func (p *object.Proxy) RegisterEvent(a, b uint32, c uint64) (uint64, error) {
-//     var parameterBytes []byte // TODO: serialized params
-//     _, err := p.Call(0, parameterBytes)
-//     if err != nil {
-//         return 0, fmt.Errorf("call to Register event failed: %s", err)
-//     }
-//     var returned uint64 // TODO unserialize response
-//     return returned, nil
-// }

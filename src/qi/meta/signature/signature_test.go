@@ -37,6 +37,10 @@ func TestParseString(t *testing.T) {
 	testUtil(t, "s", NewStringValue())
 }
 
+func TestParseLong(t *testing.T) {
+	testUtil(t, "L", NewLongValue())
+}
+
 func TestParseMultipleString(t *testing.T) {
 	testUtil(t, "ss", NewStringValue())
 }
@@ -51,6 +55,8 @@ func TestParseMap(t *testing.T) {
 	testUtil(t, "{sI}", NewMapValue(NewStringValue(), NewIntValue()))
 	testUtil(t, "{Is}", NewMapValue(NewIntValue(), NewStringValue()))
 	testUtil(t, "{II}", NewMapValue(NewIntValue(), NewIntValue()))
+	testUtil(t, "{LI}", NewMapValue(NewLongValue(), NewIntValue()))
+	testUtil(t, "{sL}", NewMapValue(NewStringValue(), NewLongValue()))
 }
 
 func TestParseDefinition(t *testing.T) {

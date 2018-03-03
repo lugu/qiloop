@@ -74,6 +74,29 @@ func WriteUint32(i uint32, w io.Writer) error {
 	return nil
 }
 
+func ReadUint64(r io.Reader) (uint64, error) {
+	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+	bytes, err := r.Read(buf)
+	if err != nil {
+		return 0, err
+	} else if bytes != 8 {
+		return 0, fmt.Errorf("failed to read uint32 (%d instead of 8)", bytes)
+	}
+	return binary.LittleEndian.Uint64(buf), nil
+}
+
+func WriteUint64(i uint64, w io.Writer) error {
+	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+	binary.LittleEndian.PutUint64(buf, i)
+	bytes, err := w.Write(buf)
+	if err != nil {
+		return err
+	} else if bytes != 8 {
+		return fmt.Errorf("failed to write uint32 (%d instead of 8)", bytes)
+	}
+	return nil
+}
+
 func ReadString(r io.Reader) (string, error) {
 	size, err := ReadUint32(r)
 	if err != nil {

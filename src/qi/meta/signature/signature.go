@@ -27,6 +27,10 @@ func Print(v ValueConstructor) string {
 	return buf.String()
 }
 
+func NewLongValue() *LongValue {
+	return &LongValue{0}
+}
+
 func NewIntValue() *IntValue {
 	return &IntValue{0}
 }
@@ -45,6 +49,10 @@ func NewMemberValue(name string, value ValueConstructor) MemberValue {
 
 func NewStrucValue(name string, members []MemberValue) *StructValue {
 	return &StructValue{name, members}
+}
+
+func NewTupleValue(values []ValueConstructor) *TupleValue {
+	return &TupleValue{values}
 }
 
 type IntValue struct {
@@ -69,6 +77,30 @@ func (i *IntValue) Marshal(id string, writer string) *Statement {
 
 func (i *IntValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadUint32").Call(jen.Id(writer))
+}
+
+type LongValue struct {
+	value uint64
+}
+
+func (i *LongValue) Signature() string {
+	return "L"
+}
+
+func (i *LongValue) TypeName() *Statement {
+	return jen.Uint64()
+}
+
+func (i *LongValue) TypeDeclaration(file *jen.File) {
+	return
+}
+
+func (i *LongValue) Marshal(id string, writer string) *Statement {
+	return jen.Qual("qi/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
+}
+
+func (i *LongValue) Unmarshal(writer string) *Statement {
+	return jen.Id("basic.ReadUint64").Call(jen.Id(writer))
 }
 
 type StringValue struct {
@@ -173,6 +205,54 @@ func (m MemberValue) Name() string {
     return strings.Title(m.name)
 }
 
+type TupleValue struct {
+	values []ValueConstructor
+}
+
+func (t *TupleValue) Signature() string {
+	sig := "("
+	for _, v := range t.values {
+        sig += v.Signature()
+    }
+	sig += ")"
+    return sig
+}
+
+func (t *TupleValue) Members() []MemberValue {
+	members := make([]MemberValue, len(t.values))
+	for i, v := range t.values {
+        members[i] = MemberValue{ fmt.Sprintf("p%d", i), v }
+	}
+    return members
+}
+
+func (t *TupleValue) Params() *Statement {
+	arguments := make([]jen.Code, len(t.values))
+	for i, v := range t.values {
+        arguments[i] = jen.Id(fmt.Sprintf("p%d", i)).Add(v.TypeName())
+	}
+	return jen.Params(arguments...)
+}
+
+func (s *TupleValue) TypeName() *Statement {
+	return jen.Id("...interface{}")
+}
+
+func (s *TupleValue) TypeDeclaration(*jen.File) {
+    return
+}
+
+func (s *TupleValue) Marshal(variadicIdentifier string, writer string) *Statement {
+    // TODO: shall returns an error
+    return jen.Empty()
+}
+
+func (s *TupleValue) Unmarshal(writer string) *Statement {
+    // TODO: shall returns (type, err)
+    return jen.Empty()
+}
+
+
 type StructValue struct {
 	name    string
 	members []MemberValue
@@ -245,7 +325,8 @@ func (s *StructValue) Unmarshal(reader string) *Statement {
 func BasicType() parsec.Parser {
 	return parsec.OrdChoice(nodifyBasicType,
 		parsec.Atom("I", "uint32"),
-		parsec.Atom("s", "string"))
+		parsec.Atom("s", "string"),
+		parsec.Atom("L", "uint64"))
 }
 
 func TypeName() parsec.Parser {
@@ -262,6 +343,8 @@ func nodifyBasicType(nodes []Node) Node {
 	switch signature {
 	case "I":
 		return NewIntValue()
+	case "L":
+		return NewLongValue()
 	case "s":
 		return NewStringValue()
 	default:
@@ -361,6 +444,13 @@ func extractMembers(typesNode, namesNode Node) []MemberValue {
 	return members
 }
 
+func nodifyTupleType(nodes []Node) Node {
+
+	types := extractMembersTypes(nodes[1])
+
+	return NewTupleValue(types)
+}
+
 func nodifyTypeDefinition(nodes []Node) Node {
 
 	terminal, ok := nodes[4].(*parsec.Terminal)
@@ -379,9 +469,10 @@ func Parse(input string) (ValueConstructor, error) {
 	var embeddedType parsec.Parser
 	var mapType parsec.Parser
 	var typeDefinition parsec.Parser
+	var tupleType parsec.Parser
 
 	var declarationType = parsec.OrdChoice(nil,
-		BasicType(), &mapType, &embeddedType, &typeDefinition)
+		BasicType(), &mapType, &embeddedType, &typeDefinition, &tupleType)
 
 	embeddedType = parsec.And(nodifyEmbeddedType,
 		parsec.Atom("[", "MapStart"),
@@ -392,6 +483,11 @@ func Parse(input string) (ValueConstructor, error) {
 
 	var typeMemberList = parsec.Maybe(nil,
 		parsec.Many(nil, TypeName(), parsec.Atom(",", "Separator")))
+
+	tupleType = parsec.And(nodifyTupleType,
+		parsec.Atom("(", "TypeParameterStart"),
+		&listType,
+		parsec.Atom(")", "TypeParameterClose"))
 
 	typeDefinition = parsec.And(nodifyTypeDefinition,
 		parsec.Atom("(", "TypeParameterStart"),

@@ -727,3 +727,16 @@ type Client struct {
 }
 
 funct NewClient(serverName string, port string) Client
+
+================================================================================
+
+{ab} // map[a] b
+s // string
+I // int
+f // float
+v // void
+b // boolean
+o // object
+m // value ?
+(ab) // tuple (a, b)
+
