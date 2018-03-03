@@ -6,6 +6,51 @@ import (
     "fmt"
 )
 
+func ReadUint8(r io.Reader) (uint8, error) {
+    buf := []byte{0}
+    bytes, err := r.Read(buf)
+    if (err != nil) {
+        return 0, err
+    } else if (bytes != 1) {
+        return 0, fmt.Errorf("failed to read uint8 (%d instead of 1)", bytes)
+    }
+    return uint8(buf[0]), nil
+}
+
+func WriteUint8(i uint8, w io.Writer) error {
+    buf := []byte{ i }
+    bytes, err := w.Write(buf)
+    if (err != nil) {
+        return err
+    } else if (bytes != 1) {
+        return fmt.Errorf("failed to write uint16 (%d instead of 1)", bytes)
+    }
+    return nil
+}
+
+func ReadUint16(r io.Reader) (uint16, error) {
+    buf := []byte{0, 0}
+    bytes, err := r.Read(buf)
+    if (err != nil) {
+        return 0, err
+    } else if (bytes != 2) {
+        return 0, fmt.Errorf("failed to read uint16 (%d instead of 2)", bytes)
+    }
+    return binary.LittleEndian.Uint16(buf), nil
+}
+
+func WriteUint16(i uint16, w io.Writer) error {
+    buf := []byte{0, 0}
+    binary.LittleEndian.PutUint16(buf, i)
+    bytes, err := w.Write(buf)
+    if (err != nil) {
+        return err
+    } else if (bytes != 2) {
+        return fmt.Errorf("failed to write uint16 (%d instead of 2)", bytes)
+    }
+    return nil
+}
+
 func ReadUint32(r io.Reader) (uint32, error) {
     buf := []byte{0, 0, 0, 0}
     bytes, err := r.Read(buf)
