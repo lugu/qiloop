@@ -1,6 +1,7 @@
 package message
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"metaqi/basic"
@@ -34,24 +35,28 @@ type Header struct {
 	Action  uint32 // function or event id
 }
 
-func NewHeader(typ uint8, service uint32, object uint32, action uint32, id uint32) (h Header) {
-	h.Magic = Magic
-	h.Type = typ
-	h.Service = service
-	h.Object = object
-	h.Action = action
-	h.Id = id
-	h.Flags = 0
-	h.Size = 0
-	h.Version = Version
-	return
+func NewHeader(typ uint8, service uint32, object uint32, action uint32, id uint32) Header {
+	return Header{
+		Magic, id, 0, Version, typ, 0, service, object, action,
+	}
 }
 
-func (h Header) Write(w io.Writer) (err error) {
+func (h *Header) writeMagic(w io.Writer) error {
+	buf := []byte{0, 0, 0, 0}
+	binary.BigEndian.PutUint32(buf, h.Magic)
+	if bytes, err := w.Write(buf); err != nil {
+		return err
+	} else if bytes != 4 {
+		return fmt.Errorf("failed to write magic (%d instead of 4)", bytes)
+	}
+	return nil
+}
+
+func (h *Header) Write(w io.Writer) (err error) {
 	wrap := func(field string, err error) error {
 		return fmt.Errorf("failed to write message %s: %s", field, err)
 	}
-	if err = basic.WriteUint32(h.Magic, w); err != nil {
+	if err = h.writeMagic(w); err != nil {
 		return wrap("magic", err)
 	}
 	if err = basic.WriteUint32(h.Id, w); err != nil {
@@ -81,11 +86,23 @@ func (h Header) Write(w io.Writer) (err error) {
 	return nil
 }
 
-func (h Header) Read(r io.Reader) (err error) {
-	if h.Magic, err = basic.ReadUint32(r); err != nil {
+func (h *Header) readMagic(r io.Reader) error {
+	buf := []byte{0, 0, 0, 0}
+	if bytes, err := r.Read(buf); err != nil {
+		return err
+	} else if bytes != 4 {
+		return fmt.Errorf("failed to read magic (%d instead of 4)", bytes)
+	} else {
+		h.Magic = binary.BigEndian.Uint32(buf)
+		return nil
+	}
+}
+
+func (h *Header) Read(r io.Reader) (err error) {
+	if err = h.readMagic(r); err != nil {
 		return fmt.Errorf("failed to read message magic: %s", err)
 	} else if h.Magic != Magic {
-		return fmt.Errorf("invalid message magic: %d", h.Magic)
+		return fmt.Errorf("invalid message magic: %x", h.Magic)
 	}
 	if h.Id, err = basic.ReadUint32(r); err != nil {
 		return fmt.Errorf("failed to read message id: %s", err)
@@ -123,7 +140,7 @@ type Message struct {
 	Payload []byte
 }
 
-func (m Message) Write(w io.Writer) error {
+func (m *Message) Write(w io.Writer) error {
 	if err := m.Header.Write(w); err != nil {
 		return fmt.Errorf("failed to write message header: %s", err)
 	}
@@ -136,7 +153,7 @@ func (m Message) Write(w io.Writer) error {
 	return nil
 }
 
-func (m Message) Read(r io.Reader) error {
+func (m *Message) Read(r io.Reader) error {
 	if err := m.Header.Read(r); err != nil {
 		return fmt.Errorf("failed to read message header: %s", err)
 	}
