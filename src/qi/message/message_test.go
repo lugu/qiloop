@@ -2,7 +2,7 @@ package message_test
 
 import (
 	"bytes"
-	"metaqi/message"
+	"qi/message"
 	"os"
 	"path/filepath"
 	"testing"

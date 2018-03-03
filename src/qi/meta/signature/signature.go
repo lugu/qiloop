@@ -1,4 +1,4 @@
-package metaqi
+package signature
 
 import (
 	"bytes"
@@ -64,7 +64,7 @@ func (i *IntValue) TypeDeclaration(file *jen.File) {
 }
 
 func (i *IntValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("metaqi/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("qi/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (i *IntValue) Unmarshal(writer string) *Statement {

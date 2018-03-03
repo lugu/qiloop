@@ -1,4 +1,4 @@
-package metaqi
+package signature
 
 import (
 	"bytes"

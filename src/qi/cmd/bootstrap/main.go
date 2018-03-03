@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"metaqi"
+	"qi/meta/signature"
 	"os"
 	"io"
 )
@@ -47,11 +47,11 @@ func main() {
         output = os.Stdout
     }
 
-    typ, err := metaqi.Parse(MetaObjectSignature)
+    typ, err := signature.Parse(MetaObjectSignature)
     if err != nil {
         log.Fatalf("parsing error: %s\n", err)
     }
-    if err = metaqi.GenerateType(typ, "object", output); err != nil {
+    if err = signature.GenerateType(typ, "object", output); err != nil {
         log.Fatalf("code generation failed: %s\n", err)
     }
 }

@@ -1,7 +1,7 @@
 package object
 
 import (
-    "metaqi/net"
+    "qi/net"
     "fmt"
 )
 

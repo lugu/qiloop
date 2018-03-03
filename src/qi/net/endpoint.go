@@ -2,7 +2,7 @@ package net
 
 import (
 	"fmt"
-	"metaqi/message"
+	"qi/message"
 	"net"
 )
 

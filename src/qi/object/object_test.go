@@ -2,7 +2,7 @@ package object_test
 
 import (
 	"bytes"
-	"metaqi/object"
+	"qi/object"
 	"os"
 	"path/filepath"
 	"reflect"
