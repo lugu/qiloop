@@ -47,23 +47,32 @@ Once installed, in the bin direction, there are two binaries:
 The binary protocol documetation is rudimentary:
 http://doc.aldebaran.com/libqi/design/network-binary-protocol.html
 
+Warning: this documentation is missing the glag field (i.e. tye Type
+field is only one byte).
+
 This translate in Go to:
 
     type Header struct {
-        Magic       uint32      // qiMessaging message magic number (0x42dead42)
-        Id          uint32      // id of the message
-        Size        uint32      // size of the payload
-        Version     uint16      // protocol version
-        Type        uint16      // type of the message
-        Service     uint32      // id of the service
-        Object      uint32      // id of the object
-        Action      uint32      // id of the function or event
+        Magic   uint32 // magic (0x42dead42)
+        Id      uint32 // an identifier to match call/reply messages
+        Size    uint32 // size of the payload
+        Version uint16 // protocol version (0)
+        Type    uint8  // type of the message
+        Flags   uint8  // flags
+        Service uint32 // service id
+        Object  uint32 // object id
+        Action  uint32 // function or event id
     }
+
 
     type Message struct {
         Header Header
         Payload []byte
     }
+
+
+Also, one shall notice the magic value (0x42dead42) is written in big
+endian while all values are transmitted in little endian.
 
 The payload is the binary serialisation of the argument of the call or
 the reply from the service. While the code is open-source, it is
