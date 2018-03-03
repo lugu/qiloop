@@ -97,6 +97,23 @@ func WriteUint64(i uint64, w io.Writer) error {
 	return nil
 }
 
+func ReadBool(r io.Reader) (bool, error) {
+    u, err := ReadUint8(r)
+    if (u == 0) {
+        return false, err
+    } else {
+        return true, err
+    }
+}
+
+func WriteBool(b bool, w io.Writer) error {
+    if b {
+        return WriteUint8(1, w)
+    } else {
+        return WriteUint8(0, w)
+    }
+}
+
 func ReadString(r io.Reader) (string, error) {
 	size, err := ReadUint32(r)
 	if err != nil {

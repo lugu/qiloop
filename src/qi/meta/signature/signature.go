@@ -68,6 +68,10 @@ func NewVoidValue() VoidValue {
 	return VoidValue{}
 }
 
+func NewBoolValue() BoolValue {
+	return BoolValue{}
+}
+
 func NewMapValue(key, value ValueConstructor) *MapValue {
 	return &MapValue{key, value, nil}
 }
@@ -140,10 +144,37 @@ func (i *LongValue) Unmarshal(writer string) *Statement {
 	return jen.Id("basic.ReadUint64").Call(jen.Id(writer))
 }
 
+type BoolValue struct {
+}
+
+func (b BoolValue) Signature() string {
+	return "b"
+}
+
+func (b BoolValue) TypeName() *Statement {
+	return jen.Bool()
+}
+
+func (b BoolValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (b BoolValue) typeDeclaration(file *jen.File) {
+	return
+}
+
+func (b BoolValue) Marshal(id string, writer string) *Statement {
+	return jen.Qual("qi/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
+}
+
+func (b BoolValue) Unmarshal(writer string) *Statement {
+	return jen.Id("basic.ReadBool").Call(jen.Id(writer))
+}
+
 type VoidValue struct {
 }
 
-func (i VoidValue) Signature() string {
+func (v VoidValue) Signature() string {
 	return "v"
 }
 
@@ -414,6 +445,7 @@ func BasicType() parsec.Parser {
 		parsec.Atom("I", "uint32"),
 		parsec.Atom("s", "string"),
 		parsec.Atom("L", "uint64"),
+		parsec.Atom("b", "bool"),
 		parsec.Atom("v", "void"))
 }
 
@@ -435,6 +467,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewLongValue()
 	case "s":
 		return NewStringValue()
+	case "b":
+		return NewBoolValue()
 	case "v":
 		return NewVoidValue()
 	default:
