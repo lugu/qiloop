@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	endpoint := "localhost:9559"
+	endpoint := ":9559"
 	conn, err := net.NewClient(endpoint)
 	if err != nil {
 		log.Fatalf("failed to connect %s: %s", endpoint, err)
