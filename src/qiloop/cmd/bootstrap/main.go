@@ -25,10 +25,7 @@ Bootstrap stages:
 
 */
 
-// WARNING: the field returnedDescription from the signature of
-// MetaObject has been omitted because it is not serialized by libqi.
-
-const MetaObjectSignature string = "({I(Issss[(ss)<MetaMethodParameter,name,description>])<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
+const MetaObjectSignature string = "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
 func main() {
 	var output io.Writer

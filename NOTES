@@ -96,16 +96,17 @@ Signature grammar:
 
     type_list = "[" type_declaration "]"
 
-    list_of_type = type_declaration | type_declaration list_of_type
+    list_of_declarations = type_declaration | type_declaration list_of_declarations
 
-    type_definition = "(" list_of_type ")" "<" type_name "," list_of_name ">"
+    list_of_types = "(" list_of_declarations ")"
+
+    type_definition = list_of_types "<" name "," list_of_names ">"
 
     type_declaration = type_basic | type_map | type_list | type_definition
 
-    type_name = string
-    name = string
+    name = alphanumeric
 
-    list_of_name = name | name "," list_of_name
+    list_of_names = name | name "," list_of_names
 
 
 # Payload analysis
@@ -343,9 +344,8 @@ From the capture we can observe the following exchange:
     00000060: 0000 0000 0000 0000 0000 0000 0200 0000  ................
 
     int: 0 // size of MetaMethod.description
-    int: 0 // size of MetaMethod.MetaMethodParameter.name
-    int: 0 // size of MetaMethod.MetaMethodParameter.description
-           // FIXME: missing MetaMethod.returnDescription
+    int: 0 // size of MetaMethod.Parameters[]
+    int: 0 // size of MetaMethod.ReturnDescription
     int: 2 // index 2?
 
     00000070: 0200 0000 1f01 0000 287b 4928 4973 7373  ........({I(Isss
@@ -425,9 +425,8 @@ From the capture we can observe the following exchange:
 
     000001b0: 0000 0000 0000 0000 0300 0000 0300 0000  ................
 
-    int: 0 // size of name
-    int: 0 // size of description
-    // FIXME: missing returnDescription ?
+    int: 0 // size of Parameters
+    int: 0 // size of ReturnDescription
     int: 3 // index of map
     int: 3 // MetaMethod.uuid
 
@@ -707,37 +706,35 @@ It reads like this:
 
 When converted into Go, this becomes:
 
-        struct MetaMethodParameter {
-            string name
-            string description;
-        }
-        struct MetaMethod {
-            uint32 uuid;
-            string returnSignature;
-            string name;
-            string parametersSignature;
-            string description;
-            MetaMethodParameter parameters;
-            string returnDescription;
-        }
-        struct MetaSignal {
-            uint32 uuid;
-            string name;
-            string signature;
-        }
-        struct MetaProperty {
-            uint32 uuid;
-            string name;
-            string signature;
-        }
-        struct MetaObject {
-            Map[int,MetaMethod] methods
-            Map[int,MetaSignal] signals
-            Map[int,MetaProperty] properties
-            string description
-        }
-
-Warning: for an unknown reason the string MetaMethod.returnDescription is not serialized.
+    type MetaMethodParameter struct {
+        Name        string
+        Description string
+    }
+    type MetaMethod struct {
+        Uid                 uint32
+        ReturnSignature     string
+        Name                string
+        ParametersSignature string
+        Description         string
+        Parameters          []MetaMethodParameter
+        ReturnDescription   string
+    }
+    type MetaSignal struct {
+        Uid       uint32
+        Name      string
+        Signature string
+    }
+    type MetaProperty struct {
+        Uid       uint32
+        Name      string
+        Signature string
+    }
+    type MetaObject struct {
+        Methods     map[uint32]MetaMethod
+        Signals     map[uint32]MetaSignal
+        Properties  map[uint32]MetaProperty
+        Description string
+    }
 
 
 1. Create MetaObject struct:

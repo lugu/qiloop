@@ -80,6 +80,10 @@ func NewBoolValue() BoolValue {
 	return BoolValue{}
 }
 
+func NewListValue(value ValueConstructor) *ListValue {
+	return &ListValue{value}
+}
+
 func NewMapValue(key, value ValueConstructor) *MapValue {
 	return &MapValue{key, value}
 }
@@ -283,6 +287,68 @@ func (s StringValue) Marshal(id string, writer string) *Statement {
 
 func (s StringValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadString").Call(jen.Id(reader))
+}
+
+type ListValue struct {
+	value ValueConstructor
+}
+
+func (l *ListValue) Signature() string {
+	return fmt.Sprintf("[%s]", l.value.Signature())
+}
+
+func (l *ListValue) TypeName() *Statement {
+	return jen.Index().Add(l.value.TypeName())
+}
+
+func (l *ListValue) RegisterTo(s *TypeSet) {
+    l.value.RegisterTo(s)
+	return
+}
+
+func (l *ListValue) typeDeclaration(file *jen.File) {
+    return
+}
+
+func (l *ListValue) Marshal(listId string, writer string) *Statement {
+	return jen.Func().Params().Params(jen.Error()).Block(
+        jen.Err().Op(":=").Qual("qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
+			jen.Id("len").Call(jen.Id(listId))),
+			jen.Id(writer)),
+		jen.Id(`if (err != nil) {
+            return fmt.Errorf("failed to write slice size: %s", err)
+        }`),
+		jen.For(
+			jen.Id("_, v := range "+listId),
+		).Block(
+			jen.Err().Op("=").Add(l.value.Marshal("v", writer)),
+			jen.Id(`if (err != nil) {
+                return fmt.Errorf("failed to write slice value: %s", err)
+            }`),
+		),
+		jen.Return(jen.Nil()),
+	).Call()
+}
+
+func (l *ListValue) Unmarshal(reader string) *Statement {
+	return jen.Func().Params().Params(
+		jen.Id("b").Index().Add(l.value.TypeName()),
+		jen.Err().Error(),
+	).Block(
+		jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
+		jen.If(jen.Id("err != nil")).Block(
+			jen.Return(jen.Id("b"), jen.Qual("fmt", "Errorf").Call(jen.Id(`"failed to read slice size: %s", err`)))),
+		jen.Id("b").Op("=").Id("make").Call(l.TypeName(), jen.Id("size")),
+		jen.For(
+			jen.Id("i := 0; i < int(size); i++"),
+		).Block(
+			jen.Id("b[i], err =").Add(l.value.Unmarshal(reader)),
+			jen.Id(`if (err != nil) {
+                return b, fmt.Errorf("failed to read slice value: %s", err)
+            }`),
+		),
+		jen.Return(jen.Id("b"), jen.Nil()),
+	).Call()
 }
 
 type MapValue struct {
@@ -568,15 +634,15 @@ func nodifyMap(nodes []Node) Node {
 	return NewMapValue(key, value)
 }
 
-func nodifyEmbeddedType(nodes []Node) Node {
+func nodifyArrayType(nodes []Node) Node {
 	if len(nodes) != 3 {
 		log.Panicf("wrong arguments %+v", nodes)
 	}
-	subnode, ok := nodes[1].([]Node)
-	if !ok {
-		log.Panicf("embedded extraction failed %+v", reflect.TypeOf(nodes[1]))
+	value, err := extractValue(nodes[1])
+	if err != nil {
+		log.Panicf("value conversion failed: %s", err)
 	}
-	return subnode[0]
+	return NewListValue(value)
 }
 
 func extractMembersTypes(node Node) []ValueConstructor {
@@ -654,15 +720,15 @@ func nodifyTypeDefinition(nodes []Node) Node {
 func Parse(input string) (ValueConstructor, error) {
 	text := []byte(input)
 
-	var embeddedType parsec.Parser
+	var arrayType parsec.Parser
 	var mapType parsec.Parser
 	var typeDefinition parsec.Parser
 	var tupleType parsec.Parser
 
 	var declarationType = parsec.OrdChoice(nil,
-		BasicType(), &mapType, &embeddedType, &typeDefinition, &tupleType)
+		BasicType(), &mapType, &arrayType, &typeDefinition, &tupleType)
 
-	embeddedType = parsec.And(nodifyEmbeddedType,
+	arrayType = parsec.And(nodifyArrayType,
 		parsec.Atom("[", "MapStart"),
 		&declarationType,
 		parsec.Atom("]", "MapClose"))

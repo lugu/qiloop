@@ -28,9 +28,17 @@ func main() {
 	metaObj := object.MetaObject{
 		Methods: map[uint32]object.MetaMethod{
 			8: object.MetaMethod{
-				8, "{sm}", "authenticate", "({sm})", "", object.MetaMethodParameter{
-					"", "",
+				Uid:                 8,
+				ReturnSignature:     "{sm}",
+				Name:                "authenticate",
+				ParametersSignature: "({sm})",
+				Description:         "",
+				Parameters: []object.MetaMethodParameter{
+					object.MetaMethodParameter{
+						"", "",
+					},
 				},
+				ReturnDescription: "",
 			},
 		},
 	}

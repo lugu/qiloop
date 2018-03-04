@@ -72,6 +72,9 @@ func TestParseDefinition(t *testing.T) {
 	}))
 }
 
+// a list of service info:
+// "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]"
+
 func TestParseEmbeddedDefinition(t *testing.T) {
 	testUtil(t, "([s])<test,a>", NewStrucValue("test", []MemberValue{
 		NewMemberValue("a", NewStringValue())}))
