@@ -43,7 +43,7 @@ type ValueConstructor interface {
 	typeDeclaration(*jen.File)
 	RegisterTo(s *TypeSet)
 	Marshal(id string, writer string) *Statement // returns an error
-	Unmarshal(writer string) *Statement          // returns (type, err)
+	Unmarshal(reader string) *Statement          // returns (type, err)
 }
 
 func Print(v ValueConstructor) string {
@@ -70,6 +70,10 @@ func NewStringValue() StringValue {
 
 func NewVoidValue() VoidValue {
 	return VoidValue{}
+}
+
+func NewValueValue() ValueValue {
+	return ValueValue{}
 }
 
 func NewBoolValue() BoolValue {
@@ -115,8 +119,8 @@ func (i IntValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("qi/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (i IntValue) Unmarshal(writer string) *Statement {
-	return jen.Id("basic.ReadUint32").Call(jen.Id(writer))
+func (i IntValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadUint32").Call(jen.Id(reader))
 }
 
 type LongValue struct {
@@ -142,8 +146,8 @@ func (i LongValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("qi/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (i LongValue) Unmarshal(writer string) *Statement {
-	return jen.Id("basic.ReadUint64").Call(jen.Id(writer))
+func (i LongValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadUint64").Call(jen.Id(reader))
 }
 
 type FloatValue struct {
@@ -169,8 +173,8 @@ func (f FloatValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("qi/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (f FloatValue) Unmarshal(writer string) *Statement {
-	return jen.Id("basic.ReadFloat32").Call(jen.Id(writer))
+func (f FloatValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadFloat32").Call(jen.Id(reader))
 }
 
 type BoolValue struct {
@@ -196,8 +200,35 @@ func (b BoolValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("qi/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (b BoolValue) Unmarshal(writer string) *Statement {
-	return jen.Id("basic.ReadBool").Call(jen.Id(writer))
+func (b BoolValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadBool").Call(jen.Id(reader))
+}
+
+type ValueValue struct {
+}
+
+func (b ValueValue) Signature() string {
+	return "m"
+}
+
+func (b ValueValue) TypeName() *Statement {
+	return jen.Qual("qi/value", "Value")
+}
+
+func (b ValueValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (b ValueValue) typeDeclaration(file *jen.File) {
+	return
+}
+
+func (b ValueValue) Marshal(id string, writer string) *Statement {
+	return jen.Id(id).Dot("Write").Call(jen.Id(writer))
+}
+
+func (b ValueValue) Unmarshal(reader string) *Statement {
+    return jen.Qual("qi/value", "NewValue").Call(jen.Id(reader))
 }
 
 type VoidValue struct {
@@ -223,7 +254,7 @@ func (v VoidValue) Marshal(id string, writer string) *Statement {
 	return jen.Nil()
 }
 
-func (v VoidValue) Unmarshal(writer string) *Statement {
+func (v VoidValue) Unmarshal(reader string) *Statement {
 	return jen.Empty()
 }
 
@@ -250,8 +281,8 @@ func (s StringValue) Marshal(id string, writer string) *Statement {
 	return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
 }
 
-func (s StringValue) Unmarshal(writer string) *Statement {
-	return jen.Id("basic.ReadString").Call(jen.Id(writer))
+func (s StringValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadString").Call(jen.Id(reader))
 }
 
 type MapValue struct {
@@ -386,7 +417,7 @@ func (s *TupleValue) Marshal(variadicIdentifier string, writer string) *Statemen
     return jen.Empty()
 }
 
-func (s *TupleValue) Unmarshal(writer string) *Statement {
+func (s *TupleValue) Unmarshal(reader string) *Statement {
     // TODO: shall returns (type, err)
     return jen.Empty()
 }
@@ -475,6 +506,7 @@ func BasicType() parsec.Parser {
 		parsec.Atom("L", "uint64"),
 		parsec.Atom("b", "bool"),
 		parsec.Atom("f", "float32"),
+		parsec.Atom("m", "value"),
 		parsec.Atom("v", "void"))
 }
 
@@ -502,6 +534,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewFloatValue()
 	case "v":
 		return NewVoidValue()
+	case "m":
+		return NewValueValue()
 	default:
 		log.Panicf("wrong signature %s", signature)
 	}
