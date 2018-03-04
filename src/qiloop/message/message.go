@@ -1,6 +1,7 @@
 package message
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -22,6 +23,8 @@ const (
 	Cancel
 	Cancelled
 )
+
+const HeaderSize uint32 = 28
 
 type Header struct {
 	Magic   uint32 // magic number
@@ -141,28 +144,55 @@ type Message struct {
 }
 
 func (m *Message) Write(w io.Writer) error {
-	if err := m.Header.Write(w); err != nil {
-		return fmt.Errorf("failed to write message header: %s", err)
+
+	if uint32(len(m.Payload)) != m.Header.Size {
+		return fmt.Errorf("invalid message size: %d instead of %d", len(m.Payload), m.Header.Size)
 	}
-	bytes, err := w.Write(m.Payload)
-	if err != nil {
+
+	// Pack header and payload in a buffer and then it to the network.
+	buf := bytes.NewBuffer(make([]byte, 0, HeaderSize+m.Header.Size))
+
+	if err := m.Header.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize header: %s", err)
+	}
+
+	if size, err := buf.Write(m.Payload); err != nil {
 		return fmt.Errorf("failed to write message payload: %s", err)
-	} else if bytes != int(m.Header.Size) {
-		return fmt.Errorf("failed to write message payload (%d instead of %d)", bytes, m.Header.Size)
+	} else if size != int(m.Header.Size) {
+		return fmt.Errorf("failed to write message payload (%d instead of %d)", size, m.Header.Size)
+	}
+
+	if size, err := w.Write(buf.Bytes()); err != nil {
+		return fmt.Errorf("failed to send message: %s", err)
+	} else if size != int(m.Header.Size+HeaderSize) {
+		return fmt.Errorf("message not completly wrote (%d instead of %d)", size, m.Header.Size+HeaderSize)
 	}
 	return nil
 }
 
 func (m *Message) Read(r io.Reader) error {
-	if err := m.Header.Read(r); err != nil {
+
+	// Read the complete header, then parse the fields.
+	b := make([]byte, HeaderSize)
+	if size, err := r.Read(b); err != nil {
+		return fmt.Errorf("failed to receive header: %s", err)
+	} else if size != int(HeaderSize) {
+		return fmt.Errorf("full header not received (%d instead of %d)", size, HeaderSize)
+	}
+
+	if err := m.Header.Read(bytes.NewBuffer(b)); err != nil {
 		return fmt.Errorf("failed to read message header: %s", err)
 	}
+	// Filter messages larger than 10 MB
+	if m.Header.Size > 10*1024*1024 {
+		return fmt.Errorf("won't process message this large: %d", m.Header.Size)
+	}
 	m.Payload = make([]byte, m.Header.Size)
-	bytes, err := r.Read(m.Payload)
+	size, err := r.Read(m.Payload)
 	if err != nil {
 		return fmt.Errorf("failed to read message payload: %s", err)
-	} else if bytes != int(m.Header.Size) {
-		return fmt.Errorf("failed to read message payload (%d instead of %d)", bytes, m.Header.Size)
+	} else if size != int(m.Header.Size) {
+		return fmt.Errorf("failed to read message payload (%d instead of %d)", size, m.Header.Size)
 	}
 	return nil
 }

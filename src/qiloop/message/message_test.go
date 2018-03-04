@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"qiloop/message"
 	"testing"
+	"unsafe"
 )
 
 func helpParseHeader(t *testing.T, filename string, expected message.Header) {
@@ -56,6 +57,10 @@ func TestParseReplyHeader(t *testing.T) {
 }
 
 func TestConstants(t *testing.T) {
+
+	if uint32(unsafe.Sizeof(message.Header{})) != message.HeaderSize {
+		t.Error("invalid header size")
+	}
 	if 0x42dead42 != message.Magic {
 		t.Error("invalid magic definition")
 	}

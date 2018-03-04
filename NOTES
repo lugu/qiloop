@@ -50,7 +50,7 @@ http://doc.aldebaran.com/libqi/design/network-binary-protocol.html
 Warning: this documentation is missing the glag field (i.e. tye Type
 field is only one byte).
 
-This translate in Go to:
+The header is 28 bytes and translate in Go to this:
 
     type Header struct {
         Magic   uint32 // magic (0x42dead42)
