@@ -5,7 +5,7 @@ import (
 	"github.com/dave/jennifer/jen"
 	"io"
 	"qiloop/meta/signature"
-	"qiloop/object"
+	"qiloop/meta/object"
 	"sort"
 	"strings"
 )
@@ -13,7 +13,7 @@ import (
 type Statement = jen.Statement
 
 func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
-	file.Type().Id(typ).Struct(jen.Qual("qiloop/object", "Proxy"))
+	file.Type().Id(typ).Struct(jen.Qual("qiloop/net", "Proxy"))
 	file.Func().Id("New"+typ).Params(
 		jen.Id("endpoint").String(),
 		jen.Id("service").Uint32(),
@@ -28,7 +28,7 @@ func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
 			).Op(";").Err().Op("!=").Nil()).Block(
 			jen.Id(`return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)`),
 		).Else().Block(
-			jen.Id(`proxy := object.NewProxy(conn, service, obj)`),
+			jen.Id(`proxy := net.NewProxy(conn, service, obj)`),
 			jen.Id(`return &`+typ+`{ proxy }, nil`),
 		),
 	)

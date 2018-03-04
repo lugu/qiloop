@@ -739,11 +739,11 @@ When converted into Go, this becomes:
 
 1. Create MetaObject struct:
 
-    go run src/qiloop/cmd/bootstrap/main.go >  src/qiloop/object/object.go
+    go run src/qiloop/cmd/bootstrap/main.go >  src/qiloop/meta/object/object.go
 
 2. Create Directory proxy:
 
-    cat ./src/qiloop/object/testdata/metaObject-reply-data.bin | go run src/qiloop/cmd/directory/main.go \
+    cat ./src/qiloop/meta/object/testdata/metaObject-reply-data.bin | go run src/qiloop/cmd/directory/main.go \
                 | grep -v "failed to render" > src/qiloop/services/directory.go
 
 3. Create Server proxy:

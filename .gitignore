@@ -11,10 +11,7 @@
 /src/github.com/
 /src/golang.org/
 /src/honnef.co/
-/src/qi/basic/.basic.go.swp
-/src/qi/object/object.go
-/src/qi/services/
 /test/
-/src/qiloop/object/object.go
-/src/qiloop/services/directory.go
-/src/qiloop/services/server.go
+/src/qiloop/meta/object/object.go
+/src/qiloop/meta/object/server.go
+/src/qiloop/services/

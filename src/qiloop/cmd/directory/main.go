@@ -4,8 +4,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"qiloop/meta/object"
 	"qiloop/meta/proxy"
-	"qiloop/object"
 )
 
 func main() {
