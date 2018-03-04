@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"qi/object"
+	"qiloop/object"
 	"reflect"
 	"testing"
 )

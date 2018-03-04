@@ -1,7 +1,7 @@
 package object
 
 import (
-	"qi/net"
+	"qiloop/net"
 )
 
 type Proxy struct {

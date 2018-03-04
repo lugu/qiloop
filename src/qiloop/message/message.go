@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"qi/basic"
+	"qiloop/basic"
 )
 
 const Magic uint32 = 0x42dead42

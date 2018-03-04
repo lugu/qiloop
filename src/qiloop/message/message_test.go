@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"qi/message"
+	"qiloop/message"
 	"testing"
 )
 

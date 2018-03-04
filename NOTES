@@ -733,16 +733,16 @@ Boostraping:
 
 1. Create MetaObject struct:
 
-    go run src/qi/cmd/bootstrap/main.go >  src/qi/object/object.go
+    go run src/qiloop/cmd/bootstrap/main.go >  src/qiloop/object/object.go
 
 2. Create Directory proxy:
 
-    cat ./src/qi/object/testdata/metaObject-reply-data.bin | go run src/qi/cmd/directory/main.go \
-                | grep -v "failed to render" > src/qi/services/directory.go
+    cat ./src/qiloop/object/testdata/metaObject-reply-data.bin | go run src/qiloop/cmd/directory/main.go \
+                | grep -v "failed to render" > src/qiloop/services/directory.go
 
 3. Create Server proxy:
 
-    go run src/qi/cmd/service0/main.go > src/qi/services/server.go
+    go run src/qiloop/cmd/service0/main.go > src/qiloop/services/server.go
 ================================================================================
 
 {ab} // map[a] b

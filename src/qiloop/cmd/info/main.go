@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"qi/net"
-	"qi/object"
-	"qi/services"
-	"qi/value"
+	"qiloop/net"
+	"qiloop/object"
+	"qiloop/services"
+	"qiloop/value"
 )
 
 func main() {

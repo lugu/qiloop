@@ -3,7 +3,7 @@ package value
 import (
 	"fmt"
 	"io"
-	"qi/basic"
+	"qiloop/basic"
 )
 
 type Value interface {

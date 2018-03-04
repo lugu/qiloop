@@ -116,7 +116,7 @@ func (i IntValue) typeDeclaration(file *jen.File) {
 }
 
 func (i IntValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("qi/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("qiloop/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (i IntValue) Unmarshal(reader string) *Statement {
@@ -143,7 +143,7 @@ func (i LongValue) typeDeclaration(file *jen.File) {
 }
 
 func (i LongValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("qi/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("qiloop/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (i LongValue) Unmarshal(reader string) *Statement {
@@ -170,7 +170,7 @@ func (f FloatValue) typeDeclaration(file *jen.File) {
 }
 
 func (f FloatValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("qi/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("qiloop/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (f FloatValue) Unmarshal(reader string) *Statement {
@@ -197,7 +197,7 @@ func (b BoolValue) typeDeclaration(file *jen.File) {
 }
 
 func (b BoolValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("qi/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("qiloop/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (b BoolValue) Unmarshal(reader string) *Statement {
@@ -212,7 +212,7 @@ func (b ValueValue) Signature() string {
 }
 
 func (b ValueValue) TypeName() *Statement {
-	return jen.Qual("qi/value", "Value")
+	return jen.Qual("qiloop/value", "Value")
 }
 
 func (b ValueValue) RegisterTo(s *TypeSet) {
@@ -228,7 +228,7 @@ func (b ValueValue) Marshal(id string, writer string) *Statement {
 }
 
 func (b ValueValue) Unmarshal(reader string) *Statement {
-    return jen.Qual("qi/value", "NewValue").Call(jen.Id(reader))
+    return jen.Qual("qiloop/value", "NewValue").Call(jen.Id(reader))
 }
 
 type VoidValue struct {
@@ -311,7 +311,7 @@ func (m *MapValue) typeDeclaration(file *jen.File) {
 
 func (m *MapValue) Marshal(mapId string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
-        jen.Err().Op(":=").Qual("qi/basic", "WriteUint32").Call(jen.Id("uint32").Call(
+        jen.Err().Op(":=").Qual("qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
 			jen.Id("len").Call(jen.Id(mapId))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {

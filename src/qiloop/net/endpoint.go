@@ -3,7 +3,7 @@ package net
 import (
 	"fmt"
 	"net"
-	"qi/message"
+	"qiloop/message"
 )
 
 type EndPoint struct {
