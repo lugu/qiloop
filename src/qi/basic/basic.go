@@ -3,8 +3,8 @@ package basic
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
 	"io"
+	"math"
 )
 
 func ReadUint8(r io.Reader) (uint8, error) {
@@ -106,14 +106,14 @@ func ReadFloat32(r io.Reader) (float32, error) {
 	} else if bytes != 8 {
 		return 0, fmt.Errorf("failed to read uint32 (%d instead of 8)", bytes)
 	}
-    bits := binary.LittleEndian.Uint32(buf)
-    return math.Float32frombits(bits), nil
+	bits := binary.LittleEndian.Uint32(buf)
+	return math.Float32frombits(bits), nil
 }
 
 func WriteFloat32(f float32, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0}
-    bits := math.Float32bits(f)
-    binary.LittleEndian.PutUint32(buf, bits)
+	bits := math.Float32bits(f)
+	binary.LittleEndian.PutUint32(buf, bits)
 	bytes, err := w.Write(buf)
 	if err != nil {
 		return err
@@ -124,20 +124,20 @@ func WriteFloat32(f float32, w io.Writer) error {
 }
 
 func ReadBool(r io.Reader) (bool, error) {
-    u, err := ReadUint8(r)
-    if (u == 0) {
-        return false, err
-    } else {
-        return true, err
-    }
+	u, err := ReadUint8(r)
+	if u == 0 {
+		return false, err
+	} else {
+		return true, err
+	}
 }
 
 func WriteBool(b bool, w io.Writer) error {
-    if b {
-        return WriteUint8(1, w)
-    } else {
-        return WriteUint8(0, w)
-    }
+	if b {
+		return WriteUint8(1, w)
+	} else {
+		return WriteUint8(0, w)
+	}
 }
 
 func ReadString(r io.Reader) (string, error) {

@@ -1,13 +1,13 @@
 package object
 
 import (
-    "qi/net"
+	"qi/net"
 )
 
 type Proxy struct {
-	client      net.Client
-	service     uint32
-	object      uint32
+	client  net.Client
+	service uint32
+	object  uint32
 }
 
 func (p Proxy) Call(action uint32, payload []byte) ([]byte, error) {
@@ -19,18 +19,17 @@ func NewProxy(c net.Client, service, object uint32) Proxy {
 }
 
 type Value interface {
-    Signature() string
-    Value() interface{}
+	Signature() string
+	Value() interface{}
 }
 
 type Object interface {
-    RegisterEvent(uint32,uint32,uint64) (uint64, error)
-    UnregisterEvent(uint32,uint32,uint64) error
-    MetaObject(uint32) (MetaObject, error)
-    Terminate(uint32) error
-    Property(Value) (Value, error)
-    SetProperty(Value,Value) error
-    Properties() ([]string, error)
-    RegisterEventWithSignature(uint32,uint32,uint64,string) (uint64, error)
+	RegisterEvent(uint32, uint32, uint64) (uint64, error)
+	UnregisterEvent(uint32, uint32, uint64) error
+	MetaObject(uint32) (MetaObject, error)
+	Terminate(uint32) error
+	Property(Value) (Value, error)
+	SetProperty(Value, Value) error
+	Properties() ([]string, error)
+	RegisterEventWithSignature(uint32, uint32, uint64, string) (uint64, error)
 }
-

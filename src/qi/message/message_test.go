@@ -2,9 +2,9 @@ package message_test
 
 import (
 	"bytes"
-	"qi/message"
 	"os"
 	"path/filepath"
+	"qi/message"
 	"testing"
 )
 

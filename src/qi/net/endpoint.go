@@ -2,8 +2,8 @@ package net
 
 import (
 	"fmt"
-	"qi/message"
 	"net"
+	"qi/message"
 )
 
 type EndPoint struct {

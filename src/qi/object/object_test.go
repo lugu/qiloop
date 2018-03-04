@@ -2,9 +2,9 @@ package object_test
 
 import (
 	"bytes"
-	"qi/object"
 	"os"
 	"path/filepath"
+	"qi/object"
 	"reflect"
 	"testing"
 )
