@@ -311,7 +311,7 @@ func (m *MapValue) typeDeclaration(file *jen.File) {
 
 func (m *MapValue) Marshal(mapId string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
-		jen.Id("err := basic.WriteUint32").Call(jen.Id("uint32").Call(
+        jen.Err().Op(":=").Qual("qi/basic", "WriteUint32").Call(jen.Id("uint32").Call(
 			jen.Id("len").Call(jen.Id(mapId))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
