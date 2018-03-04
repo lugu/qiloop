@@ -7,17 +7,21 @@ import (
 )
 
 type EndPoint struct {
-	addr string
 	conn net.Conn
 }
 
-func NewEndPoint(addr string) (e EndPoint, err error) {
-	e.addr = addr
+func DialEndPoint(addr string) (e EndPoint, err error) {
 	e.conn, err = net.Dial("tcp", addr)
 	if err != nil {
 		return e, fmt.Errorf("failed to connect %s: %s", addr, err)
 	}
 	return e, nil
+}
+
+func AcceptedEndPoint(c net.Conn) EndPoint {
+	return EndPoint{
+		conn: c,
+	}
 }
 
 func (e EndPoint) Send(m message.Message) error {
@@ -60,7 +64,7 @@ func (c BlockingClient) Call(service uint32, object uint32, action uint32, paylo
 }
 
 func NewClient(endpoint string) (Client, error) {
-	directory, err := NewEndPoint(endpoint)
+	directory, err := DialEndPoint(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("client failed to connect %s: %s", endpoint, err)
 	}
