@@ -26,7 +26,7 @@ func NewValue(r io.Reader) (Value, error) {
 	case "s":
 		return newString(r)
 	case "b":
-		return newBoolean(r)
+		return newBool(r)
 	case "f":
 		return newFloat(r)
 	default:
@@ -34,29 +34,29 @@ func NewValue(r io.Reader) (Value, error) {
 	}
 }
 
-type BooleanValue bool
+type BoolValue bool
 
-func Boolean(b bool) Value {
-	return BooleanValue(b)
+func Bool(b bool) Value {
+	return BoolValue(b)
 }
 
-func newBoolean(r io.Reader) (Value, error) {
+func newBool(r io.Reader) (Value, error) {
 	b, err := basic.ReadBool(r)
-	return Boolean(b), err
+	return Bool(b), err
 }
 
-func (b BooleanValue) Signature() string {
+func (b BoolValue) Signature() string {
 	return "b"
 }
 
-func (b BooleanValue) Write(w io.Writer) error {
+func (b BoolValue) Write(w io.Writer) error {
 	if err := basic.WriteString(b.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteBool(b.Value(), w)
 }
 
-func (b BooleanValue) Value() bool {
+func (b BoolValue) Value() bool {
 	return bool(b)
 }
 

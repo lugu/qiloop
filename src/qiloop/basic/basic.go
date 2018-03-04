@@ -103,8 +103,8 @@ func ReadFloat32(r io.Reader) (float32, error) {
 	bytes, err := r.Read(buf)
 	if err != nil {
 		return 0, err
-	} else if bytes != 8 {
-		return 0, fmt.Errorf("failed to read uint32 (%d instead of 8)", bytes)
+	} else if bytes != 4 {
+		return 0, fmt.Errorf("failed to read float32 (%d instead of 4)", bytes)
 	}
 	bits := binary.LittleEndian.Uint32(buf)
 	return math.Float32frombits(bits), nil
@@ -117,8 +117,8 @@ func WriteFloat32(f float32, w io.Writer) error {
 	bytes, err := w.Write(buf)
 	if err != nil {
 		return err
-	} else if bytes != 8 {
-		return fmt.Errorf("failed to write uint32 (%d instead of 8)", bytes)
+	} else if bytes != 4 {
+		return fmt.Errorf("failed to write float32 (%d instead of 4)", bytes)
 	}
 	return nil
 }

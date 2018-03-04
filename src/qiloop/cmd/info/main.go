@@ -18,10 +18,10 @@ func main() {
 	}
 	server := services.Server{object.NewProxy(conn, 0, 0)}
 	permissions := map[string]value.Value{
-		"ClientServerSocket":    value.Boolean(true),
-		"MessageFlags":          value.Boolean(true),
-		"MetaObjectCache":       value.Boolean(true),
-		"RemoteCancelableCalls": value.Boolean(true),
+		"ClientServerSocket":    value.Bool(true),
+		"MessageFlags":          value.Bool(true),
+		"MetaObjectCache":       value.Bool(true),
+		"RemoteCancelableCalls": value.Bool(true),
 	}
 	permissions, err = server.Authenticate(permissions)
 	if err != nil {
