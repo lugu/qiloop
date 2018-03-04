@@ -15,3 +15,6 @@
 /src/qi/object/object.go
 /src/qi/services/
 /test/
+/src/qiloop/object/object.go
+/src/qiloop/services/directory.go
+/src/qiloop/services/server.go
