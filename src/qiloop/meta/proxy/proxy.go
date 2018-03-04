@@ -6,6 +6,7 @@ import (
 	"io"
 	"qiloop/meta/signature"
 	"qiloop/object"
+	"sort"
 	"strings"
 )
 
@@ -38,7 +39,15 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
 	file := jen.NewFile(packageName)
 	set := signature.NewTypeSet()
 	generateProxyType(file, serviceName, metaObj)
-	for k, m := range metaObj.Methods {
+
+	keys := make([]int, 0)
+	for k, _ := range metaObj.Methods {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	for _, i := range keys {
+		k := uint32(i)
+		m := metaObj.Methods[k]
 		if err := generateMethod(file, set, k, serviceName, m); err != nil {
 			// FIXME: uncomment
 			// return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
