@@ -17,6 +17,8 @@ func NewValue(r io.Reader) (Value, error) {
         return nil, fmt.Errorf("value signature: %s", err)
     }
     switch s {
+	case "i":
+		return newInt(r)
 	case "I":
 		return newInt(r)
 	case "L":
