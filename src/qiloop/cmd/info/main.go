@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	service0 "qiloop/meta/stage2"
-	directory "qiloop/meta/stage3"
 	"qiloop/net"
+	"qiloop/services"
 	"qiloop/value"
 )
 
@@ -16,7 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect %s: %s", endpoint, err)
 	}
-	server := service0.Server{net.NewProxy(conn, 0, 0)}
+	server := services.Server{net.NewProxy(conn, 0, 0)}
 	permissions := map[string]value.Value{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
@@ -28,7 +27,7 @@ func main() {
 		log.Fatalf("authentication failed: %s", err)
 	}
 
-	directory := directory.Directory{net.NewProxy(conn, 1, 1)}
+	directory := services.Directory{net.NewProxy(conn, 1, 1)}
 	services, err := directory.Services()
 	if err != nil {
 		log.Fatalf("failed to list services: %s", err)

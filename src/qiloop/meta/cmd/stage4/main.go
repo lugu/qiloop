@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"qiloop/meta/proxy"
+	"qiloop/meta/signature"
 	object "qiloop/meta/stage1"
 	server "qiloop/meta/stage2"
 	directory "qiloop/meta/stage3"
@@ -53,7 +54,10 @@ func main() {
 		log.Fatalf("failed to list services: %s", err)
 	}
 
-	objects := make([]object.MetaObject, len(serviceInfoList))
+	objects := make([]object.MetaObject, len(serviceInfoList)+1)
+
+	objects[0] = signature.MetaService0
+
 	for i, s := range serviceInfoList {
 		service := server.Server{net.NewProxy(conn, s.ServiceId, 1)}
 		metaObj, err := service.MetaObject(1)
@@ -71,7 +75,7 @@ func main() {
 			log.Fatalf("failed to serialize stage2.MetaObject: %s", err)
 		}
 
-		if objects[i], err = object.ReadMetaObject(buf); err != nil {
+		if objects[i+1], err = object.ReadMetaObject(buf); err != nil {
 			log.Fatalf("failed to deserialize stage1.MetaObject: %s", err)
 		}
 
