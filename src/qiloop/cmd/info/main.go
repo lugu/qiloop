@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
-	"os"
 	"qiloop/net"
 	"qiloop/object"
 	"qiloop/services"
@@ -33,9 +33,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to list services: %s", err)
 	}
-	enc := json.NewEncoder(os.Stdout)
-	err = enc.Encode(services)
+
+	json, err := json.MarshalIndent(services, "", "    ")
 	if err != nil {
 		log.Fatalf("json encoding failed: %s", err)
 	}
+	fmt.Println(string(json))
 }
