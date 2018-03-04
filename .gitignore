@@ -1,0 +1,17 @@
+*.bin
+*.pcap
+*.a
+*.ext
+*.so
+*.swp
+*~
+/bin/
+/choregraphe/
+/pkg/
+/src/github.com/
+/src/golang.org/
+/src/honnef.co/
+/src/qi/basic/.basic.go.swp
+/src/qi/object/object.go
+/src/qi/services/
+/test/
