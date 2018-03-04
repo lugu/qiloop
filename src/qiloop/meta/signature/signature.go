@@ -81,7 +81,7 @@ func NewBoolValue() BoolValue {
 }
 
 func NewMapValue(key, value ValueConstructor) *MapValue {
-	return &MapValue{key, value, nil}
+	return &MapValue{key, value}
 }
 
 func NewMemberValue(name string, value ValueConstructor) MemberValue {
@@ -288,7 +288,6 @@ func (s StringValue) Unmarshal(reader string) *Statement {
 type MapValue struct {
 	key    ValueConstructor
 	value  ValueConstructor
-	values map[ValueConstructor]ValueConstructor
 }
 
 func (m *MapValue) Signature() string {
