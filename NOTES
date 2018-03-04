@@ -171,11 +171,11 @@ From the capture we can observe the following exchange:
     00000050: 0000 0052 656d 6f74 6543 616e 6365 6c61  ...RemoteCancela
     00000060: 626c 6543 616c 6c73 0100 0000 6201       bleCalls....b.
 
-    Strings: 
+    Strings:
 
         int: 4 // number of elements
 
-        int: 18 // size of the string 
+        int: 18 // size of the string
         string: ClientServerSocket // element
 
         int: 1 // size (number of signature)
@@ -220,7 +220,7 @@ From the capture we can observe the following exchange:
     00000070: 0000 5f5f 7169 5f61 7574 685f 7374 6174  ..__qi_auth_stat
     00000080: 6501 0000 0069 0300 0000                 e....i....
 
-    Strings: 
+    Strings:
 
         int: 5 // number of elements
 
@@ -325,7 +325,7 @@ From the capture we can observe the following exchange:
     string: "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
 
-    "(ss)<MetaMethodParameter,name,description>" : 
+    "(ss)<MetaMethodParameter,name,description>" :
     struct MetaMethodParameter {
         string name;
         string description;
@@ -432,22 +432,22 @@ From the capture we can observe the following exchange:
     00000200: 0000 286d 2900 0000 0000 0000 0000 0000  ..(m)...........
 
     sting: "(m)"
-    int: 0 
-    int: 0 
-    int: 0 
+    int: 0
+    int: 0
+    int: 0
 
     00000210: 0006 0000 0006 0000 0001 0000 0076 0b00  .............v..
 
-    int: 6 
-    int: 6 
-    int: 1 // size of string 
+    int: 6
+    int: 6
+    int: 1 // size of string
     string: "v"
-    int: 11 // size of string 
+    int: 11 // size of string
 
     00000220: 0000 7365 7450 726f 7065 7274 7904 0000  ..setProperty...
 
     string: "setProperty"
-    int: 4 // size of string 
+    int: 4 // size of string
 
     00000230: 0028 6d6d 2900 0000 0000 0000 0000 0000  .(mm)...........
     00000240: 0007 0000 0007 0000 0003 0000 005b 735d  .............[s]
@@ -557,7 +557,7 @@ serialized like this:
 
 TODO:
         - error handling in the parser
-        - create type from definition: 
+        - create type from definition:
                 create_type(TypeDefinition): String
 ================================================================================
 // https://golang.org/pkg/encoding/
@@ -604,7 +604,7 @@ Warning: for unknown reason the string MetaMethod.returnDescription is not seria
 
 "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
-MetaObject signature: 
+MetaObject signature:
 (   // new definition for MetaObject
     { // map
             I // int
@@ -628,7 +628,7 @@ MetaObject signature:
 )
 <MetaObject,methods,signals,properties,description>
 
-MetaObject signature becomes: 
+MetaObject signature becomes:
 
             struct MetaMethodParameter {
                 string name
@@ -659,7 +659,7 @@ MetaObject signature becomes:
                 Map[int,MetaProperty] properties
                 string description
             }
-        
+
 ================================================================================
 
 
@@ -680,7 +680,7 @@ Query:
 
 Service 1: service directory (i.e. the one which list the services)
       - action 2: metaObject(int) MetaObject // return description of ServiceDirectory
-      including the list of the methods, the list of the signals, the list of the 
+      including the list of the methods, the list of the signals, the list of the
       properties and a string description.
 
 
@@ -723,11 +723,26 @@ func (e EndPoint) Send(message Message) error
 func (e EndPoint) Receive() (Message, error)
 
 type Client struct {
-    Connections map[???]EndPoint 
+    Connections map[???]EndPoint
 }
 
 funct NewClient(serverName string, port string) Client
 
+================================================================================
+Boostraping:
+
+1. Create MetaObject struct:
+
+    go run src/qi/cmd/bootstrap/main.go >  src/qi/object/object.go
+
+2. Create Directory proxy:
+
+    cat ./src/qi/object/testdata/metaObject-reply-data.bin | go run src/qi/cmd/directory/main.go \
+                | grep -v "failed to render" > src/qi/services/directory.go
+
+3. Create Server proxy:
+
+    go run src/qi/cmd/service0/main.go > src/qi/services/server.go
 ================================================================================
 
 {ab} // map[a] b
