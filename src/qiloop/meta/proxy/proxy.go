@@ -34,10 +34,8 @@ func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
 	)
 }
 
-func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
+func generateProxyObject(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
 
-	file := jen.NewFile(packageName)
-	set := signature.NewTypeSet()
 	generateProxyType(file, serviceName, metaObj)
 
 	keys := make([]int, 0)
@@ -54,9 +52,37 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
 			fmt.Printf("failed to render method %s of %s: %s\n", m.Name, serviceName, err)
 		}
 	}
+	return nil
+}
+
+func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
+
+	file := jen.NewFile(packageName)
+	set := signature.NewTypeSet()
+
+	generateProxyObject(metaObj, serviceName, set, file)
+
 	set.Declare(file)
+
 	if err := file.Render(w); err != nil {
-		return fmt.Errorf("failed to render %s: %s", serviceName, err)
+		return fmt.Errorf("failed to render %s: %s", err)
+	}
+	return nil
+}
+
+func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
+
+	file := jen.NewFile(packageName)
+	set := signature.NewTypeSet()
+
+	for _, metaObj := range metaObjList {
+		generateProxyObject(metaObj, metaObj.Description, set, file)
+	}
+
+	set.Declare(file)
+
+	if err := file.Render(w); err != nil {
+		return fmt.Errorf("failed to render %s: %s", packageName, err)
 	}
 	return nil
 }

@@ -1,17 +1,15 @@
-package stage2_test
+package stage3_test
 
 import (
 	"bytes"
 	"os"
-	"path/filepath"
-	object "qiloop/meta/stage2"
+	object "qiloop/meta/stage3"
 	"reflect"
 	"testing"
 )
 
 func helpReadGolden(t *testing.T) object.MetaObject {
-	path := filepath.Join("testdata", "metaObject-reply-data.bin")
-	file, err := os.Open(path)
+	file, err := os.Open("meta-object.bin")
 	if err != nil {
 		t.Fatal(err)
 	}
