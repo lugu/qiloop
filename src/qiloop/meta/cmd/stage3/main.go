@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"qiloop/net"
-	"qiloop/services"
+	services "qiloop/stage2"
 	"qiloop/value"
 )
 
