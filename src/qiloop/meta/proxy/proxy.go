@@ -65,7 +65,7 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
 	set.Declare(file)
 
 	if err := file.Render(w); err != nil {
-		return fmt.Errorf("failed to render %s: %s", err)
+		return fmt.Errorf("failed to render %s: %s", serviceName, err)
 	}
 	return nil
 }
