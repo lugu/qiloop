@@ -42,7 +42,7 @@ type BlockingClient struct {
 	nextMessageId uint32
 }
 
-func (c BlockingClient) Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error) {
+func (c *BlockingClient) Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error) {
 	id := c.nextMessageId
 	c.nextMessageId += 2
 	h := message.NewHeader(message.Call, service, object, action, id)
@@ -68,5 +68,5 @@ func NewClient(endpoint string) (Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("client failed to connect %s: %s", endpoint, err)
 	}
-	return BlockingClient{directory, 1}, nil
+	return &BlockingClient{directory, 1}, nil
 }
