@@ -5,7 +5,7 @@ import (
 	"github.com/dave/jennifer/jen"
 	"io"
 	"qiloop/meta/signature"
-	"qiloop/meta/object"
+	object "qiloop/meta/stage1"
 	"sort"
 	"strings"
 )

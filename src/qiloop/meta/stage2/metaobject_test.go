@@ -1,10 +1,10 @@
-package object_test
+package stage2_test
 
 import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"qiloop/meta/object"
+	object "qiloop/meta/stage2"
 	"reflect"
 	"testing"
 )
