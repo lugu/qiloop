@@ -78,7 +78,39 @@ The payload is the binary serialisation of the argument of the call or
 the reply from the service. While the code is open-source, it is
 largely undocumented.
 
-# Wireshark
+# Signature
+
+Signature grammar:
+
+    type_string = "s"
+    type_boolan = "b"
+    type_int = "i" | "I"
+    type_value = "m"
+    type_long = "L"
+    type_float = "f"
+    type_object = "o"
+
+    type_basic = type_int | type_string | type_float | type_long | type_boolean | type_value | type_object
+
+    type_map = "{" type_declaration type_declaration "}"
+
+    type_list = "[" type_declaration "]"
+
+    list_of_type = type_declaration | type_declaration list_of_type
+
+    type_definition = "(" list_of_type ")" "<" type_name "," list_of_name ">"
+
+    type_declaration = type_basic | type_map | type_list | type_definition
+
+    type_name = string
+    name = string
+
+    list_of_name = name | name "," list_of_name
+
+
+# Payload analysis
+
+## Wireshark
 
 To analyse the payload, we will use those two program to explore
 qi::messaging with tcpdump and wireshark.
@@ -95,8 +127,6 @@ The plugin must be installed into ``$HOME/.config/wireshark/plugins/``:
 Each message is composed of a fixed size header followed with a
 payload. Translated in Go it becomes:
 
-
-# Payload analysis
 
 ## example: qicli info
 
@@ -576,105 +606,22 @@ binary protocol:
             <number of elements: int>
             <elements>
 
-Signature grammar:
-
-    type_int = "I"
-    type_string = "s"
-    type_basic = type_int | type_string
-    type_map = "{" type_declaration type_declaration "}"
-    type_definition = "(" type_list ")" "<" type_name "," member_list ">"
-    embedded_type_definition = "[" type_declaration "]"
-    type_declaration = type_basic | type_map | embedded_type_definition | type_definition
-    type_list = type_declaration | type_declaration type_list
-    type_name = string
-    member_name = string
-    member_list = member_name | member_name "," member_list
-
+================================================================================
 ================================================================================
 
-Reasoning: a MetaObject is an object which describes an AnyObject. The
-description includes the list of the methods and their return and parameter
-signature of the methods of the object. One method of the AnyObject returns a
-MetaObject Therefore the binary serialization of a MetaObject includes the
-signature string of a MetaObject.
-
 ================================================================================
-Warning: for unknown reason the string MetaMethod.returnDescription is not serialized. this might be a bug ... or a feature :)
-================================================================================
-
-"({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
-
-MetaObject signature:
-(   // new definition for MetaObject
-    { // map
-            I // int
-            ( // new definition for MetaMethodParameter
-                    Issss[
-                            (ss)<MetaMethodParameter,name,description>
-                    ]
-                    s
-             )
-            <MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>
-    }
-    { // map
-            I // int
-            (Iss)<MetaSignal,uid,name,signature>
-    }
-    { // map
-            I // int
-            (Iss)<MetaProperty,uid,name,signature>
-    }
-    s // string
-)
-<MetaObject,methods,signals,properties,description>
-
-MetaObject signature becomes:
-
-            struct MetaMethodParameter {
-                string name
-                string description;
-            }
-            struct MetaMethod {
-                uint32 uuid;
-                string returnSignature;
-                string name;
-                string parametersSignature;
-                string description;
-                MetaMethodParameter parameters;
-                string returnDescription;
-            }
-            struct MetaSignal {
-                uint32 uuid;
-                string name;
-                string signature;
-            }
-            struct MetaProperty {
-                uint32 uuid;
-                string name;
-                string signature;
-            }
-            struct MetaObject {
-                Map[int,MetaMethod] methods
-                Map[int,MetaSignal] signals
-                Map[int,MetaProperty] properties
-                string description
-            }
-
-================================================================================
-
 
 Service 0: service server (i.e. the one you just connecte to)
       - action 8: authenticate(CapabilityMap) // qi/session.hpp
       - action 8: authenticate(std::map<std::string, AnyValue>)
 
-================================================================================
-CapabilityMap => std::map<std::string, AnyValue>
-================================================================================
+in Go:
 
+    type CapabilityMap map[string]value.Value
 
+or in C++:
 
-Query:
-
+    typedef CapabilityMap = std::map<std::string,AnyValue>
 
 ================================================================================
 
@@ -693,43 +640,105 @@ which starts with an array of 22 elements describing the "methods" member
 followed with an array of 3 elements describing the "signals" member.
 
 
-================================================================================
+## Boostraping
 
-type ServiceInfo struct {
-    name string
-    serviceId uint32
-    machineId string
-    processId uint32
-    endpoints string
-    sessionId string
-}
+### Reasoning
 
-================================================================================
-func (h Header) withSize(size uint32) Header
-func NewHeader(type uint16, service uint32, object uint32, action uint32, id uint32) Header
+a MetaObject is an structure which describes an AnyObject. The
+description includes the list of the methods along with their
+parameters and return type.
 
-func NewMessage(header Header, payload []byte) {
-    return Message {
-        header.WithSize(len(payload)),
-        payload,
-    }
-}
+Also, every AnyObject has a method called metaObject which itself
+return structure called MetaObect.
 
-type EndPoint struct {
-    connection net.Conn
-}
+This forms a loop:
 
-func (e EndPoint) Send(message Message) error
-func (e EndPoint) Receive() (Message, error)
+    - A MetaObject structure descrives the methods of an AnyObject
+    (including the return type of the methods).
+    - Convinently one of such such method a MetaObject.
+    - Therefore every MetaObject structure describe the MetaObject
+    structure (hense their name).
 
-type Client struct {
-    Connections map[???]EndPoint
-}
+Thanks to this property, we can enter our journey into qi::messaging like this:
 
-funct NewClient(serverName string, port string) Client
+1. Recored a exchange containing a MetaObject describing the service directory.
+2. Extract the type description of the MetaObject (contained inside the MetaObject)
+3. From this type description, learn how to parse a MetaObject
+4. Parse the MetaObject to obtain a description of the AnyObject.
+5. From the description of the AnyObject, learn how to communicate with it.
+6. Query this AnyObject (which happens to be the service directory)
+7. With the list of services, learn to communicate with every service via their MetaObject.
 
-================================================================================
-Boostraping:
+This is exactly what this project propose you to do together.
+
+### MetaObject signature
+
+As we have seen, the content of a MetaObject contains a description of
+the MetaObject strucutre. This description is referred here as its *signature*.
+
+Here is the MetaObject signature extracted from the MetaObject 
+
+"({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
+
+It reads like this:
+
+    (   // new definition for a structure (MetaObject)
+        { // map
+                I // int (key)
+                ( // new definition for MetaMethodParameter (value)
+                        Issss[
+                                (ss)<MetaMethodParameter,name,description>
+                        ]
+                        s
+                 )
+                <MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>
+        }
+        { // map
+                I // int (key)
+                (Iss)<MetaSignal,uid,name,signature> // new definition (value)
+        }
+        { // map
+                I // int (key)
+                (Iss)<MetaProperty,uid,name,signature> // new definition (value)
+        }
+        s // string
+    )
+    <MetaObject,methods,signals,properties,description>
+
+When converted into Go, this becomes:
+
+        struct MetaMethodParameter {
+            string name
+            string description;
+        }
+        struct MetaMethod {
+            uint32 uuid;
+            string returnSignature;
+            string name;
+            string parametersSignature;
+            string description;
+            MetaMethodParameter parameters;
+            string returnDescription;
+        }
+        struct MetaSignal {
+            uint32 uuid;
+            string name;
+            string signature;
+        }
+        struct MetaProperty {
+            uint32 uuid;
+            string name;
+            string signature;
+        }
+        struct MetaObject {
+            Map[int,MetaMethod] methods
+            Map[int,MetaSignal] signals
+            Map[int,MetaProperty] properties
+            string description
+        }
+
+Warning: for an unknown reason the string MetaMethod.returnDescription is not serialized.
+
 
 1. Create MetaObject struct:
 
@@ -743,15 +752,4 @@ Boostraping:
 3. Create Server proxy:
 
     go run src/qiloop/cmd/service0/main.go > src/qiloop/services/server.go
-================================================================================
-
-{ab} // map[a] b
-s // string
-I // int
-f // float
-v // void
-b // boolean
-o // object
-m // value
-(ab) // tuple (a, b)
 
