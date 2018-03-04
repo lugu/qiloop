@@ -29,16 +29,13 @@ func testSignature(t *testing.T, signature string) {
 	}
 }
 
-func TestParseInt(t *testing.T) {
+func TestParseBasics(t *testing.T) {
 	testUtil(t, "I", NewIntValue())
-}
-
-func TestParseString(t *testing.T) {
 	testUtil(t, "s", NewStringValue())
-}
-
-func TestParseLong(t *testing.T) {
 	testUtil(t, "L", NewLongValue())
+	testUtil(t, "b", NewBoolValue())
+	testUtil(t, "f", NewFloatValue())
+	testUtil(t, "m", NewValueValue())
 }
 
 func TestParseMultipleString(t *testing.T) {
@@ -59,6 +56,14 @@ func TestParseMap(t *testing.T) {
 	testUtil(t, "{sL}", NewMapValue(NewStringValue(), NewLongValue()))
 }
 
+func TestParseList(t *testing.T) {
+	testUtil(t, "[s]", NewListValue(NewStringValue()))
+	testUtil(t, "[I]", NewListValue(NewIntValue()))
+	testUtil(t, "[b]", NewListValue(NewBoolValue()))
+	testUtil(t, "[{bI}]", NewListValue(NewMapValue(NewBoolValue(), NewIntValue())))
+	testUtil(t, "{b[I]}", NewMapValue(NewBoolValue(), NewListValue(NewIntValue())))
+}
+
 func TestParseDefinition(t *testing.T) {
 	testUtil(t, "(s)<test,a>", NewStrucValue("test", []MemberValue{NewMemberValue("a", NewStringValue())}))
 	testUtil(t, "(ss)<test,a,a>", NewStrucValue("test", []MemberValue{
@@ -71,9 +76,6 @@ func TestParseDefinition(t *testing.T) {
 		NewMemberValue("a", NewStringValue()),
 	}))
 }
-
-// a list of service info:
-// "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]"
 
 func TestParseEmbeddedDefinition(t *testing.T) {
 	testUtil(t, "([s])<test,a>", NewStrucValue("test", []MemberValue{
@@ -127,4 +129,7 @@ func TestParseMetaMethodMap(t *testing.T) {
 }
 func TestParseMetaObject(t *testing.T) {
 	testSignature(t, "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>")
+}
+func TestParseServiceInfo(t *testing.T) {
+	testSignature(t, "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
 }
