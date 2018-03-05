@@ -1,0 +1,12 @@
+language: go
+
+go:
+    - "1.10"
+    - tip
+
+script: 
+    - go get -t ./...
+    - go generate github.com/lugu/qiloop/meta/stage1
+    - go generate github.com/lugu/qiloop/meta/stage2
+    - go generate github.com/lugu/qiloop/meta/stage3
+    - go test -v ./...
