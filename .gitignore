@@ -12,6 +12,7 @@
 /src/golang.org/
 /src/honnef.co/
 /test/
-/src/qiloop/meta/object/object.go
-/src/qiloop/meta/object/server.go
-/src/qiloop/services/
+/meta/stage1/metaobject.go
+/meta/stage3/directory.go
+/meta/stage2/services.go
+/services/services.go
