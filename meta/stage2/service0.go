@@ -1,32 +1,33 @@
-package stage1
+package stage2
 
 import (
 	"github.com/lugu/qiloop/meta/signature"
+	"github.com/lugu/qiloop/meta/stage1"
 )
 
-var MetaService0 MetaObject = MetaObject{
-	Methods: map[uint32]MetaMethod{
-		2: MetaMethod{
+var MetaService0 stage1.MetaObject = stage1.MetaObject{
+	Methods: map[uint32]stage1.MetaMethod{
+		2: stage1.MetaMethod{
 			Uid:                 2,
 			ReturnSignature:     signature.MetaObjectSignature,
 			Name:                "metaObject",
 			ParametersSignature: "(I)",
 			Description:         "request self description",
-			Parameters: []MetaMethodParameter{
-				MetaMethodParameter{
+			Parameters: []stage1.MetaMethodParameter{
+				stage1.MetaMethodParameter{
 					"", "",
 				},
 			},
 			ReturnDescription: "",
 		},
-		8: MetaMethod{
+		8: stage1.MetaMethod{
 			Uid:                 8,
 			ReturnSignature:     "{sm}",
 			Name:                "authenticate",
 			ParametersSignature: "({sm})",
 			Description:         "",
-			Parameters: []MetaMethodParameter{
-				MetaMethodParameter{
+			Parameters: []stage1.MetaMethodParameter{
+				stage1.MetaMethodParameter{
 					"", "",
 				},
 			},
