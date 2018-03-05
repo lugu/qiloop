@@ -1,9 +1,4 @@
-#+latex_header: \hypersetup{draft=true}
-#+TITLE: qi::messaging protocol description
-#
-#
-
-# qi::messagin: the missing specification
+# qi::messaging: the missing specification
 
 qi::messaging is a network protocol for remote procedure calls. An
 open source implementation is developped by SoftBank Robotics as part
