@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/lugu/qiloop/meta/proxy"
+	"github.com/lugu/qiloop/meta/stage1"
 	"io"
 	"log"
 	"os"
-	"github.com/lugu/qiloop/meta/proxy"
-	"github.com/lugu/qiloop/meta/signature"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 		output = os.Stdout
 	}
 
-	err := proxy.GenerateProxy(signature.MetaService0, "stage2", "Server", output)
+	err := proxy.GenerateProxy(stage1.MetaService0, "stage2", "Server", output)
 	if err != nil {
 		log.Fatalf("proxy generation failed: %s\n", err)
 	}

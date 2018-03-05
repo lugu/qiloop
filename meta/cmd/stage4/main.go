@@ -2,16 +2,15 @@ package main
 
 import (
 	"bytes"
-	"io"
-	"log"
-	"os"
 	"github.com/lugu/qiloop/meta/proxy"
-	"github.com/lugu/qiloop/meta/signature"
 	object "github.com/lugu/qiloop/meta/stage1"
 	server "github.com/lugu/qiloop/meta/stage2"
 	directory "github.com/lugu/qiloop/meta/stage3"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/value"
+	"io"
+	"log"
+	"os"
 )
 
 func main() {
@@ -56,7 +55,7 @@ func main() {
 
 	objects := make([]object.MetaObject, len(serviceInfoList)+1)
 
-	objects[0] = signature.MetaService0
+	objects[0] = object.MetaService0
 
 	for i, s := range serviceInfoList {
 		service := server.Server{net.NewProxy(conn, s.ServiceId, 1)}
