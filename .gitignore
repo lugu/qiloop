@@ -13,6 +13,6 @@
 /src/honnef.co/
 /test/
 /meta/stage1/metaobject.go
-/meta/stage3/directory.go
 /meta/stage2/services.go
-/services/services.go
+/meta/stage3/directory.go
+/meta/stage4/services.go
