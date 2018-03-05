@@ -1,8 +1,10 @@
 package net
 
 import (
+	"bytes"
 	"fmt"
 	"qiloop/message"
+	"qiloop/value"
 )
 
 type Client interface {
@@ -31,6 +33,13 @@ func (c *BlockingClient) Call(service uint32, object uint32, action uint32, payl
 	if response.Header.Id != id {
 		return nil, fmt.Errorf("invalid to message id (%d is expected, got %d)",
 			id, response.Header.Id)
+	}
+	if response.Header.Type == message.Error {
+		message, err := value.NewValue(bytes.NewBuffer(response.Payload))
+		if err != nil {
+			return nil, fmt.Errorf("Error: failed to parse error message: %s", string(response.Payload))
+		}
+		return nil, fmt.Errorf("Error: %s", message)
 	}
 	return response.Payload, nil
 }
