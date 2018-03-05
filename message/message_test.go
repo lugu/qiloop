@@ -103,8 +103,8 @@ func TestMessageConstructor(t *testing.T) {
 	if m.Header.Action != 3 {
 		t.Errorf("invalid service: %d", m.Header.Action)
 	}
-	if m.Header.Id != 4 {
-		t.Errorf("invalid id: %d", m.Header.Id)
+	if m.Header.ID != 4 {
+		t.Errorf("invalid id: %d", m.Header.ID)
 	}
 	if m.Header.Size != 99 {
 		t.Errorf("invalid size: %d", m.Header.Size)

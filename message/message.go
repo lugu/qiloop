@@ -8,11 +8,14 @@ import (
 	"io"
 )
 
+// Magic is a constant to discriminate between message and garbage.
 const Magic uint32 = 0x42dead42
+
+// Version is the supported version of the protocol.
 const Version uint16 = 0
 
+// Message types:
 const (
-	// message types are:
 	Unknown uint8 = iota
 	Call
 	Reply
@@ -24,11 +27,14 @@ const (
 	Cancelled
 )
 
+// HeaderSize is the size of a message header. It is the
+// minimum size of a message.
 const HeaderSize uint32 = 28
 
+// Header represents a message header.
 type Header struct {
 	Magic   uint32 // magic number
-	Id      uint32 // message id
+	ID      uint32 // message id
 	Size    uint32 // size of the payload
 	Version uint16 // protocol version
 	Type    uint8  // type of the message
@@ -38,6 +44,8 @@ type Header struct {
 	Action  uint32 // function or event id
 }
 
+// NewHeader construct a message header given some paramters. The size
+// of the message is zero.
 func NewHeader(typ uint8, service uint32, object uint32, action uint32, id uint32) Header {
 	return Header{
 		Magic, id, 0, Version, typ, 0, service, object, action,
@@ -62,7 +70,7 @@ func (h *Header) Write(w io.Writer) (err error) {
 	if err = h.writeMagic(w); err != nil {
 		return wrap("magic", err)
 	}
-	if err = basic.WriteUint32(h.Id, w); err != nil {
+	if err = basic.WriteUint32(h.ID, w); err != nil {
 		return wrap("id", err)
 	}
 	if err = basic.WriteUint32(h.Size, w); err != nil {
@@ -101,13 +109,14 @@ func (h *Header) readMagic(r io.Reader) error {
 	}
 }
 
+// Read parses a message header from an io.Reader.
 func (h *Header) Read(r io.Reader) (err error) {
 	if err = h.readMagic(r); err != nil {
 		return fmt.Errorf("failed to read message magic: %s", err)
 	} else if h.Magic != Magic {
 		return fmt.Errorf("invalid message magic: %x", h.Magic)
 	}
-	if h.Id, err = basic.ReadUint32(r); err != nil {
+	if h.ID, err = basic.ReadUint32(r); err != nil {
 		return fmt.Errorf("failed to read message id: %s", err)
 	}
 	if h.Size, err = basic.ReadUint32(r); err != nil {
@@ -138,11 +147,14 @@ func (h *Header) Read(r io.Reader) (err error) {
 	return nil
 }
 
+// Message represents a QiMessaging message.
 type Message struct {
 	Header  Header
 	Payload []byte
 }
 
+// Write marshal a message into an io.Writer. The header and the
+// payload are written in a single write operation.
 func (m *Message) Write(w io.Writer) error {
 
 	if uint32(len(m.Payload)) != m.Header.Size {
@@ -170,6 +182,9 @@ func (m *Message) Write(w io.Writer) error {
 	return nil
 }
 
+// Read unmarshal a message from io.Reader. First the header is read,
+// then if correct the payload is read. The payload will not be read
+// if the header is not considerred well formatted.
 func (m *Message) Read(r io.Reader) error {
 
 	// Read the complete header, then parse the fields.
@@ -197,6 +212,8 @@ func (m *Message) Read(r io.Reader) error {
 	return nil
 }
 
+// NewMessage assemble an header and a payload to create a message.
+// The size filed of the header is adjusted if necessary.
 func NewMessage(header Header, payload []byte) Message {
 	header.Size = uint32(len(payload))
 	return Message{header, payload}

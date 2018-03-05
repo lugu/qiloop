@@ -11,13 +11,21 @@ import (
 	"strings"
 )
 
+// MetaObjectSignature is the signature of MetaObject. It is used to
+// generate the MetaObject struct which is used to generate the
+// services. This step is referred as stage 1.
 const MetaObjectSignature string = "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
+// TypeSet is a container which contains exactly one instance of each
+// ValueConstructor currently generated. It is used to generate the
+// type declaration only once.
 type TypeSet struct {
 	signatures map[string]bool
 	types      []ValueConstructor
 }
 
+// Register allows a ValueConstructor to declare itself for lated code
+// generation.
 func (s *TypeSet) Register(v ValueConstructor) {
 	if _, ok := s.signatures[v.Signature()]; !ok {
 		s.signatures[v.Signature()] = true
@@ -25,20 +33,27 @@ func (s *TypeSet) Register(v ValueConstructor) {
 	}
 }
 
+// Declare writes all the registered ValueConstructor into the jen.File.
 func (s *TypeSet) Declare(f *jen.File) {
 	for _, v := range s.types {
 		v.typeDeclaration(f)
 	}
 }
 
+// NewTypeSet construct a new TypeSet.
 func NewTypeSet() *TypeSet {
 	sig := make(map[string]bool)
 	typ := make([]ValueConstructor, 0)
 	return &TypeSet{sig, typ}
 }
 
+// Statement is a short version for jen.Statement.
 type Statement = jen.Statement
 
+// ValueConstructor represents a type of a signature or a type
+// embedded inside a signature. ValueConstructor represents types for
+// primitive types (int, long, float, string), vectors of a type,
+// associative maps and strucutres.
 type ValueConstructor interface {
 	Signature() string
 	TypeName() *Statement
@@ -48,71 +63,94 @@ type ValueConstructor interface {
 	Unmarshal(reader string) *Statement          // returns (type, err)
 }
 
+// Print render the type into a string. It is only used for testing.
 func Print(v ValueConstructor) string {
 	buf := bytes.NewBufferString("")
 	v.TypeName().Render(buf)
 	return buf.String()
 }
 
+// NewLongValue is a contructor for the representation of a uint64.
 func NewLongValue() LongValue {
 	return LongValue{}
 }
 
+// NewFloatValue is a contructor for the representation of a float32.
 func NewFloatValue() FloatValue {
 	return FloatValue{}
 }
 
+// NewIntValue is a contructor for the representation of an uint32.
 func NewIntValue() IntValue {
 	return IntValue{}
 }
 
+// NewStringValue is a contructor for the representation of a string.
 func NewStringValue() StringValue {
 	return StringValue{}
 }
 
+// NewVoidValue is a contructor for the representation of the
+// absence of a return type. Only used in the context of a returned
+// type.
 func NewVoidValue() VoidValue {
 	return VoidValue{}
 }
 
+// NewValueValue is a contructor for the representation of a Value.
 func NewValueValue() ValueValue {
 	return ValueValue{}
 }
 
+// NewBoolValue is a contructor for the representation of a bool.
 func NewBoolValue() BoolValue {
 	return BoolValue{}
 }
 
+// NewListValue is a contructor for the representation of a slice.
 func NewListValue(value ValueConstructor) *ListValue {
 	return &ListValue{value}
 }
 
+// NewMapValue is a contructor for the representation of a map.
 func NewMapValue(key, value ValueConstructor) *MapValue {
 	return &MapValue{key, value}
 }
 
+// NewMemberValue is a contructor for the representation of a field in
+// a struct.
 func NewMemberValue(name string, value ValueConstructor) MemberValue {
 	return MemberValue{name, value}
 }
 
+// NewStrucValue is a contructor for the representation of a struct.
 func NewStrucValue(name string, members []MemberValue) *StructValue {
 	return &StructValue{name, members}
 }
 
+// NewTupleValue is a contructor for the representation of a series of
+// types. Used to describe a method parameters list.
 func NewTupleValue(values []ValueConstructor) *TupleValue {
 	return &TupleValue{values}
 }
 
+// IntValue represents an integer.
 type IntValue struct {
 }
 
+// Signature returns "I". "i" is also accepted as an integer
+// signature.
 func (i IntValue) Signature() string {
 	return "I"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (i IntValue) TypeName() *Statement {
 	return jen.Uint32()
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (i IntValue) RegisterTo(s *TypeSet) {
 	return
 }
@@ -121,25 +159,36 @@ func (i IntValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (i IntValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (i IntValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadUint32").Call(jen.Id(reader))
 }
 
+// LongValue represents a long.
 type LongValue struct {
 }
 
+// Signature returns "L".
 func (i LongValue) Signature() string {
 	return "L"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (i LongValue) TypeName() *Statement {
 	return jen.Uint64()
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (i LongValue) RegisterTo(s *TypeSet) {
 	return
 }
@@ -148,25 +197,36 @@ func (i LongValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (i LongValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (i LongValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadUint64").Call(jen.Id(reader))
 }
 
+// FloatValue represents a float.
 type FloatValue struct {
 }
 
+// Signature returns "f".
 func (f FloatValue) Signature() string {
 	return "f"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (f FloatValue) TypeName() *Statement {
 	return jen.Float32()
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (f FloatValue) RegisterTo(s *TypeSet) {
 	return
 }
@@ -175,25 +235,36 @@ func (f FloatValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (f FloatValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("github.com/lugu/qiloop/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (f FloatValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadFloat32").Call(jen.Id(reader))
 }
 
+// BoolValue represents a bool.
 type BoolValue struct {
 }
 
+// Signature returns "b".
 func (b BoolValue) Signature() string {
 	return "b"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (b BoolValue) TypeName() *Statement {
 	return jen.Bool()
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (b BoolValue) RegisterTo(s *TypeSet) {
 	return
 }
@@ -202,25 +273,36 @@ func (b BoolValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (b BoolValue) Marshal(id string, writer string) *Statement {
 	return jen.Qual("github.com/lugu/qiloop/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (b BoolValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadBool").Call(jen.Id(reader))
 }
 
+// ValueValue represents a Value.
 type ValueValue struct {
 }
 
+// Signature returns "m".
 func (b ValueValue) Signature() string {
 	return "m"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (b ValueValue) TypeName() *Statement {
 	return jen.Qual("github.com/lugu/qiloop/value", "Value")
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (b ValueValue) RegisterTo(s *TypeSet) {
 	return
 }
@@ -229,25 +311,36 @@ func (b ValueValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (b ValueValue) Marshal(id string, writer string) *Statement {
 	return jen.Id(id).Dot("Write").Call(jen.Id(writer))
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (b ValueValue) Unmarshal(reader string) *Statement {
 	return jen.Qual("github.com/lugu/qiloop/value", "NewValue").Call(jen.Id(reader))
 }
 
+// VoidValue represents the return type of a method.
 type VoidValue struct {
 }
 
+// Signature returns "v".
 func (v VoidValue) Signature() string {
 	return "v"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (v VoidValue) TypeName() *Statement {
 	return jen.Empty()
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (v VoidValue) RegisterTo(s *TypeSet) {
 	return
 }
@@ -256,25 +349,36 @@ func (v VoidValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (v VoidValue) Marshal(id string, writer string) *Statement {
 	return jen.Nil()
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (v VoidValue) Unmarshal(reader string) *Statement {
 	return jen.Empty()
 }
 
+// StringValue represents a string.
 type StringValue struct {
 }
 
+// Signature returns "s".
 func (s StringValue) Signature() string {
 	return "s"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (s StringValue) TypeName() *Statement {
 	return jen.String()
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (s StringValue) RegisterTo(set *TypeSet) {
 	return
 }
@@ -283,26 +387,38 @@ func (s StringValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (s StringValue) Marshal(id string, writer string) *Statement {
 	return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (s StringValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadString").Call(jen.Id(reader))
 }
 
+// ListValue represents a slice.
 type ListValue struct {
 	value ValueConstructor
 }
 
+// Signature returns "[<signature>]" where <signature> is the
+// signature of the type of the list.
 func (l *ListValue) Signature() string {
 	return fmt.Sprintf("[%s]", l.value.Signature())
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (l *ListValue) TypeName() *Statement {
 	return jen.Index().Add(l.value.TypeName())
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (l *ListValue) RegisterTo(s *TypeSet) {
 	l.value.RegisterTo(s)
 	return
@@ -312,16 +428,19 @@ func (l *ListValue) typeDeclaration(file *jen.File) {
 	return
 }
 
-func (l *ListValue) Marshal(listId string, writer string) *Statement {
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (l *ListValue) Marshal(listID string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
 		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
-			jen.Id("len").Call(jen.Id(listId))),
+			jen.Id("len").Call(jen.Id(listID))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
             return fmt.Errorf("failed to write slice size: %s", err)
         }`),
 		jen.For(
-			jen.Id("_, v := range "+listId),
+			jen.Id("_, v := range "+listID),
 		).Block(
 			jen.Err().Op("=").Add(l.value.Marshal("v", writer)),
 			jen.Id(`if (err != nil) {
@@ -332,6 +451,9 @@ func (l *ListValue) Marshal(listId string, writer string) *Statement {
 	).Call()
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (l *ListValue) Unmarshal(reader string) *Statement {
 	return jen.Func().Params().Params(
 		jen.Id("b").Index().Add(l.value.TypeName()),
@@ -353,19 +475,26 @@ func (l *ListValue) Unmarshal(reader string) *Statement {
 	).Call()
 }
 
+// MapValue represents a map.
 type MapValue struct {
 	key   ValueConstructor
 	value ValueConstructor
 }
 
+// Signature returns "{<signature key><signature value>}" where
+// <signature key> is the signature of the key and <signature value>
+// the signature of the value.
 func (m *MapValue) Signature() string {
 	return fmt.Sprintf("{%s%s}", m.key.Signature(), m.value.Signature())
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (m *MapValue) TypeName() *Statement {
 	return jen.Map(m.key.TypeName()).Add(m.value.TypeName())
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (m *MapValue) RegisterTo(s *TypeSet) {
 	m.key.RegisterTo(s)
 	m.value.RegisterTo(s)
@@ -376,16 +505,19 @@ func (m *MapValue) typeDeclaration(file *jen.File) {
 	return
 }
 
-func (m *MapValue) Marshal(mapId string, writer string) *Statement {
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (m *MapValue) Marshal(mapID string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
 		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
-			jen.Id("len").Call(jen.Id(mapId))),
+			jen.Id("len").Call(jen.Id(mapID))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
             return fmt.Errorf("failed to write map size: %s", err)
         }`),
 		jen.For(
-			jen.Id("k, v := range "+mapId),
+			jen.Id("k, v := range "+mapID),
 		).Block(
 			jen.Err().Op("=").Add(m.key.Marshal("k", writer)),
 			jen.Id(`if (err != nil) {
@@ -400,6 +532,9 @@ func (m *MapValue) Marshal(mapId string, writer string) *Statement {
 	).Call()
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (m *MapValue) Unmarshal(reader string) *Statement {
 	return jen.Func().Params().Params(
 		jen.Id("m").Map(m.key.TypeName()).Add(m.value.TypeName()),
@@ -426,19 +561,24 @@ func (m *MapValue) Unmarshal(reader string) *Statement {
 	).Call()
 }
 
+// MemberValue a field in a struct.
 type MemberValue struct {
 	Name  string
 	Value ValueConstructor
 }
 
+// Title is the public name of the field.
 func (m MemberValue) Title() string {
 	return strings.Title(m.Name)
 }
 
+// TupleValue a list of a parameter of a method.
 type TupleValue struct {
 	values []ValueConstructor
 }
 
+// Signature returns "(<signature 1><signature 2>...)" where
+// <signature X> is the signature of the elements.
 func (t *TupleValue) Signature() string {
 	sig := "("
 	for _, v := range t.values {
@@ -448,6 +588,7 @@ func (t *TupleValue) Signature() string {
 	return sig
 }
 
+// Members returns the list of the types composing the TupleValue.
 func (t *TupleValue) Members() []MemberValue {
 	members := make([]MemberValue, len(t.values))
 	for i, v := range t.values {
@@ -456,6 +597,8 @@ func (t *TupleValue) Members() []MemberValue {
 	return members
 }
 
+// Params returns a statement representing the list of parameter of
+// a method.
 func (t *TupleValue) Params() *Statement {
 	arguments := make([]jen.Code, len(t.values))
 	for i, v := range t.values {
@@ -464,10 +607,13 @@ func (t *TupleValue) Params() *Statement {
 	return jen.Params(arguments...)
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (t *TupleValue) TypeName() *Statement {
 	return jen.Id("...interface{}")
 }
 
+// RegisterTo adds the type to the TypeSet.
 func (t *TupleValue) RegisterTo(s *TypeSet) {
 	for _, v := range t.values {
 		v.RegisterTo(s)
@@ -475,25 +621,33 @@ func (t *TupleValue) RegisterTo(s *TypeSet) {
 	return
 }
 
-func (s *TupleValue) typeDeclaration(*jen.File) {
+func (t *TupleValue) typeDeclaration(*jen.File) {
 	return
 }
 
-func (s *TupleValue) Marshal(variadicIdentifier string, writer string) *Statement {
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (t *TupleValue) Marshal(variadicIdentifier string, writer string) *Statement {
 	// TODO: shall returns an error
 	return jen.Empty()
 }
 
-func (s *TupleValue) Unmarshal(reader string) *Statement {
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
+func (t *TupleValue) Unmarshal(reader string) *Statement {
 	// TODO: shall returns (type, err)
 	return jen.Empty()
 }
 
+// StructValue represents a struct.
 type StructValue struct {
 	name    string
 	members []MemberValue
 }
 
+// Signature returns the signature of the struct.
 func (s *StructValue) Signature() string {
 	types := ""
 	names := make([]string, 0, len(s.members))
@@ -509,15 +663,18 @@ func (s *StructValue) Signature() string {
 		s.name, strings.Join(names, ","))
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (s *StructValue) TypeName() *Statement {
 	return jen.Id(s.name)
 }
 
-func (t *StructValue) RegisterTo(s *TypeSet) {
-	for _, v := range t.members {
-		v.Value.RegisterTo(s)
+// RegisterTo adds the type to the TypeSet.
+func (s *StructValue) RegisterTo(set *TypeSet) {
+	for _, v := range s.members {
+		v.Value.RegisterTo(set)
 	}
-	s.Register(t)
+	set.Register(s)
 	return
 }
 
@@ -557,15 +714,21 @@ func (s *StructValue) typeDeclaration(file *jen.File) {
 	).Params(jen.Err().Error()).Block(writeFields...)
 }
 
-func (s *StructValue) Marshal(strucId string, writer string) *Statement {
-	return jen.Id("Write"+s.name).Call(jen.Id(strucId), jen.Id(writer))
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (s *StructValue) Marshal(structID string, writer string) *Statement {
+	return jen.Id("Write"+s.name).Call(jen.Id(structID), jen.Id(writer))
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (s *StructValue) Unmarshal(reader string) *Statement {
 	return jen.Id("Read" + s.name).Call(jen.Id(reader))
 }
 
-func BasicType() parsec.Parser {
+func basicType() parsec.Parser {
 	return parsec.OrdChoice(nodifyBasicType,
 		parsec.Atom("I", "uint32"),
 		parsec.Atom("s", "string"),
@@ -576,10 +739,11 @@ func BasicType() parsec.Parser {
 		parsec.Atom("v", "void"))
 }
 
-func TypeName() parsec.Parser {
+func typeName() parsec.Parser {
 	return parsec.Ident()
 }
 
+// Node is an alias to parsec.ParsecNode
 type Node = parsec.ParsecNode
 
 func nodifyBasicType(nodes []Node) Node {
@@ -718,6 +882,8 @@ func nodifyTypeDefinition(nodes []Node) Node {
 	return NewStrucValue(name, members)
 }
 
+// Parse reads a signature contained in a string and constructs its
+// type representation.
 func Parse(input string) (ValueConstructor, error) {
 	text := []byte(input)
 
@@ -727,7 +893,7 @@ func Parse(input string) (ValueConstructor, error) {
 	var tupleType parsec.Parser
 
 	var declarationType = parsec.OrdChoice(nil,
-		BasicType(), &mapType, &arrayType, &typeDefinition, &tupleType)
+		basicType(), &mapType, &arrayType, &typeDefinition, &tupleType)
 
 	arrayType = parsec.And(nodifyArrayType,
 		parsec.Atom("[", "MapStart"),
@@ -737,7 +903,7 @@ func Parse(input string) (ValueConstructor, error) {
 	var listType = parsec.Kleene(nil, &declarationType)
 
 	var typeMemberList = parsec.Maybe(nil,
-		parsec.Many(nil, TypeName(), parsec.Atom(",", "Separator")))
+		parsec.Many(nil, typeName(), parsec.Atom(",", "Separator")))
 
 	tupleType = parsec.And(nodifyTupleType,
 		parsec.Atom("(", "TypeParameterStart"),
@@ -749,7 +915,7 @@ func Parse(input string) (ValueConstructor, error) {
 		&listType,
 		parsec.Atom(")", "TypeParameterClose"),
 		parsec.Atom("<", "TypeDefinitionStart"),
-		TypeName(),
+		typeName(),
 		parsec.Atom(",", "TypeName"),
 		&typeMemberList,
 		parsec.Atom(">", "TypeDefinitionClose"))
@@ -779,8 +945,10 @@ func Parse(input string) (ValueConstructor, error) {
 	return constructor, nil
 }
 
+// GenerateType generate the code required to serialize the given
+// type.
 func GenerateType(v ValueConstructor, packageName string, w io.Writer) error {
-	var file *jen.File = jen.NewFile(packageName)
+	file := jen.NewFile(packageName)
 	set := NewTypeSet()
 	v.RegisterTo(set)
 	set.Declare(file)
