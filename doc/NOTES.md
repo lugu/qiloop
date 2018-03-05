@@ -1,16 +1,26 @@
-# qi::messaging: the missing specification
+# About QiMessaging
 
-qi::messaging is a network protocol for remote procedure calls. An
-open source implementation is developped by SoftBank Robotics as part
+TODO:
+    - add notes on the message type.
+    - describe call-reply sequence and other sequences
+    - add information about CapabilityMap.
+    - add a note on the port number.
+    - provide a definition for "service", "object" and "action".
+    - describe the network interaction between two actors on the bus
+
+## Introduction
+
+QiMessaging is a network protocol for remote procedure calls. An
+open source implementation is developed by SoftBank Robotics as part
 of the libqi framework.
 
 https://github.com/aldebaran/libqi
 
-qi::messaging defines an serialisation format as well as a typed
+QiMessaging defines an serialization format as well as a typed
 signature format to describe the serialized data.
 
-qi::messaging exposes a software bus (just like D-Bus) where services
-can be registered. A services is composed of:
+QiMessaging exposes a software bus (think of D-Bus) where services
+can be registered. A service is composed of:
 - a name associated with a number and a description
 - a list of method to be called
 - a list of signals to be watched
@@ -20,30 +30,27 @@ The bus can be introspected thanks to the service directory (which is
 a service) to know the list of the services. Each service exposes the
 list its methods, signal and properties.
 
-This project aims to shed some light on qi::messaging by describing
-the inner details of the protocol.
+This project aims to shed some light on QiMessaging by describing
+the inner details of the protocol. All the notes collected in this
+document come from the analysis for the binary protocol transcribed
+bellow (section: example: qicli info).
 
-with the starting poing of capturing packets and analysing them. One
-can also browse the source code of libqi to extract those informatins.
-I explicitly decided not to do that in order to have a clean room
-implementation of the protocol free of copyright obligations.
-
-To explore qi::messaging, the easiest way is to download choregraphe
-and run the desktop version of NAOqi.
+In order to mess with QiMessaging, an easy way is to download
+Choregraphe (a GUI programming environment for NAOqi).
 
 Choregraphe download page: https://developer.softbankrobotics.com/us-en/downloads/pepper
 
-Once installed, in the bin direction, there are two binaries:
-    - naoqi-bin: the qi::messaging server listenning on port 9559.
-    - qicli: a cli client
+Once installed, in the bin direction, you will find a small utility
+called `qicli` which will allow you to introspect the QiMessaging
+bus created by Choregraphe.
 
-# Header
+## Message format
 
-The binary protocol documetation is rudimentary:
+The binary protocol is documented here:
 http://doc.aldebaran.com/libqi/design/network-binary-protocol.html
 
-Warning: this documentation is missing the glag field (i.e. tye Type
-field is only one byte).
+
+### Header format
 
 The header is 28 bytes and translate in Go to this:
 
@@ -66,10 +73,12 @@ The header is 28 bytes and translate in Go to this:
     }
 
 
-Also, one shall notice the magic value (0x42dead42) is written in big
+Note on endianness: The magic value (0x42dead42) is written in big
 endian while all values are transmitted in little endian.
 
-The payload is the binary serialisation of the argument of the call or
+### Payload format
+
+The payload is the binary serialization of the argument of the call or
 the reply from the service. While the code is open-source, it is
 largely undocumented.
 
@@ -104,14 +113,154 @@ Signature grammar:
     list_of_names = name | name "," list_of_names
 
 
+
+## Boostraping
+
+### Reasoning
+
+a MetaObject is an structure which describes an AnyObject. The
+description includes the list of the methods along with their
+parameters and return type.
+
+Also, every AnyObject has a method called metaObject which itself
+return structure called MetaObect.
+
+This forms a loop:
+
+    - A MetaObject structure descrives the methods of an AnyObject
+    (including the return type of the methods).
+    - Thankfully one of such such method return a MetaObject.
+    - Therefore every MetaObject structure describe the MetaObject
+    structure (hense their name).
+
+Thanks to this property, we can enter our journey into QiMessaging like this:
+
+1. Recored a exchange containing a MetaObject describing the service directory.
+2. Extract the type description of the MetaObject (contained inside the MetaObject)
+3. From this type description, learn how to parse a MetaObject
+4. Parse the MetaObject to obtain a description of the AnyObject.
+5. From the description of the AnyObject, learn how to communicate with it.
+6. Query this AnyObject (which happens to be the service directory)
+7. With the list of services, learn to communicate with every service via their MetaObject.
+
+This is exactly what this project propose you to do together.
+
+### MetaObject signature
+
+As we have seen, the content of a MetaObject contains a description of
+the MetaObject strucutre. This description is referred here as its *signature*.
+
+Here is the MetaObject signature extracted from the MetaObject 
+
+"({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
+
+It reads like this:
+
+    (   // new definition for a structure (MetaObject)
+        { // map
+                I // int (key)
+                ( // new definition for MetaMethodParameter (value)
+                        Issss[
+                                (ss)<MetaMethodParameter,name,description>
+                        ]
+                        s
+                 )
+                <MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>
+        }
+        { // map
+                I // int (key)
+                (Iss)<MetaSignal,uid,name,signature> // new definition (value)
+        }
+        { // map
+                I // int (key)
+                (Iss)<MetaProperty,uid,name,signature> // new definition (value)
+        }
+        s // string
+    )
+    <MetaObject,methods,signals,properties,description>
+
+When converted into Go, this becomes:
+
+    type MetaMethodParameter struct {
+        Name        string
+        Description string
+    }
+    type MetaMethod struct {
+        Uid                 uint32
+        ReturnSignature     string
+        Name                string
+        ParametersSignature string
+        Description         string
+        Parameters          []MetaMethodParameter
+        ReturnDescription   string
+    }
+    type MetaSignal struct {
+        Uid       uint32
+        Name      string
+        Signature string
+    }
+    type MetaProperty struct {
+        Uid       uint32
+        Name      string
+        Signature string
+    }
+    type MetaObject struct {
+        Methods     map[uint32]MetaMethod
+        Signals     map[uint32]MetaSignal
+        Properties  map[uint32]MetaProperty
+        Description string
+    }
+
+
+1. Create MetaObject struct:
+
+    go run src/qiloop/cmd/bootstrap/main.go >  src/qiloop/meta/object/object.go
+
+2. Create Directory proxy:
+
+    cat ./src/qiloop/meta/object/testdata/metaObject-reply-data.bin | go run src/qiloop/cmd/directory/main.go \
+                | grep -v "failed to render" > src/qiloop/services/directory.go
+
+3. Create Server proxy:
+
+    go run src/qiloop/cmd/service0/main.go > src/qiloop/services/server.go
+
+### Note on services
+
+
+Service 0: service server (i.e. the one you just connecte to)
+      - action 8: authenticate(CapabilityMap) // qi/session.hpp
+      - action 8: authenticate(std::map<std::string, AnyValue>)
+
+in Go:
+
+    type CapabilityMap map[string]value.Value
+
+or in C++:
+
+    typedef CapabilityMap = std::map<std::string,AnyValue>
+
+
+Service 1: service directory (i.e. the one which list the services)
+      - action 2: metaObject(int) MetaObject // return description of ServiceDirectory
+      including the list of the methods, the list of the signals, the list of the
+      properties and a string description.
+
+
+In the data, object is serialized without its type information, *but*
+the content of the object will include signatures when required.
+
+
+This metaObject returned does not include its type signature in the response
+which starts with an array of 22 elements describing the "methods" member
+followed with an array of 3 elements describing the "signals" member.
+
 # Payload analysis
 
 ## Wireshark
 
-To analyse the payload, we will use those two program to explore
-qi::messaging with tcpdump and wireshark.
-
-One can record the packets with:
+To analyse the payload, one can capture the QiMessaging packets with
+tcpdump or wireshark like this:
 
     $ tcpdump -i lo -w qicli-info.pcap port 9559
 
@@ -119,10 +268,6 @@ And analyse them with a plugin for Wireshark which to decode headers of the mess
 The plugin must be installed into ``$HOME/.config/wireshark/plugins/``:
 
     https://github.com/aldebaran/libqi/tree/team/platform/dev/tools/wireshark
-
-Each message is composed of a fixed size header followed with a
-payload. Translated in Go it becomes:
-
 
 ## example: qicli info
 
@@ -185,7 +330,6 @@ From the capture we can observe the following exchange:
     Client:47358 <-> Server:9559 : TCP three way handshake: FIN,FIN/ACK,ACK: Connection closed
 
 
-## Packet analysis:
 
 ### 1. Call: ServiceServer.Authenticate
 
@@ -570,178 +714,4 @@ From the capture we can observe the following exchange:
     00000810: 0000 0e00 0000 7365 7276 6963 6552 656d  ......serviceRem
     00000820: 6f76 6564 0400 0000 2849 7329 0000 0000  oved....(Is)....
     00000830: 0000 0000 0a                             .....
-
-
-
-================================================================================
-A call to ServiceDirectory.metaObject(0) will return a MetaObject
-serialized like this:
-
-================================================================================
-
-TODO:
-        - error handling in the parser
-        - create type from definition:
-                create_type(TypeDefinition): String
-================================================================================
-// https://golang.org/pkg/encoding/
-type BinaryMarshaler interface {
-            MarshalBinary() (data []byte, err error)
-}
-================================================================================
-
-binary protocol:
-    std::map:
-            <number of elements: int>
-            <key>
-            <value>
-
-    std::array:
-            <number of elements: int>
-            <elements>
-
-================================================================================
-================================================================================
-
-================================================================================
-
-Service 0: service server (i.e. the one you just connecte to)
-      - action 8: authenticate(CapabilityMap) // qi/session.hpp
-      - action 8: authenticate(std::map<std::string, AnyValue>)
-
-in Go:
-
-    type CapabilityMap map[string]value.Value
-
-or in C++:
-
-    typedef CapabilityMap = std::map<std::string,AnyValue>
-
-================================================================================
-
-Service 1: service directory (i.e. the one which list the services)
-      - action 2: metaObject(int) MetaObject // return description of ServiceDirectory
-      including the list of the methods, the list of the signals, the list of the
-      properties and a string description.
-
-
-In the data, object is serialized without its type information, *but*
-the content of the object will include signatures when required.
-
-
-This metaObject returned does not include its type signature in the response
-which starts with an array of 22 elements describing the "methods" member
-followed with an array of 3 elements describing the "signals" member.
-
-
-## Boostraping
-
-### Reasoning
-
-a MetaObject is an structure which describes an AnyObject. The
-description includes the list of the methods along with their
-parameters and return type.
-
-Also, every AnyObject has a method called metaObject which itself
-return structure called MetaObect.
-
-This forms a loop:
-
-    - A MetaObject structure descrives the methods of an AnyObject
-    (including the return type of the methods).
-    - Convinently one of such such method a MetaObject.
-    - Therefore every MetaObject structure describe the MetaObject
-    structure (hense their name).
-
-Thanks to this property, we can enter our journey into qi::messaging like this:
-
-1. Recored a exchange containing a MetaObject describing the service directory.
-2. Extract the type description of the MetaObject (contained inside the MetaObject)
-3. From this type description, learn how to parse a MetaObject
-4. Parse the MetaObject to obtain a description of the AnyObject.
-5. From the description of the AnyObject, learn how to communicate with it.
-6. Query this AnyObject (which happens to be the service directory)
-7. With the list of services, learn to communicate with every service via their MetaObject.
-
-This is exactly what this project propose you to do together.
-
-### MetaObject signature
-
-As we have seen, the content of a MetaObject contains a description of
-the MetaObject strucutre. This description is referred here as its *signature*.
-
-Here is the MetaObject signature extracted from the MetaObject 
-
-"({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
-
-It reads like this:
-
-    (   // new definition for a structure (MetaObject)
-        { // map
-                I // int (key)
-                ( // new definition for MetaMethodParameter (value)
-                        Issss[
-                                (ss)<MetaMethodParameter,name,description>
-                        ]
-                        s
-                 )
-                <MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>
-        }
-        { // map
-                I // int (key)
-                (Iss)<MetaSignal,uid,name,signature> // new definition (value)
-        }
-        { // map
-                I // int (key)
-                (Iss)<MetaProperty,uid,name,signature> // new definition (value)
-        }
-        s // string
-    )
-    <MetaObject,methods,signals,properties,description>
-
-When converted into Go, this becomes:
-
-    type MetaMethodParameter struct {
-        Name        string
-        Description string
-    }
-    type MetaMethod struct {
-        Uid                 uint32
-        ReturnSignature     string
-        Name                string
-        ParametersSignature string
-        Description         string
-        Parameters          []MetaMethodParameter
-        ReturnDescription   string
-    }
-    type MetaSignal struct {
-        Uid       uint32
-        Name      string
-        Signature string
-    }
-    type MetaProperty struct {
-        Uid       uint32
-        Name      string
-        Signature string
-    }
-    type MetaObject struct {
-        Methods     map[uint32]MetaMethod
-        Signals     map[uint32]MetaSignal
-        Properties  map[uint32]MetaProperty
-        Description string
-    }
-
-
-1. Create MetaObject struct:
-
-    go run src/qiloop/cmd/bootstrap/main.go >  src/qiloop/meta/object/object.go
-
-2. Create Directory proxy:
-
-    cat ./src/qiloop/meta/object/testdata/metaObject-reply-data.bin | go run src/qiloop/cmd/directory/main.go \
-                | grep -v "failed to render" > src/qiloop/services/directory.go
-
-3. Create Server proxy:
-
-    go run src/qiloop/cmd/service0/main.go > src/qiloop/services/server.go
 
