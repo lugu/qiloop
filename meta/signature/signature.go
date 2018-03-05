@@ -53,7 +53,7 @@ type Statement = jen.Statement
 // ValueConstructor represents a type of a signature or a type
 // embedded inside a signature. ValueConstructor represents types for
 // primitive types (int, long, float, string), vectors of a type,
-// associative maps and strucutres.
+// associative maps and structures.
 type ValueConstructor interface {
 	Signature() string
 	TypeName() *Statement

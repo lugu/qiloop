@@ -44,7 +44,7 @@ type Header struct {
 	Action  uint32 // function or event id
 }
 
-// NewHeader construct a message header given some paramters. The size
+// NewHeader construct a message header given some parameters. The size
 // of the message is zero.
 func NewHeader(typ uint8, service uint32, object uint32, action uint32, id uint32) Header {
 	return Header{

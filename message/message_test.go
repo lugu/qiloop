@@ -30,7 +30,7 @@ func TestParseCallHeader(t *testing.T) {
 		0x42dead42,
 		3,   // id
 		110, // size
-		0,   // verison
+		0,   // version
 		1,   // type call
 		0,   // flags
 		0,   // service
@@ -46,7 +46,7 @@ func TestParseReplyHeader(t *testing.T) {
 		0x42dead42,
 		3,   // id
 		138, // size
-		0,   // verison
+		0,   // version
 		2,   // type call
 		0,   // flags
 		0,   // service
