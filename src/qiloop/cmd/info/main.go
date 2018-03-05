@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("authentication failed: %s", err)
 	}
 
-	directory := services.Directory{net.NewProxy(conn, 1, 1)}
+	directory := services.ServiceDirectory{net.NewProxy(conn, 1, 1)}
 	services, err := directory.Services()
 	if err != nil {
 		log.Fatalf("failed to list services: %s", err)

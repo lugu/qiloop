@@ -38,6 +38,7 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 
 	generateProxyType(file, serviceName, metaObj)
 
+	methodNames := make(map[string]bool)
 	keys := make([]int, 0)
 	for k, _ := range metaObj.Methods {
 		keys = append(keys, int(k))
@@ -46,7 +47,7 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 	for _, i := range keys {
 		k := uint32(i)
 		m := metaObj.Methods[k]
-		if err := generateMethod(file, set, k, serviceName, m); err != nil {
+		if err := generateMethod(file, set, k, serviceName, m, methodNames); err != nil {
 			// FIXME: uncomment
 			// return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
 			fmt.Printf("failed to render method %s of %s: %s\n", m.Name, serviceName, err)
@@ -153,7 +154,18 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret sign
 	), nil
 }
 
-func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ string, m object.MetaMethod) error {
+func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ string, m object.MetaMethod, names map[string]bool) error {
+
+	// generate uniq name for the method
+	methodName := m.Name
+	for i:= 0; i < 100; i++ {
+		if _, ok := names[methodName]; !ok {
+			break
+		}
+		methodName = fmt.Sprintf("%s_%d", m.Name, i)
+	}
+	names[methodName] = true
+
 	tupleType, err := signature.Parse(m.ParametersSignature)
 	if err != nil {
 		return fmt.Errorf("failed to parse signature %s: %s", m.ParametersSignature, err)
@@ -180,7 +192,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 		retType = jen.Error()
 	}
 
-	file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id(strings.Title(m.Name)).Add(
+	file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id(strings.Title(methodName)).Add(
 		params.Params(),
 	).Add(
 		retType,
