@@ -4,37 +4,37 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/dave/jennifer/jen"
+	parsec "github.com/prataprc/goparsec"
 	"io"
 	"log"
 	"reflect"
 	"strings"
-	parsec "github.com/prataprc/goparsec"
 )
 
 const MetaObjectSignature string = "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
 type TypeSet struct {
-    signatures map[string]bool
-    types []ValueConstructor
+	signatures map[string]bool
+	types      []ValueConstructor
 }
 
 func (s *TypeSet) Register(v ValueConstructor) {
-    if _, ok := s.signatures[v.Signature()]; !ok {
-        s.signatures[v.Signature()] = true
-        s.types = append(s.types, v)
-    }
+	if _, ok := s.signatures[v.Signature()]; !ok {
+		s.signatures[v.Signature()] = true
+		s.types = append(s.types, v)
+	}
 }
 
 func (s *TypeSet) Declare(f *jen.File) {
-    for _, v := range s.types {
-        v.typeDeclaration(f)
-    }
+	for _, v := range s.types {
+		v.typeDeclaration(f)
+	}
 }
 
 func NewTypeSet() *TypeSet {
-    sig := make(map[string]bool)
-    typ := make([]ValueConstructor,0)
-    return &TypeSet { sig, typ }
+	sig := make(map[string]bool)
+	typ := make([]ValueConstructor, 0)
+	return &TypeSet{sig, typ}
 }
 
 type Statement = jen.Statement
@@ -234,7 +234,7 @@ func (b ValueValue) Marshal(id string, writer string) *Statement {
 }
 
 func (b ValueValue) Unmarshal(reader string) *Statement {
-    return jen.Qual("github.com/lugu/qiloop/value", "NewValue").Call(jen.Id(reader))
+	return jen.Qual("github.com/lugu/qiloop/value", "NewValue").Call(jen.Id(reader))
 }
 
 type VoidValue struct {
@@ -304,17 +304,17 @@ func (l *ListValue) TypeName() *Statement {
 }
 
 func (l *ListValue) RegisterTo(s *TypeSet) {
-    l.value.RegisterTo(s)
+	l.value.RegisterTo(s)
 	return
 }
 
 func (l *ListValue) typeDeclaration(file *jen.File) {
-    return
+	return
 }
 
 func (l *ListValue) Marshal(listId string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
-        jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
+		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
 			jen.Id("len").Call(jen.Id(listId))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
@@ -354,8 +354,8 @@ func (l *ListValue) Unmarshal(reader string) *Statement {
 }
 
 type MapValue struct {
-	key    ValueConstructor
-	value  ValueConstructor
+	key   ValueConstructor
+	value ValueConstructor
 }
 
 func (m *MapValue) Signature() string {
@@ -367,18 +367,18 @@ func (m *MapValue) TypeName() *Statement {
 }
 
 func (m *MapValue) RegisterTo(s *TypeSet) {
-    m.key.RegisterTo(s)
-    m.value.RegisterTo(s)
+	m.key.RegisterTo(s)
+	m.value.RegisterTo(s)
 	return
 }
 
 func (m *MapValue) typeDeclaration(file *jen.File) {
-    return
+	return
 }
 
 func (m *MapValue) Marshal(mapId string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
-        jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
+		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
 			jen.Id("len").Call(jen.Id(mapId))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
@@ -432,7 +432,7 @@ type MemberValue struct {
 }
 
 func (m MemberValue) Title() string {
-    return strings.Title(m.Name)
+	return strings.Title(m.Name)
 }
 
 type TupleValue struct {
@@ -442,24 +442,24 @@ type TupleValue struct {
 func (t *TupleValue) Signature() string {
 	sig := "("
 	for _, v := range t.values {
-        sig += v.Signature()
-    }
+		sig += v.Signature()
+	}
 	sig += ")"
-    return sig
+	return sig
 }
 
 func (t *TupleValue) Members() []MemberValue {
 	members := make([]MemberValue, len(t.values))
 	for i, v := range t.values {
-        members[i] = MemberValue{ fmt.Sprintf("p%d", i), v }
+		members[i] = MemberValue{fmt.Sprintf("p%d", i), v}
 	}
-    return members
+	return members
 }
 
 func (t *TupleValue) Params() *Statement {
 	arguments := make([]jen.Code, len(t.values))
 	for i, v := range t.values {
-        arguments[i] = jen.Id(fmt.Sprintf("p%d", i)).Add(v.TypeName())
+		arguments[i] = jen.Id(fmt.Sprintf("p%d", i)).Add(v.TypeName())
 	}
 	return jen.Params(arguments...)
 }
@@ -469,26 +469,25 @@ func (t *TupleValue) TypeName() *Statement {
 }
 
 func (t *TupleValue) RegisterTo(s *TypeSet) {
-    for _, v := range t.values {
-        v.RegisterTo(s)
-    }
-    return
+	for _, v := range t.values {
+		v.RegisterTo(s)
+	}
+	return
 }
 
 func (s *TupleValue) typeDeclaration(*jen.File) {
-    return
+	return
 }
 
 func (s *TupleValue) Marshal(variadicIdentifier string, writer string) *Statement {
-    // TODO: shall returns an error
-    return jen.Empty()
+	// TODO: shall returns an error
+	return jen.Empty()
 }
 
 func (s *TupleValue) Unmarshal(reader string) *Statement {
-    // TODO: shall returns (type, err)
-    return jen.Empty()
+	// TODO: shall returns (type, err)
+	return jen.Empty()
 }
-
 
 type StructValue struct {
 	name    string
@@ -515,11 +514,11 @@ func (s *StructValue) TypeName() *Statement {
 }
 
 func (t *StructValue) RegisterTo(s *TypeSet) {
-    for _, v := range t.members {
-        v.Value.RegisterTo(s)
-    }
-    s.Register(t)
-    return
+	for _, v := range t.members {
+		v.Value.RegisterTo(s)
+	}
+	s.Register(t)
+	return
 }
 
 func (s *StructValue) typeDeclaration(file *jen.File) {
@@ -533,12 +532,12 @@ func (s *StructValue) typeDeclaration(file *jen.File) {
 	writeFields := make([]jen.Code, len(s.members)+1)
 	for i, v := range s.members {
 		readFields[i] = jen.If(
-			jen.Id("s." + v.Title() + ", err =").Add(v.Value.Unmarshal("r")),
+			jen.Id("s."+v.Title()+", err =").Add(v.Value.Unmarshal("r")),
 			jen.Id("err != nil")).Block(
 			jen.Id(`return s, fmt.Errorf("failed to read ` + v.Title() + ` field: %s", err)`),
 		)
 		writeFields[i] = jen.If(
-			jen.Id("err :=").Add(v.Value.Marshal("s."+ v.Title(), "w")),
+			jen.Id("err :=").Add(v.Value.Marshal("s."+v.Title(), "w")),
 			jen.Err().Op("!=").Nil(),
 		).Block(
 			jen.Id(`return fmt.Errorf("failed to write ` + v.Title() + ` field: %s", err)`),
@@ -653,7 +652,7 @@ func extractMembersTypes(node Node) []ValueConstructor {
 		log.Panicf("member type list is not a list: %s", reflect.TypeOf(node))
 	}
 	types := make([]ValueConstructor, len(typeList))
-	for i, _ := range typeList {
+	for i := range typeList {
 		memberType, err := extractValue(typeList[i])
 		if err != nil {
 			log.Panicf("member type value conversion failed: %s", err)
@@ -781,12 +780,12 @@ func Parse(input string) (ValueConstructor, error) {
 }
 
 func GenerateType(v ValueConstructor, packageName string, w io.Writer) error {
-    var file *jen.File = jen.NewFile(packageName)
-    set := NewTypeSet()
-    v.RegisterTo(set)
-    set.Declare(file)
-    if err := file.Render(w); err != nil {
-        return fmt.Errorf("failed to render %s: %s", v.Signature(), err)
-    }
-    return nil
+	var file *jen.File = jen.NewFile(packageName)
+	set := NewTypeSet()
+	v.RegisterTo(set)
+	set.Declare(file)
+	if err := file.Render(w); err != nil {
+		return fmt.Errorf("failed to render %s: %s", v.Signature(), err)
+	}
+	return nil
 }

@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/lugu/qiloop/meta/proxy"
+	object "github.com/lugu/qiloop/meta/stage1"
 	"io"
 	"log"
 	"os"
-	"github.com/lugu/qiloop/meta/proxy"
-	object "github.com/lugu/qiloop/meta/stage1"
 )
 
 func main() {

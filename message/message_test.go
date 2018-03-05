@@ -2,9 +2,9 @@ package message_test
 
 import (
 	"bytes"
+	"github.com/lugu/qiloop/message"
 	"os"
 	"path/filepath"
-	"github.com/lugu/qiloop/message"
 	"testing"
 	"unsafe"
 )

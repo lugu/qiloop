@@ -3,9 +3,9 @@ package proxy
 import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
-	"io"
 	"github.com/lugu/qiloop/meta/signature"
 	object "github.com/lugu/qiloop/meta/stage1"
+	"io"
 	"sort"
 	"strings"
 )
@@ -40,7 +40,7 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 
 	methodNames := make(map[string]bool)
 	keys := make([]int, 0)
-	for k, _ := range metaObj.Methods {
+	for k := range metaObj.Methods {
 		keys = append(keys, int(k))
 	}
 	sort.Ints(keys)
@@ -158,7 +158,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 
 	// generate uniq name for the method
 	methodName := m.Name
-	for i:= 0; i < 100; i++ {
+	for i := 0; i < 100; i++ {
 		if _, ok := names[methodName]; !ok {
 			break
 		}

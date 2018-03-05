@@ -2,9 +2,9 @@ package net_test
 
 import (
 	"fmt"
-	"net"
 	"github.com/lugu/qiloop/message"
 	endpoint "github.com/lugu/qiloop/net"
+	"net"
 	"reflect"
 	"testing"
 )

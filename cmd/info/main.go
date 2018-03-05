@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/services"
 	"github.com/lugu/qiloop/value"
+	"log"
 )
 
 func main() {

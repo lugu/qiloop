@@ -2,8 +2,8 @@ package value
 
 import (
 	"fmt"
-	"io"
 	"github.com/lugu/qiloop/basic"
+	"io"
 )
 
 type Value interface {

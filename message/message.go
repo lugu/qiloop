@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"github.com/lugu/qiloop/basic"
+	"io"
 )
 
 const Magic uint32 = 0x42dead42

@@ -2,8 +2,8 @@ package net
 
 import (
 	"fmt"
-	gonet "net"
 	"github.com/lugu/qiloop/message"
+	gonet "net"
 )
 
 type EndPoint struct {

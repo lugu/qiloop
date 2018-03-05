@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/lugu/qiloop/meta/signature"
 	"io"
 	"log"
 	"os"
-	"github.com/lugu/qiloop/meta/signature"
 )
 
 func main() {

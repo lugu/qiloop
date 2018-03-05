@@ -2,8 +2,8 @@ package stage3_test
 
 import (
 	"bytes"
-	"os"
 	object "github.com/lugu/qiloop/meta/stage3"
+	"os"
 	"reflect"
 	"testing"
 )
