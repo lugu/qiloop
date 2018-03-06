@@ -1,16 +1,16 @@
-package message_test
+package net_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/message"
+	"github.com/lugu/qiloop/net"
 	"os"
 	"path/filepath"
 	"testing"
 	"unsafe"
 )
 
-func helpParseHeader(t *testing.T, filename string, expected message.Header) {
-	var m message.Message
+func helpParseHeader(t *testing.T, filename string, expected net.Header) {
+	var m net.Message
 	path := filepath.Join("testdata", filename)
 	file, err := os.Open(path)
 	if err != nil {
@@ -26,7 +26,7 @@ func helpParseHeader(t *testing.T, filename string, expected message.Header) {
 
 func TestParseCallHeader(t *testing.T) {
 	filename := "header-call-authenticate.bin"
-	expected := message.Header{
+	expected := net.Header{
 		0x42dead42,
 		3,   // id
 		110, // size
@@ -42,7 +42,7 @@ func TestParseCallHeader(t *testing.T) {
 
 func TestParseReplyHeader(t *testing.T) {
 	filename := "header-reply-authenticate.bin"
-	expected := message.Header{
+	expected := net.Header{
 		0x42dead42,
 		3,   // id
 		138, // size
@@ -58,37 +58,37 @@ func TestParseReplyHeader(t *testing.T) {
 
 func TestConstants(t *testing.T) {
 
-	if uint32(unsafe.Sizeof(message.Header{})) != message.HeaderSize {
+	if uint32(unsafe.Sizeof(net.Header{})) != net.HeaderSize {
 		t.Error("invalid header size")
 	}
-	if 0x42dead42 != message.Magic {
+	if 0x42dead42 != net.Magic {
 		t.Error("invalid magic definition")
 	}
-	if 0 != message.Version {
+	if 0 != net.Version {
 		t.Error("invalid version definition")
 	}
-	if 1 != message.Call {
+	if 1 != net.Call {
 		t.Error("invalid call definition")
 	}
-	if 2 != message.Reply {
+	if 2 != net.Reply {
 		t.Error("invalid call definition")
 	}
-	if 3 != message.Error {
+	if 3 != net.Error {
 		t.Error("invalid error definition")
 	}
 }
 
 func TestMessageConstructor(t *testing.T) {
-	h := message.NewHeader(message.Call, 1, 2, 3, 4)
-	m := message.NewMessage(h, make([]byte, 99))
+	h := net.NewHeader(net.Call, 1, 2, 3, 4)
+	m := net.NewMessage(h, make([]byte, 99))
 
-	if m.Header.Magic != message.Magic {
+	if m.Header.Magic != net.Magic {
 		t.Errorf("invalid magic: %d", m.Header.Magic)
 	}
-	if m.Header.Version != message.Version {
+	if m.Header.Version != net.Version {
 		t.Errorf("invalid version: %d", m.Header.Version)
 	}
-	if m.Header.Type != message.Call {
+	if m.Header.Type != net.Call {
 		t.Errorf("invalid type: %d", m.Header.Type)
 	}
 	if m.Header.Flags != 0 {
@@ -112,15 +112,15 @@ func TestMessageConstructor(t *testing.T) {
 }
 
 func TestWriteReadMessage(t *testing.T) {
-	h := message.NewHeader(message.Call, 1, 2, 3, 4)
-	input := message.NewMessage(h, make([]byte, 99))
+	h := net.NewHeader(net.Call, 1, 2, 3, 4)
+	input := net.NewMessage(h, make([]byte, 99))
 	buf := bytes.NewBuffer(make([]byte, 0))
 	if err := input.Write(buf); err != nil {
-		t.Errorf("failed to write message: %s", err)
+		t.Errorf("failed to write net. %s", err)
 	}
-	var output message.Message
+	var output net.Message
 	if err := output.Read(buf); err != nil {
-		t.Errorf("failed to read message: %s", err)
+		t.Errorf("failed to read net. %s", err)
 	}
 	if input.Header != output.Header {
 		t.Errorf("expected %#v, got %#v", input.Header, output.Header)

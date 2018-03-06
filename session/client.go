@@ -1,9 +1,9 @@
-package net
+package session
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/message"
+	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/value"
 )
 
@@ -13,15 +13,15 @@ type Client interface {
 }
 
 type blockingClient struct {
-	directory     EndPoint
+	directory     net.EndPoint
 	nextMessageID uint32
 }
 
 func (c *blockingClient) Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error) {
 	id := c.nextMessageID
 	c.nextMessageID += 2
-	h := message.NewHeader(message.Call, service, object, action, id)
-	m := message.NewMessage(h, payload)
+	h := net.NewHeader(net.Call, service, object, action, id)
+	m := net.NewMessage(h, payload)
 	if err := c.directory.Send(m); err != nil {
 		return nil, fmt.Errorf("failed to call service %d, object %d, action %d: %s",
 			service, object, action, err)
@@ -35,7 +35,7 @@ func (c *blockingClient) Call(service uint32, object uint32, action uint32, payl
 		return nil, fmt.Errorf("invalid to message id (%d is expected, got %d)",
 			id, response.Header.ID)
 	}
-	if response.Header.Type == message.Error {
+	if response.Header.Type == net.Error {
 		message, err := value.NewValue(bytes.NewBuffer(response.Payload))
 		if err != nil {
 			return nil, fmt.Errorf("Error: failed to parse error message: %s", string(response.Payload))
@@ -47,7 +47,7 @@ func (c *blockingClient) Call(service uint32, object uint32, action uint32, payl
 
 // NewClient returns a Client connected to the specified endpoint.
 func NewClient(endpoint string) (Client, error) {
-	directory, err := DialEndPoint(endpoint)
+	directory, err := net.DialEndPoint(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("client failed to connect %s: %s", endpoint, err)
 	}

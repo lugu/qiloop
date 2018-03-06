@@ -3,19 +3,19 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/services"
+	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
 	"log"
 )
 
 func main() {
 	endpoint := ":9559"
-	conn, err := net.NewClient(endpoint)
+	conn, err := session.NewClient(endpoint)
 	if err != nil {
 		log.Fatalf("failed to connect %s: %s", endpoint, err)
 	}
-	server := services.Server{net.NewProxy(conn, 0, 0)}
+	server := services.Server{session.NewProxy(conn, 0, 0)}
 	permissions := map[string]value.Value{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("authentication failed: %s", err)
 	}
 
-	directory := services.ServiceDirectory{net.NewProxy(conn, 1, 1)}
+	directory := services.ServiceDirectory{session.NewProxy(conn, 1, 1)}
 	services, err := directory.Services()
 	if err != nil {
 		log.Fatalf("failed to list services: %s", err)

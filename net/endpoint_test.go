@@ -2,9 +2,8 @@ package net_test
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/message"
-	qinet "github.com/lugu/qiloop/net"
-	"net"
+	"github.com/lugu/qiloop/net"
+	gonet "net"
 	"reflect"
 	"testing"
 )
@@ -13,11 +12,11 @@ func TestPingPong(t *testing.T) {
 
 	var p int
 	var err error
-	var ln net.Listener
+	var ln gonet.Listener
 
 	// 1. establish server
 	for p = 1024; p < 66535; p++ {
-		ln, err = net.Listen("tcp", fmt.Sprintf(":%d", p))
+		ln, err = gonet.Listen("tcp", fmt.Sprintf(":%d", p))
 		if err == nil {
 			break
 		}
@@ -32,7 +31,7 @@ func TestPingPong(t *testing.T) {
 			return
 		}
 		defer conn.Close()
-		endpoint := qinet.AcceptedEndPoint(conn)
+		endpoint := net.AcceptedEndPoint(conn)
 		m, err := endpoint.Receive()
 		if err != nil {
 			t.Errorf("failed to receive meesage: %s", err)
@@ -44,14 +43,14 @@ func TestPingPong(t *testing.T) {
 	}()
 
 	// 3. client estable connection
-	endpoint, err := qinet.DialEndPoint(fmt.Sprintf(":%d", p))
+	endpoint, err := net.DialEndPoint(fmt.Sprintf(":%d", p))
 	if err != nil {
 		t.Errorf("dial failed: %s", err)
 	}
 
 	// 4. client send a message
-	h := message.NewHeader(message.Call, 1, 2, 3, 4)
-	mSent := message.NewMessage(h, []byte{0xab, 0xcd})
+	h := net.NewHeader(net.Call, 1, 2, 3, 4)
+	mSent := net.NewMessage(h, []byte{0xab, 0xcd})
 
 	if err = endpoint.Send(mSent); err != nil {
 		t.Errorf("failed to send paquet: %s", err)
@@ -60,7 +59,7 @@ func TestPingPong(t *testing.T) {
 	// 5. server reply
 	mReceived, err := endpoint.Receive()
 	if err != nil {
-		t.Errorf("failed to receive message: %s", err)
+		t.Errorf("failed to receive net. %s", err)
 	}
 
 	// 6. check packet integrity

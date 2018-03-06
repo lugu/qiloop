@@ -1,4 +1,4 @@
-package net
+package session
 
 // Proxy is the parent strucuture for Service. It wraps Client and
 // capture the service name.

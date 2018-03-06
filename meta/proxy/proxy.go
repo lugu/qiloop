@@ -13,7 +13,7 @@ import (
 type Statement = jen.Statement
 
 func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
-	file.Type().Id(typ).Struct(jen.Qual("github.com/lugu/qiloop/net", "Proxy"))
+	file.Type().Id(typ).Struct(jen.Qual("github.com/lugu/qiloop/session", "Proxy"))
 	file.Func().Id("New"+typ).Params(
 		jen.Id("endpoint").String(),
 		jen.Id("service").Uint32(),
@@ -23,12 +23,12 @@ func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
 		jen.Error(),
 	).Block(
 		jen.If(
-			jen.List(jen.Id("conn"), jen.Err()).Op(":=").Qual("github.com/lugu/qiloop/net", "NewClient").Call(
+			jen.List(jen.Id("conn"), jen.Err()).Op(":=").Qual("github.com/lugu/qiloop/session", "NewClient").Call(
 				jen.Id("endpoint"),
 			).Op(";").Err().Op("!=").Nil()).Block(
 			jen.Id(`return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)`),
 		).Else().Block(
-			jen.Id(`proxy := net.NewProxy(conn, service, obj)`),
+			jen.Id(`proxy := session.NewProxy(conn, service, obj)`),
 			jen.Id(`return &`+typ+`{ proxy }, nil`),
 		),
 	)

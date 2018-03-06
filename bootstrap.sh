@@ -2,7 +2,7 @@
 
 set -e
 
-go get github.com/lugu/qiloop/net
+go get github.com/lugu/qiloop/session
 go get github.com/lugu/qiloop/meta/signature
 go get github.com/lugu/qiloop/meta/stage1/...
 go generate github.com/lugu/qiloop/meta/stage1

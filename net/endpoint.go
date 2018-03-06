@@ -2,7 +2,6 @@ package net
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/message"
 	gonet "net"
 )
 
@@ -30,12 +29,12 @@ func AcceptedEndPoint(c gonet.Conn) EndPoint {
 }
 
 // Send post a message to the other side of the endpoint.
-func (e EndPoint) Send(m message.Message) error {
+func (e EndPoint) Send(m Message) error {
 	return m.Write(e.conn)
 }
 
 // Receive wait for a message to be received.
-func (e EndPoint) Receive() (m message.Message, err error) {
+func (e EndPoint) Receive() (m Message, err error) {
 	err = m.Read(e.conn)
 	return
 }

@@ -6,7 +6,7 @@ import (
 	object "github.com/lugu/qiloop/meta/stage1"
 	server "github.com/lugu/qiloop/meta/stage2"
 	directory "github.com/lugu/qiloop/meta/stage3"
-	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
 	"io"
 	"log"
@@ -31,11 +31,11 @@ func main() {
 	}
 
 	endpoint := ":9559"
-	conn, err := net.NewClient(endpoint)
+	conn, err := session.NewClient(endpoint)
 	if err != nil {
 		log.Fatalf("failed to connect %s: %s", endpoint, err)
 	}
-	server0 := server.Server{net.NewProxy(conn, 0, 0)}
+	server0 := server.Server{session.NewProxy(conn, 0, 0)}
 	permissions := map[string]value.Value{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
@@ -47,7 +47,7 @@ func main() {
 		log.Fatalf("authentication failed: %s", err)
 	}
 
-	directory := directory.Directory{net.NewProxy(conn, 1, 1)}
+	directory := directory.Directory{session.NewProxy(conn, 1, 1)}
 	serviceInfoList, err := directory.Services()
 	if err != nil {
 		log.Fatalf("failed to list services: %s", err)
@@ -62,7 +62,7 @@ func main() {
 			continue
 		}
 
-		service := server.Server{net.NewProxy(conn, s.ServiceId, 1)}
+		service := server.Server{session.NewProxy(conn, s.ServiceId, 1)}
 		metaObj, err := service.MetaObject(1)
 		if err != nil {
 			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)

@@ -5,20 +5,20 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	basic "github.com/lugu/qiloop/basic"
-	net "github.com/lugu/qiloop/net"
+	session "github.com/lugu/qiloop/session"
 	value "github.com/lugu/qiloop/value"
 	io "io"
 )
 
 type Server struct {
-	net.Proxy
+	session.Proxy
 }
 
 func NewServer(endpoint string, service uint32, obj uint32) (*Server, error) {
-	if conn, err := net.NewClient(endpoint); err != nil {
+	if conn, err := session.NewClient(endpoint); err != nil {
 		return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)
 	} else {
-		proxy := net.NewProxy(conn, service, obj)
+		proxy := session.NewProxy(conn, service, obj)
 		return &Server{proxy}, nil
 	}
 }
@@ -96,14 +96,14 @@ func (p *Server) Authenticate(p0 map[string]value.Value) (map[string]value.Value
 }
 
 type ServiceDirectory struct {
-	net.Proxy
+	session.Proxy
 }
 
 func NewServiceDirectory(endpoint string, service uint32, obj uint32) (*ServiceDirectory, error) {
-	if conn, err := net.NewClient(endpoint); err != nil {
+	if conn, err := session.NewClient(endpoint); err != nil {
 		return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)
 	} else {
-		proxy := net.NewProxy(conn, service, obj)
+		proxy := session.NewProxy(conn, service, obj)
 		return &ServiceDirectory{proxy}, nil
 	}
 }
@@ -501,14 +501,14 @@ func (p *ServiceDirectory) MachineId() (string, error) {
 }
 
 type LogManager struct {
-	net.Proxy
+	session.Proxy
 }
 
 func NewLogManager(endpoint string, service uint32, obj uint32) (*LogManager, error) {
-	if conn, err := net.NewClient(endpoint); err != nil {
+	if conn, err := session.NewClient(endpoint); err != nil {
 		return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)
 	} else {
-		proxy := net.NewProxy(conn, service, obj)
+		proxy := session.NewProxy(conn, service, obj)
 		return &LogManager{proxy}, nil
 	}
 }
