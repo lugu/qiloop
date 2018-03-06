@@ -2,6 +2,11 @@ language: go
 
 go:
     - "1.10"
+    - tip
+
+before_install:
+    - go get golang.org/x/tools/cmd/cover
+    - go get github.com/mattn/goveralls
 
 install:
     - go get github.com/lugu/qiloop/net
@@ -17,3 +22,7 @@ install:
 script: 
     - go get github.com/lugu/qiloop/cmd/info
     - go test -v github.com/lugu/qiloop/...
+
+after_success:
+    - go test -covermode=count -coverprofile=profile.cov
+    - goveralls -coverprofile=profile.cov -service=travis-ci
