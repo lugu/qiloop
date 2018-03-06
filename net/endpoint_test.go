@@ -13,7 +13,6 @@ func TestPingPong(t *testing.T) {
 
 	var p int
 	var err error
-	var conn net.Conn
 	var ln net.Listener
 
 	// 1. establish server
@@ -23,14 +22,16 @@ func TestPingPong(t *testing.T) {
 			break
 		}
 	}
+	defer ln.Close()
 
 	// 2. accept a single connection
 	go func() {
-		conn, err = ln.Accept()
+		conn, err := ln.Accept()
 		if err != nil {
 			t.Errorf("failed to accept: %s", err)
 			return
 		}
+		defer conn.Close()
 		endpoint := qinet.AcceptedEndPoint(conn)
 		m, err := endpoint.Receive()
 		if err != nil {
@@ -61,8 +62,6 @@ func TestPingPong(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to receive message: %s", err)
 	}
-	conn.Close()
-	ln.Close()
 
 	// 6. check packet integrity
 	if !reflect.DeepEqual(mSent, mReceived) {
