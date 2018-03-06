@@ -53,11 +53,11 @@ func main() {
 		log.Fatalf("failed to list services: %s", err)
 	}
 
-	objects := make([]object.MetaObject, len(serviceInfoList)+1)
+	objects := make([]object.MetaObject, 0)
+	objects = append(objects, server.MetaService0)
 
-	objects[0] = server.MetaService0
+	for _, s := range serviceInfoList {
 
-	for i, s := range serviceInfoList {
 		service := server.Server{net.NewProxy(conn, s.ServiceId, 1)}
 		metaObj, err := service.MetaObject(1)
 		if err != nil {
@@ -74,10 +74,11 @@ func main() {
 			log.Fatalf("failed to serialize stage2.MetaObject: %s", err)
 		}
 
-		if objects[i+1], err = object.ReadMetaObject(buf); err != nil {
+		if object, err := object.ReadMetaObject(buf); err != nil {
 			log.Fatalf("failed to deserialize stage1.MetaObject: %s", err)
+		} else {
+			objects = append(objects, object)
 		}
-
 	}
 	proxy.GenerateProxys(objects, "services", output)
 }
