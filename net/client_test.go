@@ -5,11 +5,10 @@ import (
 	"github.com/lugu/qiloop/message"
 	qinet "github.com/lugu/qiloop/net"
 	"net"
-	"reflect"
 	"testing"
 )
 
-func TestPingPong(t *testing.T) {
+func TestProxyCall(t *testing.T) {
 
 	var p int
 	var err error
@@ -36,36 +35,26 @@ func TestPingPong(t *testing.T) {
 		if err != nil {
 			t.Errorf("failed to receive meesage: %s", err)
 		}
+		m.Header.Type = message.Reply
 		err = endpoint.Send(m)
 		if err != nil {
 			t.Errorf("failed to send meesage: %s", err)
 		}
+		conn.Close()
+		ln.Close()
 	}()
 
 	// 3. client estable connection
-	endpoint, err := qinet.DialEndPoint(fmt.Sprintf(":%d", p))
+	client, err := qinet.NewClient(fmt.Sprintf(":%d", p))
 	if err != nil {
-		t.Errorf("dial failed: %s", err)
+		t.Errorf("failed to create client failed: %s", err)
 	}
 
+	// 4. create proxy
+	proxy := qinet.NewProxy(client, 1, 2)
 	// 4. client send a message
-	h := message.NewHeader(message.Call, 1, 2, 3, 4)
-	mSent := message.NewMessage(h, []byte{0xab, 0xcd})
-
-	if err = endpoint.Send(mSent); err != nil {
-		t.Errorf("failed to send paquet: %s", err)
-	}
-
-	// 5. server reply
-	mReceived, err := endpoint.Receive()
+	_, err = proxy.Call(3, []byte{0xab, 0xcd})
 	if err != nil {
-		t.Errorf("failed to receive message: %s", err)
-	}
-	conn.Close()
-	ln.Close()
-
-	// 6. check packet integrity
-	if !reflect.DeepEqual(mSent, mReceived) {
-		t.Errorf("expected %#v, go %#v", mSent, mReceived)
+		t.Errorf("proxy failed to call service: %s", err)
 	}
 }
