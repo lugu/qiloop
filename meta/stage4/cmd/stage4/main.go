@@ -56,7 +56,11 @@ func main() {
 	objects := make([]object.MetaObject, 0)
 	objects = append(objects, server.MetaService0)
 
-	for _, s := range serviceInfoList {
+	for i, s := range serviceInfoList {
+
+		if i > 1 {
+			continue
+		}
 
 		service := server.Server{net.NewProxy(conn, s.ServiceId, 1)}
 		metaObj, err := service.MetaObject(1)

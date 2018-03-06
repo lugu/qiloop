@@ -949,6 +949,7 @@ func Parse(input string) (ValueConstructor, error) {
 // type.
 func GenerateType(v ValueConstructor, packageName string, w io.Writer) error {
 	file := jen.NewFile(packageName)
+	file.PackageComment("file generated. DO NOT EDIT.")
 	set := NewTypeSet()
 	v.RegisterTo(set)
 	set.Declare(file)

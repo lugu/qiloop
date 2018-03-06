@@ -59,6 +59,7 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
 
 	file := jen.NewFile(packageName)
+	file.PackageComment("file generated. DO NOT EDIT.")
 	set := signature.NewTypeSet()
 
 	generateProxyObject(metaObj, serviceName, set, file)
@@ -74,6 +75,8 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
 func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
 
 	file := jen.NewFile(packageName)
+	file.PackageComment("file generated. DO NOT EDIT.")
+
 	set := signature.NewTypeSet()
 
 	for _, metaObj := range metaObjList {
