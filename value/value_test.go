@@ -31,6 +31,29 @@ func TestValues(t *testing.T) {
 	}
 }
 
+func helpValueWrite(t *testing.T, expected value.Value) {
+	buf := bytes.NewBuffer(make([]byte, 10))
+	err := expected.Write(buf)
+	val, err := value.NewValue(buf)
+	if err != nil {
+	} else if !reflect.DeepEqual(val, expected) {
+		t.Errorf("value constructor error")
+	}
+}
+
+func TestValueWrite(t *testing.T) {
+	helpValueWrite(t, value.Bool(true))
+	helpValueWrite(t, value.Bool(false))
+	helpValueWrite(t, value.Int(0))
+	helpValueWrite(t, value.Int(42))
+	helpValueWrite(t, value.Long(0))
+	helpValueWrite(t, value.Long(42<<42))
+	helpValueWrite(t, value.Float(-1.234))
+	helpValueWrite(t, value.Float(0))
+	helpValueWrite(t, value.String(""))
+	helpValueWrite(t, value.String("testing is good"))
+}
+
 func helpParseValue(t *testing.T, b []byte, expected value.Value) {
 	buf := bytes.NewBuffer(b)
 	v, err := value.NewValue(buf)
