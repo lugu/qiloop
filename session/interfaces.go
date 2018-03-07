@@ -1,5 +1,10 @@
 package session
 
+// Client represents a client connection to a service.
+type Client interface {
+	Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error)
+}
+
 // Proxy is the parent strucuture for Service. It wraps Client and
 // capture the service name.
 type Proxy struct {
@@ -14,6 +19,10 @@ func (p Proxy) Call(action uint32, payload []byte) ([]byte, error) {
 }
 
 // NewProxy construct a Proxy.
-func NewProxy(c Client, service, object uint32) Proxy {
-	return Proxy{c, service, object}
+func NewProxy(client Client, service, object uint32) Proxy {
+	return Proxy{client, service, object}
+}
+
+type Session interface {
+	Proxy(name string, object uint32) (Proxy, error)
 }

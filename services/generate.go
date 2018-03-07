@@ -1,4 +1,4 @@
-//go:generate go get github.com/lugu/qiloop/meta/stage4/cmd/stage4
-//go:generate $GOPATH/bin/stage4 services.go
+//go:generate go get github.com/lugu/qiloop/meta/stage3/cmd/stage3
+//go:generate $GOPATH/bin/stage3 services.go
 
 package services

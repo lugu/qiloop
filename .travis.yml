@@ -12,8 +12,6 @@ install:
     - go get github.com/lugu/qiloop/meta/proxy
     - go get github.com/lugu/qiloop/meta/stage2/...
     - go generate github.com/lugu/qiloop/meta/stage2
-    - go get github.com/lugu/qiloop/meta/stage3/...
-    - go generate github.com/lugu/qiloop/meta/stage3
 
 script: 
     - go get github.com/lugu/qiloop/cmd/info

@@ -14,13 +14,12 @@ type Server struct {
 	session.Proxy
 }
 
-func NewServer(endpoint string, service uint32, obj uint32) (*Server, error) {
-	if conn, err := session.NewClient(endpoint); err != nil {
-		return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)
-	} else {
-		proxy := session.NewProxy(conn, service, obj)
-		return &Server{proxy}, nil
+func NewServer(ses session.Session, obj uint32) (*Server, error) {
+	proxy, err := ses.Proxy("Server", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
+	return &Server{proxy}, nil
 }
 func (p *Server) MetaObject(p0 uint32) (MetaObject, error) {
 	var err error
@@ -99,13 +98,12 @@ type ServiceDirectory struct {
 	session.Proxy
 }
 
-func NewServiceDirectory(endpoint string, service uint32, obj uint32) (*ServiceDirectory, error) {
-	if conn, err := session.NewClient(endpoint); err != nil {
-		return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)
-	} else {
-		proxy := session.NewProxy(conn, service, obj)
-		return &ServiceDirectory{proxy}, nil
+func NewServiceDirectory(ses session.Session, obj uint32) (*ServiceDirectory, error) {
+	proxy, err := ses.Proxy("ServiceDirectory", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
+	return &ServiceDirectory{proxy}, nil
 }
 func (p *ServiceDirectory) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint64, error) {
 	var err error
@@ -504,13 +502,12 @@ type LogManager struct {
 	session.Proxy
 }
 
-func NewLogManager(endpoint string, service uint32, obj uint32) (*LogManager, error) {
-	if conn, err := session.NewClient(endpoint); err != nil {
-		return nil, fmt.Errorf("failed to connect %s: %s", endpoint, err)
-	} else {
-		proxy := session.NewProxy(conn, service, obj)
-		return &LogManager{proxy}, nil
+func NewLogManager(ses session.Session, obj uint32) (*LogManager, error) {
+	proxy, err := ses.Proxy("LogManager", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
+	return &LogManager{proxy}, nil
 }
 func (p *LogManager) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint64, error) {
 	var err error

@@ -1,16 +1,12 @@
-package session
+package dummy
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
 )
-
-// Client represents a client connection to a service.
-type Client interface {
-	Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error)
-}
 
 type blockingClient struct {
 	directory     net.EndPoint
@@ -45,8 +41,7 @@ func (c *blockingClient) Call(service uint32, object uint32, action uint32, payl
 	return response.Payload, nil
 }
 
-// NewClient returns a Client connected to the specified endpoint.
-func NewClient(endpoint string) (Client, error) {
+func NewClient(endpoint string) (session.Client, error) {
 	directory, err := net.DialEndPoint(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("client failed to connect %s: %s", endpoint, err)
