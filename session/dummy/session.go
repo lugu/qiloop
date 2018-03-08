@@ -6,11 +6,12 @@ import (
 	"github.com/lugu/qiloop/services"
 	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
+	"strings"
 )
 
 func Authenticate(e net.EndPoint) error {
 	server0 := services.Server{
-		proxy: manualProxy(e, 0, 0),
+		manualProxy(e, 0, 0),
 	}
 	permissions := map[string]value.Value{
 		"ClientServerSocket":    value.Bool(true),
@@ -18,8 +19,8 @@ func Authenticate(e net.EndPoint) error {
 		"MetaObjectCache":       value.Bool(true),
 		"RemoteCancelableCalls": value.Bool(true),
 	}
-	if err = server0.Authenticate(permissions); err != nil {
-		err.Errorf("authentication failed: %s", err)
+	if _, err := server0.Authenticate(permissions); err != nil {
+		fmt.Errorf("authentication failed: %s", err)
 	}
 	return nil
 }
@@ -35,7 +36,7 @@ func (d *staticSession) Proxy(name string, object uint32) (p session.Proxy, err 
 
 	for _, service := range d.services {
 		if service.Name == name {
-			return NewServiceProxy(service)
+			return newServiceProxy(service)
 		}
 	}
 	return p, fmt.Errorf("service not found: %s", name)
@@ -44,41 +45,45 @@ func (d *staticSession) Proxy(name string, object uint32) (p session.Proxy, err 
 // manualProxy is to create proxies to the directory and server
 // services needed for a session.
 func manualProxy(e net.EndPoint, service, object uint32) session.Proxy {
-	return session.NewProxy(&blockingClient{e, n}, service, object)
+	return session.NewProxy(&blockingClient{e, 1}, service, object)
 }
 
 func newServiceProxy(info services.ServiceInfo) (p session.Proxy, err error) {
 
-	if len(info.EndPoints) == 0 {
+	if len(info.Endpoints) == 0 {
 		return p, fmt.Errorf("no known address for service %s", info.Name)
 	}
 
-	endpoint, err := net.DialEndPoint(info.EndPoint[0])
+	addr := strings.TrimPrefix(info.Endpoints[0], "tcp://")
+	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
-		return p, err.Errorf("%s: %s", info.Name, err)
+		return p, fmt.Errorf("%s: %s", info.Name, err)
 	}
 	if err = Authenticate(endpoint); err != nil {
-		return p, err.Errorf("%s: %s", info.Name, err)
+		return p, fmt.Errorf("%s: %s", info.Name, err)
 	}
 
-	return manualProxy(e, info.ServiceId, object), nil
+	// FIXME: object id do be defined
+	return manualProxy(endpoint, info.ServiceId, 1), nil
 }
 
-func NewSession(addr string) (*staticSession, error) {
+func NewSession(addr string) (s *staticSession, err error) {
 
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
-		return p, err.Errorf("%s: %s", name, err)
+		return s, err
 	}
 	if err = Authenticate(endpoint); err != nil {
-		return p, err.Errorf("%s: %s", name, err)
+		return s, fmt.Errorf("authenitcation failed: %s", err)
 	}
 
 	directory := services.ServiceDirectory{
-		proxy: manualProxy(e, 1, 1),
+		manualProxy(endpoint, 1, 1),
 	}
-	services, err := directory.Services()
+	s = new(staticSession)
+	s.services, err = directory.Services()
 	if err != nil {
-		log.Fatalf("failed to list services: %s", err)
+		return s, fmt.Errorf("failed to list services: %s", err)
 	}
+	return s, nil
 }
