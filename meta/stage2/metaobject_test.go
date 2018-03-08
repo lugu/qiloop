@@ -9,7 +9,7 @@ import (
 )
 
 func helpReadGolden(t *testing.T) stage2.MetaObject {
-	file, err := os.Open("meta-stage2.bin")
+	file, err := os.Open("meta-object.bin")
 	if err != nil {
 		t.Fatal(err)
 	}
