@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -46,13 +47,18 @@ func main() {
 	objects := make([]stage1.MetaObject, 0)
 	objects = append(objects, stage2.MetaService0)
 
-	for i, s := range serviceInfoList {
+	for _, s := range serviceInfoList {
 
-		if i > 1 {
-			continue
+		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
+		endpoint, err := net.DialEndPoint(addr)
+		if err != nil {
+			log.Fatalf("failed to connect: %d", err)
+		}
+		if err = authenticate(endpoint); err != nil {
+			log.Fatalf("failed to authenticate: %d", err)
 		}
 
-		service := stage2.Server{manualProxy(endpoint, s.ServiceId, 1)}
+		service := stage2.Directory{manualProxy(endpoint, s.ServiceId, 1)}
 		metaObj, err := service.MetaObject(1)
 		if err != nil {
 			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
