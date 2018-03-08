@@ -2,4 +2,4 @@
 
 # qiloop
 
-Not ready yet, please pass your way.
+Not ready yet, patience please.
