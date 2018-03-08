@@ -1,9 +1,10 @@
-package session_test
+package dummy_test
 
 import (
 	"fmt"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/session"
+	"github.com/lugu/qiloop/session/dummy"
 	gonet "net"
 	"testing"
 )
@@ -45,7 +46,7 @@ func TestProxyCall(t *testing.T) {
 	}()
 
 	// 3. client estable connection
-	client, err := session.NewClient(fmt.Sprintf(":%d", p))
+	client, err := dummy.NewClient(fmt.Sprintf(":%d", p))
 	if err != nil {
 		t.Errorf("failed to create client failed: %s", err)
 	}
