@@ -24,16 +24,16 @@ can be registered. A service is composed of:
 - a name associated with a number and a description
 - a list of method to be called
 - a list of signals to be watched
-- a list of properties to be query
+- a list of properties to be queried
 
 The bus can be introspected thanks to the service directory (which is
 a service) to know the list of the services. Each service exposes the
-list its methods, signal and properties.
+list of its methods, signals and properties.
 
 This project aims to shed some light on QiMessaging by describing
 the inner details of the protocol. All the notes collected in this
 document come from the analysis for the binary protocol transcribed
-bellow (section: example: qicli info).
+below (section: example: qicli info).
 
 In order to mess with QiMessaging, an easy way is to download
 Choregraphe (a GUI programming environment for NAOqi).
@@ -118,37 +118,37 @@ Signature grammar:
 
 ### Reasoning
 
-a MetaObject is an structure which describes an AnyObject. The
+A MetaObject is a structure which describes an object. The
 description includes the list of the methods along with their
 parameters and return type.
 
-Also, every AnyObject has a method called metaObject which itself
-return structure called MetaObect.
+Also, every object has a method called `metaObject` which itself
+returns a structure of type MetaObect.
 
 This forms a loop:
 
-    - A MetaObject structure descrives the methods of an AnyObject
+    - A MetaObject structure describes the methods of an object
     (including the return type of the methods).
-    - Thankfully one of such such method return a MetaObject.
+    - Thankfully one of these methods returns a MetaObject.
     - Therefore every MetaObject structure describe the MetaObject
     structure (hense their name).
 
 Thanks to this property, we can enter our journey into QiMessaging like this:
 
-1. Recored a exchange containing a MetaObject describing the service directory.
+1. Record an exchange containing a MetaObject describing the service directory.
 2. Extract the type description of the MetaObject (contained inside the MetaObject)
 3. From this type description, learn how to parse a MetaObject
-4. Parse the MetaObject to obtain a description of the AnyObject.
-5. From the description of the AnyObject, learn how to communicate with it.
-6. Query this AnyObject (which happens to be the service directory)
-7. With the list of services, learn to communicate with every service via their MetaObject.
+4. Parse the MetaObject to obtain a description of the object.
+5. From the description of the object, learn how to communicate with it.
+6. Query this object (which happens to be the service directory)
+7. With the list of services, learn how to communicate with every service via their MetaObject.
 
-This is exactly what this project propose you to do together.
+This is exactly what this project proposes you to do together.
 
 ### MetaObject signature
 
 As we have seen, the content of a MetaObject contains a description of
-the MetaObject strucutre. This description is referred here as its *signature*.
+the MetaObject structure. This description is referred here as its *signature*.
 
 Here is the MetaObject signature extracted from the MetaObject 
 
@@ -214,7 +214,7 @@ When converted into Go, this becomes:
 
 1. Create MetaObject struct:
 
-    go run src/qiloop/cmd/bootstrap/main.go >  src/qiloop/meta/object/object.go
+    go run src/qiloop/cmd/bootstrap/main.go > src/qiloop/meta/object/object.go
 
 2. Create Directory proxy:
 
@@ -228,7 +228,7 @@ When converted into Go, this becomes:
 ### Note on services
 
 
-Service 0: service server (i.e. the one you just connecte to)
+Service 0: service server (i.e. the one you just connected to)
       - action 8: authenticate(CapabilityMap) // qi/session.hpp
       - action 8: authenticate(std::map<std::string, AnyValue>)
 
@@ -238,11 +238,11 @@ in Go:
 
 or in C++:
 
-    typedef CapabilityMap = std::map<std::string,AnyValue>
+    typedef CapabilityMap = std::map<std::string, AnyValue>
 
 
-Service 1: service directory (i.e. the one which list the services)
-      - action 2: metaObject(int) MetaObject // return description of ServiceDirectory
+Service 1: service directory (i.e. the one which lists the services)
+      - action 2: metaObject(int) MetaObject // return a description of ServiceDirectory
       including the list of the methods, the list of the signals, the list of the
       properties and a string description.
 
@@ -250,8 +250,7 @@ Service 1: service directory (i.e. the one which list the services)
 In the data, object is serialized without its type information, *but*
 the content of the object will include signatures when required.
 
-
-This metaObject returned does not include its type signature in the response
+This returned metaObject does not include its type signature in the response
 which starts with an array of 22 elements describing the "methods" member
 followed with an array of 3 elements describing the "signals" member.
 
@@ -315,8 +314,8 @@ Note: Service of id 0. It will be observed
 From the capture we can observe the following exchange:
 
     Client:47358 <-> Server:9559 : TCP three way handshake: SYN,SYN/ACK,ACK: Connection established
-    Client:47358  -> Server:9559 : call to Service[0:ServiceServcer].Object[0].Call[8:authenticate].Id[3]
-    Client:47358 <-  Server:9559 : reply to Service[0:ServiceServcer].Object[0].Call[8:authenticate].Id[3]
+    Client:47358  -> Server:9559 : call to Service[0:ServiceServer].Object[0].Call[8:authenticate].Id[3]
+    Client:47358 <-  Server:9559 : reply to Service[0:ServiceServer].Object[0].Call[8:authenticate].Id[3]
     Client:47358  -> Server:9559 : call to Service[1:ServiceDirectory].Object[1].Call[2:metaObject].Id[5]
     Client:47358 <-  Server:9559 : reply to Service[1:ServiceDirectory].Object[1].Call[2:metaObject].Id[5]
     Client:47358  -> Server:9559 : call to Service[1:ServiceDirectory].Object[1].Call[0:registerEvent].Id[11]
