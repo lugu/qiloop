@@ -1,5 +1,62 @@
 # About QiMessaging
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Presentation](#presentation)
+  - [Introduction](#introduction)
+  - [Overview](#overview)
+  - [Comparisons](#comparisons)
+  - [OSI Model](#osi-model)
+- [Message](#message)
+  - [Message Header](#message-header)
+    - [Magic number](#magic-number)
+    - [Size](#size)
+    - [Header Version](#header-version)
+    - [Header Type](#header-type)
+    - [Flags](#flags)
+    - [Service ID](#service-id)
+    - [Object ID](#object-id)
+    - [Action ID](#action-id)
+  - [Payload](#payload)
+- [Signatures](#signatures)
+  - [Types](#types)
+    - [Basic types](#basic-types)
+    - [Composite types](#composite-types)
+    - [Object](#object)
+  - [Examples](#examples)
+    - [Real world examples](#real-world-examples)
+  - [Signature Grammar](#signature-grammar)
+- [Serialization](#serialization)
+  - [Basic types](#basic-types-1)
+  - [Values](#values)
+  - [Composite types (map, list and struct)](#composite-types-map-list-and-struct)
+  - [Object](#object-1)
+- [Objects](#objects)
+  - [Methods](#methods)
+  - [Signaux](#signaux)
+  - [Properties](#properties)
+  - [MetaObject](#metaobject)
+- [Services](#services)
+  - [Service Server (ID 0)](#service-server-id-0)
+  - [Service Directory (ID 1)](#service-directory-id-1)
+  - [Example (LogManager)](#example-logmanager)
+- [Networking](#networking)
+  - [Endpoints](#endpoints)
+  - [TCP](#tcp)
+  - [SSL](#ssl)
+- [Authentication](#authentication)
+  - [CapabilityMap](#capabilitymap)
+  - [Token](#token)
+- [Routing](#routing)
+  - [Message destination](#message-destination)
+  - [Message origin](#message-origin)
+  - [Message transferred](#message-transferred)
+- [Misc](#misc)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Presentation
 
 ### Introduction
