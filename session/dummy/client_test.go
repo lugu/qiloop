@@ -3,7 +3,7 @@ package dummy_test
 import (
 	"fmt"
 	"github.com/lugu/qiloop/net"
-	"github.com/lugu/qiloop/session"
+	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/session/dummy"
 	gonet "net"
 	"testing"
@@ -34,14 +34,17 @@ func TestProxyCall(t *testing.T) {
 		}
 		defer conn.Close()
 		endpoint := net.AcceptedEndPoint(conn)
-		m, err := endpoint.Receive()
-		if err != nil {
-			t.Errorf("failed to receive meesage: %s", err)
-		}
-		m.Header.Type = net.Reply
-		err = endpoint.Send(m)
-		if err != nil {
-			t.Errorf("failed to send meesage: %s", err)
+
+		for i := 0; i < 2; i++ {
+			m, err := endpoint.Receive()
+			if err != nil {
+				t.Errorf("failed to receive meesage: %s", err)
+			}
+			m.Header.Type = net.Reply
+			err = endpoint.Send(m)
+			if err != nil {
+				t.Errorf("failed to send meesage: %s", err)
+			}
 		}
 	}()
 
@@ -52,9 +55,9 @@ func TestProxyCall(t *testing.T) {
 	}
 
 	// 4. create proxy
-	proxy := session.NewProxy(client, 1, 2)
+	proxy := dummy.NewProxy(client, object.MetaService0, 1, 2)
 	// 4. client send a message
-	_, err = proxy.Call(3, []byte{0xab, 0xcd})
+	_, err = proxy.CallID(3, []byte{0xab, 0xcd})
 	if err != nil {
 		t.Errorf("proxy failed to call service: %s", err)
 	}

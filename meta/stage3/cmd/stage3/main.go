@@ -1,15 +1,56 @@
 package main
 
 import (
+	"fmt"
 	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/meta/stage2"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/object"
+	"github.com/lugu/qiloop/session"
+	"github.com/lugu/qiloop/value"
 	"io"
 	"log"
 	"os"
 	"strings"
 )
+
+func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) session.Session {
+	sess0 := directorySession{conn, 0, 0, 8}
+	service0, err := stage2.NewServer(sess0, 0)
+	if err != nil {
+		log.Fatalf("failed to create proxy: %s", err)
+	}
+	permissions := map[string]value.Value{
+		"ClientServerSocket":    value.Bool(true),
+		"MessageFlags":          value.Bool(true),
+		"MetaObjectCache":       value.Bool(true),
+		"RemoteCancelableCalls": value.Bool(true),
+	}
+	_, err = service0.Authenticate(permissions)
+	if err != nil {
+		log.Fatalf("failed to authenticate: %s", err)
+	}
+	return directorySession{
+		conn,
+		serviceID,
+		objectID,
+		actionID,
+	}
+}
+
+func NewServiceDirectory(addr string, serviceID, objectID, actionID uint32) (d *stage2.ServiceDirectory, err error) {
+
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		return d, fmt.Errorf("failed to connect: %s", err)
+	}
+	sess := NewSession(endpoint, serviceID, objectID, actionID)
+	if err != nil {
+		return d, fmt.Errorf("failed to create session: %s", err)
+	}
+
+	return stage2.NewServiceDirectory(sess, 1)
+}
 
 func main() {
 	var output io.Writer
@@ -29,15 +70,13 @@ func main() {
 	}
 
 	addr := ":9559"
-	endpoint, err := net.DialEndPoint(addr)
+	// directoryServiceID := 1
+	// directoryObjectID := 1
+	dir, err := NewServiceDirectory(addr, 1, 1, 101)
 	if err != nil {
-		log.Fatalf("failed to connect: %d", err)
-	}
-	if err = authenticate(endpoint); err != nil {
-		log.Fatalf("failed to authenticate: %d", err)
+		log.Fatalf("failed to create directory: %s", err)
 	}
 
-	dir := stage2.Directory{manualProxy(endpoint, 1, 1)}
 	serviceInfoList, err := dir.Services()
 	if err != nil {
 		log.Fatalf("failed to list services: %s", err)
@@ -49,21 +88,18 @@ func main() {
 	for _, s := range serviceInfoList {
 
 		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
-		endpoint, err := net.DialEndPoint(addr)
+		obj, err := NewServiceDirectory(addr, s.ServiceId, 1, 2)
 		if err != nil {
-			log.Fatalf("failed to connect: %d", err)
+			log.Printf("failed to create servinceof %s: %s", s.Name, err)
+			continue
 		}
-		if err = authenticate(endpoint); err != nil {
-			log.Fatalf("failed to authenticate: %d", err)
-		}
-
-		service := stage2.Directory{manualProxy(endpoint, s.ServiceId, 1)}
-		metaObj, err := service.MetaObject(1)
+		meta, err := obj.MetaObject(1)
 		if err != nil {
 			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
+			continue
 		}
-		metaObj.Description = s.Name
-		objects = append(objects, metaObj)
+		meta.Description = s.Name
+		objects = append(objects, meta)
 	}
 	proxy.GenerateProxys(objects, "services", output)
 }

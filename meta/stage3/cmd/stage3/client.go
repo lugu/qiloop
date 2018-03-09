@@ -3,48 +3,29 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/meta/stage2"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
 )
 
-func manualProxy(e net.EndPoint, service, object uint32) session.Proxy {
-	return session.NewProxy(&blockingClient{e, 3}, service, object)
-}
-
-func authenticate(e net.EndPoint) error {
-	server0 := stage2.Server{manualProxy(e, 0, 0)}
-	permissions := map[string]value.Value{
-		"ClientServerSocket":    value.Bool(true),
-		"MessageFlags":          value.Bool(true),
-		"MetaObjectCache":       value.Bool(true),
-		"RemoteCancelableCalls": value.Bool(true),
-	}
-	if _, err := server0.Authenticate(permissions); err != nil {
-		fmt.Errorf("authentication failed: %s", err)
-	}
-	return nil
-}
-
-type blockingClient struct {
+type directoryClient struct {
 	conn          net.EndPoint
 	nextMessageID uint32
 }
 
-func (c *blockingClient) Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error) {
+func (c directoryClient) Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error) {
 	id := c.nextMessageID
 	c.nextMessageID += 2
-	h := net.NewHeader(net.Call, service, object, action, id)
+	h := net.NewHeader(net.Call, serviceID, objectID, actionID, id)
 	m := net.NewMessage(h, payload)
 	if err := c.conn.Send(m); err != nil {
 		return nil, fmt.Errorf("failed to call service %d, object %d, action %d: %s",
-			service, object, action, err)
+			serviceID, objectID, actionID, err)
 	}
 	response, err := c.conn.Receive()
 	if err != nil {
 		return nil, fmt.Errorf("failed to receive reply from service %d, object %d, action %d: %s",
-			service, object, action, err)
+			serviceID, objectID, actionID, err)
 	}
 	if response.Header.ID != id {
 		return nil, fmt.Errorf("invalid to message id (%d is expected, got %d)",
@@ -58,4 +39,41 @@ func (c *blockingClient) Call(service uint32, object uint32, action uint32, payl
 		return nil, fmt.Errorf("Error: %s", message)
 	}
 	return response.Payload, nil
+}
+
+type directoryProxy struct {
+	client          directoryClient
+	serviceID       uint32
+	objectID        uint32
+	defaultActionID uint32
+}
+
+// Call ignores the action and call a pre-defined actionID.
+func (p directoryProxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
+	return p.client.Call(p.serviceID, p.objectID, actionID, payload)
+}
+
+func (p directoryProxy) Call(action string, payload []byte) ([]byte, error) {
+	return p.client.Call(p.serviceID, p.objectID, p.defaultActionID, payload)
+}
+
+type directorySession struct {
+	endpoint         net.EndPoint
+	defaultSerivceID uint32
+	defaultObjectID  uint32
+	defaultActionID  uint32
+}
+
+// Proxy ignores the service name and use a pre-defined serviceID and
+// objectID.
+func (s directorySession) Proxy(name string, objectID uint32) (session.Proxy, error) {
+	return directoryProxy{
+		client: directoryClient{
+			conn:          s.endpoint,
+			nextMessageID: 3,
+		},
+		serviceID:       s.defaultSerivceID,
+		objectID:        s.defaultObjectID,
+		defaultActionID: s.defaultActionID,
+	}, nil
 }

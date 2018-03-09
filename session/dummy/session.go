@@ -3,7 +3,6 @@ package dummy
 import (
 	"fmt"
 	"github.com/lugu/qiloop/net"
-	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/services"
 	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
@@ -11,7 +10,7 @@ import (
 )
 
 func Authenticate(e net.EndPoint) error {
-	server0 := object.Server{
+	server0 := services.Server{
 		manualProxy(e, 0, 0),
 	}
 	permissions := map[string]value.Value{
@@ -30,14 +29,14 @@ func Authenticate(e net.EndPoint) error {
 // implementation of Session. It does not update the list of services
 // and returns dummy blockingClients.
 type staticSession struct {
-	services []object.ServiceInfo
+	services []services.ServiceInfo
 }
 
-func (d *staticSession) Proxy(name string, object uint32) (p session.Proxy, err error) {
+func (d *staticSession) Proxy(name string, objectID uint32) (p session.Proxy, err error) {
 
 	for _, service := range d.services {
 		if service.Name == name {
-			return newServiceProxy(service)
+			return newServiceProxy(service, objectID)
 		}
 	}
 	return p, fmt.Errorf("service not found: %s", name)
@@ -45,11 +44,15 @@ func (d *staticSession) Proxy(name string, object uint32) (p session.Proxy, err 
 
 // manualProxy is to create proxies to the directory and server
 // services needed for a session.
-func manualProxy(e net.EndPoint, service, object uint32) session.Proxy {
-	return session.NewProxy(&blockingClient{e, 1}, service, object)
+func manualProxy(e net.EndPoint, serviceID, objectID uint32) session.Proxy {
+	client := &blockingClient{e, 3}
+	meta, err := session.MetaObject(client, serviceID, objectID)
+	if err != nil {
+	}
+	return NewProxy(client, meta, serviceID, objectID)
 }
 
-func newServiceProxy(info object.ServiceInfo) (p session.Proxy, err error) {
+func newServiceProxy(info services.ServiceInfo, objectID uint32) (p session.Proxy, err error) {
 
 	if len(info.Endpoints) == 0 {
 		return p, fmt.Errorf("no known address for service %s", info.Name)
@@ -65,7 +68,7 @@ func newServiceProxy(info object.ServiceInfo) (p session.Proxy, err error) {
 	}
 
 	// FIXME: object id do be defined
-	return manualProxy(endpoint, info.ServiceId, 1), nil
+	return manualProxy(endpoint, info.ServiceId, objectID), nil
 }
 
 func NewSession(addr string) (s *staticSession, err error) {

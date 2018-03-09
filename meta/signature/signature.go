@@ -975,7 +975,7 @@ func Parse(input string) (ValueConstructor, error) {
 
 	root, _ := typeSignature(parsec.NewScanner(text))
 	if root == nil {
-		return nil, fmt.Errorf("failed to parse signature")
+		return nil, fmt.Errorf("failed to parse signature: %s", input)
 	}
 	types, ok := root.([]Node)
 	if !ok {

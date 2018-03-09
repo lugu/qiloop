@@ -1,28 +1,34 @@
 package session
 
+import (
+	"bytes"
+	"fmt"
+	"github.com/lugu/qiloop/object"
+)
+
 // Client represents a client connection to a service.
 type Client interface {
-	Call(service uint32, object uint32, action uint32, payload []byte) ([]byte, error)
+	Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error)
 }
 
-// Proxy is the parent strucuture for Service. It wraps Client and
-// capture the service name.
-type Proxy struct {
-	client  Client
-	service uint32
-	object  uint32
-}
-
-// Call construct a call message and send it to the client endpoint.
-func (p Proxy) Call(action uint32, payload []byte) ([]byte, error) {
-	return p.client.Call(p.service, p.object, action, payload)
-}
-
-// NewProxy construct a Proxy.
-func NewProxy(client Client, service, object uint32) Proxy {
-	return Proxy{client, service, object}
+type Proxy interface {
+	Call(action string, payload []byte) ([]byte, error)
+	CallID(action uint32, payload []byte) ([]byte, error)
 }
 
 type Session interface {
-	Proxy(name string, object uint32) (Proxy, error)
+	Proxy(name string, objectID uint32) (Proxy, error)
+}
+
+func MetaObject(client Client, serviceID uint32, objectID uint32) (m object.MetaObject, err error) {
+	response, err := client.Call(serviceID, objectID, object.MetaObjectMethodID, nil)
+	if err != nil {
+		return m, fmt.Errorf("Can not call MetaObject: %s", err)
+	}
+	buf := bytes.NewBuffer(response)
+	m, err = object.ReadMetaObject(buf)
+	if err != nil {
+		return m, fmt.Errorf("failed to parse metaObject response: %s", err)
+	}
+	return m, nil
 }

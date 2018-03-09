@@ -118,10 +118,10 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret sign
 		}
 	}
 	if _, ok := ret.(signature.VoidValue); !ok {
-		writing[i] = jen.Id(fmt.Sprintf(`response, err := p.Call(%d, buf.Bytes())`, m.Uid))
+		writing[i] = jen.Id(fmt.Sprintf(`response, err := p.Call("%s", buf.Bytes())`, m.Name))
 		i++
 	} else {
-		writing[i] = jen.Id(fmt.Sprintf(`_, err = p.Call(%d, buf.Bytes())`, m.Uid))
+		writing[i] = jen.Id(fmt.Sprintf(`_, err = p.Call("%s", buf.Bytes())`, m.Name))
 		i++
 	}
 	if _, ok := ret.(signature.VoidValue); !ok {

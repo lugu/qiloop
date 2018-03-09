@@ -34,7 +34,7 @@ func main() {
 		log.Fatalf("failed to parse MetaObject: %s", err)
 	}
 	objects[1] = directory
-	objects[1].Description = "Directory"
+	objects[1].Description = "ServiceDirectory"
 
 	var output io.Writer
 	if len(os.Args) > 2 {
