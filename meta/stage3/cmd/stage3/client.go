@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	server "github.com/lugu/qiloop/meta/stage2"
+	"github.com/lugu/qiloop/meta/stage2"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
@@ -14,7 +14,7 @@ func manualProxy(e net.EndPoint, service, object uint32) session.Proxy {
 }
 
 func authenticate(e net.EndPoint) error {
-	server0 := server.Server{manualProxy(e, 0, 0)}
+	server0 := stage2.Server{manualProxy(e, 0, 0)}
 	permissions := map[string]value.Value{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),

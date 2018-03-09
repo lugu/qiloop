@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/signature"
-	object "github.com/lugu/qiloop/meta/stage1"
+	"github.com/lugu/qiloop/object"
 	"io"
 	"sort"
 	"strings"
@@ -176,11 +176,20 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 	if !ok {
 		return fmt.Errorf("failed to parse method parameters: expected a tuple, got %#v", tupleType)
 	}
+
+	params.ConvertMetaObjects()
 	params.RegisterTo(set)
 
 	ret, err := signature.Parse(m.ReturnSignature)
 	if err != nil {
 		return fmt.Errorf("failed to parse return signature %s: %s", m.ReturnSignature, err)
+	}
+
+	// implementation detail: use object.MetaObject when generating
+	// proxy in order for proxy to implement the object.Object
+	// interface.
+	if ret.Signature() == signature.MetaObjectSignature {
+		ret = signature.NewMetaObjectValue()
 	}
 	ret.RegisterTo(set)
 

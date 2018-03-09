@@ -2,17 +2,16 @@ package main
 
 import (
 	"github.com/lugu/qiloop/meta/proxy"
-	"github.com/lugu/qiloop/meta/stage1"
-	"github.com/lugu/qiloop/meta/stage2"
+	"github.com/lugu/qiloop/object"
 	"io"
 	"log"
 	"os"
 )
 
 func main() {
-	objects := make([]stage1.MetaObject, 2)
+	objects := make([]object.MetaObject, 2)
 
-	objects[0] = stage2.MetaService0
+	objects[0] = object.MetaService0
 	objects[0].Description = "Server"
 
 	var input io.Reader
@@ -30,7 +29,7 @@ func main() {
 		input = os.Stdin
 	}
 
-	directory, err := stage1.ReadMetaObject(input)
+	directory, err := object.ReadMetaObject(input)
 	if err != nil {
 		log.Fatalf("failed to parse MetaObject: %s", err)
 	}

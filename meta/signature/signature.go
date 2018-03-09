@@ -134,6 +134,12 @@ func NewTupleValue(values []ValueConstructor) *TupleValue {
 	return &TupleValue{values}
 }
 
+// NewMetaObjectValue is a contructor for the representation of an
+// object.
+func NewMetaObjectValue() MetaObjectValue {
+	return MetaObjectValue{}
+}
+
 // IntValue represents an integer.
 type IntValue struct {
 }
@@ -428,6 +434,33 @@ func (l *ListValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+type MetaObjectValue struct {
+}
+
+func (m MetaObjectValue) Signature() string {
+	return MetaObjectSignature
+}
+
+func (m MetaObjectValue) TypeName() *Statement {
+	return jen.Qual("github.com/lugu/qiloop/object", "MetaObject")
+}
+
+func (m MetaObjectValue) typeDeclaration(*jen.File) {
+	return
+}
+
+func (m MetaObjectValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (m MetaObjectValue) Marshal(id string, writer string) *Statement {
+	return jen.Qual("github.com/lugu/qiloop/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
+}
+
+func (m MetaObjectValue) Unmarshal(reader string) *Statement {
+	return jen.Qual("github.com/lugu/qiloop/object", "ReadMetaObject").Call(jen.Id(reader))
+}
+
 // Marshal returns a statement which represent the code needed to put
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
@@ -639,6 +672,19 @@ func (t *TupleValue) Marshal(variadicIdentifier string, writer string) *Statemen
 func (t *TupleValue) Unmarshal(reader string) *Statement {
 	// TODO: shall returns (type, err)
 	return jen.Empty()
+}
+
+// ConvertMetaObjects replace any element type which has the same
+// signature as MetaObject with an element of the type
+// object.MetaObject. This is required to generate proxy services
+// which implements the object.Object interface and avoid a circular
+// dependancy.
+func (t *TupleValue) ConvertMetaObjects() {
+	for i, member := range t.values {
+		if member.Signature() == MetaObjectSignature {
+			t.values[i] = NewMetaObjectValue()
+		}
+	}
 }
 
 // StructValue represents a struct.

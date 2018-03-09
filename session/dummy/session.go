@@ -3,6 +3,7 @@ package dummy
 import (
 	"fmt"
 	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/services"
 	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
@@ -10,7 +11,7 @@ import (
 )
 
 func Authenticate(e net.EndPoint) error {
-	server0 := services.Server{
+	server0 := object.Server{
 		manualProxy(e, 0, 0),
 	}
 	permissions := map[string]value.Value{
@@ -29,7 +30,7 @@ func Authenticate(e net.EndPoint) error {
 // implementation of Session. It does not update the list of services
 // and returns dummy blockingClients.
 type staticSession struct {
-	services []services.ServiceInfo
+	services []object.ServiceInfo
 }
 
 func (d *staticSession) Proxy(name string, object uint32) (p session.Proxy, err error) {
@@ -48,7 +49,7 @@ func manualProxy(e net.EndPoint, service, object uint32) session.Proxy {
 	return session.NewProxy(&blockingClient{e, 1}, service, object)
 }
 
-func newServiceProxy(info services.ServiceInfo) (p session.Proxy, err error) {
+func newServiceProxy(info object.ServiceInfo) (p session.Proxy, err error) {
 
 	if len(info.Endpoints) == 0 {
 		return p, fmt.Errorf("no known address for service %s", info.Name)

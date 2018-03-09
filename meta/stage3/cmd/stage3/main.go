@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"github.com/lugu/qiloop/meta/proxy"
-	"github.com/lugu/qiloop/meta/stage1"
 	"github.com/lugu/qiloop/meta/stage2"
 	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/object"
 	"io"
 	"log"
 	"os"
@@ -44,8 +43,8 @@ func main() {
 		log.Fatalf("failed to list services: %s", err)
 	}
 
-	objects := make([]stage1.MetaObject, 0)
-	objects = append(objects, stage2.MetaService0)
+	objects := make([]object.MetaObject, 0)
+	objects = append(objects, object.MetaService0)
 
 	for _, s := range serviceInfoList {
 
@@ -64,21 +63,7 @@ func main() {
 			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
 		}
 		metaObj.Description = s.Name
-
-		// Go type system: can not convert type stage2.MetaObject into
-		// stage1.MetaObject the trick is to serialize and deserialize
-		// the object to convert it.
-
-		buf := bytes.NewBuffer(make([]byte, 0))
-		if err = stage2.WriteMetaObject(metaObj, buf); err != nil {
-			log.Fatalf("failed to serialize stage2.MetaObject: %s", err)
-		}
-
-		if object, err := stage1.ReadMetaObject(buf); err != nil {
-			log.Fatalf("failed to deserialize stage1.MetaObject: %s", err)
-		} else {
-			objects = append(objects, object)
-		}
+		objects = append(objects, metaObj)
 	}
 	proxy.GenerateProxys(objects, "services", output)
 }
