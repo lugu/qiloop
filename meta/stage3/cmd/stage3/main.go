@@ -85,7 +85,11 @@ func main() {
 	objects := make([]object.MetaObject, 0)
 	objects = append(objects, object.MetaService0)
 
-	for _, s := range serviceInfoList {
+	for i, s := range serviceInfoList {
+
+		if i > 1 {
+			continue
+		}
 
 		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
 		obj, err := NewServiceDirectory(addr, s.ServiceId, 1, 2)

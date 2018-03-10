@@ -13,3 +13,7 @@ go generate github.com/lugu/qiloop/object
 go generate github.com/lugu/qiloop/meta/stage2
 go generate github.com/lugu/qiloop/meta/stage3
 go generate github.com/lugu/qiloop/services
+go get github.com/lugu/qiloop/cmd/info
+
+go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic
+$HOME/go/bin/info
