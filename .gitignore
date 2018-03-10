@@ -5,6 +5,7 @@
 *.so
 *.swp
 *~
+/coverage.txt
 /bin/
 /choregraphe/
 /pkg/
@@ -14,5 +15,5 @@
 /test/
 /meta/stage1/metaobject.go
 /meta/stage2/services.go
-/meta/stage3/directory.go
+/meta/stage3/services.go
 /meta/stage4/services.go
