@@ -29,7 +29,7 @@ func main() {
 		output = os.Stdout
 	}
 
-	typ, err := signature.Parse(signature.MetaObjectSignature)
+	typ, err := signature.Parse(signature.ObjectSignature)
 	if err != nil {
 		log.Fatalf("parsing error: %s\n", err)
 	}
