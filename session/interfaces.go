@@ -26,6 +26,7 @@ type Proxy interface {
 
 type Session interface {
 	Proxy(name string, objectID uint32) (Proxy, error)
+	Object(ref object.ObjectReference) (object.Object, error)
 }
 
 func MetaObject(client Client, serviceID uint32, objectID uint32) (m object.MetaObject, err error) {

@@ -410,7 +410,14 @@ of the type.
 
 ### Object
 
-// TODO: how to serialize object reference.
+An object is by definition a reference to a remote entity, therefore
+objects are not serialized. So the description of the object is
+serialized instead. This description contains the following fields:
+- **bool**: unknown // FIXME: why? can an object be "null" ?
+- **MetaObject**: a description of the object
+- **integer**: the service id
+- **integer**: the parent object id
+- **integer**: the object id
 
 ## Objects
 

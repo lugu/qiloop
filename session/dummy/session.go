@@ -39,59 +39,90 @@ type staticSession struct {
 	services []services.ServiceInfo
 }
 
-func newServiceProxy(info services.ServiceInfo, objectID uint32) (p session.Proxy, err error) {
-
+func newEndPoint(info services.ServiceInfo) (endpoint net.EndPoint, err error) {
 	if len(info.Endpoints) == 0 {
-		return p, fmt.Errorf("no known address for service %s", info.Name)
+		return endpoint, fmt.Errorf("missing address for service %s", info.Name)
 	}
-
 	addr := strings.TrimPrefix(info.Endpoints[0], "tcp://")
-	endpoint, err := net.DialEndPoint(addr)
+	endpoint, err = net.DialEndPoint(addr)
 	if err != nil {
-		return p, fmt.Errorf("%s: %s", info.Name, err)
+		return endpoint, fmt.Errorf("%s: connection failed (%s) : %s", info.Name, addr, err)
 	}
 	if err = Authenticate(endpoint); err != nil {
-		return p, fmt.Errorf("%s: %s", info.Name, err)
+		return endpoint, fmt.Errorf("authentication error (%s): %s", info.Name, err)
 	}
+	return endpoint, nil
+}
 
-	// FIXME: object id do be defined
-	return metaProxy(endpoint, info.ServiceId, objectID), nil
+func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Object, error) {
+	endpoint, err := newEndPoint(info)
+	if err != nil {
+		return nil, fmt.Errorf("object connection error (%s): %s", info.Name, err)
+	}
+	proxy, err := metaProxy(endpoint, ref.ServiceID, ref.ObjectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object meta object (%s): %s", info.Name, err)
+	}
+	return &services.Object{proxy}, nil
+}
+
+func newService(info services.ServiceInfo, objectID uint32) (p session.Proxy, err error) {
+	endpoint, err := newEndPoint(info)
+	if err != nil {
+		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
+	}
+	proxy, err := metaProxy(endpoint, info.ServiceId, objectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get service meta object (%s): %s", info.Name, err)
+	}
+	return proxy, nil
 }
 
 func (d *staticSession) Proxy(name string, objectID uint32) (p session.Proxy, err error) {
 
 	for _, service := range d.services {
 		if service.Name == name {
-			return newServiceProxy(service, objectID)
+			return newService(service, objectID)
 		}
 	}
 	return p, fmt.Errorf("service not found: %s", name)
 }
 
+func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err error) {
+	for _, service := range d.services {
+		if service.ServiceId == ref.ServiceID {
+			return newObject(service, ref)
+		}
+	}
+	return o, fmt.Errorf("Not yet implemented")
+}
+
 // metaProxy is to create proxies to the directory and server
 // services needed for a session.
-func metaProxy(e net.EndPoint, serviceID, objectID uint32) session.Proxy {
+func metaProxy(e net.EndPoint, serviceID, objectID uint32) (p session.Proxy, err error) {
 	client := &blockingClient{e, 3}
-	// FIXME: request a meta object
 	meta, err := session.MetaObject(client, serviceID, objectID)
 	if err != nil {
+		return p, fmt.Errorf("Can not reach metaObject: %s", err)
 	}
-	return NewProxy(client, meta, serviceID, objectID)
+	return NewProxy(client, meta, serviceID, objectID), nil
 }
 
 func NewSession(addr string) (s *staticSession, err error) {
 
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
-		return s, err
+		return s, fmt.Errorf("failed to contact %s: %s", addr, err)
 	}
 	if err = Authenticate(endpoint); err != nil {
 		return s, fmt.Errorf("authenitcation failed: %s", err)
 	}
 
-	directory := services.ServiceDirectory{
-		metaProxy(endpoint, 1, 1),
+	proxy, err := metaProxy(endpoint, 1, 1)
+	if err != nil {
+		return s, fmt.Errorf("failed to get directory meta object: %s", err)
 	}
+	directory := services.ServiceDirectory{proxy}
 	s = new(staticSession)
 	s.services, err = directory.Services()
 	if err != nil {

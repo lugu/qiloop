@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
 )
@@ -86,4 +87,8 @@ func (s directorySession) Proxy(name string, objectID uint32) (session.Proxy, er
 		objectID:        s.defaultObjectID,
 		defaultActionID: s.defaultActionID,
 	}, nil
+}
+
+func (d directorySession) Object(ref object.ObjectReference) (o object.Object, err error) {
+	return o, fmt.Errorf("Not yet implemented")
 }

@@ -320,9 +320,9 @@ func WriteMetaObject(s MetaObject, w io.Writer) (err error) {
 type ObjectReference struct {
 	Boolean    bool
 	MetaObject MetaObject
-	ServiceId  uint32
-	ParentId   uint32
-	ObjectId   uint32
+	ServiceID  uint32
+	ParentID   uint32
+	ObjectID   uint32
 }
 
 func ReadObjectReference(r io.Reader) (s ObjectReference, err error) {
@@ -332,14 +332,14 @@ func ReadObjectReference(r io.Reader) (s ObjectReference, err error) {
 	if s.MetaObject, err = ReadMetaObject(r); err != nil {
 		return s, fmt.Errorf("failed to read MetaObject field: %s", err)
 	}
-	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceId field: %s", err)
+	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceID field: %s", err)
 	}
-	if s.ParentId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ParentId field: %s", err)
+	if s.ParentID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ParentID field: %s", err)
 	}
-	if s.ObjectId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ObjectId field: %s", err)
+	if s.ObjectID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ObjectID field: %s", err)
 	}
 	return s, nil
 }
@@ -350,14 +350,14 @@ func WriteObjectReference(s ObjectReference, w io.Writer) (err error) {
 	if err := WriteMetaObject(s.MetaObject, w); err != nil {
 		return fmt.Errorf("failed to write MetaObject field: %s", err)
 	}
-	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
-		return fmt.Errorf("failed to write ServiceId field: %s", err)
+	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
+		return fmt.Errorf("failed to write ServiceID field: %s", err)
 	}
-	if err := basic.WriteUint32(s.ParentId, w); err != nil {
-		return fmt.Errorf("failed to write ParentId field: %s", err)
+	if err := basic.WriteUint32(s.ParentID, w); err != nil {
+		return fmt.Errorf("failed to write ParentID field: %s", err)
 	}
-	if err := basic.WriteUint32(s.ObjectId, w); err != nil {
-		return fmt.Errorf("failed to write ObjectId field: %s", err)
+	if err := basic.WriteUint32(s.ObjectID, w); err != nil {
+		return fmt.Errorf("failed to write ObjectID field: %s", err)
 	}
 	return nil
 }
