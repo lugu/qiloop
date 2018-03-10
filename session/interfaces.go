@@ -15,6 +15,13 @@ type Client interface {
 type Proxy interface {
 	Call(action string, payload []byte) ([]byte, error)
 	CallID(action uint32, payload []byte) ([]byte, error)
+
+	// ServiceID returns the service identifier. Allow services to
+	// implement the object.Object interface.
+	ServiceID() uint32
+	// ObjectID returns the object identifier with the service. Allow
+	// services to implement the object.Object interface.
+	ObjectID() uint32
 }
 
 type Session interface {

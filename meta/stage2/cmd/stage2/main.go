@@ -19,7 +19,6 @@ func main() {
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatalf("failed to open %s: %s", filename, err)
-			return
 		}
 		input = file
 		defer file.Close()
@@ -30,7 +29,6 @@ func main() {
 		file, err := os.Create(filename)
 		if err != nil {
 			log.Fatalf("failed to open %s: %s", filename, err)
-			return
 		}
 		output = file
 		defer file.Close()

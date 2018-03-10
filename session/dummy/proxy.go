@@ -30,6 +30,16 @@ func (p Proxy) Call(action string, payload []byte) ([]byte, error) {
 	return p.CallID(id, payload)
 }
 
+// ServiceID returns the service identifier.
+func (p Proxy) ServiceID() uint32 {
+	return p.service
+}
+
+// ObjectID returns the object identifier within the service.
+func (p Proxy) ObjectID() uint32 {
+	return p.object
+}
+
 // NewProxy construct a Proxy.
 func NewProxy(client session.Client, meta object.MetaObject, service uint32, object uint32) Proxy {
 	methods := make(map[string]uint32)

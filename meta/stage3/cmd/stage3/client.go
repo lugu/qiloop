@@ -57,6 +57,16 @@ func (p directoryProxy) Call(action string, payload []byte) ([]byte, error) {
 	return p.client.Call(p.serviceID, p.objectID, p.defaultActionID, payload)
 }
 
+// ServiceID returns the service identifier.
+func (p directoryProxy) ServiceID() uint32 {
+	return p.serviceID
+}
+
+// ObjectID returns the object identifier within the service.
+func (p directoryProxy) ObjectID() uint32 {
+	return p.objectID
+}
+
 type directorySession struct {
 	endpoint         net.EndPoint
 	defaultSerivceID uint32
