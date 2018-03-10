@@ -3,6 +3,7 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [Presentation](#presentation)
   - [Introduction](#introduction)
   - [Overview](#overview)
@@ -53,6 +54,8 @@
   - [Message origin](#message-origin)
   - [Message transferred](#message-transferred)
 - [Misc](#misc)
+  - [Object Statistics](#object-statistics)
+  - [Object tracing](#object-tracing)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -126,6 +129,8 @@ How does QiMessaging compares with:
   Python. NAOqi has JavaScript binding among many other binding. Both
   COM and QiMessaging can use reference counting to manage the life
   time of an object.
+
+// TODO: ROS comparison
 
 ### OSI Model
 
@@ -261,6 +266,8 @@ different places of the protocol. It can represents:
 - the concrete type of a value when it is serialized.
 
 ### Types
+
+libqi documentation: http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signature.html
 
 #### Basic types
 
@@ -415,6 +422,8 @@ An object is composed of:
 - a list of signals to be watched
 - a list of properties to be queried
 
+libqi documentation: http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/anyobject.html
+
 ### Methods
 ### Signaux
 ### Properties
@@ -459,6 +468,7 @@ $ qicli info --hidden 1
    006 setProperty                Void (Value,Value)
    007 properties                 List<String> ()
    008 registerEventWithSignature UInt64 (UInt32,UInt32,UInt64,String)
+
    080 isStatsEnabled             Bool ()
    081 enableStats                Void (Bool)
    082 stats                      Map<UInt32,MethodStatistics> ()
@@ -496,4 +506,7 @@ $ qicli info --hidden 1
 ### Message transferred
 
 ## Misc
+### Object Statistics
+### Object tracing
+### Interroperability
 
