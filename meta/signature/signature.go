@@ -140,6 +140,11 @@ func NewMetaObjectValue() MetaObjectValue {
 	return MetaObjectValue{}
 }
 
+// NewObjectValue is a contructor for the representation of a Value.
+func NewObjectValue() ObjectValue {
+	return ObjectValue{}
+}
+
 // IntValue represents an integer.
 type IntValue struct {
 }
@@ -459,6 +464,33 @@ func (m MetaObjectValue) Marshal(id string, writer string) *Statement {
 
 func (m MetaObjectValue) Unmarshal(reader string) *Statement {
 	return jen.Qual("github.com/lugu/qiloop/object", "ReadMetaObject").Call(jen.Id(reader))
+}
+
+type ObjectValue struct {
+}
+
+func (o ObjectValue) Signature() string {
+	return "o"
+}
+
+func (o ObjectValue) TypeName() *Statement {
+	return jen.Qual("github.com/lugu/qiloop/object", "Object")
+}
+
+func (o ObjectValue) typeDeclaration(*jen.File) {
+	return
+}
+
+func (o ObjectValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (o ObjectValue) Marshal(id string, writer string) *Statement {
+	return jen.Nil()
+}
+
+func (o ObjectValue) Unmarshal(reader string) *Statement {
+	return jen.List(jen.Nil(), jen.Nil())
 }
 
 // Marshal returns a statement which represent the code needed to put
@@ -782,6 +814,7 @@ func basicType() parsec.Parser {
 		parsec.Atom("b", "bool"),
 		parsec.Atom("f", "float32"),
 		parsec.Atom("m", "value"),
+		parsec.Atom("o", "github.com/lugu/qiloop/object.Object"),
 		parsec.Atom("v", "void"))
 }
 
@@ -812,6 +845,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewVoidValue()
 	case "m":
 		return NewValueValue()
+	case "o":
+		return NewObjectValue()
 	default:
 		log.Panicf("wrong signature %s", signature)
 	}
