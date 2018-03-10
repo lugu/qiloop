@@ -659,9 +659,9 @@ func (p *ServiceDirectory) MachineId() (string, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) _socketOfService(p0 uint32) (object.Object, error) {
+func (p *ServiceDirectory) _socketOfService(p0 uint32) (object.ObjectReference, error) {
 	var err error
-	var ret object.Object
+	var ret object.ObjectReference
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	if err = basic.WriteUint32(p0, buf); err != nil {
@@ -672,7 +672,7 @@ func (p *ServiceDirectory) _socketOfService(p0 uint32) (object.Object, error) {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = nil, nil
+	ret, err = object.ReadObjectReference(buf)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse _socketOfService response: %s", err)
 	}
@@ -960,9 +960,9 @@ func (p *LogManager) EnableTrace(p0 bool) error {
 	}
 	return nil
 }
-func (p *LogManager) CreateListener() (object.Object, error) {
+func (p *LogManager) CreateListener() (object.ObjectReference, error) {
 	var err error
-	var ret object.Object
+	var ret object.ObjectReference
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	response, err := p.Call("createListener", buf.Bytes())
@@ -970,15 +970,15 @@ func (p *LogManager) CreateListener() (object.Object, error) {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = nil, nil
+	ret, err = object.ReadObjectReference(buf)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse createListener response: %s", err)
 	}
 	return ret, nil
 }
-func (p *LogManager) GetListener() (object.Object, error) {
+func (p *LogManager) GetListener() (object.ObjectReference, error) {
 	var err error
-	var ret object.Object
+	var ret object.ObjectReference
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	response, err := p.Call("getListener", buf.Bytes())
@@ -986,7 +986,7 @@ func (p *LogManager) GetListener() (object.Object, error) {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = nil, nil
+	ret, err = object.ReadObjectReference(buf)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse getListener response: %s", err)
 	}

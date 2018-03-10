@@ -477,7 +477,7 @@ func (o ObjectValue) Signature() string {
 }
 
 func (o ObjectValue) TypeName() *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "Object")
+	return jen.Qual("github.com/lugu/qiloop/object", "ObjectReference")
 }
 
 func (o ObjectValue) typeDeclaration(*jen.File) {
@@ -489,11 +489,11 @@ func (o ObjectValue) RegisterTo(s *TypeSet) {
 }
 
 func (o ObjectValue) Marshal(id string, writer string) *Statement {
-	return jen.Nil()
+	return jen.Qual("github.com/lugu/qiloop/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (o ObjectValue) Unmarshal(reader string) *Statement {
-	return jen.List(jen.Nil(), jen.Nil())
+	return jen.Qual("github.com/lugu/qiloop/object", "ReadObjectReference").Call(jen.Id(reader))
 }
 
 // Marshal returns a statement which represent the code needed to put
