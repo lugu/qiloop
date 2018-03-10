@@ -9,15 +9,13 @@ import (
 )
 
 func main() {
-	objects := make([]object.MetaObject, 2)
 
-	objects[0] = object.MetaService0
-	objects[0].Description = "Server"
+	var err error
+	var input io.Reader = os.Stdin
+	var output io.Writer = os.Stdout
 
-	var input io.Reader
 	if len(os.Args) > 1 {
 		filename := os.Args[1]
-
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatalf("failed to open %s: %s", filename, err)
@@ -25,21 +23,10 @@ func main() {
 		}
 		input = file
 		defer file.Close()
-	} else {
-		input = os.Stdin
 	}
 
-	directory, err := object.ReadMetaObject(input)
-	if err != nil {
-		log.Fatalf("failed to parse MetaObject: %s", err)
-	}
-	objects[1] = directory
-	objects[1].Description = "ServiceDirectory"
-
-	var output io.Writer
 	if len(os.Args) > 2 {
 		filename := os.Args[2]
-
 		file, err := os.Create(filename)
 		if err != nil {
 			log.Fatalf("failed to open %s: %s", filename, err)
@@ -47,14 +34,19 @@ func main() {
 		}
 		output = file
 		defer file.Close()
-	} else {
-		output = os.Stdout
 	}
+
+	objects := make([]object.MetaObject, 3)
+	objects[0] = object.MetaService0
+	objects[1] = object.ObjectMetaObject
+	objects[2], err = object.ReadMetaObject(input)
+	if err != nil {
+		log.Fatalf("failed to parse MetaObject: %s", err)
+	}
+	objects[2].Description = "ServiceDirectory"
 
 	err = proxy.GenerateProxys(objects, "stage2", output)
 	if err != nil {
 		log.Fatalf("proxy generation failed: %s\n", err)
 	}
-
-	return
 }
