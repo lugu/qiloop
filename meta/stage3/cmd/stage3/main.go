@@ -15,6 +15,7 @@ import (
 )
 
 func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) session.Session {
+
 	sess0 := directorySession{conn, 0, 0, 8}
 	service0, err := stage2.NewServer(sess0, 0)
 	if err != nil {
@@ -36,6 +37,20 @@ func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) session
 		objectID,
 		actionID,
 	}
+}
+
+func NewObject(addr string, serviceID, objectID, actionID uint32) (d *stage2.Object, err error) {
+
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		return d, fmt.Errorf("failed to connect: %s", err)
+	}
+	sess := NewSession(endpoint, serviceID, objectID, actionID)
+	if err != nil {
+		return d, fmt.Errorf("failed to create session: %s", err)
+	}
+
+	return stage2.NewObject(sess, 1)
 }
 
 func NewServiceDirectory(addr string, serviceID, objectID, actionID uint32) (d *stage2.ServiceDirectory, err error) {
@@ -84,6 +99,7 @@ func main() {
 
 	objects := make([]object.MetaObject, 0)
 	objects = append(objects, object.MetaService0)
+	objects = append(objects, object.ObjectMetaObject)
 
 	for i, s := range serviceInfoList {
 
@@ -92,7 +108,7 @@ func main() {
 		}
 
 		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
-		obj, err := NewServiceDirectory(addr, s.ServiceId, 1, 2)
+		obj, err := NewObject(addr, s.ServiceId, 1, 2)
 		if err != nil {
 			log.Printf("failed to create servinceof %s: %s", s.Name, err)
 			continue
