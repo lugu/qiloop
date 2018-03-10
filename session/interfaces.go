@@ -3,6 +3,7 @@ package session
 import (
 	"bytes"
 	"fmt"
+	"github.com/lugu/qiloop/basic"
 	"github.com/lugu/qiloop/object"
 )
 
@@ -21,11 +22,13 @@ type Session interface {
 }
 
 func MetaObject(client Client, serviceID uint32, objectID uint32) (m object.MetaObject, err error) {
-	response, err := client.Call(serviceID, objectID, object.MetaObjectMethodID, nil)
+	buf := bytes.NewBuffer(make([]byte, 4))
+	basic.WriteUint32(objectID, buf)
+	response, err := client.Call(serviceID, objectID, object.MetaObjectMethodID, buf.Bytes())
 	if err != nil {
 		return m, fmt.Errorf("Can not call MetaObject: %s", err)
 	}
-	buf := bytes.NewBuffer(response)
+	buf = bytes.NewBuffer(response)
 	m, err = object.ReadMetaObject(buf)
 	if err != nil {
 		return m, fmt.Errorf("failed to parse metaObject response: %s", err)
