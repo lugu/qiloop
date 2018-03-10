@@ -16,7 +16,7 @@ import (
 // services. This step is referred as stage 1.
 const MetaObjectSignature string = "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
-var ObjectSignature string = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaObject,serviceID,parentID,objectID>",
+var ObjectSignature string = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaObject,parentID,serviceID,objectID>",
 	MetaObjectSignature)
 
 // TypeSet is a container which contains exactly one instance of each

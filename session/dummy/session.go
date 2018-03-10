@@ -59,10 +59,7 @@ func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Ob
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s", info.Name, err)
 	}
-	proxy, err := metaProxy(endpoint, ref.ServiceID, ref.ObjectID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get object meta object (%s): %s", info.Name, err)
-	}
+	proxy := newProxy(endpoint, ref.MetaObject, ref.ServiceID, ref.ObjectID)
 	return &services.Object{proxy}, nil
 }
 
@@ -95,6 +92,11 @@ func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err
 		}
 	}
 	return o, fmt.Errorf("Not yet implemented")
+}
+
+func newProxy(e net.EndPoint, meta object.MetaObject, serviceID, objectID uint32) session.Proxy {
+	client := &blockingClient{e, 3}
+	return NewProxy(client, meta, serviceID, objectID)
 }
 
 // metaProxy is to create proxies to the directory and server
