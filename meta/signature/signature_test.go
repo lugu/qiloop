@@ -34,6 +34,7 @@ func TestParseBasics(t *testing.T) {
 	testUtil(t, "I", NewIntValue())
 	testUtil(t, "s", NewStringValue())
 	testUtil(t, "L", NewLongValue())
+	testUtil(t, "l", NewLongValue())
 	testUtil(t, "b", NewBoolValue())
 	testUtil(t, "f", NewFloatValue())
 	testUtil(t, "m", NewValueValue())

@@ -815,6 +815,7 @@ func basicType() parsec.Parser {
 		parsec.Atom("i", "uint32"),
 		parsec.Atom("s", "string"),
 		parsec.Atom("L", "uint64"),
+		parsec.Atom("l", "uint64"),
 		parsec.Atom("b", "bool"),
 		parsec.Atom("f", "float32"),
 		parsec.Atom("m", "value"),
@@ -839,6 +840,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewIntValue()
 	case "I":
 		return NewIntValue()
+	case "l":
+		return NewLongValue()
 	case "L":
 		return NewLongValue()
 	case "s":
