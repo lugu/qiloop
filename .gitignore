@@ -5,6 +5,8 @@
 *.so
 *.swp
 *~
+/main
+/debug.test
 /coverage.txt
 /bin/
 /choregraphe/
