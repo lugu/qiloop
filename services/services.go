@@ -960,6 +960,31 @@ func (p *LogManager) EnableTrace(p0 bool) error {
 	}
 	return nil
 }
+func (p *LogManager) Log(p0 []LogMessage) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = func() error {
+		err := basic.WriteUint32(uint32(len(p0)), buf)
+		if err != nil {
+			return fmt.Errorf("failed to write slice size: %s", err)
+		}
+		for _, v := range p0 {
+			err = WriteLogMessage(v, buf)
+			if err != nil {
+				return fmt.Errorf("failed to write slice value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("failed to serialize p0: %s", err)
+	}
+	_, err = p.Call("log", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call log failed: %s", err)
+	}
+	return nil
+}
 func (p *LogManager) CreateListener() (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
@@ -991,6 +1016,38 @@ func (p *LogManager) GetListener() (object.ObjectReference, error) {
 		return ret, fmt.Errorf("failed to parse getListener response: %s", err)
 	}
 	return ret, nil
+}
+func (p *LogManager) AddProvider(p0 object.ObjectReference) (uint32, error) {
+	var err error
+	var ret uint32
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = object.WriteObjectReference(p0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	}
+	response, err := p.Call("addProvider", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call addProvider failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadUint32(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse addProvider response: %s", err)
+	}
+	return ret, nil
+}
+func (p *LogManager) RemoveProvider(p0 uint32) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(p0, buf); err != nil {
+		return fmt.Errorf("failed to serialize p0: %s", err)
+	}
+	_, err = p.Call("removeProvider", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call removeProvider failed: %s", err)
+	}
+	return nil
 }
 
 type MinMaxSum struct {
@@ -1135,6 +1192,72 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	}
 	if err := basic.WriteString(s.SessionId, w); err != nil {
 		return fmt.Errorf("failed to write SessionId field: %s", err)
+	}
+	return nil
+}
+
+type LogMessage struct {
+	Source     string
+	Level      uint32
+	Category   string
+	Location   string
+	Message    string
+	Id         uint32
+	Date       uint64
+	SystemDate uint64
+}
+
+func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
+	if s.Source, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Source field: %s", err)
+	}
+	if s.Level, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read Level field: %s", err)
+	}
+	if s.Category, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Category field: %s", err)
+	}
+	if s.Location, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Location field: %s", err)
+	}
+	if s.Message, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Message field: %s", err)
+	}
+	if s.Id, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read Id field: %s", err)
+	}
+	if s.Date, err = basic.ReadUint64(r); err != nil {
+		return s, fmt.Errorf("failed to read Date field: %s", err)
+	}
+	if s.SystemDate, err = basic.ReadUint64(r); err != nil {
+		return s, fmt.Errorf("failed to read SystemDate field: %s", err)
+	}
+	return s, nil
+}
+func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
+	if err := basic.WriteString(s.Source, w); err != nil {
+		return fmt.Errorf("failed to write Source field: %s", err)
+	}
+	if err := basic.WriteUint32(s.Level, w); err != nil {
+		return fmt.Errorf("failed to write Level field: %s", err)
+	}
+	if err := basic.WriteString(s.Category, w); err != nil {
+		return fmt.Errorf("failed to write Category field: %s", err)
+	}
+	if err := basic.WriteString(s.Location, w); err != nil {
+		return fmt.Errorf("failed to write Location field: %s", err)
+	}
+	if err := basic.WriteString(s.Message, w); err != nil {
+		return fmt.Errorf("failed to write Message field: %s", err)
+	}
+	if err := basic.WriteUint32(s.Id, w); err != nil {
+		return fmt.Errorf("failed to write Id field: %s", err)
+	}
+	if err := basic.WriteUint64(s.Date, w); err != nil {
+		return fmt.Errorf("failed to write Date field: %s", err)
+	}
+	if err := basic.WriteUint64(s.SystemDate, w); err != nil {
+		return fmt.Errorf("failed to write SystemDate field: %s", err)
 	}
 	return nil
 }
