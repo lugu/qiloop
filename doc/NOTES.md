@@ -300,6 +300,11 @@ When describing the return type of a method:
   2- the list of methods and signals associated with an object can be
   query by calling its method "metaObject". See MetaObject section.
 
+#### Other
+
+- 'X': an unknown type.
+- 'v': void: used for the return type of a method.
+
 ### Examples
 
 - i: an integer (`int`)

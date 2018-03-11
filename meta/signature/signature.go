@@ -148,6 +148,11 @@ func NewObjectValue() ObjectValue {
 	return ObjectValue{}
 }
 
+// NewUnknownValue is a contructor for an unkown type.
+func NewUnknownValue() UnknownValue {
+	return UnknownValue{}
+}
+
 // IntValue represents an integer.
 type IntValue struct {
 }
@@ -496,6 +501,33 @@ func (o ObjectValue) Unmarshal(reader string) *Statement {
 	return jen.Qual("github.com/lugu/qiloop/object", "ReadObjectReference").Call(jen.Id(reader))
 }
 
+type UnknownValue struct {
+}
+
+func (u UnknownValue) Signature() string {
+	return "X"
+}
+
+func (u UnknownValue) TypeName() *Statement {
+	return jen.Id("interface{}")
+}
+
+func (u UnknownValue) typeDeclaration(*jen.File) {
+	return
+}
+
+func (u UnknownValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (u UnknownValue) Marshal(id string, writer string) *Statement {
+	return jen.Nil()
+}
+
+func (u UnknownValue) Unmarshal(reader string) *Statement {
+	return jen.List(jen.Nil(), jen.Nil())
+}
+
 // Marshal returns a statement which represent the code needed to put
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
@@ -820,6 +852,7 @@ func basicType() parsec.Parser {
 		parsec.Atom("f", "float32"),
 		parsec.Atom("m", "value"),
 		parsec.Atom("o", "github.com/lugu/qiloop/object.Object"),
+		parsec.Atom("X", "interface{}"),
 		parsec.Atom("v", "void"))
 }
 
@@ -856,6 +889,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewValueValue()
 	case "o":
 		return NewObjectValue()
+	case "X":
+		return NewUnknownValue()
 	default:
 		log.Panicf("wrong signature %s", signature)
 	}
