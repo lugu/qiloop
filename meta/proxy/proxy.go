@@ -175,7 +175,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 	paramType.RegisterTo(set)
 	tuple, ok := paramType.(*signature.TupleValue)
 	if !ok {
-		return fmt.Errorf("parameter is not a tuple: %s: got %#v", m.ParametersSignature, paramType)
+		tuple = signature.NewTupleValue([]signature.ValueConstructor{paramType})
 	}
 
 	tuple.ConvertMetaObjects()
