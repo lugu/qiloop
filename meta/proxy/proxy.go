@@ -168,21 +168,21 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 	}
 	names[methodName] = true
 
-	tupleType, err := signature.Parse(m.ParametersSignature)
+	paramType, err := signature.Parse(m.ParametersSignature)
 	if err != nil {
-		return fmt.Errorf("failed to parse signature %s: %s", m.ParametersSignature, err)
+		return fmt.Errorf("failed to parse parameters %s: %s", m.ParametersSignature, err)
 	}
-	params, ok := tupleType.(*signature.TupleValue)
+	paramType.RegisterTo(set)
+	tuple, ok := paramType.(*signature.TupleValue)
 	if !ok {
-		return fmt.Errorf("failed to parse method parameters: expected a tuple, got %#v", tupleType)
+		return fmt.Errorf("parameter is not a tuple: %s: got %#v", m.ParametersSignature, paramType)
 	}
 
-	params.ConvertMetaObjects()
-	params.RegisterTo(set)
+	tuple.ConvertMetaObjects()
 
 	ret, err := signature.Parse(m.ReturnSignature)
 	if err != nil {
-		return fmt.Errorf("failed to parse return signature %s: %s", m.ReturnSignature, err)
+		return fmt.Errorf("failed to parse return: %s: %s", m.ReturnSignature, err)
 	}
 
 	// implementation detail: use object.MetaObject when generating
@@ -193,7 +193,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 	}
 	ret.RegisterTo(set)
 
-	body, err := methodBodyBlock(m, params, ret)
+	body, err := methodBodyBlock(m, tuple, ret)
 	if err != nil {
 		return fmt.Errorf("failed to generate body: %s", err)
 	}
@@ -204,7 +204,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 	}
 
 	file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id(strings.Title(methodName)).Add(
-		params.Params(),
+		tuple.Params(),
 	).Add(
 		retType,
 	).Add(
