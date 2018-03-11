@@ -192,7 +192,8 @@ func (m *Message) Read(r io.Reader) error {
 	if size, err := r.Read(b); err != nil {
 		return err // won't process reader issues.
 	} else if size != int(HeaderSize) {
-		// TODO: truncated message: read again.
+		// BUG: must re-try to read from the reader until the
+		// header is read.
 		return fmt.Errorf("full header not received (%d instead of %d)", size, HeaderSize)
 	}
 
@@ -208,6 +209,8 @@ func (m *Message) Read(r io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("failed to read message payload: %s", err)
 	} else if size != int(m.Header.Size) {
+		// BUG: must re-try to read from the reader until the full
+		// payload is read.
 		return fmt.Errorf("failed to read message payload (%d instead of %d)", size, m.Header.Size)
 	}
 	return nil

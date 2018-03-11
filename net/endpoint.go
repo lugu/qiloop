@@ -27,6 +27,9 @@ type EndPoint interface {
 	Send(m Message) error
 	ReceiveAny() (*Message, error)
 
+	// TODO: split Handler into two parts: a filter for the message
+	// header which must not block and another part which does the
+	// processing which will be run it its own goroutine.
 	AddHandler(h Handler) int
 	RemoveHandler(id int) error
 }
@@ -89,6 +92,11 @@ func (e *endPoint) AddHandler(h Handler) int {
 	return len(e.destinations) - 1
 }
 
+// dispatch test all destinations for someone interrested in the
+// message.
+//
+// BUG: do not holds the destMutex lock during processing since one
+// of the Handler might want to unregister itself.
 func (e *endPoint) dispatch(msg *Message) error {
 	e.destMutex.Lock()
 	defer e.destMutex.Unlock()
@@ -119,6 +127,8 @@ func (e *endPoint) process() {
 			e.Close()
 			break
 		} else if err != nil {
+			// FIXME: proper error management: recover from a
+			// currupted message by discarding the crap.
 			log.Printf("closing connection: %s", err)
 			e.Close()
 			break
