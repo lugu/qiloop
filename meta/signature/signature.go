@@ -489,7 +489,7 @@ func (o ObjectValue) RegisterTo(s *TypeSet) {
 }
 
 func (o ObjectValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/object", "WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (o ObjectValue) Unmarshal(reader string) *Statement {
