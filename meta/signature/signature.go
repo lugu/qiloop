@@ -301,14 +301,14 @@ func (d DoubleValue) typeDeclaration(dile *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (d DoubleValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteDouble64").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (d DoubleValue) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadFloat64").Call(jen.Id(reader))
+	return jen.Qual("github.com/lugu/qiloop/basic", "ReadFloat64").Call(jen.Id(reader))
 }
 
 // BoolValue represents a bool.
