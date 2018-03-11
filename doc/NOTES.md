@@ -417,6 +417,8 @@ of the type.
 
 - **structure**: the concatenation of the serialized fields.
 
+- **tuple**: the concatenation of the serialized members.
+
 ### Object
 
 An object is a reference to a remote entity, therefore it is not
