@@ -82,6 +82,7 @@ func (c *blockingClient) Stream(serviceID, objectID, actionID uint32, cancel cha
 	go func(id int) {
 		<-cancel
 		c.endpoint.RemoveHandler(id)
+		close(stream)
 	}(c.endpoint.AddHandler(filter, consumer))
 
 	return stream, nil
