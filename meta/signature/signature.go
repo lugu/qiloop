@@ -83,6 +83,11 @@ func NewFloatValue() FloatValue {
 	return FloatValue{}
 }
 
+// NewDoubleValue is a contructor for the representation of a float32.
+func NewDoubleValue() DoubleValue {
+	return DoubleValue{}
+}
+
 // NewIntValue is a contructor for the representation of an uint32.
 func NewIntValue() IntValue {
 	return IntValue{}
@@ -266,6 +271,44 @@ func (f FloatValue) Marshal(id string, writer string) *Statement {
 // read and an error.
 func (f FloatValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadFloat32").Call(jen.Id(reader))
+}
+
+// DoubleValue represents a float.
+type DoubleValue struct {
+}
+
+// Signature returns "f".
+func (d DoubleValue) Signature() string {
+	return "f"
+}
+
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
+func (d DoubleValue) TypeName() *Statement {
+	return jen.Float64()
+}
+
+// RegisterTo adds the type to the TypeSet.
+func (d DoubleValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (d DoubleValue) typeDeclaration(dile *jen.File) {
+	return
+}
+
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (d DoubleValue) Marshal(id string, writer string) *Statement {
+	return jen.Qual("github.com/lugu/qiloop/basic", "WriteDouble64").Call(jen.Id(id), jen.Id(writer))
+}
+
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
+func (d DoubleValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadFloat64").Call(jen.Id(reader))
 }
 
 // BoolValue represents a bool.
@@ -850,6 +893,7 @@ func basicType() parsec.Parser {
 		parsec.Atom("l", "uint64"),
 		parsec.Atom("b", "bool"),
 		parsec.Atom("f", "float32"),
+		parsec.Atom("d", "float64"),
 		parsec.Atom("m", "value"),
 		parsec.Atom("o", "github.com/lugu/qiloop/object.Object"),
 		parsec.Atom("X", "interface{}"),
@@ -883,6 +927,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewBoolValue()
 	case "f":
 		return NewFloatValue()
+	case "d":
+		return NewDoubleValue()
 	case "v":
 		return NewVoidValue()
 	case "m":

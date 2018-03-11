@@ -133,6 +133,33 @@ func WriteFloat32(f float32, w io.Writer) error {
 	return nil
 }
 
+// ReadFloat64 read a little endian float64
+func ReadFloat64(r io.Reader) (float64, error) {
+	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+	bytes, err := r.Read(buf)
+	if err != nil {
+		return 0, err
+	} else if bytes != 8 {
+		return 0, fmt.Errorf("failed to read float64 (%d instead of 4)", bytes)
+	}
+	bits := binary.LittleEndian.Uint64(buf)
+	return math.Float64frombits(bits), nil
+}
+
+// WriteFloat64 writes a little endian float64
+func WriteFloat64(f float64, w io.Writer) error {
+	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+	bits := math.Float64bits(f)
+	binary.LittleEndian.PutUint64(buf, bits)
+	bytes, err := w.Write(buf)
+	if err != nil {
+		return err
+	} else if bytes != 8 {
+		return fmt.Errorf("failed to write float64 (%d instead of 4)", bytes)
+	}
+	return nil
+}
+
 // ReadBool read a one byte size binary value
 func ReadBool(r io.Reader) (bool, error) {
 	u, err := ReadUint8(r)

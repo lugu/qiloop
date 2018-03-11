@@ -82,7 +82,7 @@ QiMessaging exposes a software bus on which services can be used.
 Services have methods (to be called) and signals (to be watched).
 Signals, method parameters can have different kind of type:
 
-- basic type (int, long, float, string and bool)
+- basic type (int, long, float, double, string and bool)
 - aggregates (vector, hash map, structures)
 - untyped (also referred as values)
 - and even objects!
@@ -273,6 +273,7 @@ libqi documentation: http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signatu
 
 - 'i' or 'I': integer: 32 bits signed.
 - 'f': float: 32 bits (IEEE 754)
+- 'd': double: 64 bits (IEEE 754)
 - 'l': long: 64 bits signed value
 - 'b': bool: boolean value
 - 's': string: string of character
@@ -309,6 +310,7 @@ When describing the return type of a method:
 
 - i: an integer (`int`)
 - f: a float (`float`)
+- d: a double (`double`)
 - [s]: a vector of string (`std::vector<string>`)
 - {lb}: a map from long to boolean (`std::map<long int, bool>`)
 - (s)<Structure,field>: a structure represented C like:
@@ -360,8 +362,9 @@ type_string = "s"
 type_boolan = "b"
 type_int = "i" | "I"
 type_value = "m"
-type_long = "L"
+type_long = "L" | "l"
 type_float = "f"
+type_float = "d"
 type_object = "o"
 
 type_basic = type_int | type_string | type_float | type_long | type_boolean | type_value | type_object
@@ -392,7 +395,8 @@ all values are transmitted in little endian.
 
 - **integer**: 32 bits little endian signed.
 - **long**: 64 bits little endian signed.
-- **float**: IEEE 754 little endian.
+- **float**: 32 bites IEEE 754 little endian.
+- **double**: 64 bites IEEE 754 little endian.
 - **boolean**: 1 byte (zero for false)
 - **string**: an integer (as defined above) followed the bytes of the
   string. Not finishing with a zero.
