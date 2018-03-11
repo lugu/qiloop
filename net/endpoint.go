@@ -8,18 +8,12 @@ import (
 	"sync"
 )
 
-type ConstError string
+// Filter returns true if given message shall be processed by a
+// Consumer.
+type Filter func(hdr *Header) bool
 
-func (e ConstError) Error() string {
-	return string(e)
-}
-
-const ErrNotForMe = ConstError("This message is not for me")
-
-// Handler consum messages. If a message is not destinated to the
-// Handle, it must return ErrNotForMe otherwise it must return nil.
-// Messages are passed through handlers until one handler returns nil.
-type Handler func(msg *Message) error
+// Consumer process a message which has been selected by a filter.
+type Consumer func(msg *Message) error
 
 // EndPoint reprensents a network socket capable of sending and
 // receiving messages.
@@ -27,24 +21,24 @@ type EndPoint interface {
 	Send(m Message) error
 	ReceiveAny() (*Message, error)
 
-	// TODO: split Handler into two parts: a filter for the message
-	// header which must not block and another part which does the
-	// processing which will be run it its own goroutine.
-	AddHandler(h Handler) int
+	AddHandler(f Filter, c Consumer) int
 	RemoveHandler(id int) error
 }
 
 type endPoint struct {
-	conn         gonet.Conn
-	destinations []Handler
-	destMutex    sync.Mutex
+	conn      gonet.Conn
+	filters   []Filter
+	consumers []Consumer
+	// handlerMutex: protect filters and consumers which must stay synchronized.
+	handlerMutex sync.Mutex
 }
 
 // NewEndPoint creates an EndPoint which accpets messsages
 func NewEndPoint(conn gonet.Conn) EndPoint {
 	e := &endPoint{
-		conn:         conn,
-		destinations: make([]Handler, 10),
+		conn:      conn,
+		filters:   make([]Filter, 10),
+		consumers: make([]Consumer, 10),
 	}
 	go e.process()
 	return e
@@ -70,38 +64,39 @@ func (e *endPoint) Close() error {
 }
 
 func (e *endPoint) RemoveHandler(id int) error {
-	e.destMutex.Lock()
-	defer e.destMutex.Unlock()
-	if id >= 0 && id < len(e.destinations) {
-		e.destinations[id] = nil
+	e.handlerMutex.Lock()
+	defer e.handlerMutex.Unlock()
+	if id >= 0 && id < len(e.filters) {
+		e.filters[id] = nil
+		e.consumers[id] = nil
 		return nil
 	}
-	return fmt.Errorf("invalid Handler id: %d", id)
+	return fmt.Errorf("invalid handler id: %d", id)
 }
 
-func (e *endPoint) AddHandler(h Handler) int {
-	e.destMutex.Lock()
-	defer e.destMutex.Unlock()
-	for i, handler := range e.destinations {
-		if handler == nil {
-			e.destinations[i] = h
+func (e *endPoint) AddHandler(f Filter, c Consumer) int {
+	e.handlerMutex.Lock()
+	defer e.handlerMutex.Unlock()
+	for i, filter := range e.filters {
+		if filter == nil {
+			e.filters[i] = f
+			e.consumers[i] = c
 			return i
 		}
 	}
-	e.destinations = append(e.destinations, h)
-	return len(e.destinations) - 1
+	e.filters = append(e.filters, f)
+	e.consumers = append(e.consumers, c)
+	return len(e.filters) - 1
 }
 
 // dispatch test all destinations for someone interrested in the
 // message.
-//
-// BUG: do not holds the destMutex lock during processing since one
-// of the Handler might want to unregister itself.
 func (e *endPoint) dispatch(msg *Message) error {
-	e.destMutex.Lock()
-	defer e.destMutex.Unlock()
-	for _, dest := range e.destinations {
-		if dest != nil && dest(msg) == nil {
+	e.handlerMutex.Lock()
+	defer e.handlerMutex.Unlock()
+	for i, f := range e.filters {
+		if f != nil && f(&msg.Header) == true {
+			go e.consumers[i](msg)
 			return nil
 		}
 	}
@@ -140,11 +135,14 @@ func (e *endPoint) process() {
 // Receive wait for a message to be received.
 func (e *endPoint) ReceiveAny() (*Message, error) {
 	found := make(chan *Message)
-	var handler Handler = func(msg *Message) error {
+	filter := func(msg *Header) bool {
+		return true
+	}
+	consumer := func(msg *Message) error {
 		found <- msg
 		return nil
 	}
-	id := e.AddHandler(handler)
+	id := e.AddHandler(filter, consumer)
 	defer e.RemoveHandler(id)
 	msg := <-found
 	return msg, nil
