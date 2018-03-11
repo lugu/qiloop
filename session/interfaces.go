@@ -10,11 +10,15 @@ import (
 // Client represents a client connection to a service.
 type Client interface {
 	Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error)
+	Stream(serviceID, objectID, signalID uint32, cancel chan int) (chan []byte, error)
 }
 
 type Proxy interface {
 	Call(action string, payload []byte) ([]byte, error)
 	CallID(action uint32, payload []byte) ([]byte, error)
+
+	// SignalStream returns a channel with the values of a signal
+	SignalStream(signal uint32, cancel chan int) (chan []byte, error)
 
 	// ServiceID returns the service identifier. Allow services to
 	// implement the object.Object interface.

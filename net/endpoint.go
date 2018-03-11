@@ -2,70 +2,83 @@ package net
 
 import (
 	"fmt"
+	"io"
 	"log"
 	gonet "net"
+	"sync"
 )
 
+type ConstError string
+
+func (e ConstError) Error() string {
+	return string(e)
+}
+
+const ErrNotForMe = ConstError("This message is not for me")
+
 // Handler consum messages. If a message is not destinated to the
-// Handle, it must return an error. It must return nil if the message
-// was processed.
+// Handle, it must return ErrNotForMe otherwise it must return nil.
+// Messages are passed through handlers until one handler returns nil.
 type Handler func(msg *Message) error
 
 // EndPoint reprensents a network socket capable of sending and
 // receiving messages.
-type EndPoint struct {
+type EndPoint interface {
+	Send(m Message) error
+	ReceiveAny() (*Message, error)
+
+	AddHandler(h Handler) int
+	RemoveHandler(id int) error
+}
+
+type endPoint struct {
 	conn         gonet.Conn
 	destinations []Handler
-	msg          chan *Message
+	destMutex    sync.Mutex
 }
 
 // NewEndPoint creates an EndPoint which accpets messsages
-// TODO: add a Start() Pause(), Terminate() methods
 func NewEndPoint(conn gonet.Conn) EndPoint {
-	e := EndPoint{
+	e := &endPoint{
 		conn:         conn,
 		destinations: make([]Handler, 10),
 	}
-	// FIXME: not yet switched
-	// e.process()
+	go e.process()
 	return e
 }
 
 // DialEndPoint construct an endpoint by contacting a given address.
-func DialEndPoint(addr string) (e EndPoint, err error) {
+func DialEndPoint(addr string) (EndPoint, error) {
 	conn, err := gonet.Dial("tcp", addr)
 	if err != nil {
-		return e, fmt.Errorf("failed to connect %s: %s", addr, err)
+		return nil, fmt.Errorf("failed to connect %s: %s", addr, err)
 	}
 	return NewEndPoint(conn), nil
 }
 
-// AcceptedEndPoint construct an endpoint using an accepted
-// connection.
-func AcceptedEndPoint(c gonet.Conn) EndPoint {
-	return NewEndPoint(c)
-}
-
 // Send post a message to the other side of the endpoint.
-func (e EndPoint) Send(m Message) error {
+func (e *endPoint) Send(m Message) error {
 	return m.Write(e.conn)
 }
 
 // Close wait for a message to be received.
-func (e EndPoint) Close() error {
+func (e *endPoint) Close() error {
 	return e.conn.Close()
 }
 
-func (e EndPoint) removeHandler(id int) error {
+func (e *endPoint) RemoveHandler(id int) error {
+	e.destMutex.Lock()
+	defer e.destMutex.Unlock()
 	if id >= 0 && id < len(e.destinations) {
 		e.destinations[id] = nil
 		return nil
-	} else {
-		return fmt.Errorf("invalid Handler id: %d", id)
 	}
+	return fmt.Errorf("invalid Handler id: %d", id)
 }
 
-func (e EndPoint) addHandler(h Handler) int {
+func (e *endPoint) AddHandler(h Handler) int {
+	e.destMutex.Lock()
+	defer e.destMutex.Unlock()
 	for i, handler := range e.destinations {
 		if handler == nil {
 			e.destinations[i] = h
@@ -76,9 +89,11 @@ func (e EndPoint) addHandler(h Handler) int {
 	return len(e.destinations) - 1
 }
 
-func (e EndPoint) dispatch(msg *Message) error {
+func (e *endPoint) dispatch(msg *Message) error {
+	e.destMutex.Lock()
+	defer e.destMutex.Unlock()
 	for _, dest := range e.destinations {
-		if dest != nil && dest(msg) != nil {
+		if dest != nil && dest(msg) == nil {
 			return nil
 		}
 	}
@@ -87,7 +102,7 @@ func (e EndPoint) dispatch(msg *Message) error {
 
 // process read all messages from the end point and dispatch them one
 // by one.
-func (e EndPoint) process() {
+func (e *endPoint) process() {
 	queue := make(chan *Message, 10)
 	defer close(queue)
 
@@ -100,51 +115,27 @@ func (e EndPoint) process() {
 	for {
 		msg := new(Message)
 		err := msg.Read(e.conn)
-		if err != nil {
-			// TODO: stop when the connection closed
-			log.Printf("message read error: %s", err)
-			continue
+		if err == io.EOF {
+			e.Close()
+			break
+		} else if err != nil {
+			log.Printf("closing connection: %s", err)
+			e.Close()
+			break
 		}
 		queue <- msg
 	}
 }
 
-func (e EndPoint) consume(chan *Message) {
-}
-
-type ConstError string
-
-func (e ConstError) Error() string {
-	return string(e)
-}
-
-const ErrNotForMe = ConstError("This message is not for me")
-const ErrCancelled = ConstError("Don't wait for a reply")
-
-// ReceiveOne wait for a message to be received.
-func (e EndPoint) ReceiveOne(serviceID, objectID, actionID, messageID uint32, cancel chan int) (m *Message, err error) {
+// Receive wait for a message to be received.
+func (e *endPoint) ReceiveAny() (*Message, error) {
 	found := make(chan *Message)
 	var handler Handler = func(msg *Message) error {
-		if msg.Header.Service == serviceID && msg.Header.Object == objectID &&
-			msg.Header.Action == actionID && msg.Header.ID == messageID {
-			found <- msg
-			return nil
-		}
-		return ErrNotForMe
+		found <- msg
+		return nil
 	}
-	id := e.addHandler(handler)
-	select {
-	case msg := <-found:
-		e.removeHandler(id)
-		return msg, nil
-	case <-cancel:
-		e.removeHandler(id)
-		return m, ErrCancelled
-	}
-}
-
-// Receive wait for a message to be received.
-func (e EndPoint) Receive() (m Message, err error) {
-	err = m.Read(e.conn)
-	return
+	id := e.AddHandler(handler)
+	defer e.RemoveHandler(id)
+	msg := <-found
+	return msg, nil
 }

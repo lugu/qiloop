@@ -14,9 +14,8 @@ func Authenticate(endpoint net.EndPoint) error {
 
 	const serviceID = 0
 	const objectID = 0
-	const messageID = 0
 
-	client0 := &blockingClient{endpoint, messageID}
+	client0 := newClient(endpoint)
 	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
 	server0 := services.Server{proxy0}
 
@@ -95,14 +94,13 @@ func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err
 }
 
 func newProxy(e net.EndPoint, meta object.MetaObject, serviceID, objectID uint32) session.Proxy {
-	client := &blockingClient{e, 3}
-	return NewProxy(client, meta, serviceID, objectID)
+	return NewProxy(newClient(e), meta, serviceID, objectID)
 }
 
 // metaProxy is to create proxies to the directory and server
 // services needed for a session.
 func metaProxy(e net.EndPoint, serviceID, objectID uint32) (p session.Proxy, err error) {
-	client := &blockingClient{e, 3}
+	client := newClient(e)
 	meta, err := session.MetaObject(client, serviceID, objectID)
 	if err != nil {
 		return p, fmt.Errorf("Can not reach metaObject: %s", err)

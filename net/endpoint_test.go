@@ -13,15 +13,20 @@ func TestPingPong(t *testing.T) {
 	var p int
 	var err error
 	var ln gonet.Listener
+	var addr string
 
 	// 1. establish server
 	for p = 1024; p < 66535; p++ {
-		ln, err = gonet.Listen("tcp", fmt.Sprintf(":%d", p))
+		addr = fmt.Sprintf(":%d", p)
+		ln, err = gonet.Listen("tcp", addr)
 		if err == nil {
+			defer ln.Close()
 			break
 		}
 	}
-	defer ln.Close()
+	if ln == nil {
+		t.Errorf("cannot find available port")
+	}
 
 	// 2. accept a single connection
 	go func() {
@@ -31,39 +36,47 @@ func TestPingPong(t *testing.T) {
 			return
 		}
 		defer conn.Close()
-		endpoint := net.AcceptedEndPoint(conn)
-		m, err := endpoint.Receive()
+
+		endpoint := net.NewEndPoint(conn)
+		m, err := endpoint.ReceiveAny()
 		if err != nil {
 			t.Errorf("failed to receive meesage: %s", err)
 		}
-		err = endpoint.Send(m)
+		err = endpoint.Send(*m)
 		if err != nil {
 			t.Errorf("failed to send meesage: %s", err)
 		}
 	}()
 
 	// 3. client estable connection
-	endpoint, err := net.DialEndPoint(fmt.Sprintf(":%d", p))
+	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
 		t.Errorf("dial failed: %s", err)
 	}
 
-	// 4. client send a message
 	h := net.NewHeader(net.Call, 1, 2, 3, 4)
 	mSent := net.NewMessage(h, []byte{0xab, 0xcd})
 
+	// 4. prepare to receive a message
+	received := make(chan *net.Message)
+	go func() {
+		msg, err := endpoint.ReceiveAny()
+		if err != nil {
+			t.Errorf("failed to receive net. %s", err)
+		}
+		received <- msg
+	}()
+
+	// 5. client send a message
 	if err = endpoint.Send(mSent); err != nil {
 		t.Errorf("failed to send paquet: %s", err)
 	}
 
-	// 5. server reply
-	mReceived, err := endpoint.Receive()
-	if err != nil {
-		t.Errorf("failed to receive net. %s", err)
-	}
+	// 6. server replied
+	mReceived := <-received
 
-	// 6. check packet integrity
-	if !reflect.DeepEqual(mSent, mReceived) {
+	// 7. check packet integrity
+	if !reflect.DeepEqual(mSent, *mReceived) {
 		t.Errorf("expected %#v, go %#v", mSent, mReceived)
 	}
 }

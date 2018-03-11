@@ -190,8 +190,9 @@ func (m *Message) Read(r io.Reader) error {
 	// Read the complete header, then parse the fields.
 	b := make([]byte, HeaderSize)
 	if size, err := r.Read(b); err != nil {
-		return fmt.Errorf("failed to receive header: %s", err)
+		return err // won't process reader issues.
 	} else if size != int(HeaderSize) {
+		// TODO: truncated message: read again.
 		return fmt.Errorf("full header not received (%d instead of %d)", size, HeaderSize)
 	}
 

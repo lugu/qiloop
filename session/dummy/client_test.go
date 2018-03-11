@@ -33,15 +33,15 @@ func TestProxyCall(t *testing.T) {
 			return
 		}
 		defer conn.Close()
-		endpoint := net.AcceptedEndPoint(conn)
+		endpoint := net.NewEndPoint(conn)
 
 		for i := 0; i < 2; i++ {
-			m, err := endpoint.Receive()
+			m, err := endpoint.ReceiveAny()
 			if err != nil {
 				t.Errorf("failed to receive meesage: %s", err)
 			}
 			m.Header.Type = net.Reply
-			err = endpoint.Send(m)
+			err = endpoint.Send(*m)
 			if err != nil {
 				t.Errorf("failed to send meesage: %s", err)
 			}

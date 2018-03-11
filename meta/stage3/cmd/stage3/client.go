@@ -19,15 +19,23 @@ func (c directoryClient) Call(serviceID uint32, objectID uint32, actionID uint32
 	c.nextMessageID += 2
 	h := net.NewHeader(net.Call, serviceID, objectID, actionID, id)
 	m := net.NewMessage(h, payload)
+
+	received := make(chan *net.Message)
+	go func() {
+		msg, err := c.conn.ReceiveAny()
+		if err != nil {
+			fmt.Errorf("failed to receive net. %s", err)
+		}
+		received <- msg
+	}()
+
 	if err := c.conn.Send(m); err != nil {
 		return nil, fmt.Errorf("failed to call service %d, object %d, action %d: %s",
 			serviceID, objectID, actionID, err)
 	}
-	response, err := c.conn.Receive()
-	if err != nil {
-		return nil, fmt.Errorf("failed to receive reply from service %d, object %d, action %d: %s",
-			serviceID, objectID, actionID, err)
-	}
+
+	response := <-received
+
 	if response.Header.ID != id {
 		return nil, fmt.Errorf("invalid to message id (%d is expected, got %d)",
 			id, response.Header.ID)
@@ -66,6 +74,11 @@ func (p directoryProxy) ServiceID() uint32 {
 // ObjectID returns the object identifier within the service.
 func (p directoryProxy) ObjectID() uint32 {
 	return p.objectID
+}
+
+// SignalStream is not implemented. Does nothing in stage3.
+func (p directoryProxy) SignalStream(signal uint32, cancel chan int) (chan []byte, error) {
+	return nil, fmt.Errorf("not used during stage 3")
 }
 
 type directorySession struct {
