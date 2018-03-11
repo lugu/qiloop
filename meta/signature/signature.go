@@ -564,11 +564,11 @@ func (u UnknownValue) RegisterTo(s *TypeSet) {
 }
 
 func (u UnknownValue) Marshal(id string, writer string) *Statement {
-	return jen.Nil()
+	return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not supported: %v"), jen.Id(id))
 }
 
 func (u UnknownValue) Unmarshal(reader string) *Statement {
-	return jen.List(jen.Nil(), jen.Nil())
+	return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type deserialization not supported")))
 }
 
 // Marshal returns a statement which represent the code needed to put
@@ -773,7 +773,7 @@ func (t *TupleValue) typeDeclaration(*jen.File) {
 // error.
 func (t *TupleValue) Marshal(variadicIdentifier string, writer string) *Statement {
 	// TODO: shall returns an error
-	return jen.Empty()
+	return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not implemented: %v"), jen.Id(variadicIdentifier))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -781,7 +781,7 @@ func (t *TupleValue) Marshal(variadicIdentifier string, writer string) *Statemen
 // read and an error.
 func (t *TupleValue) Unmarshal(reader string) *Statement {
 	// TODO: shall returns (type, err)
-	return jen.Empty()
+	return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("tuple type deserialization not implemented")))
 }
 
 // ConvertMetaObjects replace any element type which has the same
