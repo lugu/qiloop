@@ -812,6 +812,7 @@ func (s *StructValue) Unmarshal(reader string) *Statement {
 func basicType() parsec.Parser {
 	return parsec.OrdChoice(nodifyBasicType,
 		parsec.Atom("I", "uint32"),
+		parsec.Atom("i", "uint32"),
 		parsec.Atom("s", "string"),
 		parsec.Atom("L", "uint64"),
 		parsec.Atom("b", "bool"),
@@ -834,6 +835,8 @@ func nodifyBasicType(nodes []Node) Node {
 	}
 	signature := nodes[0].(*parsec.Terminal).GetValue()
 	switch signature {
+	case "i":
+		return NewIntValue()
 	case "I":
 		return NewIntValue()
 	case "L":

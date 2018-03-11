@@ -30,6 +30,7 @@ func testSignature(t *testing.T, signature string) {
 }
 
 func TestParseBasics(t *testing.T) {
+	testUtil(t, "i", NewIntValue())
 	testUtil(t, "I", NewIntValue())
 	testUtil(t, "s", NewStringValue())
 	testUtil(t, "L", NewLongValue())
