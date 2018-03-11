@@ -434,6 +434,14 @@ An object is composed of:
 libqi documentation: http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/anyobject.html
 
 ### Methods
+
+The signature of the parameters of a method is a tuple, except for the
+method `pCall`, which has a value instead of a tuple (for unknown
+reason).
+
+The return type of a method can not be a tuple. It can be anything
+else, including a special type `void` which represents nothing.
+
 ### Signaux
 ### Properties
 ### MetaObject
