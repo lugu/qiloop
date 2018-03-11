@@ -32,12 +32,12 @@ func (c *blockingClient) Call(serviceID uint32, objectID uint32, actionID uint32
 
 	reply := make(chan []byte)
 
-	filter := func(hdr *net.Header) bool {
+	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Service == serviceID && hdr.Object == objectID &&
 			hdr.Action == actionID && hdr.ID == messageID {
-			return true
+			return true, false
 		}
-		return false
+		return false, true
 	}
 
 	consumer := func(msg *net.Message) error {
@@ -47,10 +47,10 @@ func (c *blockingClient) Call(serviceID uint32, objectID uint32, actionID uint32
 
 	// 1. starts listening for an answer.
 	id := c.endpoint.AddHandler(filter, consumer)
-	defer c.endpoint.RemoveHandler(id)
 
 	// 2. send the call message.
 	if err := c.endpoint.Send(msg); err != nil {
+		c.endpoint.RemoveHandler(id)
 		return nil, fmt.Errorf("failed to call service %d, object %d, action %d: %s",
 			serviceID, objectID, actionID, err)
 	}
@@ -67,12 +67,12 @@ func (c *blockingClient) Call(serviceID uint32, objectID uint32, actionID uint32
 func (c *blockingClient) Stream(serviceID, objectID, actionID uint32, cancel chan int) (chan []byte, error) {
 	stream := make(chan []byte)
 
-	filter := func(hdr *net.Header) bool {
+	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Service == serviceID && hdr.Object == objectID &&
 			hdr.Action == actionID {
-			return true
+			return true, true
 		}
-		return false
+		return false, true
 	}
 	consumer := func(msg *net.Message) error {
 		stream <- msg.Payload
