@@ -726,7 +726,7 @@ func (t *TupleValue) Signature() string {
 func (t *TupleValue) Members() []MemberValue {
 	members := make([]MemberValue, len(t.values))
 	for i, v := range t.values {
-		members[i] = MemberValue{fmt.Sprintf("p%d", i), v}
+		members[i] = MemberValue{fmt.Sprintf("P%d", i), v}
 	}
 	return members
 }
@@ -736,7 +736,7 @@ func (t *TupleValue) Members() []MemberValue {
 func (t *TupleValue) Params() *Statement {
 	arguments := make([]jen.Code, len(t.values))
 	for i, v := range t.values {
-		arguments[i] = jen.Id(fmt.Sprintf("p%d", i)).Add(v.TypeName())
+		arguments[i] = jen.Id(fmt.Sprintf("P%d", i)).Add(v.TypeName())
 	}
 	return jen.Params(arguments...)
 }
