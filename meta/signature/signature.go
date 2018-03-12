@@ -490,6 +490,53 @@ func (l *ListValue) typeDeclaration(file *jen.File) {
 	return
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (l *ListValue) Marshal(listID string, writer string) *Statement {
+	return jen.Func().Params().Params(jen.Error()).Block(
+		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
+			jen.Id("len").Call(jen.Id(listID))),
+			jen.Id(writer)),
+		jen.Id(`if (err != nil) {
+            return fmt.Errorf("failed to write slice size: %s", err)
+        }`),
+		jen.For(
+			jen.Id("_, v := range "+listID),
+		).Block(
+			jen.Err().Op("=").Add(l.value.Marshal("v", writer)),
+			jen.Id(`if (err != nil) {
+                return fmt.Errorf("failed to write slice value: %s", err)
+            }`),
+		),
+		jen.Return(jen.Nil()),
+	).Call()
+}
+
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
+func (l *ListValue) Unmarshal(reader string) *Statement {
+	return jen.Func().Params().Params(
+		jen.Id("b").Index().Add(l.value.TypeName()),
+		jen.Err().Error(),
+	).Block(
+		jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
+		jen.If(jen.Id("err != nil")).Block(
+			jen.Return(jen.Id("b"), jen.Qual("fmt", "Errorf").Call(jen.Id(`"failed to read slice size: %s", err`)))),
+		jen.Id("b").Op("=").Id("make").Call(l.TypeName(), jen.Id("size")),
+		jen.For(
+			jen.Id("i := 0; i < int(size); i++"),
+		).Block(
+			jen.Id("b[i], err =").Add(l.value.Unmarshal(reader)),
+			jen.Id(`if (err != nil) {
+                return b, fmt.Errorf("failed to read slice value: %s", err)
+            }`),
+		),
+		jen.Return(jen.Id("b"), jen.Nil()),
+	).Call()
+}
+
 type MetaObjectValue struct {
 }
 
@@ -569,53 +616,6 @@ func (u UnknownValue) Marshal(id string, writer string) *Statement {
 
 func (u UnknownValue) Unmarshal(reader string) *Statement {
 	return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type deserialization not supported")))
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (l *ListValue) Marshal(listID string, writer string) *Statement {
-	return jen.Func().Params().Params(jen.Error()).Block(
-		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
-			jen.Id("len").Call(jen.Id(listID))),
-			jen.Id(writer)),
-		jen.Id(`if (err != nil) {
-            return fmt.Errorf("failed to write slice size: %s", err)
-        }`),
-		jen.For(
-			jen.Id("_, v := range "+listID),
-		).Block(
-			jen.Err().Op("=").Add(l.value.Marshal("v", writer)),
-			jen.Id(`if (err != nil) {
-                return fmt.Errorf("failed to write slice value: %s", err)
-            }`),
-		),
-		jen.Return(jen.Nil()),
-	).Call()
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (l *ListValue) Unmarshal(reader string) *Statement {
-	return jen.Func().Params().Params(
-		jen.Id("b").Index().Add(l.value.TypeName()),
-		jen.Err().Error(),
-	).Block(
-		jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
-		jen.If(jen.Id("err != nil")).Block(
-			jen.Return(jen.Id("b"), jen.Qual("fmt", "Errorf").Call(jen.Id(`"failed to read slice size: %s", err`)))),
-		jen.Id("b").Op("=").Id("make").Call(l.TypeName(), jen.Id("size")),
-		jen.For(
-			jen.Id("i := 0; i < int(size); i++"),
-		).Block(
-			jen.Id("b[i], err =").Add(l.value.Unmarshal(reader)),
-			jen.Id(`if (err != nil) {
-                return b, fmt.Errorf("failed to read slice value: %s", err)
-            }`),
-		),
-		jen.Return(jen.Id("b"), jen.Nil()),
-	).Call()
 }
 
 // MapValue represents a map.
@@ -753,7 +753,11 @@ func (t *TupleValue) Params() *Statement {
 // TypeName returns a statement to be inserted when the type is to be
 // declared.
 func (t *TupleValue) TypeName() *Statement {
-	return jen.Id("...interface{}")
+	params := make([]jen.Code, 0)
+	for _, typ := range t.Members() {
+		params = append(params, jen.Id(typ.Name).Add(typ.Value.TypeName()))
+	}
+	return jen.Struct(params...)
 }
 
 // RegisterTo adds the type to the TypeSet.
@@ -771,9 +775,21 @@ func (t *TupleValue) typeDeclaration(*jen.File) {
 // Marshal returns a statement which represent the code needed to put
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
-func (t *TupleValue) Marshal(variadicIdentifier string, writer string) *Statement {
-	// TODO: shall returns an error
-	return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not implemented: %v"), jen.Id(variadicIdentifier))
+func (t *TupleValue) Marshal(tupleID string, writer string) *Statement {
+	statements := make([]jen.Code, 0)
+	for _, typ := range t.Members() {
+		s1 := jen.Err().Op("=").Add(typ.Value.Marshal(tupleID+"."+typ.Name, writer))
+		s2 := jen.Id(`if (err != nil) {
+			return fmt.Errorf("failed to write tuple member: %s", err)
+		}`)
+		statements = append(statements, s1)
+		statements = append(statements, s2)
+	}
+	statements = append(statements, jen.Return(jen.Nil()))
+	return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not implemented: %v"), jen.Id(tupleID))
+	return jen.Func().Params().Params(jen.Error()).Block(
+		statements...,
+	).Call()
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -782,6 +798,22 @@ func (t *TupleValue) Marshal(variadicIdentifier string, writer string) *Statemen
 func (t *TupleValue) Unmarshal(reader string) *Statement {
 	// TODO: shall returns (type, err)
 	return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("tuple type deserialization not implemented")))
+	statements := make([]jen.Code, 0)
+	for _, typ := range t.Members() {
+		s1 := jen.List(jen.Id("s."+typ.Name), jen.Err()).Op("=").Add(typ.Value.Unmarshal(reader))
+		s2 := jen.Id(`if (err != nil) {
+			return fmt.Errorf("failed to read tuple member: %s", err)
+		}`)
+		statements = append(statements, s1)
+		statements = append(statements, s2)
+	}
+	statements = append(statements, jen.Return(jen.Id("s"), jen.Nil()))
+	return jen.Func().Params().Params(
+		jen.Id("s").Index().Add(t.TypeName()),
+		jen.Err().Error(),
+	).Block(
+		statements...,
+	).Call()
 }
 
 // ConvertMetaObjects replace any element type which has the same

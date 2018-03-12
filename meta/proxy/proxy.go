@@ -241,17 +241,7 @@ func generateSignal(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 		return fmt.Errorf("failed to parse signal %s: %s", s.Signature, err)
 	}
 
-	// TODO: signal generation requires working tuple.
-	// FIXME: quick test with the first element of the tuple
-	tuple, ok := signalType.(*signature.TupleValue)
-	if ok {
-		signalType = tuple.Members()[0].Value
-	}
-
 	signalType.RegisterTo(set)
-
-	fmt.Printf("%s\n", s.Signature)
-	fmt.Printf("%+v\n", signalType)
 
 	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
 	body := jen.Block(jen.Return(jen.Nil(), jen.Nil()))
