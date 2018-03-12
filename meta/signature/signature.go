@@ -796,20 +796,18 @@ func (t *TupleValue) Marshal(tupleID string, writer string) *Statement {
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (t *TupleValue) Unmarshal(reader string) *Statement {
-	// TODO: shall returns (type, err)
-	return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("tuple type deserialization not implemented")))
 	statements := make([]jen.Code, 0)
 	for _, typ := range t.Members() {
 		s1 := jen.List(jen.Id("s."+typ.Name), jen.Err()).Op("=").Add(typ.Value.Unmarshal(reader))
 		s2 := jen.Id(`if (err != nil) {
-			return fmt.Errorf("failed to read tuple member: %s", err)
+			return s, fmt.Errorf("failed to read tuple member: %s", err)
 		}`)
 		statements = append(statements, s1)
 		statements = append(statements, s2)
 	}
 	statements = append(statements, jen.Return(jen.Id("s"), jen.Nil()))
 	return jen.Func().Params().Params(
-		jen.Id("s").Index().Add(t.TypeName()),
+		jen.Id("s").Add(t.TypeName()),
 		jen.Err().Error(),
 	).Block(
 		statements...,
