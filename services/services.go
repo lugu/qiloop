@@ -681,19 +681,127 @@ func (p *ServiceDirectory) _socketOfService(p0 uint32) (object.ObjectReference, 
 func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (chan struct {
 	p0 EventTrace
 }, error) {
-	return nil, nil
+	ch := make(chan struct {
+		p0 EventTrace
+	})
+	chPay, err := p.SignalStream("traceObject", cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request signal: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				close(ch) // upstream is closed.
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (s struct {
+				p0 EventTrace
+			}, err error) {
+				s.p0, err = ReadEventTrace(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				return s, nil
+			}()
+			if err != nil {
+				fmt.Errorf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return ch, nil
 }
 func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (chan struct {
 	p0 uint32
 	p1 string
 }, error) {
-	return nil, nil
+	ch := make(chan struct {
+		p0 uint32
+		p1 string
+	})
+	chPay, err := p.SignalStream("serviceAdded", cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request signal: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				close(ch) // upstream is closed.
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (s struct {
+				p0 uint32
+				p1 string
+			}, err error) {
+				s.p0, err = basic.ReadUint32(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				s.p1, err = basic.ReadString(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				return s, nil
+			}()
+			if err != nil {
+				fmt.Errorf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return ch, nil
 }
 func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (chan struct {
 	p0 uint32
 	p1 string
 }, error) {
-	return nil, nil
+	ch := make(chan struct {
+		p0 uint32
+		p1 string
+	})
+	chPay, err := p.SignalStream("serviceRemoved", cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request signal: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				close(ch) // upstream is closed.
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (s struct {
+				p0 uint32
+				p1 string
+			}, err error) {
+				s.p0, err = basic.ReadUint32(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				s.p1, err = basic.ReadString(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				return s, nil
+			}()
+			if err != nil {
+				fmt.Errorf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return ch, nil
 }
 
 type LogManager struct {
@@ -1069,7 +1177,39 @@ func (p *LogManager) RemoveProvider(p0 uint32) error {
 func (p *LogManager) SignalTraceObject(cancel chan int) (chan struct {
 	p0 EventTrace
 }, error) {
-	return nil, nil
+	ch := make(chan struct {
+		p0 EventTrace
+	})
+	chPay, err := p.SignalStream("traceObject", cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request signal: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				close(ch) // upstream is closed.
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (s struct {
+				p0 EventTrace
+			}, err error) {
+				s.p0, err = ReadEventTrace(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				return s, nil
+			}()
+			if err != nil {
+				fmt.Errorf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return ch, nil
 }
 
 type MinMaxSum struct {
