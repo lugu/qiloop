@@ -2,6 +2,7 @@ package signature
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func testUtil(t *testing.T, input string, expected ValueConstructor) {
 		t.Error(err)
 	} else if result == nil {
 		t.Error("wrong return")
-	} else if Print(result) != Print(expected) {
+	} else if strings.ToLower(result.Signature()) != strings.ToLower(expected.Signature()) {
 		buf := bytes.NewBufferString("")
 		result.TypeName().Render(buf)
 		t.Error("invalid type: " + buf.String())
