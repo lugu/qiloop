@@ -68,6 +68,13 @@ func TestParseList(t *testing.T) {
 	testUtil(t, "{b[I]}", NewMapValue(NewBoolValue(), NewListValue(NewIntValue())))
 }
 
+func TestParseTuple(t *testing.T) {
+	testUtil(t, "(s)", NewTupleValue([]ValueConstructor{NewStringValue()}))
+	testUtil(t, "(i)", NewTupleValue([]ValueConstructor{NewIntValue()}))
+	testUtil(t, "(ii)", NewTupleValue([]ValueConstructor{NewIntValue(), NewIntValue()}))
+	testUtil(t, "(fbd)", NewTupleValue([]ValueConstructor{NewFloatValue(), NewBoolValue(), NewDoubleValue()}))
+}
+
 func TestParseDefinition(t *testing.T) {
 	testUtil(t, "(s)<test,a>", NewStrucValue("test", []MemberValue{NewMemberValue("a", NewStringValue())}))
 	testUtil(t, "(ss)<test,a,a>", NewStrucValue("test", []MemberValue{
