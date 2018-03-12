@@ -22,9 +22,9 @@ type Object interface {
 	// Terminate informs a service that an object is no longer needed.
 	Terminate(objectID uint32) error
 
-	RegisterEvent(fromServiceID uint32, fromObjectID uint32, signalID uint64) (uint64, error)
-	RegisterEventWithSignature(fromServiceID uint32, fromObjectID uint32, signalID uint64, signature string) (uint64, error)
-	UnregisterEvent(fromServiceID uint32, fromObjectID uint32, signalID uint64) error
+	RegisterEvent(serviceID uint32, signalID uint32, handler uint64) (uint64, error)
+	UnregisterEvent(serviceID uint32, signalID uint32, handler uint64) error
+	RegisterEventWithSignature(serviceID uint32, signalID uint32, handler uint64, signature string) (uint64, error)
 
 	// Property returns the value of the property.
 	Property(prop value.Value) (value.Value, error)
