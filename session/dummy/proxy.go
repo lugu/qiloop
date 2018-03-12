@@ -47,7 +47,7 @@ func (p Proxy) SignalStreamID(signal uint32, cancel chan int) (chan []byte, erro
 
 // SignalStream returns a channel with the values of a signal
 func (p Proxy) SignalStream(signal string, cancel chan int) (chan []byte, error) {
-	id, err := p.meta.MethodUid(signal)
+	id, err := p.meta.SignalUid(signal)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find signal %s: %s", signal, err)
 	}
