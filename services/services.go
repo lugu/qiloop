@@ -22,17 +22,17 @@ func NewServer(ses session.Session, obj uint32) (*Server, error) {
 	}
 	return &Server{proxy}, nil
 }
-func (p *Server) Authenticate(p0 map[string]value.Value) (map[string]value.Value, error) {
+func (p *Server) Authenticate(P0 map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(p0)), buf)
+		err := basic.WriteUint32(uint32(len(P0)), buf)
 		if err != nil {
 			return fmt.Errorf("failed to write map size: %s", err)
 		}
-		for k, v := range p0 {
+		for k, v := range P0 {
 			err = basic.WriteString(k, buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
@@ -44,7 +44,7 @@ func (p *Server) Authenticate(p0 map[string]value.Value) (map[string]value.Value
 		}
 		return nil
 	}(); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("authenticate", buf.Bytes())
 	if err != nil {
@@ -87,19 +87,19 @@ func NewObject(ses session.Session, obj uint32) (*Object, error) {
 	}
 	return &Object{proxy}, nil
 }
-func (p *Object) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint64, error) {
+func (p *Object) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P2: %s", err)
 	}
 	response, err := p.Call("registerEvent", buf.Bytes())
 	if err != nil {
@@ -112,18 +112,18 @@ func (p *Object) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint64, error) 
 	}
 	return ret, nil
 }
-func (p *Object) UnregisterEvent(p0 uint32, p1 uint32, p2 uint64) error {
+func (p *Object) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return fmt.Errorf("failed to serialize P2: %s", err)
 	}
 	_, err = p.Call("unregisterEvent", buf.Bytes())
 	if err != nil {
@@ -131,13 +131,13 @@ func (p *Object) UnregisterEvent(p0 uint32, p1 uint32, p2 uint64) error {
 	}
 	return nil
 }
-func (p *Object) MetaObject(p0 uint32) (object.MetaObject, error) {
+func (p *Object) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("metaObject", buf.Bytes())
 	if err != nil {
@@ -150,12 +150,12 @@ func (p *Object) MetaObject(p0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
-func (p *Object) Terminate(p0 uint32) error {
+func (p *Object) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("terminate", buf.Bytes())
 	if err != nil {
@@ -163,13 +163,13 @@ func (p *Object) Terminate(p0 uint32) error {
 	}
 	return nil
 }
-func (p *Object) Property(p0 value.Value) (value.Value, error) {
+func (p *Object) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = p0.Write(buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = P0.Write(buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("property", buf.Bytes())
 	if err != nil {
@@ -182,15 +182,15 @@ func (p *Object) Property(p0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
-func (p *Object) SetProperty(p0 value.Value, p1 value.Value) error {
+func (p *Object) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = p0.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = P0.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = p1.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize p1: %s", err)
+	if err = P1.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize P1: %s", err)
 	}
 	_, err = p.Call("setProperty", buf.Bytes())
 	if err != nil {
@@ -227,22 +227,22 @@ func (p *Object) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
-func (p *Object) RegisterEventWithSignature(p0 uint32, p1 uint32, p2 uint64, p3 string) (uint64, error) {
+func (p *Object) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P2: %s", err)
 	}
-	if err = basic.WriteString(p3, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p3: %s", err)
+	if err = basic.WriteString(P3, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P3: %s", err)
 	}
 	response, err := p.Call("registerEventWithSignature", buf.Bytes())
 	if err != nil {
@@ -267,19 +267,19 @@ func NewServiceDirectory(ses session.Session, obj uint32) (*ServiceDirectory, er
 	}
 	return &ServiceDirectory{proxy}, nil
 }
-func (p *ServiceDirectory) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint64, error) {
+func (p *ServiceDirectory) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P2: %s", err)
 	}
 	response, err := p.Call("registerEvent", buf.Bytes())
 	if err != nil {
@@ -292,18 +292,18 @@ func (p *ServiceDirectory) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint6
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) UnregisterEvent(p0 uint32, p1 uint32, p2 uint64) error {
+func (p *ServiceDirectory) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return fmt.Errorf("failed to serialize P2: %s", err)
 	}
 	_, err = p.Call("unregisterEvent", buf.Bytes())
 	if err != nil {
@@ -311,13 +311,13 @@ func (p *ServiceDirectory) UnregisterEvent(p0 uint32, p1 uint32, p2 uint64) erro
 	}
 	return nil
 }
-func (p *ServiceDirectory) MetaObject(p0 uint32) (object.MetaObject, error) {
+func (p *ServiceDirectory) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("metaObject", buf.Bytes())
 	if err != nil {
@@ -330,12 +330,12 @@ func (p *ServiceDirectory) MetaObject(p0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) Terminate(p0 uint32) error {
+func (p *ServiceDirectory) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("terminate", buf.Bytes())
 	if err != nil {
@@ -343,13 +343,13 @@ func (p *ServiceDirectory) Terminate(p0 uint32) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) Property(p0 value.Value) (value.Value, error) {
+func (p *ServiceDirectory) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = p0.Write(buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = P0.Write(buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("property", buf.Bytes())
 	if err != nil {
@@ -362,15 +362,15 @@ func (p *ServiceDirectory) Property(p0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) SetProperty(p0 value.Value, p1 value.Value) error {
+func (p *ServiceDirectory) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = p0.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = P0.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = p1.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize p1: %s", err)
+	if err = P1.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize P1: %s", err)
 	}
 	_, err = p.Call("setProperty", buf.Bytes())
 	if err != nil {
@@ -407,22 +407,22 @@ func (p *ServiceDirectory) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) RegisterEventWithSignature(p0 uint32, p1 uint32, p2 uint64, p3 string) (uint64, error) {
+func (p *ServiceDirectory) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P2: %s", err)
 	}
-	if err = basic.WriteString(p3, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p3: %s", err)
+	if err = basic.WriteString(P3, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P3: %s", err)
 	}
 	response, err := p.Call("registerEventWithSignature", buf.Bytes())
 	if err != nil {
@@ -451,12 +451,12 @@ func (p *ServiceDirectory) IsStatsEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) EnableStats(p0 bool) error {
+func (p *ServiceDirectory) EnableStats(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteBool(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteBool(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("enableStats", buf.Bytes())
 	if err != nil {
@@ -524,12 +524,12 @@ func (p *ServiceDirectory) IsTraceEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) EnableTrace(p0 bool) error {
+func (p *ServiceDirectory) EnableTrace(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteBool(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteBool(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("enableTrace", buf.Bytes())
 	if err != nil {
@@ -537,13 +537,13 @@ func (p *ServiceDirectory) EnableTrace(p0 bool) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) Service(p0 string) (ServiceInfo, error) {
+func (p *ServiceDirectory) Service(P0 string) (ServiceInfo, error) {
 	var err error
 	var ret ServiceInfo
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteString(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("service", buf.Bytes())
 	if err != nil {
@@ -585,13 +585,13 @@ func (p *ServiceDirectory) Services() ([]ServiceInfo, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) RegisterService(p0 ServiceInfo) (uint32, error) {
+func (p *ServiceDirectory) RegisterService(P0 ServiceInfo) (uint32, error) {
 	var err error
 	var ret uint32
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = WriteServiceInfo(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("registerService", buf.Bytes())
 	if err != nil {
@@ -604,12 +604,12 @@ func (p *ServiceDirectory) RegisterService(p0 ServiceInfo) (uint32, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) UnregisterService(p0 uint32) error {
+func (p *ServiceDirectory) UnregisterService(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("unregisterService", buf.Bytes())
 	if err != nil {
@@ -617,12 +617,12 @@ func (p *ServiceDirectory) UnregisterService(p0 uint32) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) ServiceReady(p0 uint32) error {
+func (p *ServiceDirectory) ServiceReady(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("serviceReady", buf.Bytes())
 	if err != nil {
@@ -630,12 +630,12 @@ func (p *ServiceDirectory) ServiceReady(p0 uint32) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) UpdateServiceInfo(p0 ServiceInfo) error {
+func (p *ServiceDirectory) UpdateServiceInfo(P0 ServiceInfo) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = WriteServiceInfo(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("updateServiceInfo", buf.Bytes())
 	if err != nil {
@@ -659,13 +659,13 @@ func (p *ServiceDirectory) MachineId() (string, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) _socketOfService(p0 uint32) (object.ObjectReference, error) {
+func (p *ServiceDirectory) _socketOfService(P0 uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("_socketOfService", buf.Bytes())
 	if err != nil {
@@ -679,12 +679,21 @@ func (p *ServiceDirectory) _socketOfService(p0 uint32) (object.ObjectReference, 
 	return ret, nil
 }
 func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (chan struct {
-	p0 EventTrace
+	P0 EventTrace
 }, error) {
+	signalID, err := p.SignalUid("traceObject")
+	if err != nil {
+		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
+	}
+
+	id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
+	}
 	ch := make(chan struct {
-		p0 EventTrace
+		P0 EventTrace
 	})
-	chPay, err := p.SignalStream("traceObject", cancel)
+	chPay, err := p.SignalStreamID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}
@@ -693,14 +702,19 @@ func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (chan struct {
 			payload, ok := <-chPay
 			if !ok {
 				close(ch) // upstream is closed.
+				err = p.UnregisterEvent(p.ObjectID(), signalID, id)
+				if err != nil {
+					// FIXME: implement proper logging.
+					fmt.Printf("failed to unregister event %s: %s", "traceObject", err)
+				}
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := func() (s struct {
-				p0 EventTrace
+				P0 EventTrace
 			}, err error) {
-				s.p0, err = ReadEventTrace(buf)
+				s.P0, err = ReadEventTrace(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}
@@ -716,14 +730,23 @@ func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (chan struct {
 	return ch, nil
 }
 func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (chan struct {
-	p0 uint32
-	p1 string
+	P0 uint32
+	P1 string
 }, error) {
+	signalID, err := p.SignalUid("serviceAdded")
+	if err != nil {
+		return nil, fmt.Errorf("signal %s not available: %s", "serviceAdded", err)
+	}
+
+	id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register event for %s: %s", "serviceAdded", err)
+	}
 	ch := make(chan struct {
-		p0 uint32
-		p1 string
+		P0 uint32
+		P1 string
 	})
-	chPay, err := p.SignalStream("serviceAdded", cancel)
+	chPay, err := p.SignalStreamID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}
@@ -732,19 +755,24 @@ func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (chan struct {
 			payload, ok := <-chPay
 			if !ok {
 				close(ch) // upstream is closed.
+				err = p.UnregisterEvent(p.ObjectID(), signalID, id)
+				if err != nil {
+					// FIXME: implement proper logging.
+					fmt.Printf("failed to unregister event %s: %s", "serviceAdded", err)
+				}
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := func() (s struct {
-				p0 uint32
-				p1 string
+				P0 uint32
+				P1 string
 			}, err error) {
-				s.p0, err = basic.ReadUint32(buf)
+				s.P0, err = basic.ReadUint32(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}
-				s.p1, err = basic.ReadString(buf)
+				s.P1, err = basic.ReadString(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}
@@ -760,14 +788,23 @@ func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (chan struct {
 	return ch, nil
 }
 func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (chan struct {
-	p0 uint32
-	p1 string
+	P0 uint32
+	P1 string
 }, error) {
+	signalID, err := p.SignalUid("serviceRemoved")
+	if err != nil {
+		return nil, fmt.Errorf("signal %s not available: %s", "serviceRemoved", err)
+	}
+
+	id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register event for %s: %s", "serviceRemoved", err)
+	}
 	ch := make(chan struct {
-		p0 uint32
-		p1 string
+		P0 uint32
+		P1 string
 	})
-	chPay, err := p.SignalStream("serviceRemoved", cancel)
+	chPay, err := p.SignalStreamID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}
@@ -776,19 +813,24 @@ func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (chan struct {
 			payload, ok := <-chPay
 			if !ok {
 				close(ch) // upstream is closed.
+				err = p.UnregisterEvent(p.ObjectID(), signalID, id)
+				if err != nil {
+					// FIXME: implement proper logging.
+					fmt.Printf("failed to unregister event %s: %s", "serviceRemoved", err)
+				}
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := func() (s struct {
-				p0 uint32
-				p1 string
+				P0 uint32
+				P1 string
 			}, err error) {
-				s.p0, err = basic.ReadUint32(buf)
+				s.P0, err = basic.ReadUint32(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}
-				s.p1, err = basic.ReadString(buf)
+				s.P1, err = basic.ReadString(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}
@@ -815,19 +857,19 @@ func NewLogManager(ses session.Session, obj uint32) (*LogManager, error) {
 	}
 	return &LogManager{proxy}, nil
 }
-func (p *LogManager) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint64, error) {
+func (p *LogManager) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P2: %s", err)
 	}
 	response, err := p.Call("registerEvent", buf.Bytes())
 	if err != nil {
@@ -840,18 +882,18 @@ func (p *LogManager) RegisterEvent(p0 uint32, p1 uint32, p2 uint64) (uint64, err
 	}
 	return ret, nil
 }
-func (p *LogManager) UnregisterEvent(p0 uint32, p1 uint32, p2 uint64) error {
+func (p *LogManager) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return fmt.Errorf("failed to serialize P2: %s", err)
 	}
 	_, err = p.Call("unregisterEvent", buf.Bytes())
 	if err != nil {
@@ -859,13 +901,13 @@ func (p *LogManager) UnregisterEvent(p0 uint32, p1 uint32, p2 uint64) error {
 	}
 	return nil
 }
-func (p *LogManager) MetaObject(p0 uint32) (object.MetaObject, error) {
+func (p *LogManager) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("metaObject", buf.Bytes())
 	if err != nil {
@@ -878,12 +920,12 @@ func (p *LogManager) MetaObject(p0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) Terminate(p0 uint32) error {
+func (p *LogManager) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("terminate", buf.Bytes())
 	if err != nil {
@@ -891,13 +933,13 @@ func (p *LogManager) Terminate(p0 uint32) error {
 	}
 	return nil
 }
-func (p *LogManager) Property(p0 value.Value) (value.Value, error) {
+func (p *LogManager) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = p0.Write(buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = P0.Write(buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("property", buf.Bytes())
 	if err != nil {
@@ -910,15 +952,15 @@ func (p *LogManager) Property(p0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) SetProperty(p0 value.Value, p1 value.Value) error {
+func (p *LogManager) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = p0.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = P0.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = p1.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize p1: %s", err)
+	if err = P1.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize P1: %s", err)
 	}
 	_, err = p.Call("setProperty", buf.Bytes())
 	if err != nil {
@@ -955,22 +997,22 @@ func (p *LogManager) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) RegisterEventWithSignature(p0 uint32, p1 uint32, p2 uint64, p3 string) (uint64, error) {
+func (p *LogManager) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
-	if err = basic.WriteUint32(p1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p1: %s", err)
+	if err = basic.WriteUint32(P1, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P1: %s", err)
 	}
-	if err = basic.WriteUint64(p2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p2: %s", err)
+	if err = basic.WriteUint64(P2, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P2: %s", err)
 	}
-	if err = basic.WriteString(p3, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p3: %s", err)
+	if err = basic.WriteString(P3, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P3: %s", err)
 	}
 	response, err := p.Call("registerEventWithSignature", buf.Bytes())
 	if err != nil {
@@ -999,12 +1041,12 @@ func (p *LogManager) IsStatsEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) EnableStats(p0 bool) error {
+func (p *LogManager) EnableStats(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteBool(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteBool(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("enableStats", buf.Bytes())
 	if err != nil {
@@ -1072,12 +1114,12 @@ func (p *LogManager) IsTraceEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) EnableTrace(p0 bool) error {
+func (p *LogManager) EnableTrace(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteBool(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteBool(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("enableTrace", buf.Bytes())
 	if err != nil {
@@ -1085,16 +1127,16 @@ func (p *LogManager) EnableTrace(p0 bool) error {
 	}
 	return nil
 }
-func (p *LogManager) Log(p0 []LogMessage) error {
+func (p *LogManager) Log(P0 []LogMessage) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(p0)), buf)
+		err := basic.WriteUint32(uint32(len(P0)), buf)
 		if err != nil {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
-		for _, v := range p0 {
+		for _, v := range P0 {
 			err = WriteLogMessage(v, buf)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
@@ -1102,7 +1144,7 @@ func (p *LogManager) Log(p0 []LogMessage) error {
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("log", buf.Bytes())
 	if err != nil {
@@ -1142,13 +1184,13 @@ func (p *LogManager) GetListener() (object.ObjectReference, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) AddProvider(p0 object.ObjectReference) (uint32, error) {
+func (p *LogManager) AddProvider(P0 object.ObjectReference) (uint32, error) {
 	var err error
 	var ret uint32
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = object.WriteObjectReference(p0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize p0: %s", err)
+	if err = object.WriteObjectReference(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	response, err := p.Call("addProvider", buf.Bytes())
 	if err != nil {
@@ -1161,12 +1203,12 @@ func (p *LogManager) AddProvider(p0 object.ObjectReference) (uint32, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) RemoveProvider(p0 uint32) error {
+func (p *LogManager) RemoveProvider(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(p0, buf); err != nil {
-		return fmt.Errorf("failed to serialize p0: %s", err)
+	if err = basic.WriteUint32(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("removeProvider", buf.Bytes())
 	if err != nil {
@@ -1175,12 +1217,21 @@ func (p *LogManager) RemoveProvider(p0 uint32) error {
 	return nil
 }
 func (p *LogManager) SignalTraceObject(cancel chan int) (chan struct {
-	p0 EventTrace
+	P0 EventTrace
 }, error) {
+	signalID, err := p.SignalUid("traceObject")
+	if err != nil {
+		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
+	}
+
+	id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
+	}
 	ch := make(chan struct {
-		p0 EventTrace
+		P0 EventTrace
 	})
-	chPay, err := p.SignalStream("traceObject", cancel)
+	chPay, err := p.SignalStreamID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}
@@ -1189,14 +1240,19 @@ func (p *LogManager) SignalTraceObject(cancel chan int) (chan struct {
 			payload, ok := <-chPay
 			if !ok {
 				close(ch) // upstream is closed.
+				err = p.UnregisterEvent(p.ObjectID(), signalID, id)
+				if err != nil {
+					// FIXME: implement proper logging.
+					fmt.Printf("failed to unregister event %s: %s", "traceObject", err)
+				}
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := func() (s struct {
-				p0 EventTrace
+				P0 EventTrace
 			}, err error) {
-				s.p0, err = ReadEventTrace(buf)
+				s.P0, err = ReadEventTrace(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}

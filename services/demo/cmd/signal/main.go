@@ -17,11 +17,6 @@ func main() {
 		log.Fatalf("failed to connect log manager: %s", err)
 	}
 
-	id, err := directory.RegisterEvent(1, 107, 0x0000006b00000001)
-	if err != nil {
-		log.Fatalf("failed to register event: %s", err)
-	}
-
 	cancel := make(chan int)
 
 	channel, err := directory.SignalServiceRemoved(cancel)
@@ -31,10 +26,5 @@ func main() {
 
 	for e := range channel {
 		log.Printf("service removed: %s (%d)", e.P1, e.P0)
-	}
-
-	err = directory.UnregisterEvent(1, 107, id)
-	if err != nil {
-		log.Fatalf("failed to register event: %s", err)
 	}
 }

@@ -245,8 +245,17 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 
 	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
 	body := jen.Block(
+		jen.Id(`signalID, err := p.SignalUid("`+s.Name+`")
+		if err != nil {
+			return nil, fmt.Errorf("signal %s not available: %s", "`+s.Name+`", err)
+		}
+
+		id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+		if err != nil {
+			return nil, fmt.Errorf("failed to register event for %s: %s", "`+s.Name+`", err)
+		}`),
 		jen.Id("ch").Op(":=").Make(jen.Chan().Add(signalType.TypeName())),
-		jen.List(jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SignalStream").Call(jen.Lit(s.Name), jen.Id("cancel")),
+		jen.List(jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SignalStreamID").Call(jen.Id("signalID"), jen.Id("cancel")),
 		jen.Id(`if err != nil {
 			return nil, fmt.Errorf("failed to request signal: %s", err)
 		}`),
@@ -255,6 +264,11 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 				jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
 				jen.Id(`if !ok {
 					close(ch) // upstream is closed.
+					err = p.UnregisterEvent(p.ObjectID(), signalID, id)
+					if err != nil {
+						// FIXME: implement proper logging.
+						fmt.Printf("failed to unregister event %s: %s", "`+s.Name+`", err)
+					}
 					return
 				}`),
 				jen.Id("buf := bytes.NewBuffer(payload)"),
