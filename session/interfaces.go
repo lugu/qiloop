@@ -21,6 +21,9 @@ type Proxy interface {
 	SignalStream(signal string, cancel chan int) (chan []byte, error)
 	SignalStreamID(signal uint32, cancel chan int) (chan []byte, error)
 
+	MethodUid(name string) (uint32, error)
+	SignalUid(name string) (uint32, error)
+
 	// ServiceID returns the service identifier. Allow services to
 	// implement the object.Object interface.
 	ServiceID() uint32

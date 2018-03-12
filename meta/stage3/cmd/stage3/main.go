@@ -84,12 +84,22 @@ func (p directoryProxy) ObjectID() uint32 {
 
 // SignalStreamID is not implemented. Does nothing in stage3.
 func (p directoryProxy) SignalStreamID(signal uint32, cancel chan int) (chan []byte, error) {
-	return nil, fmt.Errorf("not used during stage 3")
+	return nil, fmt.Errorf("SignalStreamID not available during stage 3")
 }
 
 // SignalStream is not implemented. Does nothing in stage3.
 func (p directoryProxy) SignalStream(signal string, cancel chan int) (chan []byte, error) {
-	return nil, fmt.Errorf("not used during stage 3")
+	return nil, fmt.Errorf("SignalStream not available during stage 3")
+}
+
+// MethodUid is not implemented. Does nothing in stage3.
+func (p directoryProxy) MethodUid(name string) (uint32, error) {
+	return 0, fmt.Errorf("MethodUid not available during stage 3")
+}
+
+// SignalUid is not implemented. Does nothing in stage3.
+func (p directoryProxy) SignalUid(name string) (uint32, error) {
+	return 0, fmt.Errorf("SignalUid not available during stage 3")
 }
 
 type directorySession struct {

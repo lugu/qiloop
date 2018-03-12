@@ -54,6 +54,14 @@ func (p Proxy) SignalStream(signal string, cancel chan int) (chan []byte, error)
 	return p.client.Stream(p.service, p.object, id, cancel)
 }
 
+func (p Proxy) MethodUid(name string) (uint32, error) {
+	return p.meta.MethodUid(name)
+}
+
+func (p Proxy) SignalUid(name string) (uint32, error) {
+	return p.meta.SignalUid(name)
+}
+
 // NewProxy construct a Proxy.
 func NewProxy(client session.Client, meta object.MetaObject, service uint32, object uint32) Proxy {
 	methods := make(map[string]uint32)
