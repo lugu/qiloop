@@ -90,7 +90,9 @@ func TestParseDefinition(t *testing.T) {
 
 func TestParseEmbeddedDefinition(t *testing.T) {
 	testUtil(t, "([s])<test,a>", NewStrucValue("test", []MemberValue{
-		NewMemberValue("a", NewStringValue())}))
+		NewMemberValue("a", NewListValue(NewStringValue()))}))
+	testUtil(t, "({si})<test,a>", NewStrucValue("test", []MemberValue{
+		NewMemberValue("a", NewMapValue(NewStringValue(), NewIntValue()))}))
 }
 
 func TestParseMapMap(t *testing.T) {
