@@ -18,7 +18,8 @@ type Proxy interface {
 	CallID(action uint32, payload []byte) ([]byte, error)
 
 	// SignalStream returns a channel with the values of a signal
-	SignalStream(signal uint32, cancel chan int) (chan []byte, error)
+	SignalStream(signal string, cancel chan int) (chan []byte, error)
+	SignalStreamID(signal uint32, cancel chan int) (chan []byte, error)
 
 	// ServiceID returns the service identifier. Allow services to
 	// implement the object.Object interface.

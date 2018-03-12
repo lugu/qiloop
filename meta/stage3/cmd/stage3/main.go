@@ -82,8 +82,13 @@ func (p directoryProxy) ObjectID() uint32 {
 	return p.objectID
 }
 
+// SignalStreamID is not implemented. Does nothing in stage3.
+func (p directoryProxy) SignalStreamID(signal uint32, cancel chan int) (chan []byte, error) {
+	return nil, fmt.Errorf("not used during stage 3")
+}
+
 // SignalStream is not implemented. Does nothing in stage3.
-func (p directoryProxy) SignalStream(signal uint32, cancel chan int) (chan []byte, error) {
+func (p directoryProxy) SignalStream(signal string, cancel chan int) (chan []byte, error) {
 	return nil, fmt.Errorf("not used during stage 3")
 }
 
