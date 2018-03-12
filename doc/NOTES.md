@@ -217,11 +217,15 @@ Each message have a type. Possible types are:
 - **Reply** (2): Response to remote procedure call message. The payload
   has the returned type of the called method.
 - **Error** (3): Signal an error. Can be used in response to a call
-  message. Payload is a string value (values are described bellow).
-- **Post** (4): // TODO
-- **Event** (5): // TODO
+  message. Payload is a value (values are described bellow).
+- **Post** (4): Call a method but without expecting an answer. Payload
+  contains the arguments of the method.
+- **Event** (5): Inform of a new signal state. Events are sent
+  following a call to the registerEvent method. unregisterEvent stops
+  the stream of events. The payload is the new value of the signal.
 - **Capability** (6): // TODO
-- **Cancel** (7): // TODO
+- **Cancel** (7): Request the interruption of the remote procedure
+  call.
 - **Cancelled** (8): // TODO
 
 #### Flags
