@@ -48,14 +48,13 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 		m := metaObj.Methods[k]
 
 		// generate uniq name for the method
-		methodName := registerName(m.Name, methodNames)
-		if err := generateMethod(file, set, k, serviceName, m, methodName); err != nil {
+		methodName := registerName(strings.Title(m.Name), methodNames)
+		if err := generateMethod(file, set, serviceName, m, methodName); err != nil {
 			// FIXME: uncomment
 			// return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
 			fmt.Printf("failed to render method %s of %s: %s\n", m.Name, serviceName, err)
 		}
 	}
-	signalNames := make(map[string]bool)
 	keys = make([]int, 0)
 	for k := range metaObj.Signals {
 		keys = append(keys, int(k))
@@ -64,8 +63,9 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 	for _, i := range keys {
 		k := uint32(i)
 		s := metaObj.Signals[k]
-		signalName := registerName(s.Name, signalNames)
-		if err := generateSignal(file, set, k, serviceName, s, signalName); err != nil {
+		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
+
+		if err := generateSignal(file, set, serviceName, s, methodName); err != nil {
 			// FIXME: uncomment
 			// return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
 			fmt.Printf("failed to render signal %s of %s: %s\n", s.Name, serviceName, err)
@@ -187,7 +187,7 @@ func registerName(name string, names map[string]bool) string {
 	return newName
 }
 
-func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ string, m object.MetaMethod, methodName string) error {
+func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, m object.MetaMethod, methodName string) error {
 
 	paramType, err := signature.Parse(m.ParametersSignature)
 	if err != nil {
@@ -224,7 +224,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 		retType = jen.Error()
 	}
 
-	file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id(strings.Title(methodName)).Add(
+	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(strings.Title(methodName)).Add(
 		tuple.Params(),
 	).Add(
 		retType,
@@ -234,7 +234,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 	return nil
 }
 
-func generateSignal(file *jen.File, set *signature.TypeSet, id uint32, typ string, s object.MetaSignal, signalName string) error {
+func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, s object.MetaSignal, methodName string) error {
 
 	signalType, err := signature.Parse(s.Signature)
 	if err != nil {
@@ -244,44 +244,38 @@ func generateSignal(file *jen.File, set *signature.TypeSet, id uint32, typ strin
 	signalType.RegisterTo(set)
 
 	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
-	body := jen.Block(jen.Return(jen.Nil(), jen.Nil()))
+	body := jen.Block(
+		jen.Id("ch").Op(":=").Make(jen.Chan().Add(signalType.TypeName())),
+		jen.List(jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SignalStream").Call(jen.Lit(s.Name), jen.Id("cancel")),
+		jen.Id(`if err != nil {
+			return nil, fmt.Errorf("failed to request signal: %s", err)
+		}`),
+		jen.Go().Func().Params().Block(
+			jen.For().Block(
+				jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
+				jen.Id(`if !ok {
+					close(ch) // upstream is closed.
+					return
+				}`),
+				jen.Id("buf := bytes.NewBuffer(payload)"),
+				jen.Id("_ = buf // discard unused variable error"),
+				jen.List(jen.Id("e"), jen.Err()).Op(":=").Add(signalType.Unmarshal("buf")),
+				jen.Id(`if err != nil {
+					fmt.Errorf("failed to unmarshall tuple: %s", err)
+					continue
+				}
+				ch<- e`),
+			),
+		).Call(),
+		jen.Return(jen.Id("ch"), jen.Nil()),
+	)
 
-	file.Func().Params(jen.Id("p").Op("*").Id(typ)).Id("Signal" + strings.Title(signalName)).Params(
+	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(methodName).Params(
 		jen.Id("cancel").Chan().Int(),
 	).Add(
 		retType,
 	).Add(
 		body,
 	)
-	/*
-		func (o Object) Signal%d(cancel chan int) (chan %T, error) {
-
-			chanPayload, err := SignalStream(%d, cancel)
-			if err != nil {
-				return fmt.Errorf("failed to get signal stream: %s", err)
-			}
-			values := make(chan %T)
-			go func() {
-				for {
-					val e %T
-					select {
-					case payload, ok :=<- chanPayload:
-						if !ok {
-							// stream closed
-							close(values)
-							return
-						}
-						e, err := %s
-						if err != nil {
-							fmt.Errorf("failed to unmarshall %T: %s", err)
-							continue
-						}
-						values<- e
-					}
-				}
-			}
-			return nil
-		}
-	*/
 	return nil
 }
