@@ -678,13 +678,21 @@ func (p *ServiceDirectory) _socketOfService(p0 uint32) (object.ObjectReference, 
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (error, error) {
+func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (chan struct {
+	p0 EventTrace
+}, error) {
 	return nil, nil
 }
-func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (error, error) {
+func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (chan struct {
+	p0 uint32
+	p1 string
+}, error) {
 	return nil, nil
 }
-func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (error, error) {
+func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (chan struct {
+	p0 uint32
+	p1 string
+}, error) {
 	return nil, nil
 }
 
@@ -1058,7 +1066,9 @@ func (p *LogManager) RemoveProvider(p0 uint32) error {
 	}
 	return nil
 }
-func (p *LogManager) SignalTraceObject(cancel chan int) (error, error) {
+func (p *LogManager) SignalTraceObject(cancel chan int) (chan struct {
+	p0 EventTrace
+}, error) {
 	return nil, nil
 }
 
