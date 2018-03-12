@@ -23,29 +23,20 @@ var ObjectSignature string = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaO
 // ValueConstructor currently generated. It is used to generate the
 // type declaration only once.
 type TypeSet struct {
-	signatures map[string]bool
-	types      []ValueConstructor
-}
-
-// Register allows a ValueConstructor to declare itself for lated code
-// generation.
-func (s *TypeSet) Register(v ValueConstructor) {
-	if _, ok := s.signatures[v.Signature()]; !ok {
-		s.signatures[v.Signature()] = true
-		s.types = append(s.types, v)
-	}
+	Signatures map[string]string // maps type name with signatures
+	Types      []ValueConstructor
 }
 
 // Declare writes all the registered ValueConstructor into the jen.File.
 func (s *TypeSet) Declare(f *jen.File) {
-	for _, v := range s.types {
+	for _, v := range s.Types {
 		v.typeDeclaration(f)
 	}
 }
 
 // NewTypeSet construct a new TypeSet.
 func NewTypeSet() *TypeSet {
-	sig := make(map[string]bool)
+	sig := make(map[string]string)
 	typ := make([]ValueConstructor, 0)
 	return &TypeSet{sig, typ}
 }
@@ -860,7 +851,22 @@ func (s *StructValue) RegisterTo(set *TypeSet) {
 	for _, v := range s.members {
 		v.Value.RegisterTo(set)
 	}
-	set.Register(s)
+
+	// register the name of the struct. if the name is used by a
+	// struct of a different signature, change the name.
+	for i := 0; i < 100; i++ {
+		if sgn, ok := set.Signatures[s.name]; !ok {
+			// name not yet used
+			set.Signatures[s.name] = s.Signature()
+			set.Types = append(set.Types, s)
+			break
+		} else if sgn == s.Signature() {
+			// same name and same signatures
+			break
+		} else {
+			s.name = fmt.Sprintf("%s_%d", s.name, i)
+		}
+	}
 	return
 }
 
