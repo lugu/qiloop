@@ -15,12 +15,12 @@ import (
 	"strings"
 )
 
-type directoryClient struct {
+type dummyClient struct {
 	conn          net.EndPoint
 	nextMessageID uint32
 }
 
-func (c directoryClient) Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error) {
+func (c dummyClient) Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error) {
 	id := c.nextMessageID
 	c.nextMessageID += 2
 	h := net.NewHeader(net.Call, serviceID, objectID, actionID, id)
@@ -56,53 +56,53 @@ func (c directoryClient) Call(serviceID uint32, objectID uint32, actionID uint32
 	return response.Payload, nil
 }
 
-type directoryProxy struct {
-	client          directoryClient
+type dummyProxy struct {
+	client          dummyClient
 	serviceID       uint32
 	objectID        uint32
 	defaultActionID uint32
 }
 
 // Call ignores the action and call a pre-defined actionID.
-func (p directoryProxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
+func (p dummyProxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
 	return p.client.Call(p.serviceID, p.objectID, actionID, payload)
 }
 
-func (p directoryProxy) Call(action string, payload []byte) ([]byte, error) {
+func (p dummyProxy) Call(action string, payload []byte) ([]byte, error) {
 	return p.client.Call(p.serviceID, p.objectID, p.defaultActionID, payload)
 }
 
 // ServiceID returns the service identifier.
-func (p directoryProxy) ServiceID() uint32 {
+func (p dummyProxy) ServiceID() uint32 {
 	return p.serviceID
 }
 
 // ObjectID returns the object identifier within the service.
-func (p directoryProxy) ObjectID() uint32 {
+func (p dummyProxy) ObjectID() uint32 {
 	return p.objectID
 }
 
 // SignalStreamID is not implemented. Does nothing in stage3.
-func (p directoryProxy) SignalStreamID(signal uint32, cancel chan int) (chan []byte, error) {
+func (p dummyProxy) SignalStreamID(signal uint32, cancel chan int) (chan []byte, error) {
 	return nil, fmt.Errorf("SignalStreamID not available during stage 3")
 }
 
 // SignalStream is not implemented. Does nothing in stage3.
-func (p directoryProxy) SignalStream(signal string, cancel chan int) (chan []byte, error) {
+func (p dummyProxy) SignalStream(signal string, cancel chan int) (chan []byte, error) {
 	return nil, fmt.Errorf("SignalStream not available during stage 3")
 }
 
 // MethodUid is not implemented. Does nothing in stage3.
-func (p directoryProxy) MethodUid(name string) (uint32, error) {
+func (p dummyProxy) MethodUid(name string) (uint32, error) {
 	return 0, fmt.Errorf("MethodUid not available during stage 3")
 }
 
 // SignalUid is not implemented. Does nothing in stage3.
-func (p directoryProxy) SignalUid(name string) (uint32, error) {
+func (p dummyProxy) SignalUid(name string) (uint32, error) {
 	return 0, fmt.Errorf("SignalUid not available during stage 3")
 }
 
-type directorySession struct {
+type dummySession struct {
 	endpoint         net.EndPoint
 	defaultSerivceID uint32
 	defaultObjectID  uint32
@@ -111,9 +111,9 @@ type directorySession struct {
 
 // Proxy ignores the service name and use a pre-defined serviceID and
 // objectID.
-func (s directorySession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
-	return directoryProxy{
-		client: directoryClient{
+func (s dummySession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
+	return dummyProxy{
+		client: dummyClient{
 			conn:          s.endpoint,
 			nextMessageID: 3,
 		},
@@ -123,13 +123,13 @@ func (s directorySession) Proxy(name string, objectID uint32) (bus.Proxy, error)
 	}, nil
 }
 
-func (d directorySession) Object(ref object.ObjectReference) (o object.Object, err error) {
+func (d dummySession) Object(ref object.ObjectReference) (o object.Object, err error) {
 	return o, fmt.Errorf("Not yet implemented")
 }
 
 func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) bus.Session {
 
-	sess0 := directorySession{conn, 0, 0, 8}
+	sess0 := dummySession{conn, 0, 0, 8}
 	service0, err := stage2.NewServer(sess0, 0)
 	if err != nil {
 		log.Fatalf("failed to create proxy: %s", err)
@@ -144,7 +144,7 @@ func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) bus.Ses
 	if err != nil {
 		log.Fatalf("failed to authenticate: %s", err)
 	}
-	return directorySession{
+	return dummySession{
 		conn,
 		serviceID,
 		objectID,
