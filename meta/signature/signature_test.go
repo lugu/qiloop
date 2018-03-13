@@ -32,9 +32,9 @@ func testSignature(t *testing.T, signature string) {
 
 func TestParseBasics(t *testing.T) {
 	testUtil(t, "i", NewIntValue())
-	testUtil(t, "I", NewIntValue())
+	testUtil(t, "I", NewUIntValue())
 	testUtil(t, "s", NewStringValue())
-	testUtil(t, "L", NewLongValue())
+	testUtil(t, "L", NewULongValue())
 	testUtil(t, "l", NewLongValue())
 	testUtil(t, "b", NewBoolValue())
 	testUtil(t, "f", NewFloatValue())
@@ -54,19 +54,19 @@ func TestParseEmpty(t *testing.T) {
 
 func TestParseMap(t *testing.T) {
 	testUtil(t, "{ss}", NewMapValue(NewStringValue(), NewStringValue()))
-	testUtil(t, "{sI}", NewMapValue(NewStringValue(), NewIntValue()))
-	testUtil(t, "{Is}", NewMapValue(NewIntValue(), NewStringValue()))
-	testUtil(t, "{II}", NewMapValue(NewIntValue(), NewIntValue()))
-	testUtil(t, "{LI}", NewMapValue(NewLongValue(), NewIntValue()))
-	testUtil(t, "{sL}", NewMapValue(NewStringValue(), NewLongValue()))
+	testUtil(t, "{sI}", NewMapValue(NewStringValue(), NewUIntValue()))
+	testUtil(t, "{is}", NewMapValue(NewIntValue(), NewStringValue()))
+	testUtil(t, "{iI}", NewMapValue(NewIntValue(), NewUIntValue()))
+	testUtil(t, "{Li}", NewMapValue(NewULongValue(), NewIntValue()))
+	testUtil(t, "{sl}", NewMapValue(NewStringValue(), NewLongValue()))
 }
 
 func TestParseList(t *testing.T) {
 	testUtil(t, "[s]", NewListValue(NewStringValue()))
-	testUtil(t, "[I]", NewListValue(NewIntValue()))
+	testUtil(t, "[i]", NewListValue(NewIntValue()))
 	testUtil(t, "[b]", NewListValue(NewBoolValue()))
-	testUtil(t, "[{bI}]", NewListValue(NewMapValue(NewBoolValue(), NewIntValue())))
-	testUtil(t, "{b[I]}", NewMapValue(NewBoolValue(), NewListValue(NewIntValue())))
+	testUtil(t, "[{bi}]", NewListValue(NewMapValue(NewBoolValue(), NewIntValue())))
+	testUtil(t, "{b[i]}", NewMapValue(NewBoolValue(), NewListValue(NewIntValue())))
 }
 
 func TestParseTuple(t *testing.T) {
@@ -97,17 +97,17 @@ func TestParseEmbeddedDefinition(t *testing.T) {
 }
 
 func TestParseMapMap(t *testing.T) {
-	testSignature(t, "{{II}I}")
-	testSignature(t, "{I{II}}")
-	testSignature(t, "{{ss}{II}}")
-	testSignature(t, "{{{sI}s}{II}}")
+	testSignature(t, "{{ii}i}")
+	testSignature(t, "{i{ii}}")
+	testSignature(t, "{{ss}{ii}}")
+	testSignature(t, "{{{si}s}{ii}}")
 }
 
 func TestParseDefinitionSignature(t *testing.T) {
 	testSignature(t, "(s)<test,a>")
-	testSignature(t, "(sI)<test,a,b>")
-	testSignature(t, "(III)<test,a,b,c>")
-	testSignature(t, "(s{II})<test,a,b>")
+	testSignature(t, "(si)<test,a,b>")
+	testSignature(t, "(iii)<test,a,b,c>")
+	testSignature(t, "(s{ii})<test,a,b>")
 	testSignature(t, "({ss})<test,a>")
 }
 

@@ -1184,9 +1184,9 @@ func (p *LogManager) GetListener() (object.ObjectReference, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) AddProvider(P0 object.ObjectReference) (uint32, error) {
+func (p *LogManager) AddProvider(P0 object.ObjectReference) (int32, error) {
 	var err error
-	var ret uint32
+	var ret int32
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	if err = object.WriteObjectReference(P0, buf); err != nil {
@@ -1197,17 +1197,17 @@ func (p *LogManager) AddProvider(P0 object.ObjectReference) (uint32, error) {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadUint32(buf)
+	ret, err = basic.ReadInt32(buf)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse addProvider response: %s", err)
 	}
 	return ret, nil
 }
-func (p *LogManager) RemoveProvider(P0 uint32) error {
+func (p *LogManager) RemoveProvider(P0 int32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
+	if err = basic.WriteInt32(P0, buf); err != nil {
 		return fmt.Errorf("failed to serialize P0: %s", err)
 	}
 	_, err = p.Call("removeProvider", buf.Bytes())
@@ -1415,24 +1415,24 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 }
 
 type timeval struct {
-	Tv_sec  uint64
-	Tv_usec uint64
+	Tv_sec  int64
+	Tv_usec int64
 }
 
 func Readtimeval(r io.Reader) (s timeval, err error) {
-	if s.Tv_sec, err = basic.ReadUint64(r); err != nil {
+	if s.Tv_sec, err = basic.ReadInt64(r); err != nil {
 		return s, fmt.Errorf("failed to read Tv_sec field: %s", err)
 	}
-	if s.Tv_usec, err = basic.ReadUint64(r); err != nil {
+	if s.Tv_usec, err = basic.ReadInt64(r); err != nil {
 		return s, fmt.Errorf("failed to read Tv_usec field: %s", err)
 	}
 	return s, nil
 }
 func Writetimeval(s timeval, w io.Writer) (err error) {
-	if err := basic.WriteUint64(s.Tv_sec, w); err != nil {
+	if err := basic.WriteInt64(s.Tv_sec, w); err != nil {
 		return fmt.Errorf("failed to write Tv_sec field: %s", err)
 	}
-	if err := basic.WriteUint64(s.Tv_usec, w); err != nil {
+	if err := basic.WriteInt64(s.Tv_usec, w); err != nil {
 		return fmt.Errorf("failed to write Tv_usec field: %s", err)
 	}
 	return nil
@@ -1440,12 +1440,12 @@ func Writetimeval(s timeval, w io.Writer) (err error) {
 
 type EventTrace struct {
 	Id            uint32
-	Kind          uint32
+	Kind          int32
 	SlotId        uint32
 	Arguments     value.Value
 	Timestamp     timeval
-	UserUsTime    uint64
-	SystemUsTime  uint64
+	UserUsTime    int64
+	SystemUsTime  int64
 	CallerContext uint32
 	CalleeContext uint32
 }
@@ -1454,7 +1454,7 @@ func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Id field: %s", err)
 	}
-	if s.Kind, err = basic.ReadUint32(r); err != nil {
+	if s.Kind, err = basic.ReadInt32(r); err != nil {
 		return s, fmt.Errorf("failed to read Kind field: %s", err)
 	}
 	if s.SlotId, err = basic.ReadUint32(r); err != nil {
@@ -1466,10 +1466,10 @@ func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Timestamp, err = Readtimeval(r); err != nil {
 		return s, fmt.Errorf("failed to read Timestamp field: %s", err)
 	}
-	if s.UserUsTime, err = basic.ReadUint64(r); err != nil {
+	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
 		return s, fmt.Errorf("failed to read UserUsTime field: %s", err)
 	}
-	if s.SystemUsTime, err = basic.ReadUint64(r); err != nil {
+	if s.SystemUsTime, err = basic.ReadInt64(r); err != nil {
 		return s, fmt.Errorf("failed to read SystemUsTime field: %s", err)
 	}
 	if s.CallerContext, err = basic.ReadUint32(r); err != nil {
@@ -1484,7 +1484,7 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
 		return fmt.Errorf("failed to write Id field: %s", err)
 	}
-	if err := basic.WriteUint32(s.Kind, w); err != nil {
+	if err := basic.WriteInt32(s.Kind, w); err != nil {
 		return fmt.Errorf("failed to write Kind field: %s", err)
 	}
 	if err := basic.WriteUint32(s.SlotId, w); err != nil {
@@ -1496,10 +1496,10 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := Writetimeval(s.Timestamp, w); err != nil {
 		return fmt.Errorf("failed to write Timestamp field: %s", err)
 	}
-	if err := basic.WriteUint64(s.UserUsTime, w); err != nil {
+	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {
 		return fmt.Errorf("failed to write UserUsTime field: %s", err)
 	}
-	if err := basic.WriteUint64(s.SystemUsTime, w); err != nil {
+	if err := basic.WriteInt64(s.SystemUsTime, w); err != nil {
 		return fmt.Errorf("failed to write SystemUsTime field: %s", err)
 	}
 	if err := basic.WriteUint32(s.CallerContext, w); err != nil {
@@ -1513,7 +1513,7 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 
 type LogMessage struct {
 	Source     string
-	Level      uint32
+	Level      int32
 	Category   string
 	Location   string
 	Message    string
@@ -1526,7 +1526,7 @@ func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
 	if s.Source, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Source field: %s", err)
 	}
-	if s.Level, err = basic.ReadUint32(r); err != nil {
+	if s.Level, err = basic.ReadInt32(r); err != nil {
 		return s, fmt.Errorf("failed to read Level field: %s", err)
 	}
 	if s.Category, err = basic.ReadString(r); err != nil {
@@ -1553,7 +1553,7 @@ func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Source, w); err != nil {
 		return fmt.Errorf("failed to write Source field: %s", err)
 	}
-	if err := basic.WriteUint32(s.Level, w); err != nil {
+	if err := basic.WriteInt32(s.Level, w); err != nil {
 		return fmt.Errorf("failed to write Level field: %s", err)
 	}
 	if err := basic.WriteString(s.Category, w); err != nil {

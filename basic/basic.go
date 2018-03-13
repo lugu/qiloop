@@ -106,6 +106,28 @@ func WriteUint64(i uint64, w io.Writer) error {
 	return nil
 }
 
+// ReadInt32 reads a little endian int32
+func ReadInt32(r io.Reader) (int32, error) {
+	i, err := ReadUint32(r)
+	return int32(i), err
+}
+
+// WriteInt32 writes a little endian int32
+func WriteInt32(i int32, w io.Writer) error {
+	return WriteUint32(uint32(i), w)
+}
+
+// ReadInt64 reads a little endian int64
+func ReadInt64(r io.Reader) (int64, error) {
+	i, err := ReadUint64(r)
+	return int64(i), err
+}
+
+// WriteInt64 writes a little endian int64
+func WriteInt64(i int64, w io.Writer) error {
+	return WriteUint64(uint64(i), w)
+}
+
 // ReadFloat32 read a little endian float32
 func ReadFloat32(r io.Reader) (float32, error) {
 	buf := []byte{0, 0, 0, 0}

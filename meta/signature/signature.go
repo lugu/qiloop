@@ -69,6 +69,11 @@ func NewLongValue() LongValue {
 	return LongValue{}
 }
 
+// NewULongValue is a contructor for the representation of a uint64.
+func NewULongValue() ULongValue {
+	return ULongValue{}
+}
+
 // NewFloatValue is a contructor for the representation of a float32.
 func NewFloatValue() FloatValue {
 	return FloatValue{}
@@ -79,9 +84,14 @@ func NewDoubleValue() DoubleValue {
 	return DoubleValue{}
 }
 
-// NewIntValue is a contructor for the representation of an uint32.
+// NewIntValue is a contructor for the representation of an int32.
 func NewIntValue() IntValue {
 	return IntValue{}
+}
+
+// NewUIntValue is a contructor for the representation of an uint32.
+func NewUIntValue() UIntValue {
+	return UIntValue{}
 }
 
 // NewStringValue is a contructor for the representation of a string.
@@ -156,13 +166,13 @@ type IntValue struct {
 // Signature returns "I". "i" is also accepted as an integer
 // signature.
 func (i IntValue) Signature() string {
-	return "I"
+	return "i"
 }
 
 // TypeName returns a statement to be inserted when the type is to be
 // declared.
 func (i IntValue) TypeName() *Statement {
-	return jen.Uint32()
+	return jen.Int32()
 }
 
 // RegisterTo adds the type to the TypeSet.
@@ -178,13 +188,52 @@ func (i IntValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (i IntValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (i IntValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadInt32").Call(jen.Id(reader))
+}
+
+// UIntValue represents an integer.
+type UIntValue struct {
+}
+
+// Signature returns "I". "i" is also accepted as an integer
+// signature.
+func (i UIntValue) Signature() string {
+	return "I"
+}
+
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
+func (i UIntValue) TypeName() *Statement {
+	return jen.Uint32()
+}
+
+// RegisterTo adds the type to the TypeSet.
+func (i UIntValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (i UIntValue) typeDeclaration(file *jen.File) {
+	return
+}
+
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (i UIntValue) Marshal(id string, writer string) *Statement {
+	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+}
+
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
+func (i UIntValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadUint32").Call(jen.Id(reader))
 }
 
@@ -194,13 +243,13 @@ type LongValue struct {
 
 // Signature returns "L".
 func (i LongValue) Signature() string {
-	return "L"
+	return "l"
 }
 
 // TypeName returns a statement to be inserted when the type is to be
 // declared.
 func (i LongValue) TypeName() *Statement {
-	return jen.Uint64()
+	return jen.Int64()
 }
 
 // RegisterTo adds the type to the TypeSet.
@@ -216,13 +265,51 @@ func (i LongValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (i LongValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (i LongValue) Unmarshal(reader string) *Statement {
+	return jen.Id("basic.ReadInt64").Call(jen.Id(reader))
+}
+
+// ULongValue represents a long.
+type ULongValue struct {
+}
+
+// Signature returns "L".
+func (i ULongValue) Signature() string {
+	return "L"
+}
+
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
+func (i ULongValue) TypeName() *Statement {
+	return jen.Uint64()
+}
+
+// RegisterTo adds the type to the TypeSet.
+func (i ULongValue) RegisterTo(s *TypeSet) {
+	return
+}
+
+func (i ULongValue) typeDeclaration(file *jen.File) {
+	return
+}
+
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (i ULongValue) Marshal(id string, writer string) *Statement {
+	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
+}
+
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
+func (i ULongValue) Unmarshal(reader string) *Statement {
 	return jen.Id("basic.ReadUint64").Call(jen.Id(reader))
 }
 
@@ -952,11 +1039,11 @@ func nodifyBasicType(nodes []Node) Node {
 	case "i":
 		return NewIntValue()
 	case "I":
-		return NewIntValue()
+		return NewUIntValue()
 	case "l":
 		return NewLongValue()
 	case "L":
-		return NewLongValue()
+		return NewULongValue()
 	case "s":
 		return NewStringValue()
 	case "b":
