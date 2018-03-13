@@ -699,12 +699,55 @@ signals:
 ### Example (LogManager)
 
 ## Networking
+
 ### Endpoints
+
+The `ServiceInfo` data structure which describes a service contains a
+list of addresses whre to contact the service.
+
 ### TCP
+
+The default port to contact the service directory is 9559.
+
 ### SSL
 
+SSL is supported using the addressing scheme `tcps://` in the
+`ServiceInfo` description of the service.
+
 ## Authentication
+
+Authentication is required to communicate with QiMessaging. The
+service 0 is responsible for the authentication procedure and have a
+method called `authenticate`. When a client tries to skip the
+authentication procedure, it is sent a `capability` message.
+
 ### CapabilityMap
+
+The method `authenticate` takes a map of string and `value` as
+argument. This data structure is called the `CapabilityMap`:
+
+```
+type CapabilityMap map[string]value
+```
+
+The list of capabilities is not fixed in the protocol. It represents
+allows a client to annonce the non mandatory feature of the protocol
+which are supported. Possible values are:
+
+- `"ClientServerSocket"`: boolean `value`
+
+- `"MessageFlags"`: boolean `value`
+
+- `"MetaObjectCache"`: boolean `value`
+
+- `"RemoteCancelableCalls"`: boolean `value`
+
+The server 0 responds to the `authenticate` method with its
+`CapabilityMap` including:
+
+- `"__qi_authh_state"`: integer `value`
+
+
 ### Token
 
 ## Routing
