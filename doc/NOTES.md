@@ -87,10 +87,11 @@ QiMessaging exposes a software bus on which services can be used.
 Services have methods (to be called) and signals (to be watched).
 Signals, method parameters can have different kind of type:
 
-- basic type (int, long, float, double, string and bool)
+- basic type (int, float, string, bool, ...)
 - aggregates (vector, map, structures, tuple)
-- untyped (also referred as values)
-- objects
+- untyped (also referred as `value`)
+- object (services are objects)
+- other (pointer, raw, unknown, ...)
 
 Services are objects registered to a naming service called the
 service directory.
@@ -342,10 +343,12 @@ libqi [documentation](http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signat
 
 #### Basic types
 
-- 'i' or 'I': integer: 32 bits signed.
+- 'i': signed integer: 32 bits signed.
+- 'I': unsigned integer: 32 bits signed.
 - 'f': float: 32 bits (IEEE 754)
 - 'd': double: 64 bits (IEEE 754)
 - 'l': long: 64 bits signed value
+- 'L': unsigned long: 64 bits signed value
 - 'b': bool: boolean value
 - 's': string: string of character
 
@@ -429,14 +432,16 @@ type MetaMethod struct {
 ```
 type_string = "s"
 type_boolan = "b"
-type_int = "i" | "I"
+type_int = "i"
+type_uint = "I"
 type_value = "m"
-type_long = "L" | "l"
+type_long = "l"
+type_ulong = "L"
 type_float = "f"
 type_float = "d"
 type_object = "o"
 
-type_basic = type_int | type_string | type_float | type_long | type_boolean | type_value | type_object
+type_basic = type_int | type_uint | type_string | type_float | type_long | type_ulong | type_boolean | type_value | type_object
 
 type_map = "{" type_declaration type_declaration "}"
 
@@ -463,7 +468,9 @@ all values are transmitted in little endian.
 ### Basic types
 
 - **integer**: 32 bits little endian signed.
+- **unsigned integer**: 32 bits little endian.
 - **long**: 64 bits little endian signed.
+- **unsigned long**: 64 bits little endian.
 - **float**: 32 bites IEEE 754 little endian.
 - **double**: 64 bites IEEE 754 little endian.
 - **boolean**: 1 byte (zero for false)
