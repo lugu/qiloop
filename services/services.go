@@ -5,17 +5,17 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	basic "github.com/lugu/qiloop/basic"
-	session "github.com/lugu/qiloop/bus"
+	bus "github.com/lugu/qiloop/bus"
 	object "github.com/lugu/qiloop/object"
 	value "github.com/lugu/qiloop/value"
 	io "io"
 )
 
 type Server struct {
-	session.Proxy
+	bus.Proxy
 }
 
-func NewServer(ses session.Session, obj uint32) (*Server, error) {
+func NewServer(ses bus.Session, obj uint32) (*Server, error) {
 	proxy, err := ses.Proxy("Server", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
@@ -77,10 +77,10 @@ func (p *Server) Authenticate(P0 map[string]value.Value) (map[string]value.Value
 }
 
 type Object struct {
-	session.Proxy
+	bus.Proxy
 }
 
-func NewObject(ses session.Session, obj uint32) (*Object, error) {
+func NewObject(ses bus.Session, obj uint32) (*Object, error) {
 	proxy, err := ses.Proxy("Object", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
@@ -257,10 +257,10 @@ func (p *Object) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 
 }
 
 type ServiceDirectory struct {
-	session.Proxy
+	bus.Proxy
 }
 
-func NewServiceDirectory(ses session.Session, obj uint32) (*ServiceDirectory, error) {
+func NewServiceDirectory(ses bus.Session, obj uint32) (*ServiceDirectory, error) {
 	proxy, err := ses.Proxy("ServiceDirectory", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
@@ -847,10 +847,10 @@ func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (chan struct {
 }
 
 type LogManager struct {
-	session.Proxy
+	bus.Proxy
 }
 
-func NewLogManager(ses session.Session, obj uint32) (*LogManager, error) {
+func NewLogManager(ses bus.Session, obj uint32) (*LogManager, error) {
 	proxy, err := ses.Proxy("LogManager", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)

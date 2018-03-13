@@ -1,8 +1,8 @@
-package dummy_test
+package session_test
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/bus/dummy"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/object"
 	gonet "net"
@@ -49,13 +49,13 @@ func TestProxyCall(t *testing.T) {
 	}()
 
 	// 3. client estable connection
-	client, err := dummy.NewClient(fmt.Sprintf(":%d", p))
+	client, err := session.NewClient(fmt.Sprintf(":%d", p))
 	if err != nil {
 		t.Errorf("failed to create client failed: %s", err)
 	}
 
 	// 4. create proxy
-	proxy := dummy.NewProxy(client, object.MetaService0, 1, 2)
+	proxy := session.NewProxy(client, object.MetaService0, 1, 2)
 	// 4. client send a message
 	_, err = proxy.CallID(3, []byte{0xab, 0xcd})
 	if err != nil {

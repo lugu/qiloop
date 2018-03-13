@@ -1,4 +1,4 @@
-package dummy
+package session
 
 import (
 	"fmt"
@@ -33,9 +33,10 @@ func Authenticate(endpoint net.EndPoint) error {
 	return nil
 }
 
-// staticSession implements the Session interface. It is a dummy
+// staticSession implements the Session interface. It is an
 // implementation of Session. It does not update the list of services
-// and returns dummy blockingClients.
+// and returns blockingClients.
+
 type staticSession struct {
 	services []services.ServiceInfo
 }

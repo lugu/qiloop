@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lugu/qiloop/bus/dummy"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/services"
 	"log"
@@ -19,7 +19,7 @@ func Print(i interface{}) {
 }
 
 func main() {
-	sess, err := dummy.NewSession(":9559")
+	sess, err := session.NewSession(":9559")
 	if err != nil {
 		log.Fatalf("failed to connect: %s", err)
 	}
