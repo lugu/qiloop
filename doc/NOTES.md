@@ -152,44 +152,74 @@ QiMessaging corresponds to the following layers of the OSI model:
 
 ## Message
 
-Objects exchange messages. A remote procedure call is initiate by
-sending a "Call" message to an object. This object responds either
-with an "Error" or a "Reply" message.
+Every data shared with QiMessage is encapsulated in a message.
+Messages start with a header followed with an optional payload.
 
-To publish a signal, an object send a "Event" message to the list of
-object which have subscribed to the signal.
+Example of messages are:
+
+- A message of type `call` is sent to a service to initiate a remote
+  procedure call.
+
+- A service responds to a `call` message with a `reply` message.
+
+- A message of type `error` is sent when a service is unable to
+  respond a `call` message.
+
+- A message of type `event` is sent when a signal state has changed.
+
 
 Messages are composed of two parts:
 
-- a fixed size header describing the message.
-- an optional payload containing serialized data.
+- a header of fixed size
+- an optional payload
 
 ### Message Header
 
-The header is documented
-[here](http://doc.aldebaran.com/libqi/design/network-binary-protocol.html).
-Its size is 28 bytes and it is followed with an optional payload.
-
-A message can be represented in Go with:
+A header is composed of 28 bytes structured in the following way:
 
 ```
-type Header struct {
-    Id      uint32 // an identifier to match call/reply messages
-    Size    uint32 // size of the payload
-    Version uint16 // protocol version (0)
-    Type    uint8  // type of the message
-    Flags   uint8  // flags
-    Service uint32 // service id
-    Object  uint32 // object id
-    Action  uint32 // function or event id
-}
+      0       1       2       3       4
+      +-------------------------------+    ^
+   0  |             Magic             |    |
+      +-------------------------------+    |
+   4  |           Message ID          |    |
+      +-------------------------------+    |
+   8  |           Data size           |    |
+      +-------------------------------+    |
+   12 |    Version    |  Type | Flags |  Header
+      +-------------------------------+    |
+   16 |           Service ID          |    |
+      +-------------------------------+    |
+   20 |           Ojbect ID           |    |
+      +-------------------------------+    |
+   24 |           Action ID           |    |
+      +-------------------------------+    V
+   28 |                               |
+      |        Data (Optional)        |
+      |                               |
+      +-------------------------------+
 
-type Message struct {
-    Header Header
-    Payload []byte
-}
 ```
 
+In the C programming language, this becomes:
+
+```
+struct header_t {
+    uint32_t magic;      // constant value
+    uint32_t message_id; // identifier to associate call/reply messages
+    uint32_t size;       // size of the payload
+    uint32_t version;    // protocol version (0)
+    uint8_t  type;       // type of message
+    uint8_t  flags;      // flags
+    uint32_t service_id; // service id
+    uint32_t object_id;  // object id
+    uint32_t action_id;  // function or event id
+};
+```
+
+The header is also documented
+[here](http://doc.aldebaran.com/libqi/design/network-binary-protocol.html)
+as part of the libqi.
 
 #### Magic number
 
@@ -234,9 +264,9 @@ Each message have a type. Possible types are:
 
 #### Service ID
 
-Each object registered to the service directory is given a unique
-identifier. This identifier is used to address the objects associated
-with this service.
+Each service registered to the service directory (described bellow) is
+given a unique identifier. The service identifier act as a namespace
+for the objects associated with the service.
 
 #### Object ID
 
