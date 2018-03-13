@@ -9,12 +9,12 @@
   - [Overview](#overview)
   - [Comparisons](#comparisons)
   - [OSI Model](#osi-model)
-- [Message](#message)
+- [Messages](#messages)
   - [Message Header](#message-header)
-    - [Magic number](#magic-number)
+    - [Magic](#magic)
     - [Size](#size)
-    - [Header Version](#header-version)
-    - [Header Type](#header-type)
+    - [Version](#version)
+    - [Message Type](#message-type)
     - [Flags](#flags)
     - [Service ID](#service-id)
     - [Object ID](#object-id)
@@ -36,12 +36,18 @@
   - [Object](#object-1)
 - [Objects](#objects)
   - [Methods](#methods)
-  - [Signaux](#signaux)
+    - [Generic methods](#generic-methods)
+    - [Specific methods](#specific-methods)
+    - [Debug methods](#debug-methods)
+  - [Signals](#signals)
+    - [Debug signal](#debug-signal)
   - [Properties](#properties)
   - [MetaObject](#metaobject)
 - [Services](#services)
   - [Service Server (ID 0)](#service-server-id-0)
   - [Service Directory (ID 1)](#service-directory-id-1)
+    - [Methods](#methods-1)
+    - [Signals](#signals-1)
   - [Example (LogManager)](#example-logmanager)
 - [Networking](#networking)
   - [Endpoints](#endpoints)
@@ -57,7 +63,7 @@
 - [Misc](#misc)
   - [Object Statistics](#object-statistics)
   - [Object tracing](#object-tracing)
-  - [Interroperability](#interroperability)
+  - [Interoperability](#interoperability)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -69,8 +75,8 @@ QiMessaging is a network protocol used to create rich distributed
 applications. It was created by Aldebaran Robotics (currently SoftBank
 Robotics) and is the foundation of the NAOqi SDK. SoftBank Robotics
 uses it for the Romeo, NAO and Pepper robots. QiMessaging is also used
-in Choregraphe, an integrated development environment which simplifies
-programming of the NAO and Pepper robots.
+in Choregraphe, an integrated development environment which helps
+programming NAO and Pepper robots.
 
 An open source implementation of QiMessaging is actively developed as
 part of the libqi framework: https://github.com/aldebaran/libqi
@@ -85,14 +91,14 @@ Services have methods (to be called) and signals (to be watched).
 Signals, method parameters can have different kind of type:
 
 - basic type (int, long, float, double, string and bool)
-- aggregates (vector, hash map, structures)
+- aggregates (vector, map, structures, tuple)
 - untyped (also referred as values)
-- and even objects!
+- objects
 
-Actually services are plain objects registerred to a naming service
-(service directory).
+Services are objects registered to a naming service called the
+service directory.
 
-Objects exchange messages to communicate. Messages are composed of a
+Objects send messages to communicate. Messages are composed of a
 header and a payload. Different type of message allow different
 interactions (some message types are "Call", "Reply", "Cancel",
 "Event"). Those messages are transmitted using a transport protocol
@@ -105,10 +111,10 @@ How does QiMessaging compares with:
 
 * **D-Bus**: Both QiMessaging and D-Bus allow introspection (i.e. it
   is possible to list of the services and their methods). Both have a
-  concept of asynchroneous notification. D-Bus have a well defined
+  concept of asynchronous notification. D-Bus have a well defined
   permissions system. QiMessaging doesn't includes permissions but has
   authentication. QiMessaging allows different applications to
-  communicate accross the network.
+  communicate across the network.
 
 * **Binder**: Both Binder and QiMessaging follow an object model. And
   both Android and libqi provides tools to process an intermediate
@@ -122,7 +128,7 @@ How does QiMessaging compares with:
   format for discoverability.
 
 * **Component Object Model (COM)**: Both COM and QiMessaging offer an
-  IPC mechanism independant of a particular programming language which
+  IPC mechanism independent of a particular programming language which
   can be easily binded into various languages. libqi supports C++ and
   Python. NAOqi has JavaScript binding among many other binding. Both
   COM and QiMessaging can use reference counting to manage the life
@@ -150,7 +156,7 @@ QiMessaging corresponds to the following layers of the OSI model:
 
 ## Messages
 
-Every data shared with QiMessage is encapsulated in a message.
+Every data shared with QiMessaging is encapsulated in a message.
 Messages start with a header followed with an optional payload.
 
 Example of messages are:
@@ -166,7 +172,7 @@ Example of messages are:
 - A message of type `event` is sent when a signal state has changed.
 
 
-![Exmaple of type of messages](/doc/examples-message-type.png)
+![Example of type of messages](/doc/examples-message-type.png)
 
 
 Messages are composed of two parts:
@@ -191,7 +197,7 @@ A header is composed of 28 bytes structured in the following way:
       +-------------------------------+    |
    16 |           Service ID          |    |
       +-------------------------------+    |
-   20 |           Ojbect ID           |    |
+   20 |           Object ID           |    |
       +-------------------------------+    |
    24 |           Action ID           |    |
       +-------------------------------+    V
@@ -244,28 +250,26 @@ Each message have a type. Possible types are:
 - **Call** (1): Initiate a remote procedure call. The payload of the
   message is the parameters of the method. The object and the method
   are identified by the fields Service, Object and Action described
-  bellow.
+  below.
 - **Reply** (2): Response to remote procedure call message. The payload
   has the returned type of the called method.
 - **Error** (3): Signal an error. Can be used in response to a call
-  message. Payload is a value (values are described bellow).
+  message. Payload is a value (values are described below).
 - **Post** (4): Call a method but without expecting an answer. Payload
   contains the arguments of the method.
 - **Event** (5): Inform of a new signal state. Events are sent
   following a call to the registerEvent method. unregisterEvent stops
   the stream of events. The payload is the new value of the signal.
-- **Capability** (6): // TODO
+- **Capability** (6):
 - **Cancel** (7): Request the interruption of the remote procedure
   call.
-- **Cancelled** (8): // TODO
+- **Cancelled** (8):
 
 #### Flags
 
-// TODO
-
 #### Service ID
 
-Each service registered to the service directory (described bellow) is
+Each service registered to the service directory (described below) is
 given a unique identifier. The service identifier act as a namespace
 for the objects associated with the service.
 
@@ -301,10 +305,9 @@ In order to send a `call` message, one needs to know the prototype of
 the method to be called. Since every method have a different
 prototype each payload must be crafted accordingly.
 
-For example the method `authenticate` of the service zero takes a map
-of string and values and returns a map of string and values.
-
-On the other hand, the method `services` of the service one takes no
+For example the method `authenticate` of the service 0 takes a map
+of string and values and returns a map of string and values. On the
+other hand, the method `services` of the service one takes no
 arguments and return a list of a structure called `ServiceInfo`. One
 needs to know what is structure is in order read it.
 
@@ -316,22 +319,25 @@ of two parts:
 - the type of the arguments
 - the type of the returned value
 
-Those types are described in the structure call MetaObject (which is
-returned by the method `metaObject`) using character strings called
-*signatures*. Understanding those signatures is fundamental in order
-to communicate with an object. The next section explains the format of
-those signatures.
+Those types are described using a strings characters called
+*signatures*. Understanding the format of the signature is required to
+know what to read and write in the payload of a message. The next
+section explains the signature format.
 
 
 ## Signatures
 
-A signature is a string representing a type. Signatures are used in
-different places of the protocol. It can represents:
+A signature is a string which describes a type. Signatures are used in
+different places of the protocol. A signature can represents:
 
 - the type of a signal
-- the type of the arguments to a method as well as the return type of
-  the method.
-- the concrete type of a value when it is serialized.
+
+- the type of the arguments of a method
+
+- the type of the data returned by a method call.
+
+- the concrete type of a `value` when it is serialized (`value`s are
+  detailed explained below).
 
 ### Types
 
@@ -469,7 +475,7 @@ all values are transmitted in little endian.
 
 ### Values
 
-A value is serialized with a string (a defined bellow) representing
+A value is serialized with a string (a defined below) representing
 the signature of the concrete type followed with the serialized value
 of the type.
 
@@ -500,35 +506,172 @@ This description contains the following fields:
 
 ## Objects
 
-A service is associated with every object as well as a unique identifier
-with the namespace of the service.
-
 An object is composed of:
 - a list of method to be called
 - a list of signals to be watched
 - a list of properties to be queried
 
-libqi documentation: http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/anyobject.html
+Within the libqi framework objects are called
+[AnyObject](http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/anyobject.html).
 
 ### Methods
 
-The signature of the parameters of a method is a tuple, except for the
-method `pCall`, which has a value instead of a tuple (for unknown
-reason).
+At the heart of QiMessage is the feature of remote procedure calls:
 
-The return type of a method can not be a tuple. It can be anything
-else, including a special type `void` which represents nothing.
+- authentication is done by calling the method `authenticate` to the
+  service 0.
 
-### Signaux
+- asynchronous communication of events requires to subscribe to a
+  signal using the method `registerEvent`.
+
+- services name resolution is done using methods from the service
+  directory (service 1).
+
+- method and signal name resolution of an object is done by calling
+  the method `metaObject` of that object.
+
+#### Generic methods
+
+Here is a list of methods shared by almost every object:
+
+- 000: `registerEvent(UInt32,UInt32,UInt64) UInt64`: subscribes to a
+  signal. The new values of the signal will be sent the client using
+  messages of type `event`.
+
+- 001: `unregisterEvent(UInt32,UInt32,UInt64) Void`: unsubscribes
+  from a signal.
+
+- 002: `metaObject(UInt32) MetaObject`: introspects an object. It
+  returns structure called `MetaObject` which describe an object. This
+  structure contains the list of methods, signal and properties as
+  well as the signature of the associated types. When communicating
+  with an object, the method `metaObject` is often the first method
+  called because it allows the client to associate the name of the
+  method with the action ID.
+
+- 003: `terminate(UInt32) Void`: informs a object it is not used
+  anymore. This allows the object to be destroyed. It is used in the
+  context of objects returned by methods. In such situation life cycle
+  of the object is controlled by the client.
+
+- 005: `property(Value) Value`: returns the value associated with the
+  property. 
+
+- 006: `setProperty(Value,Value) Void `: sets the value of a property.
+
+- 007: `properties() List<String>`
+
+- 008: `registerEventWithSignature(UInt32,UInt32,UInt64,String) UInt64`
+
+Notice: one exception is the the object 0 of service 0 which does not
+supports those methods. 
+
+The `MetaObject` is useful to interact with an object. Especially it
+gives access to the list of methods and signals as well as their
+signature. The next section describes this `MetaObject`.
+
+#### Specific methods
+
+Allong with the previously describe methods, objects can have as many
+methods as needed. Those specific methods have indexes which start
+from 100.
+
+#### Debug methods
+
+There is a set of methods used for tracing (index ranging from 80 to
+85):
+
+- 080 `isStatsEnabled() Bool`: returns true if the statistics are
+  enabled.
+
+- 081: `enableStats(Bool) Void`: enables statistics. 
+
+- 082: `stats() Map<UInt32,MethodStatistics> `: returns the current
+  statistics
+
+- 083: `clearStats() Void `: reset the counters.
+
+- 084: `isTraceEnabled() Bool`: returns true if tracing is enable.
+
+- 085: `enableTrace(Bool) Void`: enables / disables tracing.
+
+### Signals
+
+A signal represents a variable whose state can change in time. When
+the state of the signal change, notifications are sent. One can
+subscribe to a signal using `registerEvent` and unsubscribe with
+`unregisterEvent`. Once registered, a client will receive new values
+taken by a signal by messages of type `event` which contain the new
+value.
+
+#### Debug signal
+
+Most object have this signal:
+
+- 086: `traceObject(EventTrace)`: signal when a method of the object
+  have been called.
+
 ### Properties
 ### MetaObject
 
-A MetaObject is a structure which describes an object. The description
+`MetaObject` is a structure which describes an object. The description
 includes the list of the methods along with their parameters and
 return type.
 
 Since every object has a method which returns a MetaObect, every
-instance of a MetaObect contains a description of the MetaObject type.
+instance of a MetaObect contains a description of the `MetaObject` type.
+
+Here is the signature of `MetaObject`:
+
+```
+({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,r
+eturnSignature,name,parametersSignature,description,parameters,returnDes
+cription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,ui
+d,name,signature>}s)<MetaObject,methods,signals,properties,description>
+```
+
+This expression is complicated because signature of `MetaObject`
+embedded the signature of `MetaMethod` (which embedded
+`MetaMethodParameter`) as well as `MetaSignal` and `MetaProperty`.
+
+Translated in a programming language this becomes:
+
+```
+type MetaObject struct {
+	Methods     map[uint32]MetaMethod
+	Signals     map[uint32]MetaSignal
+	Properties  map[uint32]MetaProperty
+	Description string
+}
+
+type MetaMethod struct {
+	Uid                 uint32
+	ReturnSignature     string
+	Name                string
+	ParametersSignature string
+	Description         string
+	Parameters          []MetaMethodParameter
+	ReturnDescription   string
+}
+
+type MetaMethodParameter struct {
+	Name        string
+	Description string
+}
+
+type MetaSignal struct {
+	Uid       uint32
+	Name      string
+	Signature string
+}
+
+type MetaProperty struct {
+	Uid       uint32
+	Name      string
+	Signature string
+}
+```
+
 
 ## Services
 
@@ -544,44 +687,43 @@ Used for authentication.
 
 Used to register new services to the bus and to list the services.
 
-Description a service directory:
+#### Methods
 
-```
-$ qicli info --hidden 1
-001 [ServiceDirectory]
-  * Info:
-   machine   6126ad3c-2f1f-4e25-8ec9-8bb20bfd195e
-   process   3082
-   endpoints tcp://127.0.0.1:9559
-  * Methods:
-   000 registerEvent              UInt64 (UInt32,UInt32,UInt64)
-   001 unregisterEvent            Void (UInt32,UInt32,UInt64)
-   002 metaObject                 MetaObject (UInt32)
-   003 terminate                  Void (UInt32)
-   005 property                   Value (Value)
-   006 setProperty                Void (Value,Value)
-   007 properties                 List<String> ()
-   008 registerEventWithSignature UInt64 (UInt32,UInt32,UInt64,String)
+Here is a list of the specific method offerred by the service
+directory:
 
-   080 isStatsEnabled             Bool ()
-   081 enableStats                Void (Bool)
-   082 stats                      Map<UInt32,MethodStatistics> ()
-   083 clearStats                 Void ()
-   084 isTraceEnabled             Bool ()
-   085 enableTrace                Void (Bool)
-   100 service                    ServiceInfo (String)
-   101 services                   List<ServiceInfo> ()
-   102 registerService            UInt32 (ServiceInfo)
-   103 unregisterService          Void (UInt32)
-   104 serviceReady               Void (UInt32)
-   105 updateServiceInfo          Void (ServiceInfo)
-   108 machineId                  String ()
-   109 _socketOfService           Object (UInt32)
-  * Signals:
-   086 traceObject    (EventTrace)
-   106 serviceAdded   (UInt32,String)
-   107 serviceRemoved (UInt32,String)
-```
+- 100: `service(String) ServiceInfo`: associate the name of a service
+  with its identifier and its network endpoint.
+
+- 101: `services() List<ServiceInfo>`: list all registered services.
+
+- 102: `registerService(ServiceInfo) UInt32`: add a new service to the
+  service directory.
+
+- 103: `unregisterService(UInt32) Void`: remove the service.
+
+- 104: `serviceReady(UInt32) Void`: informs the service directory when
+  a given service is ready to receive requests.
+
+- 105: `updateServiceInfo(ServiceInfo) Void`: update the service
+  information associated with a service.
+
+- 108: `machineId() String`: returns the unique identifier of the
+  machine.
+
+- 109: `_socketOfService(UInt32) Object`: 
+
+#### Signals
+
+In order to monitor the list of services, one can use the following
+signals:
+
+- 106: `serviceAdded(UInt32,String)`: informs when a new service has
+  registered to the bus.
+
+- 107: `serviceRemoved(UInt32,String)`: informs when a service has
+  quitted the bus.
+ 
 
 ### Example (LogManager)
 
@@ -602,5 +744,5 @@ $ qicli info --hidden 1
 ## Misc
 ### Object Statistics
 ### Object tracing
-### Interroperability
+### Interoperability
 
