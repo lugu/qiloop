@@ -99,10 +99,6 @@ interactions (some message types are "Call", "Reply", "Cancel",
 defined by an string (such as: "tcp://localhost:9559"). Currently
 libqi supports two transport protocols (TCP and SSL).
 
-FIXME: is QiMessaging a distributed system ? is there anything in the
-protocol which prevent several services directory to exists
-concurrently on the same bus ?
-
 ### Comparisons
 
 How does QiMessaging compares with:
@@ -288,11 +284,44 @@ message.
 
 The payload is optional. Its content depends on the type of message.
 
-- For example, in the case of a Call message, the payload is the
-  binary serialization of the argument of the method to be called.
-- In the case of a reply message, the payload is the returned value.
-- In the case of an error message, the payload is a value. This value
-  can be string a describing the error but does not have to be.
+- `call` message: the payload contains the parameters of the method called.
+
+- `reply` message: the payload contains the returned value of the
+  call.
+
+- `error` message: the payload contains a value associated with the
+  error (like a string of character).
+
+- `event` message: the payload contains the new value of the signal.
+
+- `post` message: the payload contains the parameters of the method
+  called.
+
+In order to send a `call` message, one needs to know the prototype of
+the method to be called. Since every method have a different
+prototype each payload must be crafted accordingly.
+
+For example the method `authenticate` of the service zero takes a map
+of string and values and returns a map of string and values.
+
+On the other hand, the method `services` of the service one takes no
+arguments and return a list of a structure called `ServiceInfo`. One
+needs to know what is structure is in order read it.
+
+Fortunately, every object (and service) can be introspected by calling
+its method `metaObject`. Using this property, one can learn about the
+methods (and their prototype). The prototype of a method is composed
+of two parts:
+
+- the type of the arguments
+- the type of the returned value
+
+Those types are described in the structure call MetaObject (which is
+returned by the method `metaObject`) using character strings called
+*signatures*. Understanding those signatures is fundamental in order
+to communicate with an object. The next section explains the format of
+those signatures.
+
 
 ## Signatures
 
@@ -306,7 +335,7 @@ different places of the protocol. It can represents:
 
 ### Types
 
-libqi documentation: http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signature.html
+libqi [documentation](http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signature.html) on the various type.
 
 #### Basic types
 
@@ -316,8 +345,6 @@ libqi documentation: http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signatu
 - 'l': long: 64 bits signed value
 - 'b': bool: boolean value
 - 's': string: string of character
-
-// FIXME: is the string encoding fixed?
 
 When describing the return type of a method:
 - 'v': void: the method is not returning a result other than the
@@ -465,9 +492,9 @@ really serialized. What is serialized is the description of this
 object.
 
 This description contains the following fields:
-- **bool**: unknown usage // FIXME: often true. Linked with terminate ?
+- **bool**: unknown usage
 - **MetaObject**: description of the object
-- **integer**: unknown usage // FIXME: often 1.
+- **integer**: unknown usage
 - **integer**: service id
 - **integer**: object id
 
