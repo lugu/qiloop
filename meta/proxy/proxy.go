@@ -14,9 +14,9 @@ type Statement = jen.Statement
 
 func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
 
-	file.Type().Id(typ).Struct(jen.Qual("github.com/lugu/qiloop/session", "Proxy"))
+	file.Type().Id(typ).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	file.Func().Id("New"+typ).Params(
-		jen.Id("ses").Qual("github.com/lugu/qiloop/session", "Session"),
+		jen.Id("ses").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("obj").Uint32(),
 	).Params(
 		jen.Op("*").Id(typ),

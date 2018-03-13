@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus/dummy"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/services"
-	"github.com/lugu/qiloop/session/dummy"
-	"github.com/lugu/qiloop/session/util"
 	"log"
 )
 

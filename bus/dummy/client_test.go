@@ -2,9 +2,9 @@ package dummy_test
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus/dummy"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/object"
-	"github.com/lugu/qiloop/session/dummy"
 	gonet "net"
 	"testing"
 )

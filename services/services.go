@@ -5,8 +5,8 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	basic "github.com/lugu/qiloop/basic"
+	session "github.com/lugu/qiloop/bus"
 	object "github.com/lugu/qiloop/object"
-	session "github.com/lugu/qiloop/session"
 	value "github.com/lugu/qiloop/value"
 	io "io"
 )

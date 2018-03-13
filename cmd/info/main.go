@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lugu/qiloop/bus/dummy"
 	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/services"
-	"github.com/lugu/qiloop/session/dummy"
 	"log"
 	"os"
 )

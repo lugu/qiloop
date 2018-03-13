@@ -2,8 +2,8 @@ package dummy
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/net"
-	"github.com/lugu/qiloop/session"
 	"sync"
 )
 
@@ -88,7 +88,7 @@ func (c *blockingClient) Stream(serviceID, objectID, actionID uint32, cancel cha
 	return stream, nil
 }
 
-func NewClient(addr string) (session.Client, error) {
+func NewClient(addr string) (bus.Client, error) {
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
 		return nil, fmt.Errorf("client failed to connect %s: %s", endpoint, err)
@@ -99,7 +99,7 @@ func NewClient(addr string) (session.Client, error) {
 	}, nil
 }
 
-func newClient(endpoint net.EndPoint) session.Client {
+func newClient(endpoint net.EndPoint) bus.Client {
 	return &blockingClient{
 		endpoint:  endpoint,
 		messageID: 3,

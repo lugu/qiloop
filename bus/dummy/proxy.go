@@ -2,8 +2,8 @@ package dummy
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/object"
-	"github.com/lugu/qiloop/session"
 )
 
 // Proxy is the parent strucuture for Service. It wraps Client and
@@ -11,7 +11,7 @@ import (
 type Proxy struct {
 	meta    object.MetaObject
 	methods map[string]uint32
-	client  session.Client
+	client  bus.Client
 	service uint32
 	object  uint32
 }
@@ -63,7 +63,7 @@ func (p Proxy) SignalUid(name string) (uint32, error) {
 }
 
 // NewProxy construct a Proxy.
-func NewProxy(client session.Client, meta object.MetaObject, service uint32, object uint32) Proxy {
+func NewProxy(client bus.Client, meta object.MetaObject, service uint32, object uint32) Proxy {
 	methods := make(map[string]uint32)
 	for id, method := range meta.Methods {
 		methods[method.Name] = id

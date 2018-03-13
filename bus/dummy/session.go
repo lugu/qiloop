@@ -2,10 +2,10 @@ package dummy
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/services"
-	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
 	"strings"
 )
@@ -64,7 +64,7 @@ func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Ob
 	return &services.Object{proxy}, nil
 }
 
-func newService(info services.ServiceInfo, objectID uint32) (p session.Proxy, err error) {
+func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
 	endpoint, err := newEndPoint(info)
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
@@ -76,7 +76,7 @@ func newService(info services.ServiceInfo, objectID uint32) (p session.Proxy, er
 	return proxy, nil
 }
 
-func (d *staticSession) Proxy(name string, objectID uint32) (p session.Proxy, err error) {
+func (d *staticSession) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
 
 	for _, service := range d.services {
 		if service.Name == name {
@@ -95,15 +95,15 @@ func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err
 	return o, fmt.Errorf("Not yet implemented")
 }
 
-func newProxy(e net.EndPoint, meta object.MetaObject, serviceID, objectID uint32) session.Proxy {
+func newProxy(e net.EndPoint, meta object.MetaObject, serviceID, objectID uint32) bus.Proxy {
 	return NewProxy(newClient(e), meta, serviceID, objectID)
 }
 
 // metaProxy is to create proxies to the directory and server
 // services needed for a session.
-func metaProxy(e net.EndPoint, serviceID, objectID uint32) (p session.Proxy, err error) {
+func metaProxy(e net.EndPoint, serviceID, objectID uint32) (p bus.Proxy, err error) {
 	client := newClient(e)
-	meta, err := session.MetaObject(client, serviceID, objectID)
+	meta, err := bus.MetaObject(client, serviceID, objectID)
 	if err != nil {
 		return p, fmt.Errorf("Can not reach metaObject: %s", err)
 	}

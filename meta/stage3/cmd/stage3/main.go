@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/meta/stage2"
 	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/object"
-	"github.com/lugu/qiloop/session"
 	"github.com/lugu/qiloop/value"
 	"io"
 	"log"
@@ -111,7 +111,7 @@ type directorySession struct {
 
 // Proxy ignores the service name and use a pre-defined serviceID and
 // objectID.
-func (s directorySession) Proxy(name string, objectID uint32) (session.Proxy, error) {
+func (s directorySession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 	return directoryProxy{
 		client: directoryClient{
 			conn:          s.endpoint,
@@ -127,7 +127,7 @@ func (d directorySession) Object(ref object.ObjectReference) (o object.Object, e
 	return o, fmt.Errorf("Not yet implemented")
 }
 
-func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) session.Session {
+func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) bus.Session {
 
 	sess0 := directorySession{conn, 0, 0, 8}
 	service0, err := stage2.NewServer(sess0, 0)
