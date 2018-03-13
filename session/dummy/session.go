@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+type CapabilityMap map[string]value.Value
+
 func Authenticate(endpoint net.EndPoint) error {
 
 	const serviceID = 0
@@ -19,7 +21,7 @@ func Authenticate(endpoint net.EndPoint) error {
 	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
 	server0 := services.Server{proxy0}
 
-	permissions := map[string]value.Value{
+	permissions := CapabilityMap{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
 		"MetaObjectCache":       value.Bool(true),
