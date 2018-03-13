@@ -38,9 +38,7 @@
   - [Methods](#methods)
     - [Generic methods](#generic-methods)
     - [Specific methods](#specific-methods)
-    - [Debug methods](#debug-methods)
   - [Signals](#signals)
-    - [Debug signal](#debug-signal)
   - [Properties](#properties)
   - [MetaObject](#metaobject)
 - [Services](#services)
@@ -61,8 +59,7 @@
   - [Message origin](#message-origin)
   - [Message transferred](#message-transferred)
 - [Misc](#misc)
-  - [Object Statistics](#object-statistics)
-  - [Object tracing](#object-tracing)
+  - [Object Statistics and tracing](#object-statistics-and-tracing)
   - [Interoperability](#interoperability)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -576,25 +573,6 @@ Allong with the previously describe methods, objects can have as many
 methods as needed. Those specific methods have indexes which start
 from 100.
 
-#### Debug methods
-
-There is a set of methods used for tracing (index ranging from 80 to
-85):
-
-- 080 `isStatsEnabled() Bool`: returns true if the statistics are
-  enabled.
-
-- 081: `enableStats(Bool) Void`: enables statistics. 
-
-- 082: `stats() Map<UInt32,MethodStatistics> `: returns the current
-  statistics
-
-- 083: `clearStats() Void `: reset the counters.
-
-- 084: `isTraceEnabled() Bool`: returns true if tracing is enable.
-
-- 085: `enableTrace(Bool) Void`: enables / disables tracing.
-
 ### Signals
 
 A signal represents a variable whose state can change in time. When
@@ -603,13 +581,6 @@ subscribe to a signal using `registerEvent` and unsubscribe with
 `unregisterEvent`. Once registered, a client will receive new values
 taken by a signal by messages of type `event` which contain the new
 value.
-
-#### Debug signal
-
-Most object have this signal:
-
-- 086: `traceObject(EventTrace)`: signal when a method of the object
-  have been called.
 
 ### Properties
 ### MetaObject
@@ -742,7 +713,30 @@ signals:
 ### Message transferred
 
 ## Misc
-### Object Statistics
-### Object tracing
+### Object Statistics and tracing
+
+There is a set of methods used for tracing (index ranging from 80 to
+85):
+
+- 080 `isStatsEnabled() Bool`: returns true if the statistics are
+  enabled.
+
+- 081: `enableStats(Bool) Void`: enables statistics. 
+
+- 082: `stats() Map<UInt32,MethodStatistics> `: returns the current
+  statistics
+
+- 083: `clearStats() Void `: reset the counters.
+
+- 084: `isTraceEnabled() Bool`: returns true if tracing is enable.
+
+- 085: `enableTrace(Bool) Void`: enables / disables tracing.
+
+Most object have this signal:
+
+- 086: `traceObject(EventTrace)`: signal when a method of the object
+  have been called.
+
+
 ### Interoperability
 
