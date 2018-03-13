@@ -152,7 +152,7 @@ QiMessaging corresponds to the following layers of the OSI model:
 - **Layer 7 (application)**: API are exposed using services (which are
   objects). Objects expose methods and signals.
 
-## Message
+## Messages
 
 Every data shared with QiMessage is encapsulated in a message.
 Messages start with a header followed with an optional payload.
@@ -214,7 +214,7 @@ struct header_t {
     uint32_t message_id; // identifier to associate call/reply messages
     uint32_t size;       // size of the payload
     uint32_t version;    // protocol version (0)
-    uint8_t  type;       // type of message
+    uint8_t  type;       // type of message (call, reply, event, ...)
     uint8_t  flags;      // flags
     uint32_t service_id; // service id
     uint32_t object_id;  // object id
@@ -226,7 +226,7 @@ The header is also documented
 [here](http://doc.aldebaran.com/libqi/design/network-binary-protocol.html)
 as part of the libqi.
 
-#### Magic number
+#### Magic
 
 Messages start with a constant value of 4 bytes used to identify
 QiMessaging headers. This value is always `0x42dead42` and it is
@@ -236,11 +236,11 @@ encoded in big endian.
 
 The size of the payload. Can be zero.
 
-#### Header Version
+#### Version
 
 The version of the protocol used. This document describes version 0.
 
-#### Header Type
+#### Message Type
 
 Each message have a type. Possible types are:
 
@@ -412,13 +412,13 @@ type_map = "{" type_declaration type_declaration "}"
 
 type_list = "[" type_declaration "]"
 
-list_of_declarations = type_declaration | type_declaration list_of_declarations
+type_tuple = "(" type_declaration ")"
 
-list_of_types = "(" list_of_declarations ")"
-
-type_definition = list_of_types "<" name "," list_of_names ">"
+type_definition = type_tuple "<" name "," list_of_names ">"
 
 type_declaration = type_basic | type_map | type_list | type_definition
+
+list_of_declarations = type_declaration | type_declaration list_of_declarations
 
 name = alphanumeric
 
