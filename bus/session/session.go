@@ -35,7 +35,7 @@ func Authenticate(endpoint net.EndPoint) error {
 
 // staticSession implements the Session interface. It is an
 // implementation of Session. It does not update the list of services
-// and returns blockingClients.
+// and returns clients.
 
 type staticSession struct {
 	services []services.ServiceInfo

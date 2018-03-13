@@ -7,25 +7,25 @@ import (
 	"sync"
 )
 
-type blockingClient struct {
+type client struct {
 	endpoint       net.EndPoint
 	messageID      uint32
 	messageIDMutex sync.Mutex
 }
 
-func (c *blockingClient) nextMessageID() uint32 {
+func (c *client) nextMessageID() uint32 {
 	c.messageIDMutex.Lock()
 	defer c.messageIDMutex.Unlock()
 	c.messageID += 2
 	return c.messageID
 }
 
-func (c *blockingClient) newMessage(serviceID uint32, objectID uint32, actionID uint32, payload []byte) net.Message {
+func (c *client) newMessage(serviceID uint32, objectID uint32, actionID uint32, payload []byte) net.Message {
 	header := net.NewHeader(net.Call, serviceID, objectID, actionID, c.nextMessageID())
 	return net.NewMessage(header, payload)
 }
 
-func (c *blockingClient) Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error) {
+func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error) {
 
 	msg := c.newMessage(serviceID, objectID, actionID, payload)
 	messageID := msg.Header.ID
@@ -64,7 +64,7 @@ func (c *blockingClient) Call(serviceID uint32, objectID uint32, actionID uint32
 // Stream returns a channel which returns the future value of a
 // given signal. To stop the stream one must send a value in the
 // cancel channel. Do not close the message channel.
-func (c *blockingClient) Stream(serviceID, objectID, actionID uint32, cancel chan int) (chan []byte, error) {
+func (c *client) Stream(serviceID, objectID, actionID uint32, cancel chan int) (chan []byte, error) {
 	stream := make(chan []byte)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
@@ -93,14 +93,14 @@ func NewClient(addr string) (bus.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("client failed to connect %s: %s", endpoint, err)
 	}
-	return &blockingClient{
+	return &client{
 		endpoint:  endpoint,
 		messageID: 1,
 	}, nil
 }
 
 func newClient(endpoint net.EndPoint) bus.Client {
-	return &blockingClient{
+	return &client{
 		endpoint:  endpoint,
 		messageID: 3,
 	}
