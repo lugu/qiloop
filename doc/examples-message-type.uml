@@ -1,0 +1,16 @@
+@startuml
+    ...
+
+    Client  -> Service: **call**: service.method()
+    Client <-  Service: **reply**: result
+    ...
+    Client  -> Service: **call**: service.unkown()
+    Client <-  Service: **error**:
+    ...
+    Client  -> Service: **call**: service.registerEvent(...)
+    Client <-  Service: **reply**
+    Client <-  Service: **event**: new value
+    Client <-  Service: **event**: new value
+    ...
+
+@enduml

@@ -25,6 +25,7 @@
     - [Basic types](#basic-types)
     - [Composite types](#composite-types)
     - [Object](#object)
+    - [Other](#other)
   - [Examples](#examples)
     - [Real world examples](#real-world-examples)
   - [Signature Grammar](#signature-grammar)
@@ -56,6 +57,7 @@
 - [Misc](#misc)
   - [Object Statistics](#object-statistics)
   - [Object tracing](#object-tracing)
+  - [Interroperability](#interroperability)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -95,7 +97,7 @@ header and a payload. Different type of message allow different
 interactions (some message types are "Call", "Reply", "Cancel",
 "Event"). Those messages are transmitted using a transport protocol
 defined by an string (such as: "tcp://localhost:9559"). Currently
-libqi supports two transport protocols (TCP and SSL). 
+libqi supports two transport protocols (TCP and SSL).
 
 FIXME: is QiMessaging a distributed system ? is there anything in the
 protocol which prevent several services directory to exists
@@ -166,6 +168,9 @@ Example of messages are:
   respond a `call` message.
 
 - A message of type `event` is sent when a signal state has changed.
+
+
+![Exmaple of type of messages](/doc/examples-message-type.png)
 
 
 Messages are composed of two parts:
