@@ -18,24 +18,24 @@ func newFileAndSet(packageName string) (*jen.File, *signature.TypeSet) {
 	return file, signature.NewTypeSet()
 }
 
-func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
+func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj object.MetaObject) {
 
-	file.Type().Id(typ).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
-	file.Func().Id("New"+typ).Params(
+	file.Type().Id(proxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+	file.Func().Id("New"+serviceName).Params(
 		jen.Id("ses").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("obj").Uint32(),
 	).Params(
-		jen.Op("*").Id(typ),
+		jen.Id(serviceName),
 		jen.Error(),
 	).Block(
 		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("ses").Dot("Proxy").Call(
-			jen.Lit(typ),
+			jen.Lit(serviceName),
 			jen.Id("obj"),
 		),
 		jen.Id(`if err != nil {
 			return nil, fmt.Errorf("failed to contact service: %s", err)
 		}`),
-		jen.Id(`return &`+typ+`{ proxy }, nil`),
+		jen.Id(`return &`+proxyName+`{ proxy }, nil`),
 	)
 }
 
@@ -63,6 +63,7 @@ func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName strin
 	if ret.Signature() == signature.MetaObjectSignature {
 		ret = signature.NewMetaObjectValue()
 	}
+	ret.RegisterTo(set)
 	if _, ok := ret.(signature.VoidValue); ok {
 		return jen.Id(methodName).Add(tuple.Params()).Error(), nil
 	} else {
@@ -73,8 +74,10 @@ func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName strin
 func generateObjectInterface(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
 
 	definitions := make([]jen.Code, 0)
+	if serviceName != "Server" {
+		definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/object", "Object"))
+	}
 	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
-	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/object", "Object"))
 
 	methodNames := make(map[string]bool)
 	keys := make([]int, 0)
@@ -83,7 +86,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 	}
 	sort.Ints(keys)
 	for id, i := range keys {
-		if id < 10 {
+		if serviceName != "Server" && id < 10 {
 			// those are already defined as part of object.Object
 			continue
 		}
@@ -113,7 +116,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		definitions = append(definitions, def)
 	}
 
-	file.Type().Id("I" + serviceName).Interface(
+	file.Type().Id(serviceName).Interface(
 		definitions...,
 	)
 	return nil
@@ -121,7 +124,8 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 
 func generateProxyObject(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
 
-	generateProxyType(file, serviceName, metaObj)
+	proxyName := serviceName + "Proxy"
+	generateProxyType(file, serviceName, proxyName, metaObj)
 
 	methodNames := make(map[string]bool)
 	keys := make([]int, 0)
@@ -135,8 +139,8 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 
 		// generate uniq name for the method
 		methodName := registerName(strings.Title(m.Name), methodNames)
-		if err := generateMethod(file, set, serviceName, m, methodName); err != nil {
-			return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
+		if err := generateMethod(file, set, proxyName, m, methodName); err != nil {
+			return fmt.Errorf("failed to render method %s of %s: %s", m.Name, proxyName, err)
 		}
 	}
 	keys = make([]int, 0)
@@ -149,8 +153,8 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 		s := metaObj.Signals[k]
 		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
 
-		if err := generateSignal(file, set, serviceName, s, methodName); err != nil {
-			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
+		if err := generateSignal(file, set, proxyName, s, methodName); err != nil {
+			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, proxyName, err)
 		}
 	}
 	return nil
@@ -385,6 +389,7 @@ func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse signal %s: %s", s.Signature, err)
 	}
+	signalType.RegisterTo(set)
 	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
 	return jen.Id(methodName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
 }

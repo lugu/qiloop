@@ -3,8 +3,11 @@
 set -e
 
 rm -f \
+    meta/stage2/interfaces.go \
     meta/stage2/services.go   \
+    meta/stage3/interfaces.go \
     meta/stage3/services.go   \
+    services/interfaces.go    \
     services/services.go      \
     object/metaobject.go      \
 

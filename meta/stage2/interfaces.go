@@ -1,5 +1,5 @@
 // file generated. DO NOT EDIT.
-package services
+package stage2
 
 import (
 	bus "github.com/lugu/qiloop/bus"
@@ -40,21 +40,5 @@ type ServiceDirectory interface {
 	SignalServiceRemoved(cancel chan int) (chan struct {
 		P0 uint32
 		P1 string
-	}, error)
-}
-type LogManager interface {
-	object.Object
-	bus.Proxy
-	Stats() (map[uint32]MethodStatistics, error)
-	ClearStats() error
-	IsTraceEnabled() (bool, error)
-	EnableTrace(P0 bool) error
-	Log(P0 []LogMessage) error
-	CreateListener() (object.ObjectReference, error)
-	GetListener() (object.ObjectReference, error)
-	AddProvider(P0 object.ObjectReference) (int32, error)
-	RemoveProvider(P0 int32) error
-	SignalTraceObject(cancel chan int) (chan struct {
-		P0 EventTrace
 	}, error)
 }

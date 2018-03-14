@@ -19,7 +19,7 @@ func Authenticate(endpoint net.EndPoint) error {
 
 	client0 := newClient(endpoint)
 	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
-	server0 := services.Server{proxy0}
+	server0 := services.ServerProxy{proxy0}
 
 	permissions := CapabilityMap{
 		"ClientServerSocket":    value.Bool(true),
@@ -62,7 +62,7 @@ func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Ob
 		return nil, fmt.Errorf("object connection error (%s): %s", info.Name, err)
 	}
 	proxy := newProxy(endpoint, ref.MetaObject, ref.ServiceID, ref.ObjectID)
-	return &services.Object{proxy}, nil
+	return &services.ObjectProxy{proxy}, nil
 }
 
 func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
@@ -125,7 +125,7 @@ func NewSession(addr string) (s *staticSession, err error) {
 	if err != nil {
 		return s, fmt.Errorf("failed to get directory meta object: %s", err)
 	}
-	directory := services.ServiceDirectory{proxy}
+	directory := services.ServiceDirectoryProxy{proxy}
 	s = new(staticSession)
 	s.services, err = directory.Services()
 	if err != nil {

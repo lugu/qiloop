@@ -11,18 +11,18 @@ import (
 	io "io"
 )
 
-type Server struct {
+type ServerProxy struct {
 	bus.Proxy
 }
 
-func NewServer(ses bus.Session, obj uint32) (*Server, error) {
+func NewServer(ses bus.Session, obj uint32) (Server, error) {
 	proxy, err := ses.Proxy("Server", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &Server{proxy}, nil
+	return &ServerProxy{proxy}, nil
 }
-func (p *Server) Authenticate(P0 map[string]value.Value) (map[string]value.Value, error) {
+func (p *ServerProxy) Authenticate(P0 map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
 	var buf *bytes.Buffer
@@ -76,18 +76,18 @@ func (p *Server) Authenticate(P0 map[string]value.Value) (map[string]value.Value
 	return ret, nil
 }
 
-type Object struct {
+type ObjectProxy struct {
 	bus.Proxy
 }
 
-func NewObject(ses bus.Session, obj uint32) (*Object, error) {
+func NewObject(ses bus.Session, obj uint32) (Object, error) {
 	proxy, err := ses.Proxy("Object", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &Object{proxy}, nil
+	return &ObjectProxy{proxy}, nil
 }
-func (p *Object) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
+func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -112,7 +112,7 @@ func (p *Object) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) 
 	}
 	return ret, nil
 }
-func (p *Object) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
+func (p *ObjectProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -131,7 +131,7 @@ func (p *Object) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	}
 	return nil
 }
-func (p *Object) MetaObject(P0 uint32) (object.MetaObject, error) {
+func (p *ObjectProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
@@ -150,7 +150,7 @@ func (p *Object) MetaObject(P0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
-func (p *Object) Terminate(P0 uint32) error {
+func (p *ObjectProxy) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -163,7 +163,7 @@ func (p *Object) Terminate(P0 uint32) error {
 	}
 	return nil
 }
-func (p *Object) Property(P0 value.Value) (value.Value, error) {
+func (p *ObjectProxy) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
@@ -182,7 +182,7 @@ func (p *Object) Property(P0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
-func (p *Object) SetProperty(P0 value.Value, P1 value.Value) error {
+func (p *ObjectProxy) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -198,7 +198,7 @@ func (p *Object) SetProperty(P0 value.Value, P1 value.Value) error {
 	}
 	return nil
 }
-func (p *Object) Properties() ([]string, error) {
+func (p *ObjectProxy) Properties() ([]string, error) {
 	var err error
 	var ret []string
 	var buf *bytes.Buffer
@@ -227,7 +227,7 @@ func (p *Object) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
-func (p *Object) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
+func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -256,18 +256,18 @@ func (p *Object) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 
 	return ret, nil
 }
 
-type ServiceDirectory struct {
+type ServiceDirectoryProxy struct {
 	bus.Proxy
 }
 
-func NewServiceDirectory(ses bus.Session, obj uint32) (*ServiceDirectory, error) {
+func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) {
 	proxy, err := ses.Proxy("ServiceDirectory", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &ServiceDirectory{proxy}, nil
+	return &ServiceDirectoryProxy{proxy}, nil
 }
-func (p *ServiceDirectory) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
+func (p *ServiceDirectoryProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -292,7 +292,7 @@ func (p *ServiceDirectory) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint6
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
+func (p *ServiceDirectoryProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -311,7 +311,7 @@ func (p *ServiceDirectory) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) erro
 	}
 	return nil
 }
-func (p *ServiceDirectory) MetaObject(P0 uint32) (object.MetaObject, error) {
+func (p *ServiceDirectoryProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
@@ -330,7 +330,7 @@ func (p *ServiceDirectory) MetaObject(P0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) Terminate(P0 uint32) error {
+func (p *ServiceDirectoryProxy) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -343,7 +343,7 @@ func (p *ServiceDirectory) Terminate(P0 uint32) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) Property(P0 value.Value) (value.Value, error) {
+func (p *ServiceDirectoryProxy) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
@@ -362,7 +362,7 @@ func (p *ServiceDirectory) Property(P0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) SetProperty(P0 value.Value, P1 value.Value) error {
+func (p *ServiceDirectoryProxy) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -378,7 +378,7 @@ func (p *ServiceDirectory) SetProperty(P0 value.Value, P1 value.Value) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) Properties() ([]string, error) {
+func (p *ServiceDirectoryProxy) Properties() ([]string, error) {
 	var err error
 	var ret []string
 	var buf *bytes.Buffer
@@ -407,7 +407,7 @@ func (p *ServiceDirectory) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
+func (p *ServiceDirectoryProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -435,7 +435,7 @@ func (p *ServiceDirectory) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 u
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) IsStatsEnabled() (bool, error) {
+func (p *ServiceDirectoryProxy) IsStatsEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf *bytes.Buffer
@@ -451,7 +451,7 @@ func (p *ServiceDirectory) IsStatsEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) EnableStats(P0 bool) error {
+func (p *ServiceDirectoryProxy) EnableStats(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -464,7 +464,7 @@ func (p *ServiceDirectory) EnableStats(P0 bool) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) Stats() (map[uint32]MethodStatistics, error) {
+func (p *ServiceDirectoryProxy) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
 	var ret map[uint32]MethodStatistics
 	var buf *bytes.Buffer
@@ -498,7 +498,7 @@ func (p *ServiceDirectory) Stats() (map[uint32]MethodStatistics, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) ClearStats() error {
+func (p *ServiceDirectoryProxy) ClearStats() error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -508,7 +508,7 @@ func (p *ServiceDirectory) ClearStats() error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) IsTraceEnabled() (bool, error) {
+func (p *ServiceDirectoryProxy) IsTraceEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf *bytes.Buffer
@@ -524,7 +524,7 @@ func (p *ServiceDirectory) IsTraceEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) EnableTrace(P0 bool) error {
+func (p *ServiceDirectoryProxy) EnableTrace(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -537,7 +537,7 @@ func (p *ServiceDirectory) EnableTrace(P0 bool) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) Service(P0 string) (ServiceInfo, error) {
+func (p *ServiceDirectoryProxy) Service(P0 string) (ServiceInfo, error) {
 	var err error
 	var ret ServiceInfo
 	var buf *bytes.Buffer
@@ -556,7 +556,7 @@ func (p *ServiceDirectory) Service(P0 string) (ServiceInfo, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) Services() ([]ServiceInfo, error) {
+func (p *ServiceDirectoryProxy) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf *bytes.Buffer
@@ -585,7 +585,7 @@ func (p *ServiceDirectory) Services() ([]ServiceInfo, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) RegisterService(P0 ServiceInfo) (uint32, error) {
+func (p *ServiceDirectoryProxy) RegisterService(P0 ServiceInfo) (uint32, error) {
 	var err error
 	var ret uint32
 	var buf *bytes.Buffer
@@ -604,7 +604,7 @@ func (p *ServiceDirectory) RegisterService(P0 ServiceInfo) (uint32, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) UnregisterService(P0 uint32) error {
+func (p *ServiceDirectoryProxy) UnregisterService(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -617,7 +617,7 @@ func (p *ServiceDirectory) UnregisterService(P0 uint32) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) ServiceReady(P0 uint32) error {
+func (p *ServiceDirectoryProxy) ServiceReady(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -630,7 +630,7 @@ func (p *ServiceDirectory) ServiceReady(P0 uint32) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) UpdateServiceInfo(P0 ServiceInfo) error {
+func (p *ServiceDirectoryProxy) UpdateServiceInfo(P0 ServiceInfo) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -643,7 +643,7 @@ func (p *ServiceDirectory) UpdateServiceInfo(P0 ServiceInfo) error {
 	}
 	return nil
 }
-func (p *ServiceDirectory) MachineId() (string, error) {
+func (p *ServiceDirectoryProxy) MachineId() (string, error) {
 	var err error
 	var ret string
 	var buf *bytes.Buffer
@@ -659,7 +659,7 @@ func (p *ServiceDirectory) MachineId() (string, error) {
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) _socketOfService(P0 uint32) (object.ObjectReference, error) {
+func (p *ServiceDirectoryProxy) _socketOfService(P0 uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
@@ -678,7 +678,7 @@ func (p *ServiceDirectory) _socketOfService(P0 uint32) (object.ObjectReference, 
 	}
 	return ret, nil
 }
-func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (chan struct {
+func (p *ServiceDirectoryProxy) SignalTraceObject(cancel chan int) (chan struct {
 	P0 EventTrace
 }, error) {
 	signalID, err := p.SignalUid("traceObject")
@@ -729,7 +729,7 @@ func (p *ServiceDirectory) SignalTraceObject(cancel chan int) (chan struct {
 	}()
 	return ch, nil
 }
-func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (chan struct {
+func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct {
 	P0 uint32
 	P1 string
 }, error) {
@@ -787,7 +787,7 @@ func (p *ServiceDirectory) SignalServiceAdded(cancel chan int) (chan struct {
 	}()
 	return ch, nil
 }
-func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (chan struct {
+func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan struct {
 	P0 uint32
 	P1 string
 }, error) {
@@ -846,18 +846,18 @@ func (p *ServiceDirectory) SignalServiceRemoved(cancel chan int) (chan struct {
 	return ch, nil
 }
 
-type LogManager struct {
+type LogManagerProxy struct {
 	bus.Proxy
 }
 
-func NewLogManager(ses bus.Session, obj uint32) (*LogManager, error) {
+func NewLogManager(ses bus.Session, obj uint32) (LogManager, error) {
 	proxy, err := ses.Proxy("LogManager", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &LogManager{proxy}, nil
+	return &LogManagerProxy{proxy}, nil
 }
-func (p *LogManager) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
+func (p *LogManagerProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -882,7 +882,7 @@ func (p *LogManager) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, err
 	}
 	return ret, nil
 }
-func (p *LogManager) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
+func (p *LogManagerProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -901,7 +901,7 @@ func (p *LogManager) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	}
 	return nil
 }
-func (p *LogManager) MetaObject(P0 uint32) (object.MetaObject, error) {
+func (p *LogManagerProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
@@ -920,7 +920,7 @@ func (p *LogManager) MetaObject(P0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) Terminate(P0 uint32) error {
+func (p *LogManagerProxy) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -933,7 +933,7 @@ func (p *LogManager) Terminate(P0 uint32) error {
 	}
 	return nil
 }
-func (p *LogManager) Property(P0 value.Value) (value.Value, error) {
+func (p *LogManagerProxy) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
@@ -952,7 +952,7 @@ func (p *LogManager) Property(P0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) SetProperty(P0 value.Value, P1 value.Value) error {
+func (p *LogManagerProxy) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -968,7 +968,7 @@ func (p *LogManager) SetProperty(P0 value.Value, P1 value.Value) error {
 	}
 	return nil
 }
-func (p *LogManager) Properties() ([]string, error) {
+func (p *LogManagerProxy) Properties() ([]string, error) {
 	var err error
 	var ret []string
 	var buf *bytes.Buffer
@@ -997,7 +997,7 @@ func (p *LogManager) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
+func (p *LogManagerProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -1025,7 +1025,7 @@ func (p *LogManager) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64,
 	}
 	return ret, nil
 }
-func (p *LogManager) IsStatsEnabled() (bool, error) {
+func (p *LogManagerProxy) IsStatsEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf *bytes.Buffer
@@ -1041,7 +1041,7 @@ func (p *LogManager) IsStatsEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) EnableStats(P0 bool) error {
+func (p *LogManagerProxy) EnableStats(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -1054,7 +1054,7 @@ func (p *LogManager) EnableStats(P0 bool) error {
 	}
 	return nil
 }
-func (p *LogManager) Stats() (map[uint32]MethodStatistics, error) {
+func (p *LogManagerProxy) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
 	var ret map[uint32]MethodStatistics
 	var buf *bytes.Buffer
@@ -1088,7 +1088,7 @@ func (p *LogManager) Stats() (map[uint32]MethodStatistics, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) ClearStats() error {
+func (p *LogManagerProxy) ClearStats() error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -1098,7 +1098,7 @@ func (p *LogManager) ClearStats() error {
 	}
 	return nil
 }
-func (p *LogManager) IsTraceEnabled() (bool, error) {
+func (p *LogManagerProxy) IsTraceEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf *bytes.Buffer
@@ -1114,7 +1114,7 @@ func (p *LogManager) IsTraceEnabled() (bool, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) EnableTrace(P0 bool) error {
+func (p *LogManagerProxy) EnableTrace(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -1127,7 +1127,7 @@ func (p *LogManager) EnableTrace(P0 bool) error {
 	}
 	return nil
 }
-func (p *LogManager) Log(P0 []LogMessage) error {
+func (p *LogManagerProxy) Log(P0 []LogMessage) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -1152,7 +1152,7 @@ func (p *LogManager) Log(P0 []LogMessage) error {
 	}
 	return nil
 }
-func (p *LogManager) CreateListener() (object.ObjectReference, error) {
+func (p *LogManagerProxy) CreateListener() (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
@@ -1168,7 +1168,7 @@ func (p *LogManager) CreateListener() (object.ObjectReference, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) GetListener() (object.ObjectReference, error) {
+func (p *LogManagerProxy) GetListener() (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
@@ -1184,7 +1184,7 @@ func (p *LogManager) GetListener() (object.ObjectReference, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) AddProvider(P0 object.ObjectReference) (int32, error) {
+func (p *LogManagerProxy) AddProvider(P0 object.ObjectReference) (int32, error) {
 	var err error
 	var ret int32
 	var buf *bytes.Buffer
@@ -1203,7 +1203,7 @@ func (p *LogManager) AddProvider(P0 object.ObjectReference) (int32, error) {
 	}
 	return ret, nil
 }
-func (p *LogManager) RemoveProvider(P0 int32) error {
+func (p *LogManagerProxy) RemoveProvider(P0 int32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -1216,7 +1216,7 @@ func (p *LogManager) RemoveProvider(P0 int32) error {
 	}
 	return nil
 }
-func (p *LogManager) SignalTraceObject(cancel chan int) (chan struct {
+func (p *LogManagerProxy) SignalTraceObject(cancel chan int) (chan struct {
 	P0 EventTrace
 }, error) {
 	signalID, err := p.SignalUid("traceObject")

@@ -152,7 +152,7 @@ func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) bus.Ses
 	}
 }
 
-func NewObject(addr string, serviceID, objectID, actionID uint32) (d *stage2.Object, err error) {
+func NewObject(addr string, serviceID, objectID, actionID uint32) (d stage2.Object, err error) {
 
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
@@ -166,7 +166,7 @@ func NewObject(addr string, serviceID, objectID, actionID uint32) (d *stage2.Obj
 	return stage2.NewObject(sess, 1)
 }
 
-func NewServiceDirectory(addr string, serviceID, objectID, actionID uint32) (d *stage2.ServiceDirectory, err error) {
+func NewServiceDirectory(addr string, serviceID, objectID, actionID uint32) (d stage2.ServiceDirectory, err error) {
 
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
@@ -231,6 +231,7 @@ func main() {
 
 	for i, s := range serviceInfoList {
 
+		// FIXME: change me to 100
 		if i > 1 {
 			continue
 		}
