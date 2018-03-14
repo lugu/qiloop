@@ -97,6 +97,21 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		}
 		definitions = append(definitions, def)
 	}
+	keys = make([]int, 0)
+	for k := range metaObj.Signals {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	for _, i := range keys {
+		k := uint32(i)
+		s := metaObj.Signals[k]
+		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
+		def, err := generateSignalDef(file, set, serviceName, s, methodName)
+		if err != nil {
+			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
+		}
+		definitions = append(definitions, def)
+	}
 
 	file.Type().Id("I" + serviceName).Interface(
 		definitions...,
@@ -121,9 +136,7 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 		// generate uniq name for the method
 		methodName := registerName(strings.Title(m.Name), methodNames)
 		if err := generateMethod(file, set, serviceName, m, methodName); err != nil {
-			// FIXME: uncomment
-			// return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
-			fmt.Printf("failed to render method %s of %s: %s\n", m.Name, serviceName, err)
+			return fmt.Errorf("failed to render method %s of %s: %s", m.Name, serviceName, err)
 		}
 	}
 	keys = make([]int, 0)
@@ -137,9 +150,7 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
 
 		if err := generateSignal(file, set, serviceName, s, methodName); err != nil {
-			// FIXME: uncomment
-			// return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
-			fmt.Printf("failed to render signal %s of %s: %s\n", s.Name, serviceName, err)
+			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
 		}
 	}
 	return nil
@@ -367,4 +378,13 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 		body,
 	)
 	return nil
+}
+
+func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName string, s object.MetaSignal, methodName string) (jen.Code, error) {
+	signalType, err := signature.Parse(s.Signature)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse signal %s: %s", s.Signature, err)
+	}
+	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
+	return jen.Id(methodName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
 }
