@@ -71,7 +71,7 @@
 QiMessaging is a network protocol used to create rich distributed
 applications. It was created by Aldebaran Robotics (currently SoftBank
 Robotics) and is the foundation of the NAOqi SDK. SoftBank Robotics
-uses it for the Romeo, NAO and Pepper robots. QiMessaging is also used
+uses it inside Romeo, NAO and Pepper robots. QiMessaging is also used
 in Choregraphe, an integrated development environment which helps
 programming NAO and Pepper robots.
 
@@ -303,11 +303,12 @@ In order to send a `call` message, one needs to know the prototype of
 the method to be called. Since every method have a different
 prototype each payload must be crafted accordingly.
 
-For example the method `authenticate` of the service 0 takes a map
-of string and values and returns a map of string and values. On the
-other hand, the method `services` of the service one takes no
-arguments and return a list of a structure called `ServiceInfo`. One
-needs to know what is structure is in order read it.
+For example the method `authenticate` of the service 0 takes a map of
+string keys and values of type `value` and returns also a map of
+string and `value`. On the other hand, the method `services` of
+the service 1 takes no arguments and returns a list of a structure
+called `ServiceInfo`. One needs to know what is structure is in order
+read it.
 
 Fortunately, every object (and service) can be introspected by calling
 its method `metaObject`. Using this property, one can learn about the
@@ -376,7 +377,6 @@ When describing the return type of a method:
 #### Other
 
 - 'X': an unknown type.
-- 'v': void: used for the return type of a method.
 
 ### Examples
 
@@ -406,7 +406,7 @@ std::map<string, struct Structure>
 
 #### Real world examples
 
-- `[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]`: a vector of structure service Info.
+- `[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]`: a vector of structure `ServiceInfo`.
 
 - `(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>`:
   in the Go programming language this becomes:
@@ -479,7 +479,7 @@ all values are transmitted in little endian.
 
 ### Values
 
-A value is serialized with a string (a defined below) representing
+A value is serialized with a string (a defined above) representing
 the signature of the concrete type followed with the serialized value
 of the type.
 
@@ -503,7 +503,7 @@ object.
 
 This description contains the following fields:
 - **bool**: unknown usage
-- **MetaObject**: description of the object
+- **MetaObject**: description of the object (explained later)
 - **integer**: unknown usage
 - **integer**: service id
 - **integer**: object id
@@ -538,14 +538,14 @@ At the heart of QiMessage is the feature of remote procedure calls:
 
 Here is a list of methods shared by almost every object:
 
-- 000: `registerEvent(UInt32,UInt32,UInt64) UInt64`: subscribes to a
+- 0: `registerEvent(UInt32,UInt32,UInt64) UInt64`: subscribes to a
   signal. The new values of the signal will be sent the client using
   messages of type `event`.
 
-- 001: `unregisterEvent(UInt32,UInt32,UInt64) Void`: unsubscribes
+- 1: `unregisterEvent(UInt32,UInt32,UInt64) Void`: unsubscribes
   from a signal.
 
-- 002: `metaObject(UInt32) MetaObject`: introspects an object. It
+- 2: `metaObject(UInt32) MetaObject`: introspects an object. It
   returns structure called `MetaObject` which describe an object. This
   structure contains the list of methods, signal and properties as
   well as the signature of the associated types. When communicating
@@ -553,19 +553,19 @@ Here is a list of methods shared by almost every object:
   called because it allows the client to associate the name of the
   method with the action ID.
 
-- 003: `terminate(UInt32) Void`: informs a object it is not used
+- 3: `terminate(UInt32) Void`: informs a object it is not used
   anymore. This allows the object to be destroyed. It is used in the
   context of objects returned by methods. In such situation life cycle
   of the object is controlled by the client.
 
-- 005: `property(Value) Value`: returns the value associated with the
+- 5: `property(Value) Value`: returns the value associated with the
   property. 
 
-- 006: `setProperty(Value,Value) Void `: sets the value of a property.
+- 6: `setProperty(Value,Value) Void `: sets the value of a property.
 
-- 007: `properties() List<String>`
+- 7: `properties() List<String>`
 
-- 008: `registerEventWithSignature(UInt32,UInt32,UInt64,String) UInt64`
+- 8: `registerEventWithSignature(UInt32,UInt32,UInt64,String) UInt64`
 
 Notice: one exception is the the object 0 of service 0 which does not
 supports those methods. 
@@ -768,23 +768,23 @@ The server 0 responds to the `authenticate` method with its
 There is a set of methods used for tracing (index ranging from 80 to
 85):
 
-- 080 `isStatsEnabled() Bool`: returns true if the statistics are
+- 80 `isStatsEnabled() Bool`: returns true if the statistics are
   enabled.
 
-- 081: `enableStats(Bool) Void`: enables statistics. 
+- 81: `enableStats(Bool) Void`: enables statistics. 
 
-- 082: `stats() Map<UInt32,MethodStatistics> `: returns the current
+- 82: `stats() Map<UInt32,MethodStatistics> `: returns the current
   statistics
 
-- 083: `clearStats() Void `: reset the counters.
+- 83: `clearStats() Void `: reset the counters.
 
-- 084: `isTraceEnabled() Bool`: returns true if tracing is enable.
+- 84: `isTraceEnabled() Bool`: returns true if tracing is enable.
 
-- 085: `enableTrace(Bool) Void`: enables / disables tracing.
+- 85: `enableTrace(Bool) Void`: enables / disables tracing.
 
 Most object have this signal:
 
-- 086: `traceObject(EventTrace)`: signal when a method of the object
+- 86: `traceObject(EventTrace)`: signal when a method of the object
   have been called.
 
 
