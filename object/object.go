@@ -10,11 +10,6 @@ const MetaObjectMethodID = 2
 // implement the Object interface except the Server service which only
 // has one method (authenticate).
 type Object interface {
-	// ServiceID returns the related service identifier
-	ServiceID() uint32
-	// ServiceID returns object identifier within the service
-	// namespace.
-	ObjectID() uint32
 
 	// MetaObject returns a description of an Object.
 	MetaObject(objectID uint32) (MetaObject, error)

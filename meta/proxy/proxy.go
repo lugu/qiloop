@@ -12,6 +12,12 @@ import (
 
 type Statement = jen.Statement
 
+func newFileAndSet(packageName string) (*jen.File, *signature.TypeSet) {
+	file := jen.NewFile(packageName)
+	file.PackageComment("file generated. DO NOT EDIT.")
+	return file, signature.NewTypeSet()
+}
+
 func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
 
 	file.Type().Id(typ).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
@@ -31,6 +37,71 @@ func generateProxyType(file *jen.File, typ string, metaObj object.MetaObject) {
 		}`),
 		jen.Id(`return &`+typ+`{ proxy }, nil`),
 	)
+}
+
+func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName string, m object.MetaMethod, methodName string) (jen.Code, error) {
+
+	paramType, err := signature.Parse(m.ParametersSignature)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse parameters %s: %s", m.ParametersSignature, err)
+	}
+	paramType.RegisterTo(set)
+	tuple, ok := paramType.(*signature.TupleValue)
+	if !ok {
+		tuple = signature.NewTupleValue([]signature.ValueConstructor{paramType})
+	}
+	tuple.ConvertMetaObjects()
+
+	ret, err := signature.Parse(m.ReturnSignature)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse return: %s: %s", m.ReturnSignature, err)
+	}
+
+	// implementation detail: use object.MetaObject when generating
+	// proxy in order for proxy to implement the object.Object
+	// interface.
+	if ret.Signature() == signature.MetaObjectSignature {
+		ret = signature.NewMetaObjectValue()
+	}
+	if _, ok := ret.(signature.VoidValue); ok {
+		return jen.Id(methodName).Add(tuple.Params()).Error(), nil
+	} else {
+		return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(), jen.Error()), nil
+	}
+}
+
+func generateObjectInterface(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
+
+	definitions := make([]jen.Code, 0)
+	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/object", "Object"))
+
+	methodNames := make(map[string]bool)
+	keys := make([]int, 0)
+	for k := range metaObj.Methods {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	for id, i := range keys {
+		if id < 10 {
+			// those are already defined as part of object.Object
+			continue
+		}
+		k := uint32(i)
+		m := metaObj.Methods[k]
+
+		methodName := registerName(strings.Title(m.Name), methodNames)
+		def, err := generateMethodDef(file, set, serviceName, m, methodName)
+		if err != nil {
+			return fmt.Errorf("failed to render method definition %s of %s: %s", m.Name, serviceName, err)
+		}
+		definitions = append(definitions, def)
+	}
+
+	file.Type().Id("I" + serviceName).Interface(
+		definitions...,
+	)
+	return nil
 }
 
 func generateProxyObject(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
@@ -74,14 +145,23 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 	return nil
 }
 
-func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
+func GenerateInterfaces(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
+	file, set := newFileAndSet(packageName)
 
-	file := jen.NewFile(packageName)
-	file.PackageComment("file generated. DO NOT EDIT.")
-	set := signature.NewTypeSet()
+	for _, metaObj := range metaObjList {
+		generateObjectInterface(metaObj, metaObj.Description, set, file)
+	}
+
+	if err := file.Render(w); err != nil {
+		return fmt.Errorf("failed to render %s: %s", packageName, err)
+	}
+	return nil
+}
+
+func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
+	file, set := newFileAndSet(packageName)
 
 	generateProxyObject(metaObj, serviceName, set, file)
-
 	set.Declare(file)
 
 	if err := file.Render(w); err != nil {
@@ -91,16 +171,11 @@ func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w
 }
 
 func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
-
-	file := jen.NewFile(packageName)
-	file.PackageComment("file generated. DO NOT EDIT.")
-
-	set := signature.NewTypeSet()
+	file, set := newFileAndSet(packageName)
 
 	for _, metaObj := range metaObjList {
 		generateProxyObject(metaObj, metaObj.Description, set, file)
 	}
-
 	set.Declare(file)
 
 	if err := file.Render(w); err != nil {

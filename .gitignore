@@ -18,4 +18,5 @@
 /meta/stage1/metaobject.go
 /meta/stage2/services.go
 /meta/stage3/services.go
+/meta/stage3/interfaces.go
 /meta/stage4/services.go

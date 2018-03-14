@@ -24,11 +24,10 @@ type Proxy interface {
 	MethodUid(name string) (uint32, error)
 	SignalUid(name string) (uint32, error)
 
-	// ServiceID returns the service identifier. Allow services to
-	// implement the object.Object interface.
+	// ServiceID returns the related service identifier
 	ServiceID() uint32
-	// ObjectID returns the object identifier with the service. Allow
-	// services to implement the object.Object interface.
+	// ServiceID returns object identifier within the service
+	// namespace.
 	ObjectID() uint32
 }
 

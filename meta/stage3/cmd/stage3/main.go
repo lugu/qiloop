@@ -181,7 +181,8 @@ func NewServiceDirectory(addr string, serviceID, objectID, actionID uint32) (d *
 }
 
 func main() {
-	var output io.Writer
+	var outputImplementation io.Writer
+	var outputInterface io.Writer
 
 	if len(os.Args) > 1 {
 		filename := os.Args[1]
@@ -191,10 +192,24 @@ func main() {
 			log.Fatalf("failed to open %s: %s", filename, err)
 			return
 		}
-		output = file
+		outputInterface = file
 		defer file.Close()
 	} else {
-		output = os.Stdout
+		outputInterface = os.Stdout
+	}
+
+	if len(os.Args) > 2 {
+		filename := os.Args[2]
+
+		file, err := os.Create(filename)
+		if err != nil {
+			log.Fatalf("failed to open %s: %s", filename, err)
+			return
+		}
+		outputImplementation = file
+		defer file.Close()
+	} else {
+		outputImplementation = os.Stdout
 	}
 
 	addr := ":9559"
@@ -234,5 +249,6 @@ func main() {
 		meta.Description = s.Name
 		objects = append(objects, meta)
 	}
-	proxy.GenerateProxys(objects, "services", output)
+	proxy.GenerateInterfaces(objects, "services", outputInterface)
+	proxy.GenerateProxys(objects, "services", outputImplementation)
 }
