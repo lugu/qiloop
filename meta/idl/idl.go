@@ -33,7 +33,11 @@ func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMetho
 // conflicts. QiMessage do not have such constraint and thus we don't
 // use this name when creating IDL files.
 func generateSignal(writer io.Writer, set *signature.TypeSet, s object.MetaSignal, methodName string) error {
-	fmt.Fprintf(writer, "\tsig %s\n", s.Name)
+	signalType, err := signature.Parse(s.Signature)
+	if err != nil {
+		return fmt.Errorf("failed to parse signal of %s: %s", s.Name, err)
+	}
+	fmt.Fprintf(writer, "\tsig %s(%s)\n", s.Name, signalType.SignatureIDL())
 	return nil
 }
 

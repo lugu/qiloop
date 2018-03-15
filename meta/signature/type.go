@@ -509,10 +509,10 @@ func (t *TupleType) SignatureIDL() string {
 		if i == len(t.values)-1 {
 			break
 		}
-		sig += typ.Name + " " + typ.Value.SignatureIDL() + ", "
+		sig += typ.Name + ": " + typ.Value.SignatureIDL() + ", "
 	}
 	if len(t.values) > 0 {
-		sig += t.Members()[i].Name + " " + t.Members()[i].Value.SignatureIDL()
+		sig += t.Members()[i].Name + ": " + t.Members()[i].Value.SignatureIDL()
 	}
 	return sig
 }
