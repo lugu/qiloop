@@ -200,64 +200,47 @@ func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Wr
 }
 
 func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret signature.ValueConstructor) (*Statement, error) {
-	i := 0
-	length := 20 + len(params.Members())
-	writing := make([]jen.Code, length)
-	writing[i] = jen.Var().Err().Error()
-	i++
+	writing := make([]jen.Code, 0)
+	writing = append(writing, jen.Var().Err().Error())
 	if _, ok := ret.(signature.VoidValue); !ok {
-		writing[i] = jen.Var().Id("ret").Add(ret.TypeName())
-		i++
+		writing = append(writing, jen.Var().Id("ret").Add(ret.TypeName()))
 	}
-	writing[i] = jen.Var().Id("buf").Op("*").Qual("bytes", "Buffer")
-	i++
-	writing[i] = jen.Id("buf = bytes.NewBuffer(make([]byte, 0))")
-	i++
+	writing = append(writing, jen.Var().Id("buf").Op("*").Qual("bytes", "Buffer"))
+	writing = append(writing, jen.Id("buf = bytes.NewBuffer(make([]byte, 0))"))
 	for _, v := range params.Members() {
 		if _, ok := ret.(signature.VoidValue); !ok {
-			writing[i] = jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
-				jen.Id(`return ret, fmt.Errorf("failed to serialize ` + v.Name + `: %s", err)`),
-			)
-			i++
+			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
+				jen.Id(`return ret, fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
+			))
 		} else {
-			writing[i] = jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
-				jen.Id(`return fmt.Errorf("failed to serialize ` + v.Name + `: %s", err)`),
-			)
-			i++
+			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
+				jen.Id(`return fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
+			))
 		}
 	}
 	if _, ok := ret.(signature.VoidValue); !ok {
-		writing[i] = jen.Id(fmt.Sprintf(`response, err := p.Call("%s", buf.Bytes())`, m.Name))
-		i++
+		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.Call("%s", buf.Bytes())`, m.Name)))
 	} else {
-		writing[i] = jen.Id(fmt.Sprintf(`_, err = p.Call("%s", buf.Bytes())`, m.Name))
-		i++
+		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.Call("%s", buf.Bytes())`, m.Name)))
 	}
 	if _, ok := ret.(signature.VoidValue); !ok {
-		writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
+		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
-		)
-		i++
+		))
 	} else {
-		writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
+		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Id(fmt.Sprintf(`return fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
-		)
-		i++
+		))
 	}
 	if _, ok := ret.(signature.VoidValue); !ok {
-		writing[i] = jen.Id("buf = bytes.NewBuffer(response)")
-		i++
-		writing[i] = jen.Id("ret, err =").Add(ret.Unmarshal("buf"))
-		i++
-		writing[i] = jen.If(jen.Err().Op("!=").Nil()).Block(
+		writing = append(writing, jen.Id("buf = bytes.NewBuffer(response)"))
+		writing = append(writing, jen.Id("ret, err =").Add(ret.Unmarshal("buf")))
+		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("failed to parse %s response: %s", err)`, m.Name, "%s")),
-		)
-		i++
-		writing[i] = jen.Return(jen.Id("ret"), jen.Nil())
-		i++
+		))
+		writing = append(writing, jen.Return(jen.Id("ret"), jen.Nil()))
 	} else {
-		writing[i] = jen.Return(jen.Nil())
-		i++
+		writing = append(writing, jen.Return(jen.Nil()))
 	}
 
 	return jen.Block(
