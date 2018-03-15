@@ -3,7 +3,7 @@ package session
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/bus/net"
 	"sync"
 )
 

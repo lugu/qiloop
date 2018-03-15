@@ -2,7 +2,7 @@ package net_test
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/bus/net"
 	gonet "net"
 	"reflect"
 	"testing"

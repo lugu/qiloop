@@ -2,7 +2,7 @@ package net_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/net"
+	"github.com/lugu/qiloop/bus/net"
 	"os"
 	"path/filepath"
 	"testing"

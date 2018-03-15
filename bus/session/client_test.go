@@ -2,8 +2,8 @@ package session_test
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
-	"github.com/lugu/qiloop/net"
 	"github.com/lugu/qiloop/object"
 	gonet "net"
 	"testing"
