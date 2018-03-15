@@ -3,7 +3,7 @@ package session
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/object"
+	"github.com/lugu/qiloop/type/object"
 )
 
 // Proxy is the parent strucuture for Service. It wraps Client and

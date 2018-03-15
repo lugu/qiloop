@@ -3,8 +3,8 @@ package stage2
 
 import (
 	bus "github.com/lugu/qiloop/bus"
-	object "github.com/lugu/qiloop/object"
-	value "github.com/lugu/qiloop/value"
+	object "github.com/lugu/qiloop/type/object"
+	value "github.com/lugu/qiloop/type/value"
 )
 
 type Server interface {

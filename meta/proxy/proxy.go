@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/signature"
-	"github.com/lugu/qiloop/object"
+	"github.com/lugu/qiloop/type/object"
 	"io"
 	"sort"
 	"strings"
@@ -75,7 +75,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 
 	definitions := make([]jen.Code, 0)
 	if serviceName != "Server" {
-		definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/object", "Object"))
+		definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
 	}
 	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 

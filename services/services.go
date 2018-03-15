@@ -4,10 +4,10 @@ package services
 import (
 	bytes "bytes"
 	fmt "fmt"
-	basic "github.com/lugu/qiloop/basic"
 	bus "github.com/lugu/qiloop/bus"
-	object "github.com/lugu/qiloop/object"
-	value "github.com/lugu/qiloop/value"
+	basic "github.com/lugu/qiloop/type/basic"
+	object "github.com/lugu/qiloop/type/object"
+	value "github.com/lugu/qiloop/type/value"
 	io "io"
 )
 

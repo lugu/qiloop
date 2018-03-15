@@ -2,7 +2,7 @@ package value_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/value"
+	"github.com/lugu/qiloop/type/value"
 	"reflect"
 	"testing"
 )

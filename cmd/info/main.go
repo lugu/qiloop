@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lugu/qiloop/bus/session"
-	"github.com/lugu/qiloop/object"
 	"github.com/lugu/qiloop/services"
+	"github.com/lugu/qiloop/type/object"
 	"log"
 	"os"
 )

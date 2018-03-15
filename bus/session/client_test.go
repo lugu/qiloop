@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
-	"github.com/lugu/qiloop/object"
+	"github.com/lugu/qiloop/type/object"
 	gonet "net"
 	"testing"
 )

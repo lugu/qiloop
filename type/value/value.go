@@ -2,7 +2,7 @@ package value
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/basic"
+	"github.com/lugu/qiloop/type/basic"
 	"io"
 )
 

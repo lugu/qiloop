@@ -1,7 +1,7 @@
 package object
 
 import (
-	"github.com/lugu/qiloop/value"
+	"github.com/lugu/qiloop/type/value"
 )
 
 const MetaObjectMethodID = 2

@@ -3,7 +3,7 @@ package object
 
 import (
 	fmt "fmt"
-	basic "github.com/lugu/qiloop/basic"
+	basic "github.com/lugu/qiloop/type/basic"
 	io "io"
 )
 

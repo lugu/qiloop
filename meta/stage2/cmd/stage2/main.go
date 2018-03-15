@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/lugu/qiloop/meta/proxy"
-	"github.com/lugu/qiloop/object"
+	"github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
 	"os"

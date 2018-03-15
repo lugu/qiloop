@@ -3,8 +3,8 @@ package bus
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/basic"
-	"github.com/lugu/qiloop/object"
+	"github.com/lugu/qiloop/type/basic"
+	"github.com/lugu/qiloop/type/object"
 )
 
 // Client represents a client connection to a service.

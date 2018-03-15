@@ -2,7 +2,7 @@ package object_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/object"
+	"github.com/lugu/qiloop/type/object"
 	"os"
 	"path/filepath"
 	"reflect"

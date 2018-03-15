@@ -188,7 +188,7 @@ func (i IntValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (i IntValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -227,7 +227,7 @@ func (i UIntValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (i UIntValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -265,7 +265,7 @@ func (i LongValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (i LongValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -303,7 +303,7 @@ func (i ULongValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (i ULongValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -341,7 +341,7 @@ func (f FloatValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (f FloatValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -379,14 +379,14 @@ func (d DoubleValue) typeDeclaration(dile *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (d DoubleValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (d DoubleValue) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "ReadFloat64").Call(jen.Id(reader))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadFloat64").Call(jen.Id(reader))
 }
 
 // BoolValue represents a bool.
@@ -417,7 +417,7 @@ func (b BoolValue) typeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (b BoolValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
@@ -439,7 +439,7 @@ func (b ValueValue) Signature() string {
 // TypeName returns a statement to be inserted when the type is to be
 // declared.
 func (b ValueValue) TypeName() *Statement {
-	return jen.Qual("github.com/lugu/qiloop/value", "Value")
+	return jen.Qual("github.com/lugu/qiloop/type/value", "Value")
 }
 
 // RegisterTo adds the type to the TypeSet.
@@ -462,7 +462,7 @@ func (b ValueValue) Marshal(id string, writer string) *Statement {
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (b ValueValue) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/value", "NewValue").Call(jen.Id(reader))
+	return jen.Qual("github.com/lugu/qiloop/type/value", "NewValue").Call(jen.Id(reader))
 }
 
 // VoidValue represents the return type of a method.
@@ -573,7 +573,7 @@ func (l *ListValue) typeDeclaration(file *jen.File) {
 // error.
 func (l *ListValue) Marshal(listID string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
-		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
+		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id("uint32").Call(
 			jen.Id("len").Call(jen.Id(listID))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
@@ -623,7 +623,7 @@ func (m MetaObjectValue) Signature() string {
 }
 
 func (m MetaObjectValue) TypeName() *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "MetaObject")
+	return jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject")
 }
 
 func (m MetaObjectValue) typeDeclaration(*jen.File) {
@@ -635,11 +635,11 @@ func (m MetaObjectValue) RegisterTo(s *TypeSet) {
 }
 
 func (m MetaObjectValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (m MetaObjectValue) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "ReadMetaObject").Call(jen.Id(reader))
+	return jen.Qual("github.com/lugu/qiloop/type/object", "ReadMetaObject").Call(jen.Id(reader))
 }
 
 type ObjectValue struct {
@@ -650,7 +650,7 @@ func (o ObjectValue) Signature() string {
 }
 
 func (o ObjectValue) TypeName() *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "ObjectReference")
+	return jen.Qual("github.com/lugu/qiloop/type/object", "ObjectReference")
 }
 
 func (o ObjectValue) typeDeclaration(*jen.File) {
@@ -662,11 +662,11 @@ func (o ObjectValue) RegisterTo(s *TypeSet) {
 }
 
 func (o ObjectValue) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
+	return jen.Qual("github.com/lugu/qiloop/type/object", "WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
 }
 
 func (o ObjectValue) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/object", "ReadObjectReference").Call(jen.Id(reader))
+	return jen.Qual("github.com/lugu/qiloop/type/object", "ReadObjectReference").Call(jen.Id(reader))
 }
 
 type UnknownValue struct {
@@ -731,7 +731,7 @@ func (m *MapValue) typeDeclaration(file *jen.File) {
 // error.
 func (m *MapValue) Marshal(mapID string, writer string) *Statement {
 	return jen.Func().Params().Params(jen.Error()).Block(
-		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/basic", "WriteUint32").Call(jen.Id("uint32").Call(
+		jen.Err().Op(":=").Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id("uint32").Call(
 			jen.Id("len").Call(jen.Id(mapID))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
@@ -1018,7 +1018,7 @@ func basicType() parsec.Parser {
 		parsec.Atom("f", "float32"),
 		parsec.Atom("d", "float64"),
 		parsec.Atom("m", "value"),
-		parsec.Atom("o", "github.com/lugu/qiloop/object.Object"),
+		parsec.Atom("o", "github.com/lugu/qiloop/type/object.Object"),
 		parsec.Atom("X", "interface{}"),
 		parsec.Atom("v", "void"))
 }
