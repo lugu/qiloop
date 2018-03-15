@@ -35,6 +35,7 @@ func NewTypeSet() *TypeSet {
 // associative maps and structures.
 type Type interface {
 	Signature() string
+	SignatureIDL() string
 	TypeName() *Statement
 	TypeDeclaration(*jen.File)
 	RegisterTo(s *TypeSet)
@@ -43,14 +44,18 @@ type Type interface {
 }
 
 type TypeConstructor struct {
-	signature string
-	typeName  *Statement
-	marshal   func(id string, writer string) *Statement // returns an error
-	unmarshal func(reader string) *Statement            // returns (type, err)
+	signature    string
+	signatureIDL string
+	typeName     *Statement
+	marshal      func(id string, writer string) *Statement // returns an error
+	unmarshal    func(reader string) *Statement            // returns (type, err)
 }
 
 func (t *TypeConstructor) Signature() string {
 	return t.signature
+}
+func (t *TypeConstructor) SignatureIDL() string {
+	return t.signatureIDL
 }
 func (t *TypeConstructor) TypeName() *Statement {
 	return t.typeName
@@ -78,8 +83,9 @@ func Print(v Type) string {
 // NewLongType is a contructor for the representation of a uint64.
 func NewLongType() Type {
 	return &TypeConstructor{
-		signature: "l",
-		typeName:  jen.Int64(),
+		signature:    "l",
+		signatureIDL: "long",
+		typeName:     jen.Int64(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -92,8 +98,9 @@ func NewLongType() Type {
 // NewULongType is a contructor for the representation of a uint64.
 func NewULongType() Type {
 	return &TypeConstructor{
-		signature: "L",
-		typeName:  jen.Uint64(),
+		signature:    "L",
+		signatureIDL: "ulong",
+		typeName:     jen.Uint64(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -106,8 +113,9 @@ func NewULongType() Type {
 // NewFloatType is a contructor for the representation of a float32.
 func NewFloatType() Type {
 	return &TypeConstructor{
-		signature: "f",
-		typeName:  jen.Float32(),
+		signature:    "f",
+		signatureIDL: "float",
+		typeName:     jen.Float32(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -120,8 +128,9 @@ func NewFloatType() Type {
 // NewDoubleType is a contructor for the representation of a float32.
 func NewDoubleType() Type {
 	return &TypeConstructor{
-		signature: "d",
-		typeName:  jen.Float64(),
+		signature:    "d",
+		signatureIDL: "double",
+		typeName:     jen.Float64(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -134,8 +143,9 @@ func NewDoubleType() Type {
 // NewIntType is a contructor for the representation of an int32.
 func NewIntType() Type {
 	return &TypeConstructor{
-		signature: "i",
-		typeName:  jen.Int32(),
+		signature:    "i",
+		signatureIDL: "int",
+		typeName:     jen.Int32(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -148,8 +158,9 @@ func NewIntType() Type {
 // NewUIntType is a contructor for the representation of an uint32.
 func NewUIntType() Type {
 	return &TypeConstructor{
-		signature: "I",
-		typeName:  jen.Uint32(),
+		signature:    "I",
+		signatureIDL: "uint",
+		typeName:     jen.Uint32(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -162,8 +173,9 @@ func NewUIntType() Type {
 // NewStringType is a contructor for the representation of a string.
 func NewStringType() Type {
 	return &TypeConstructor{
-		signature: "s",
-		typeName:  jen.String(),
+		signature:    "s",
+		signatureIDL: "str",
+		typeName:     jen.String(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -178,8 +190,9 @@ func NewStringType() Type {
 // type.
 func NewVoidType() Type {
 	return &TypeConstructor{
-		signature: "v",
-		typeName:  jen.Empty(),
+		signature:    "v",
+		signatureIDL: "",
+		typeName:     jen.Empty(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Nil()
 		},
@@ -192,8 +205,9 @@ func NewVoidType() Type {
 // NewValueType is a contructor for the representation of a Value.
 func NewValueType() Type {
 	return &TypeConstructor{
-		signature: "m",
-		typeName:  jen.Qual("github.com/lugu/qiloop/type/value", "Value"),
+		signature:    "m",
+		signatureIDL: "Value",
+		typeName:     jen.Qual("github.com/lugu/qiloop/type/value", "Value"),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Id(id).Dot("Write").Call(jen.Id(writer))
 		},
@@ -206,8 +220,9 @@ func NewValueType() Type {
 // NewBoolType is a contructor for the representation of a bool.
 func NewBoolType() Type {
 	return &TypeConstructor{
-		signature: "b",
-		typeName:  jen.Bool(),
+		signature:    "b",
+		signatureIDL: "bool",
+		typeName:     jen.Bool(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -221,8 +236,9 @@ func NewBoolType() Type {
 // object.
 func NewMetaObjectType() Type {
 	return &TypeConstructor{
-		signature: MetaObjectSignature,
-		typeName:  jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject"),
+		signature:    MetaObjectSignature,
+		signatureIDL: "MetaObject",
+		typeName:     jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject"),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -235,8 +251,9 @@ func NewMetaObjectType() Type {
 // NewObjectType is a contructor for the representation of a Value.
 func NewObjectType() Type {
 	return &TypeConstructor{
-		signature: "o",
-		typeName:  jen.Qual("github.com/lugu/qiloop/type/object", "ObjectReference"),
+		signature:    "o",
+		signatureIDL: "interface",
+		typeName:     jen.Qual("github.com/lugu/qiloop/type/object", "ObjectReference"),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
 		},
@@ -249,8 +266,9 @@ func NewObjectType() Type {
 // NewUnknownType is a contructor for an unkown type.
 func NewUnknownType() Type {
 	return &TypeConstructor{
-		signature: "X",
-		typeName:  jen.Id("interface{}"),
+		signature:    "X",
+		signatureIDL: "unknown",
+		typeName:     jen.Id("interface{}"),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not supported: %v"), jen.Id(id))
 		},
@@ -265,28 +283,6 @@ func NewListType(value Type) *ListType {
 	return &ListType{value}
 }
 
-// NewMapType is a contructor for the representation of a map.
-func NewMapType(key, value Type) *MapType {
-	return &MapType{key, value}
-}
-
-// NewMemberType is a contructor for the representation of a field in
-// a struct.
-func NewMemberType(name string, value Type) MemberType {
-	return MemberType{name, value}
-}
-
-// NewStrucType is a contructor for the representation of a struct.
-func NewStrucType(name string, members []MemberType) *StructType {
-	return &StructType{name, members}
-}
-
-// NewTupleType is a contructor for the representation of a series of
-// types. Used to describe a method parameters list.
-func NewTupleType(values []Type) *TupleType {
-	return &TupleType{values}
-}
-
 // ListType represents a slice.
 type ListType struct {
 	value Type
@@ -296,6 +292,12 @@ type ListType struct {
 // signature of the type of the list.
 func (l *ListType) Signature() string {
 	return fmt.Sprintf("[%s]", l.value.Signature())
+}
+
+// SignatureIDL returns "Vec<signature>" where "signature" is the IDL
+// signature of the type of the list.
+func (l *ListType) SignatureIDL() string {
+	return fmt.Sprintf("Vec<%s>", l.value.SignatureIDL())
 }
 
 // TypeName returns a statement to be inserted when the type is to be
@@ -361,6 +363,11 @@ func (l *ListType) Unmarshal(reader string) *Statement {
 	).Call()
 }
 
+// NewMapType is a contructor for the representation of a map.
+func NewMapType(key, value Type) *MapType {
+	return &MapType{key, value}
+}
+
 // MapType represents a map.
 type MapType struct {
 	key   Type
@@ -372,6 +379,12 @@ type MapType struct {
 // the signature of the value.
 func (m *MapType) Signature() string {
 	return fmt.Sprintf("{%s%s}", m.key.Signature(), m.value.Signature())
+}
+
+// SignatureIDL returns "map<key><value>" where "key" is the IDL
+// signature of the key and "value" the IDL signature of the value.
+func (m *MapType) SignatureIDL() string {
+	return fmt.Sprintf("Map<%s,%s>", m.key.SignatureIDL(), m.value.SignatureIDL())
 }
 
 // TypeName returns a statement to be inserted when the type is to be
@@ -447,6 +460,12 @@ func (m *MapType) Unmarshal(reader string) *Statement {
 	).Call()
 }
 
+// NewMemberType is a contructor for the representation of a field in
+// a struct.
+func NewMemberType(name string, value Type) MemberType {
+	return MemberType{name, value}
+}
+
 // MemberType a field in a struct.
 type MemberType struct {
 	Name  string
@@ -456,6 +475,12 @@ type MemberType struct {
 // Title is the public name of the field.
 func (m MemberType) Title() string {
 	return strings.Title(m.Name)
+}
+
+// NewTupleType is a contructor for the representation of a series of
+// types. Used to describe a method parameters list.
+func NewTupleType(values []Type) *TupleType {
+	return &TupleType{values}
 }
 
 // TupleType a list of a parameter of a method.
@@ -471,6 +496,24 @@ func (t *TupleType) Signature() string {
 		sig += v.Signature()
 	}
 	sig += ")"
+	return sig
+}
+
+// SignatureIDL returns "name1 signature1, name2 signature2" where
+// signatureX is the signature of the elements.
+func (t *TupleType) SignatureIDL() string {
+	var i int = -1
+	var typ MemberType
+	sig := ""
+	for i, typ = range t.Members() {
+		if i == len(t.values)-1 {
+			break
+		}
+		sig += typ.Name + " " + typ.Value.SignatureIDL() + ", "
+	}
+	if len(t.values) > 0 {
+		sig += t.Members()[i].Name + " " + t.Members()[i].Value.SignatureIDL()
+	}
 	return sig
 }
 
@@ -570,6 +613,11 @@ func (t *TupleType) ConvertMetaObjects() {
 	}
 }
 
+// NewStrucType is a contructor for the representation of a struct.
+func NewStrucType(name string, members []MemberType) *StructType {
+	return &StructType{name, members}
+}
+
 // StructType represents a struct.
 type StructType struct {
 	name    string
@@ -590,6 +638,11 @@ func (s *StructType) Signature() string {
 	}
 	return fmt.Sprintf("(%s)<%s,%s>", types,
 		s.name, strings.Join(names, ","))
+}
+
+// SignatureIDL returns the idl signature of the struct.
+func (s *StructType) SignatureIDL() string {
+	return s.name
 }
 
 // TypeName returns a statement to be inserted when the type is to be

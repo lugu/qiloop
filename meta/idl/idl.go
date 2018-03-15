@@ -12,7 +12,19 @@ import (
 // conflicts. QiMessage do not have such constraint and thus we don't
 // use this name when creating IDL files.
 func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMethod, methodName string) error {
-	fmt.Fprintf(writer, "\tfn %s\n", m.Name)
+	paramType, err := signature.Parse(m.ParametersSignature)
+	if err != nil {
+		return fmt.Errorf("failed to parse parms of %s: %s", m.Name, err)
+	}
+	retType, err := signature.Parse(m.ReturnSignature)
+	if err != nil {
+		return fmt.Errorf("failed to parse return of %s: %s", m.Name, err)
+	}
+	if retType.Signature() == "v" {
+		fmt.Fprintf(writer, "\tfn %s(%s)\n", m.Name, paramType.SignatureIDL())
+	} else {
+		fmt.Fprintf(writer, "\tfn %s(%s) -> %s\n", m.Name, paramType.SignatureIDL(), retType.SignatureIDL())
+	}
 	return nil
 }
 
