@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/services"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 	"strings"
