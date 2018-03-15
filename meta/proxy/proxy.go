@@ -6,7 +6,6 @@ import (
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
-	"sort"
 	"strings"
 )
 
@@ -99,53 +98,13 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		return nil
 	}
 
-	if err := forEachMethodAndSignal(metaObj, methodCall, signalCall); err != nil {
+	if err := metaObj.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
 		return fmt.Errorf("failed to generate interface object %s: %s", serviceName, err)
 	}
 
 	file.Type().Id(serviceName).Interface(
 		definitions...,
 	)
-	return nil
-}
-
-// forEachMethodAndSignal call methodCall and signalCall for each
-// method and signal respectively. Always call them in the same order
-// and unsure the generated method names are unique within the object.
-func forEachMethodAndSignal(metaObj object.MetaObject,
-	methodCall func(m object.MetaMethod, methodName string) error,
-	signalCall func(s object.MetaSignal, methodName string) error) error {
-
-	methodNames := make(map[string]bool)
-	keys := make([]int, 0)
-	for k := range metaObj.Methods {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	for _, i := range keys {
-		k := uint32(i)
-		m := metaObj.Methods[k]
-
-		// generate uniq name for the method
-		methodName := registerName(strings.Title(m.Name), methodNames)
-		if err := methodCall(m, methodName); err != nil {
-			return fmt.Errorf("method callback failed for %s: %s", m.Name, err)
-		}
-	}
-	keys = make([]int, 0)
-	for k := range metaObj.Signals {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	for _, i := range keys {
-		k := uint32(i)
-		s := metaObj.Signals[k]
-		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
-
-		if err := signalCall(s, methodName); err != nil {
-			return fmt.Errorf("signal callback failed for %s: %s", s.Name, err)
-		}
-	}
 	return nil
 }
 
@@ -161,7 +120,7 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 		return generateSignal(file, set, proxyName, s, methodName)
 	}
 
-	if err := forEachMethodAndSignal(metaObj, methodCall, signalCall); err != nil {
+	if err := metaObj.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
 		return fmt.Errorf("failed to generate proxy object %s: %s", serviceName, err)
 	}
 	return nil
@@ -253,18 +212,6 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret sign
 	return jen.Block(
 		writing...,
 	), nil
-}
-
-func registerName(name string, names map[string]bool) string {
-	newName := name
-	for i := 0; i < 100; i++ {
-		if _, ok := names[newName]; !ok {
-			break
-		}
-		newName = fmt.Sprintf("%s_%d", name, i)
-	}
-	names[newName] = true
-	return newName
 }
 
 func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, m object.MetaMethod, methodName string) error {
