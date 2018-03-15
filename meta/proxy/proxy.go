@@ -45,9 +45,9 @@ func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName strin
 		return nil, fmt.Errorf("failed to parse parameters %s: %s", m.ParametersSignature, err)
 	}
 	paramType.RegisterTo(set)
-	tuple, ok := paramType.(*signature.TupleValue)
+	tuple, ok := paramType.(*signature.TupleType)
 	if !ok {
-		tuple = signature.NewTupleValue([]signature.ValueConstructor{paramType})
+		tuple = signature.NewTupleType([]signature.Type{paramType})
 	}
 	tuple.ConvertMetaObjects()
 
@@ -60,10 +60,10 @@ func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName strin
 	// proxy in order for proxy to implement the object.Object
 	// interface.
 	if ret.Signature() == signature.MetaObjectSignature {
-		ret = signature.NewMetaObjectValue()
+		ret = signature.NewMetaObjectType()
 	}
 	ret.RegisterTo(set)
-	if _, ok := ret.(signature.VoidValue); ok {
+	if _, ok := ret.(signature.VoidType); ok {
 		return jen.Id(methodName).Add(tuple.Params()).Error(), nil
 	} else {
 		return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(), jen.Error()), nil
@@ -165,16 +165,16 @@ func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Wr
 	return nil
 }
 
-func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret signature.ValueConstructor) (*Statement, error) {
+func methodBodyBlock(m object.MetaMethod, params *signature.TupleType, ret signature.Type) (*Statement, error) {
 	writing := make([]jen.Code, 0)
 	writing = append(writing, jen.Var().Err().Error())
-	if _, ok := ret.(signature.VoidValue); !ok {
+	if _, ok := ret.(signature.VoidType); !ok {
 		writing = append(writing, jen.Var().Id("ret").Add(ret.TypeName()))
 	}
 	writing = append(writing, jen.Var().Id("buf").Op("*").Qual("bytes", "Buffer"))
 	writing = append(writing, jen.Id("buf = bytes.NewBuffer(make([]byte, 0))"))
 	for _, v := range params.Members() {
-		if _, ok := ret.(signature.VoidValue); !ok {
+		if _, ok := ret.(signature.VoidType); !ok {
 			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
 				jen.Id(`return ret, fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
 			))
@@ -184,12 +184,12 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret sign
 			))
 		}
 	}
-	if _, ok := ret.(signature.VoidValue); !ok {
+	if _, ok := ret.(signature.VoidType); !ok {
 		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.Call("%s", buf.Bytes())`, m.Name)))
 	} else {
 		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.Call("%s", buf.Bytes())`, m.Name)))
 	}
-	if _, ok := ret.(signature.VoidValue); !ok {
+	if _, ok := ret.(signature.VoidType); !ok {
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
 		))
@@ -198,7 +198,7 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleValue, ret sign
 			jen.Id(fmt.Sprintf(`return fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
 		))
 	}
-	if _, ok := ret.(signature.VoidValue); !ok {
+	if _, ok := ret.(signature.VoidType); !ok {
 		writing = append(writing, jen.Id("buf = bytes.NewBuffer(response)"))
 		writing = append(writing, jen.Id("ret, err =").Add(ret.Unmarshal("buf")))
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
@@ -221,9 +221,9 @@ func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, 
 		return fmt.Errorf("failed to parse parameters %s: %s", m.ParametersSignature, err)
 	}
 	paramType.RegisterTo(set)
-	tuple, ok := paramType.(*signature.TupleValue)
+	tuple, ok := paramType.(*signature.TupleType)
 	if !ok {
-		tuple = signature.NewTupleValue([]signature.ValueConstructor{paramType})
+		tuple = signature.NewTupleType([]signature.Type{paramType})
 	}
 
 	tuple.ConvertMetaObjects()
@@ -237,7 +237,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, 
 	// proxy in order for proxy to implement the object.Object
 	// interface.
 	if ret.Signature() == signature.MetaObjectSignature {
-		ret = signature.NewMetaObjectValue()
+		ret = signature.NewMetaObjectType()
 	}
 	ret.RegisterTo(set)
 
@@ -247,7 +247,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, 
 	}
 
 	retType := jen.Params(ret.TypeName(), jen.Error())
-	if _, ok := ret.(signature.VoidValue); ok {
+	if _, ok := ret.(signature.VoidType); ok {
 		retType = jen.Error()
 	}
 

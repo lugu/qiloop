@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func testUtil(t *testing.T, input string, expected ValueConstructor) {
+func testUtil(t *testing.T, input string, expected Type) {
 	result, err := Parse(input)
 	if err != nil {
 		t.Error(err)
@@ -31,20 +31,20 @@ func testSignature(t *testing.T, signature string) {
 }
 
 func TestParseBasics(t *testing.T) {
-	testUtil(t, "i", NewIntValue())
-	testUtil(t, "I", NewUIntValue())
-	testUtil(t, "s", NewStringValue())
-	testUtil(t, "L", NewULongValue())
-	testUtil(t, "l", NewLongValue())
-	testUtil(t, "b", NewBoolValue())
-	testUtil(t, "f", NewFloatValue())
-	testUtil(t, "d", NewDoubleValue())
-	testUtil(t, "m", NewValueValue())
-	testUtil(t, "X", NewUnknownValue())
+	testUtil(t, "i", NewIntType())
+	testUtil(t, "I", NewUIntType())
+	testUtil(t, "s", NewStringType())
+	testUtil(t, "L", NewULongType())
+	testUtil(t, "l", NewLongType())
+	testUtil(t, "b", NewBoolType())
+	testUtil(t, "f", NewFloatType())
+	testUtil(t, "d", NewDoubleType())
+	testUtil(t, "m", NewValueType())
+	testUtil(t, "X", NewUnknownType())
 }
 
 func TestParseMultipleString(t *testing.T) {
-	testUtil(t, "ss", NewStringValue())
+	testUtil(t, "ss", NewStringType())
 }
 
 func TestParseEmpty(t *testing.T) {
@@ -53,47 +53,47 @@ func TestParseEmpty(t *testing.T) {
 }
 
 func TestParseMap(t *testing.T) {
-	testUtil(t, "{ss}", NewMapValue(NewStringValue(), NewStringValue()))
-	testUtil(t, "{sI}", NewMapValue(NewStringValue(), NewUIntValue()))
-	testUtil(t, "{is}", NewMapValue(NewIntValue(), NewStringValue()))
-	testUtil(t, "{iI}", NewMapValue(NewIntValue(), NewUIntValue()))
-	testUtil(t, "{Li}", NewMapValue(NewULongValue(), NewIntValue()))
-	testUtil(t, "{sl}", NewMapValue(NewStringValue(), NewLongValue()))
+	testUtil(t, "{ss}", NewMapType(NewStringType(), NewStringType()))
+	testUtil(t, "{sI}", NewMapType(NewStringType(), NewUIntType()))
+	testUtil(t, "{is}", NewMapType(NewIntType(), NewStringType()))
+	testUtil(t, "{iI}", NewMapType(NewIntType(), NewUIntType()))
+	testUtil(t, "{Li}", NewMapType(NewULongType(), NewIntType()))
+	testUtil(t, "{sl}", NewMapType(NewStringType(), NewLongType()))
 }
 
 func TestParseList(t *testing.T) {
-	testUtil(t, "[s]", NewListValue(NewStringValue()))
-	testUtil(t, "[i]", NewListValue(NewIntValue()))
-	testUtil(t, "[b]", NewListValue(NewBoolValue()))
-	testUtil(t, "[{bi}]", NewListValue(NewMapValue(NewBoolValue(), NewIntValue())))
-	testUtil(t, "{b[i]}", NewMapValue(NewBoolValue(), NewListValue(NewIntValue())))
+	testUtil(t, "[s]", NewListType(NewStringType()))
+	testUtil(t, "[i]", NewListType(NewIntType()))
+	testUtil(t, "[b]", NewListType(NewBoolType()))
+	testUtil(t, "[{bi}]", NewListType(NewMapType(NewBoolType(), NewIntType())))
+	testUtil(t, "{b[i]}", NewMapType(NewBoolType(), NewListType(NewIntType())))
 }
 
 func TestParseTuple(t *testing.T) {
-	testUtil(t, "(s)", NewTupleValue([]ValueConstructor{NewStringValue()}))
-	testUtil(t, "(i)", NewTupleValue([]ValueConstructor{NewIntValue()}))
-	testUtil(t, "(ii)", NewTupleValue([]ValueConstructor{NewIntValue(), NewIntValue()}))
-	testUtil(t, "(fbd)", NewTupleValue([]ValueConstructor{NewFloatValue(), NewBoolValue(), NewDoubleValue()}))
+	testUtil(t, "(s)", NewTupleType([]Type{NewStringType()}))
+	testUtil(t, "(i)", NewTupleType([]Type{NewIntType()}))
+	testUtil(t, "(ii)", NewTupleType([]Type{NewIntType(), NewIntType()}))
+	testUtil(t, "(fbd)", NewTupleType([]Type{NewFloatType(), NewBoolType(), NewDoubleType()}))
 }
 
 func TestParseDefinition(t *testing.T) {
-	testUtil(t, "(s)<test,a>", NewStrucValue("test", []MemberValue{NewMemberValue("a", NewStringValue())}))
-	testUtil(t, "(ss)<test,a,a>", NewStrucValue("test", []MemberValue{
-		NewMemberValue("a", NewStringValue()),
-		NewMemberValue("a", NewStringValue()),
+	testUtil(t, "(s)<test,a>", NewStrucType("test", []MemberType{NewMemberType("a", NewStringType())}))
+	testUtil(t, "(ss)<test,a,a>", NewStrucType("test", []MemberType{
+		NewMemberType("a", NewStringType()),
+		NewMemberType("a", NewStringType()),
 	}))
-	testUtil(t, "(sss)<test,a,a,a>", NewStrucValue("test", []MemberValue{
-		NewMemberValue("a", NewStringValue()),
-		NewMemberValue("a", NewStringValue()),
-		NewMemberValue("a", NewStringValue()),
+	testUtil(t, "(sss)<test,a,a,a>", NewStrucType("test", []MemberType{
+		NewMemberType("a", NewStringType()),
+		NewMemberType("a", NewStringType()),
+		NewMemberType("a", NewStringType()),
 	}))
 }
 
 func TestParseEmbeddedDefinition(t *testing.T) {
-	testUtil(t, "([s])<test,a>", NewStrucValue("test", []MemberValue{
-		NewMemberValue("a", NewListValue(NewStringValue()))}))
-	testUtil(t, "({si})<test,a>", NewStrucValue("test", []MemberValue{
-		NewMemberValue("a", NewMapValue(NewStringValue(), NewIntValue()))}))
+	testUtil(t, "([s])<test,a>", NewStrucType("test", []MemberType{
+		NewMemberType("a", NewListType(NewStringType()))}))
+	testUtil(t, "({si})<test,a>", NewStrucType("test", []MemberType{
+		NewMemberType("a", NewMapType(NewStringType(), NewIntType()))}))
 }
 
 func TestParseMapMap(t *testing.T) {
