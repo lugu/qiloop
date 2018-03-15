@@ -79,41 +79,28 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 	}
 	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 
-	methodNames := make(map[string]bool)
-	keys := make([]int, 0)
-	for k := range metaObj.Methods {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	for id, i := range keys {
-		if serviceName != "Server" && id < 10 {
-			// those are already defined as part of object.Object
-			continue
+	methodCall := func(m object.MetaMethod, methodName string) error {
+		if serviceName != "Server" && m.Uid < 10 {
+			return nil
 		}
-		k := uint32(i)
-		m := metaObj.Methods[k]
-
-		methodName := registerName(strings.Title(m.Name), methodNames)
 		def, err := generateMethodDef(file, set, serviceName, m, methodName)
 		if err != nil {
 			return fmt.Errorf("failed to render method definition %s of %s: %s", m.Name, serviceName, err)
 		}
 		definitions = append(definitions, def)
+		return nil
 	}
-	keys = make([]int, 0)
-	for k := range metaObj.Signals {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	for _, i := range keys {
-		k := uint32(i)
-		s := metaObj.Signals[k]
-		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
+	signalCall := func(s object.MetaSignal, methodName string) error {
 		def, err := generateSignalDef(file, set, serviceName, s, methodName)
 		if err != nil {
 			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
 		}
 		definitions = append(definitions, def)
+		return nil
+	}
+
+	if err := forEachMethodAndSignal(metaObj, methodCall, signalCall); err != nil {
+		return fmt.Errorf("failed to generate interface object %s: %s", serviceName, err)
 	}
 
 	file.Type().Id(serviceName).Interface(
@@ -122,10 +109,12 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 	return nil
 }
 
-func generateProxyObject(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
-
-	proxyName := serviceName + "Proxy"
-	generateProxyType(file, serviceName, proxyName, metaObj)
+// forEachMethodAndSignal call methodCall and signalCall for each
+// method and signal respectively. Always call them in the same order
+// and unsure the generated method names are unique within the object.
+func forEachMethodAndSignal(metaObj object.MetaObject,
+	methodCall func(m object.MetaMethod, methodName string) error,
+	signalCall func(s object.MetaSignal, methodName string) error) error {
 
 	methodNames := make(map[string]bool)
 	keys := make([]int, 0)
@@ -139,8 +128,8 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 
 		// generate uniq name for the method
 		methodName := registerName(strings.Title(m.Name), methodNames)
-		if err := generateMethod(file, set, proxyName, m, methodName); err != nil {
-			return fmt.Errorf("failed to render method %s of %s: %s", m.Name, proxyName, err)
+		if err := methodCall(m, methodName); err != nil {
+			return fmt.Errorf("method callback failed for %s: %s", m.Name, err)
 		}
 	}
 	keys = make([]int, 0)
@@ -153,9 +142,27 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 		s := metaObj.Signals[k]
 		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
 
-		if err := generateSignal(file, set, proxyName, s, methodName); err != nil {
-			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, proxyName, err)
+		if err := signalCall(s, methodName); err != nil {
+			return fmt.Errorf("signal callback failed for %s: %s", s.Name, err)
 		}
+	}
+	return nil
+}
+
+func generateProxyObject(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
+
+	proxyName := serviceName + "Proxy"
+	generateProxyType(file, serviceName, proxyName, metaObj)
+
+	methodCall := func(m object.MetaMethod, methodName string) error {
+		return generateMethod(file, set, proxyName, m, methodName)
+	}
+	signalCall := func(s object.MetaSignal, methodName string) error {
+		return generateSignal(file, set, proxyName, s, methodName)
+	}
+
+	if err := forEachMethodAndSignal(metaObj, methodCall, signalCall); err != nil {
+		return fmt.Errorf("failed to generate proxy object %s: %s", serviceName, err)
 	}
 	return nil
 }

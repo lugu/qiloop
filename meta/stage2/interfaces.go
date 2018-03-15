@@ -18,6 +18,8 @@ type Object interface {
 type ServiceDirectory interface {
 	object.Object
 	bus.Proxy
+	IsStatsEnabled() (bool, error)
+	EnableStats(P0 bool) error
 	Stats() (map[uint32]MethodStatistics, error)
 	ClearStats() error
 	IsTraceEnabled() (bool, error)
