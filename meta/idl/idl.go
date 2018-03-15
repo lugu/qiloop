@@ -25,6 +25,8 @@ func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMetho
 	} else {
 		fmt.Fprintf(writer, "\tfn %s(%s) -> %s\n", m.Name, paramType.SignatureIDL(), retType.SignatureIDL())
 	}
+	paramType.RegisterTo(set)
+	retType.RegisterTo(set)
 	return nil
 }
 
@@ -37,6 +39,7 @@ func generateSignal(writer io.Writer, set *signature.TypeSet, s object.MetaSigna
 	if err != nil {
 		return fmt.Errorf("failed to parse signal of %s: %s", s.Name, err)
 	}
+	signalType.RegisterTo(set)
 	fmt.Fprintf(writer, "\tsig %s(%s)\n", s.Name, signalType.SignatureIDL())
 	return nil
 }
@@ -58,6 +61,7 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 	}
 	fmt.Fprintf(writer, "end\n")
 
+	// TODO: defines types from the typeset
 	return nil
 }
 
