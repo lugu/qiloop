@@ -18,7 +18,7 @@ type TypeSet struct {
 // Declare writes all the registered Type into the jen.File.
 func (s *TypeSet) Declare(f *jen.File) {
 	for _, v := range s.Types {
-		v.typeDeclaration(f)
+		v.TypeDeclaration(f)
 	}
 }
 
@@ -36,10 +36,36 @@ func NewTypeSet() *TypeSet {
 type Type interface {
 	Signature() string
 	TypeName() *Statement
-	typeDeclaration(*jen.File)
+	TypeDeclaration(*jen.File)
 	RegisterTo(s *TypeSet)
 	Marshal(id string, writer string) *Statement // returns an error
 	Unmarshal(reader string) *Statement          // returns (type, err)
+}
+
+type TypeConstructor struct {
+	signature string
+	typeName  *Statement
+	marshal   func(id string, writer string) *Statement // returns an error
+	unmarshal func(reader string) *Statement            // returns (type, err)
+}
+
+func (t *TypeConstructor) Signature() string {
+	return t.signature
+}
+func (t *TypeConstructor) TypeName() *Statement {
+	return t.typeName
+}
+func (t *TypeConstructor) TypeDeclaration(f *jen.File) {
+	return
+}
+func (t *TypeConstructor) RegisterTo(s *TypeSet) {
+	return
+}
+func (t *TypeConstructor) Marshal(id string, writer string) *Statement {
+	return t.marshal(id, writer)
+}
+func (t *TypeConstructor) Unmarshal(reader string) *Statement {
+	return t.unmarshal(reader)
 }
 
 // Print render the type into a string. It is only used for testing.
@@ -50,55 +76,188 @@ func Print(v Type) string {
 }
 
 // NewLongType is a contructor for the representation of a uint64.
-func NewLongType() LongType {
-	return LongType{}
+func NewLongType() Type {
+	return &TypeConstructor{
+		signature: "l",
+		typeName:  jen.Int64(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadInt64").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewULongType is a contructor for the representation of a uint64.
-func NewULongType() ULongType {
-	return ULongType{}
+func NewULongType() Type {
+	return &TypeConstructor{
+		signature: "L",
+		typeName:  jen.Uint64(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadUint64").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewFloatType is a contructor for the representation of a float32.
-func NewFloatType() FloatType {
-	return FloatType{}
+func NewFloatType() Type {
+	return &TypeConstructor{
+		signature: "f",
+		typeName:  jen.Float32(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadFloat32").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewDoubleType is a contructor for the representation of a float32.
-func NewDoubleType() DoubleType {
-	return DoubleType{}
+func NewDoubleType() Type {
+	return &TypeConstructor{
+		signature: "d",
+		typeName:  jen.Float64(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadFloat64").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewIntType is a contructor for the representation of an int32.
-func NewIntType() IntType {
-	return IntType{}
+func NewIntType() Type {
+	return &TypeConstructor{
+		signature: "i",
+		typeName:  jen.Int32(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadInt32").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewUIntType is a contructor for the representation of an uint32.
-func NewUIntType() UIntType {
-	return UIntType{}
+func NewUIntType() Type {
+	return &TypeConstructor{
+		signature: "I",
+		typeName:  jen.Uint32(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadUint32").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewStringType is a contructor for the representation of a string.
-func NewStringType() StringType {
-	return StringType{}
+func NewStringType() Type {
+	return &TypeConstructor{
+		signature: "s",
+		typeName:  jen.String(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadString").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewVoidType is a contructor for the representation of the
 // absence of a return type. Only used in the context of a returned
 // type.
-func NewVoidType() VoidType {
-	return VoidType{}
+func NewVoidType() Type {
+	return &TypeConstructor{
+		signature: "v",
+		typeName:  jen.Empty(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Nil()
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Empty()
+		},
+	}
 }
 
 // NewValueType is a contructor for the representation of a Value.
-func NewValueType() ValueType {
-	return ValueType{}
+func NewValueType() Type {
+	return &TypeConstructor{
+		signature: "m",
+		typeName:  jen.Qual("github.com/lugu/qiloop/type/value", "Value"),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Id(id).Dot("Write").Call(jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/value", "NewValue").Call(jen.Id(reader))
+		},
+	}
 }
 
 // NewBoolType is a contructor for the representation of a bool.
-func NewBoolType() BoolType {
-	return BoolType{}
+func NewBoolType() Type {
+	return &TypeConstructor{
+		signature: "b",
+		typeName:  jen.Bool(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadBool").Call(jen.Id(reader))
+		},
+	}
+}
+
+// NewMetaObjectType is a contructor for the representation of an
+// object.
+func NewMetaObjectType() Type {
+	return &TypeConstructor{
+		signature: MetaObjectSignature,
+		typeName:  jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject"),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadMetaObject").Call(jen.Id(reader))
+		},
+	}
+}
+
+// NewObjectType is a contructor for the representation of a Value.
+func NewObjectType() Type {
+	return &TypeConstructor{
+		signature: "o",
+		typeName:  jen.Qual("github.com/lugu/qiloop/type/object", "ObjectReference"),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/object", "WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadObjectReference").Call(jen.Id(reader))
+		},
+	}
+}
+
+// NewUnknownType is a contructor for an unkown type.
+func NewUnknownType() Type {
+	return &TypeConstructor{
+		signature: "X",
+		typeName:  jen.Id("interface{}"),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not supported: %v"), jen.Id(id))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type deserialization not supported")))
+		},
+	}
 }
 
 // NewListType is a contructor for the representation of a slice.
@@ -128,402 +287,6 @@ func NewTupleType(values []Type) *TupleType {
 	return &TupleType{values}
 }
 
-// NewMetaObjectType is a contructor for the representation of an
-// object.
-func NewMetaObjectType() MetaObjectType {
-	return MetaObjectType{}
-}
-
-// NewObjectType is a contructor for the representation of a Value.
-func NewObjectType() ObjectType {
-	return ObjectType{}
-}
-
-// NewUnknownType is a contructor for an unkown type.
-func NewUnknownType() UnknownType {
-	return UnknownType{}
-}
-
-// IntType represents an integer.
-type IntType struct {
-}
-
-// Signature returns "i".
-func (i IntType) Signature() string {
-	return "i"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (i IntType) TypeName() *Statement {
-	return jen.Int32()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (i IntType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (i IntType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (i IntType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (i IntType) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadInt32").Call(jen.Id(reader))
-}
-
-// UIntType represents an integer.
-type UIntType struct {
-}
-
-// Signature returns "I".
-func (i UIntType) Signature() string {
-	return "I"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (i UIntType) TypeName() *Statement {
-	return jen.Uint32()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (i UIntType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (i UIntType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (i UIntType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (i UIntType) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadUint32").Call(jen.Id(reader))
-}
-
-// LongType represents a long.
-type LongType struct {
-}
-
-// Signature returns "l".
-func (i LongType) Signature() string {
-	return "l"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (i LongType) TypeName() *Statement {
-	return jen.Int64()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (i LongType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (i LongType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (i LongType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (i LongType) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadInt64").Call(jen.Id(reader))
-}
-
-// ULongType represents a long.
-type ULongType struct {
-}
-
-// Signature returns "L".
-func (i ULongType) Signature() string {
-	return "L"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (i ULongType) TypeName() *Statement {
-	return jen.Uint64()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (i ULongType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (i ULongType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (i ULongType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (i ULongType) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadUint64").Call(jen.Id(reader))
-}
-
-// FloatType represents a float.
-type FloatType struct {
-}
-
-// Signature returns "f".
-func (f FloatType) Signature() string {
-	return "f"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (f FloatType) TypeName() *Statement {
-	return jen.Float32()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (f FloatType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (f FloatType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (f FloatType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (f FloatType) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadFloat32").Call(jen.Id(reader))
-}
-
-// DoubleType represents a float.
-type DoubleType struct {
-}
-
-// Signature returns "f".
-func (d DoubleType) Signature() string {
-	return "f"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (d DoubleType) TypeName() *Statement {
-	return jen.Float64()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (d DoubleType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (d DoubleType) typeDeclaration(dile *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (d DoubleType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (d DoubleType) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadFloat64").Call(jen.Id(reader))
-}
-
-// BoolType represents a bool.
-type BoolType struct {
-}
-
-// Signature returns "b".
-func (b BoolType) Signature() string {
-	return "b"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (b BoolType) TypeName() *Statement {
-	return jen.Bool()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (b BoolType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (b BoolType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (b BoolType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (b BoolType) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadBool").Call(jen.Id(reader))
-}
-
-// ValueType represents a Value.
-type ValueType struct {
-}
-
-// Signature returns "m".
-func (b ValueType) Signature() string {
-	return "m"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (b ValueType) TypeName() *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/value", "Value")
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (b ValueType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (b ValueType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (b ValueType) Marshal(id string, writer string) *Statement {
-	return jen.Id(id).Dot("Write").Call(jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (b ValueType) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/value", "NewValue").Call(jen.Id(reader))
-}
-
-// VoidType represents the return type of a method.
-type VoidType struct {
-}
-
-// Signature returns "v".
-func (v VoidType) Signature() string {
-	return "v"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (v VoidType) TypeName() *Statement {
-	return jen.Empty()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (v VoidType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (v VoidType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (v VoidType) Marshal(id string, writer string) *Statement {
-	return jen.Nil()
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (v VoidType) Unmarshal(reader string) *Statement {
-	return jen.Empty()
-}
-
-// StringType represents a string.
-type StringType struct {
-}
-
-// Signature returns "s".
-func (s StringType) Signature() string {
-	return "s"
-}
-
-// TypeName returns a statement to be inserted when the type is to be
-// declared.
-func (s StringType) TypeName() *Statement {
-	return jen.String()
-}
-
-// RegisterTo adds the type to the TypeSet.
-func (s StringType) RegisterTo(set *TypeSet) {
-	return
-}
-
-func (s StringType) typeDeclaration(file *jen.File) {
-	return
-}
-
-// Marshal returns a statement which represent the code needed to put
-// the variable "id" into the io.Writer "writer" while returning an
-// error.
-func (s StringType) Marshal(id string, writer string) *Statement {
-	return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
-}
-
-// Unmarshal returns a statement which represent the code needed to read
-// from a reader "reader" of type io.Reader and returns both the value
-// read and an error.
-func (s StringType) Unmarshal(reader string) *Statement {
-	return jen.Id("basic.ReadString").Call(jen.Id(reader))
-}
-
 // ListType represents a slice.
 type ListType struct {
 	value Type
@@ -547,7 +310,7 @@ func (l *ListType) RegisterTo(s *TypeSet) {
 	return
 }
 
-func (l *ListType) typeDeclaration(file *jen.File) {
+func (l *ListType) TypeDeclaration(file *jen.File) {
 	return
 }
 
@@ -598,87 +361,6 @@ func (l *ListType) Unmarshal(reader string) *Statement {
 	).Call()
 }
 
-type MetaObjectType struct {
-}
-
-func (m MetaObjectType) Signature() string {
-	return MetaObjectSignature
-}
-
-func (m MetaObjectType) TypeName() *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject")
-}
-
-func (m MetaObjectType) typeDeclaration(*jen.File) {
-	return
-}
-
-func (m MetaObjectType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (m MetaObjectType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/object", "WriteMetaObject").Call(jen.Id(id), jen.Id(writer))
-}
-
-func (m MetaObjectType) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/object", "ReadMetaObject").Call(jen.Id(reader))
-}
-
-type ObjectType struct {
-}
-
-func (o ObjectType) Signature() string {
-	return "o"
-}
-
-func (o ObjectType) TypeName() *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/object", "ObjectReference")
-}
-
-func (o ObjectType) typeDeclaration(*jen.File) {
-	return
-}
-
-func (o ObjectType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (o ObjectType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/object", "WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
-}
-
-func (o ObjectType) Unmarshal(reader string) *Statement {
-	return jen.Qual("github.com/lugu/qiloop/type/object", "ReadObjectReference").Call(jen.Id(reader))
-}
-
-type UnknownType struct {
-}
-
-func (u UnknownType) Signature() string {
-	return "X"
-}
-
-func (u UnknownType) TypeName() *Statement {
-	return jen.Id("interface{}")
-}
-
-func (u UnknownType) typeDeclaration(*jen.File) {
-	return
-}
-
-func (u UnknownType) RegisterTo(s *TypeSet) {
-	return
-}
-
-func (u UnknownType) Marshal(id string, writer string) *Statement {
-	return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not supported: %v"), jen.Id(id))
-}
-
-func (u UnknownType) Unmarshal(reader string) *Statement {
-	return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type deserialization not supported")))
-}
-
 // MapType represents a map.
 type MapType struct {
 	key   Type
@@ -705,7 +387,7 @@ func (m *MapType) RegisterTo(s *TypeSet) {
 	return
 }
 
-func (m *MapType) typeDeclaration(file *jen.File) {
+func (m *MapType) TypeDeclaration(file *jen.File) {
 	return
 }
 
@@ -829,7 +511,7 @@ func (t *TupleType) RegisterTo(s *TypeSet) {
 	return
 }
 
-func (t *TupleType) typeDeclaration(*jen.File) {
+func (t *TupleType) TypeDeclaration(*jen.File) {
 	return
 }
 
@@ -940,7 +622,7 @@ func (s *StructType) RegisterTo(set *TypeSet) {
 	return
 }
 
-func (s *StructType) typeDeclaration(file *jen.File) {
+func (s *StructType) TypeDeclaration(file *jen.File) {
 	fields := make([]jen.Code, len(s.members))
 	for i, v := range s.members {
 		fields[i] = jen.Id(v.Title()).Add(v.Value.TypeName())
