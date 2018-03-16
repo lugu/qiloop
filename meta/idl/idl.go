@@ -62,6 +62,9 @@ func generateStructures(writer io.Writer, set *signature.TypeSet) error {
 	return nil
 }
 
+// GenerateIDL writes the IDL definition of a MetaObject into a
+// writer. This IDL definition can be used to re-create the MetaObject
+// with the method ParseIDL.
 func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject) error {
 	set := signature.NewTypeSet()
 
@@ -85,6 +88,8 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 	return nil
 }
 
+// ParseIDL read an IDL definition from a reader and returns the
+// MetaObject associated with the IDL.
 func ParseIDL(reader io.Reader) (*object.MetaObject, error) {
 	return nil, fmt.Errorf("Not yet implemented")
 }
