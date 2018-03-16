@@ -37,6 +37,35 @@ func TestObject(t *testing.T) {
 	fn properties() -> Vec<str>
 	fn registerEventWithSignature(P0: uint, P1: uint, P2: ulong, P3: str) -> ulong
 end
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint,MetaMethod>
+	signals: Map<uint,MetaSignal>
+	properties: Map<uint,MetaProperty>
+	description: str
+end
 `
 	if w.String() != expected {
 		t.Errorf("Got:\n%s\nExpecting:\n%s\n", w.String(), expected)
@@ -80,6 +109,69 @@ func TestServiceDirectory(t *testing.T) {
 	sig traceObject(P0: EventTrace)
 	sig serviceAdded(P0: uint, P1: str)
 	sig serviceRemoved(P0: uint, P1: str)
+end
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint,MetaMethod>
+	signals: Map<uint,MetaSignal>
+	properties: Map<uint,MetaProperty>
+	description: str
+end
+struct MinMaxSum
+	minValue: float
+	maxValue: float
+	cumulatedValue: float
+end
+struct MethodStatistics
+	count: uint
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
+struct ServiceInfo
+	name: str
+	serviceId: uint
+	machineId: str
+	processId: uint
+	endpoints: Vec<str>
+	sessionId: str
+end
+struct timeval
+	tv_sec: long
+	tv_usec: long
+end
+struct EventTrace
+	id: uint
+	kind: int
+	slotId: uint
+	arguments: Value
+	timestamp: timeval
+	userUsTime: long
+	systemUsTime: long
+	callerContext: uint
+	calleeContext: uint
 end
 `
 	if w.String() != expected {

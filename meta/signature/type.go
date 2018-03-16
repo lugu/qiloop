@@ -620,15 +620,15 @@ func NewStrucType(name string, members []MemberType) *StructType {
 
 // StructType represents a struct.
 type StructType struct {
-	name    string
-	members []MemberType
+	Name    string
+	Members []MemberType
 }
 
 // Signature returns the signature of the struct.
 func (s *StructType) Signature() string {
 	types := ""
-	names := make([]string, 0, len(s.members))
-	for _, v := range s.members {
+	names := make([]string, 0, len(s.Members))
+	for _, v := range s.Members {
 		names = append(names, v.Name)
 		if s, ok := v.Value.(*StructType); ok {
 			types += "[" + s.Signature() + "]"
@@ -637,54 +637,54 @@ func (s *StructType) Signature() string {
 		}
 	}
 	return fmt.Sprintf("(%s)<%s,%s>", types,
-		s.name, strings.Join(names, ","))
+		s.Name, strings.Join(names, ","))
 }
 
 // SignatureIDL returns the idl signature of the struct.
 func (s *StructType) SignatureIDL() string {
-	return s.name
+	return s.Name
 }
 
 // TypeName returns a statement to be inserted when the type is to be
 // declared.
 func (s *StructType) TypeName() *Statement {
-	return jen.Id(s.name)
+	return jen.Id(s.Name)
 }
 
 // RegisterTo adds the type to the TypeSet.
 func (s *StructType) RegisterTo(set *TypeSet) {
-	for _, v := range s.members {
+	for _, v := range s.Members {
 		v.Value.RegisterTo(set)
 	}
 
 	// register the name of the struct. if the name is used by a
 	// struct of a different signature, change the name.
 	for i := 0; i < 100; i++ {
-		if sgn, ok := set.Signatures[s.name]; !ok {
+		if sgn, ok := set.Signatures[s.Name]; !ok {
 			// name not yet used
-			set.Signatures[s.name] = s.Signature()
+			set.Signatures[s.Name] = s.Signature()
 			set.Types = append(set.Types, s)
 			break
 		} else if sgn == s.Signature() {
 			// same name and same signatures
 			break
 		} else {
-			s.name = fmt.Sprintf("%s_%d", s.name, i)
+			s.Name = fmt.Sprintf("%s_%d", s.Name, i)
 		}
 	}
 	return
 }
 
 func (s *StructType) TypeDeclaration(file *jen.File) {
-	fields := make([]jen.Code, len(s.members))
-	for i, v := range s.members {
+	fields := make([]jen.Code, len(s.Members))
+	for i, v := range s.Members {
 		fields[i] = jen.Id(v.Title()).Add(v.Value.TypeName())
 	}
-	file.Type().Id(s.name).Struct(fields...)
+	file.Type().Id(s.Name).Struct(fields...)
 
-	readFields := make([]jen.Code, len(s.members)+1)
-	writeFields := make([]jen.Code, len(s.members)+1)
-	for i, v := range s.members {
+	readFields := make([]jen.Code, len(s.Members)+1)
+	writeFields := make([]jen.Code, len(s.Members)+1)
+	for i, v := range s.Members {
 		readFields[i] = jen.If(
 			jen.Id("s."+v.Title()+", err =").Add(v.Value.Unmarshal("r")),
 			jen.Id("err != nil")).Block(
@@ -697,16 +697,16 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 			jen.Id(`return fmt.Errorf("failed to write ` + v.Title() + ` field: %s", err)`),
 		)
 	}
-	readFields[len(s.members)] = jen.Return(jen.Id("s"), jen.Nil())
-	writeFields[len(s.members)] = jen.Return(jen.Nil())
+	readFields[len(s.Members)] = jen.Return(jen.Id("s"), jen.Nil())
+	writeFields[len(s.Members)] = jen.Return(jen.Nil())
 
-	file.Func().Id("Read"+s.name).Params(
+	file.Func().Id("Read"+s.Name).Params(
 		jen.Id("r").Id("io.Reader"),
 	).Params(
-		jen.Id("s").Id(s.name), jen.Err().Error(),
+		jen.Id("s").Id(s.Name), jen.Err().Error(),
 	).Block(readFields...)
-	file.Func().Id("Write"+s.name).Params(
-		jen.Id("s").Id(s.name),
+	file.Func().Id("Write"+s.Name).Params(
+		jen.Id("s").Id(s.Name),
 		jen.Id("w").Qual("io", "Writer"),
 	).Params(jen.Err().Error()).Block(writeFields...)
 }
@@ -715,12 +715,12 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (s *StructType) Marshal(structID string, writer string) *Statement {
-	return jen.Id("Write"+s.name).Call(jen.Id(structID), jen.Id(writer))
+	return jen.Id("Write"+s.Name).Call(jen.Id(structID), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (s *StructType) Unmarshal(reader string) *Statement {
-	return jen.Id("Read" + s.name).Call(jen.Id(reader))
+	return jen.Id("Read" + s.Name).Call(jen.Id(reader))
 }

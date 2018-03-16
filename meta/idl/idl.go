@@ -44,6 +44,24 @@ func generateSignal(writer io.Writer, set *signature.TypeSet, s object.MetaSigna
 	return nil
 }
 
+func generateStructure(writer io.Writer, s *signature.StructType) error {
+	fmt.Fprintf(writer, "struct %s\n", s.Name)
+	for _, mem := range s.Members {
+		fmt.Fprintf(writer, "\t%s: %s\n", mem.Name, mem.Value.SignatureIDL())
+	}
+	fmt.Fprintf(writer, "end\n")
+	return nil
+}
+
+func generateStructures(writer io.Writer, set *signature.TypeSet) error {
+	for _, typ := range set.Types {
+		if structure, ok := typ.(*signature.StructType); ok {
+			generateStructure(writer, structure)
+		}
+	}
+	return nil
+}
+
 func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject) error {
 	set := signature.NewTypeSet()
 
@@ -61,7 +79,9 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 	}
 	fmt.Fprintf(writer, "end\n")
 
-	// TODO: defines types from the typeset
+	if err := generateStructures(writer, set); err != nil {
+		return fmt.Errorf("failed to generate structures: %s", err)
+	}
 	return nil
 }
 
