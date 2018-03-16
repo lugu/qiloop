@@ -48,15 +48,14 @@ func TestProxyCall(t *testing.T) {
 		}
 	}()
 
-	// 3. client estable connection
+	// 3. client connection
 	client, err := session.NewClient(fmt.Sprintf(":%d", p))
 	if err != nil {
 		t.Errorf("failed to create client failed: %s", err)
 	}
 
-	// 4. create proxy
+	// 4. send a message
 	proxy := session.NewProxy(client, object.MetaService0, 1, 2)
-	// 4. client send a message
 	_, err = proxy.CallID(3, []byte{0xab, 0xcd})
 	if err != nil {
 		t.Errorf("proxy failed to call service: %s", err)
