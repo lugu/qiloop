@@ -19,4 +19,5 @@ go generate github.com/lugu/qiloop/bus/services
 go get github.com/lugu/qiloop/bus/cmd/info
 
 go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic
+# go tool cover -html=./coverage.txt
 $HOME/go/bin/info | head
