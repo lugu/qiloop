@@ -84,7 +84,7 @@ func Print(v Type) string {
 func NewLongType() Type {
 	return &TypeConstructor{
 		signature:    "l",
-		signatureIDL: "long",
+		signatureIDL: "int64",
 		typeName:     jen.Int64(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
@@ -99,7 +99,7 @@ func NewLongType() Type {
 func NewULongType() Type {
 	return &TypeConstructor{
 		signature:    "L",
-		signatureIDL: "ulong",
+		signatureIDL: "uint64",
 		typeName:     jen.Uint64(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
@@ -114,7 +114,7 @@ func NewULongType() Type {
 func NewFloatType() Type {
 	return &TypeConstructor{
 		signature:    "f",
-		signatureIDL: "float",
+		signatureIDL: "float32",
 		typeName:     jen.Float32(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
@@ -129,7 +129,7 @@ func NewFloatType() Type {
 func NewDoubleType() Type {
 	return &TypeConstructor{
 		signature:    "d",
-		signatureIDL: "double",
+		signatureIDL: "float64",
 		typeName:     jen.Float64(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
@@ -144,7 +144,7 @@ func NewDoubleType() Type {
 func NewIntType() Type {
 	return &TypeConstructor{
 		signature:    "i",
-		signatureIDL: "int",
+		signatureIDL: "int32",
 		typeName:     jen.Int32(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
@@ -159,7 +159,7 @@ func NewIntType() Type {
 func NewUIntType() Type {
 	return &TypeConstructor{
 		signature:    "I",
-		signatureIDL: "uint",
+		signatureIDL: "uint32",
 		typeName:     jen.Uint32(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
@@ -191,7 +191,7 @@ func NewStringType() Type {
 func NewVoidType() Type {
 	return &TypeConstructor{
 		signature:    "v",
-		signatureIDL: "",
+		signatureIDL: "nothing",
 		typeName:     jen.Empty(),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Nil()
@@ -206,7 +206,7 @@ func NewVoidType() Type {
 func NewValueType() Type {
 	return &TypeConstructor{
 		signature:    "m",
-		signatureIDL: "Value",
+		signatureIDL: "any",
 		typeName:     jen.Qual("github.com/lugu/qiloop/type/value", "Value"),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Id(id).Dot("Write").Call(jen.Id(writer))
@@ -252,7 +252,7 @@ func NewMetaObjectType() Type {
 func NewObjectType() Type {
 	return &TypeConstructor{
 		signature:    "o",
-		signatureIDL: "interface",
+		signatureIDL: "obj",
 		typeName:     jen.Qual("github.com/lugu/qiloop/type/object", "ObjectReference"),
 		marshal: func(id string, writer string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "WriteObjectReference").Call(jen.Id(id), jen.Id(writer))

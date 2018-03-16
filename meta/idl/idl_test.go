@@ -14,7 +14,7 @@ func TestServiceServer(t *testing.T) {
 		t.Errorf("failed to parse server: %s", err)
 	}
 	expected := `interface Server
-	fn authenticate(P0: Map<str,Value>) -> Map<str,Value>
+	fn authenticate(P0: Map<str,any>) -> Map<str,any>
 end
 `
 	if w.String() != expected {
@@ -28,21 +28,21 @@ func TestObject(t *testing.T) {
 		t.Errorf("failed to parse server: %s", err)
 	}
 	expected := `interface Object
-	fn registerEvent(P0: uint, P1: uint, P2: ulong) -> ulong
-	fn unregisterEvent(P0: uint, P1: uint, P2: ulong)
-	fn metaObject(P0: uint) -> MetaObject
-	fn terminate(P0: uint)
-	fn property(P0: Value) -> Value
-	fn setProperty(P0: Value, P1: Value)
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64)
+	fn metaObject(P0: uint32) -> MetaObject
+	fn terminate(P0: uint32)
+	fn property(P0: any) -> any
+	fn setProperty(P0: any, P1: any)
 	fn properties() -> Vec<str>
-	fn registerEventWithSignature(P0: uint, P1: uint, P2: ulong, P3: str) -> ulong
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64
 end
 struct MetaMethodParameter
 	name: str
 	description: str
 end
 struct MetaMethod
-	uid: uint
+	uid: uint32
 	returnSignature: str
 	name: str
 	parametersSignature: str
@@ -51,19 +51,19 @@ struct MetaMethod
 	returnDescription: str
 end
 struct MetaSignal
-	uid: uint
+	uid: uint32
 	name: str
 	signature: str
 end
 struct MetaProperty
-	uid: uint
+	uid: uint32
 	name: str
 	signature: str
 end
 struct MetaObject
-	methods: Map<uint,MetaMethod>
-	signals: Map<uint,MetaSignal>
-	properties: Map<uint,MetaProperty>
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
 	description: str
 end
 `
@@ -84,38 +84,38 @@ func TestServiceDirectory(t *testing.T) {
 		t.Errorf("failed to parse server: %s", err)
 	}
 	expected := `interface ServiceDirectory
-	fn registerEvent(P0: uint, P1: uint, P2: ulong) -> ulong
-	fn unregisterEvent(P0: uint, P1: uint, P2: ulong)
-	fn metaObject(P0: uint) -> MetaObject
-	fn terminate(P0: uint)
-	fn property(P0: Value) -> Value
-	fn setProperty(P0: Value, P1: Value)
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64)
+	fn metaObject(P0: uint32) -> MetaObject
+	fn terminate(P0: uint32)
+	fn property(P0: any) -> any
+	fn setProperty(P0: any, P1: any)
 	fn properties() -> Vec<str>
-	fn registerEventWithSignature(P0: uint, P1: uint, P2: ulong, P3: str) -> ulong
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64
 	fn isStatsEnabled() -> bool
 	fn enableStats(P0: bool)
-	fn stats() -> Map<uint,MethodStatistics>
+	fn stats() -> Map<uint32,MethodStatistics>
 	fn clearStats()
 	fn isTraceEnabled() -> bool
 	fn enableTrace(P0: bool)
 	fn service(P0: str) -> ServiceInfo
 	fn services() -> Vec<ServiceInfo>
-	fn registerService(P0: ServiceInfo) -> uint
-	fn unregisterService(P0: uint)
-	fn serviceReady(P0: uint)
+	fn registerService(P0: ServiceInfo) -> uint32
+	fn unregisterService(P0: uint32)
+	fn serviceReady(P0: uint32)
 	fn updateServiceInfo(P0: ServiceInfo)
 	fn machineId() -> str
-	fn _socketOfService(P0: uint) -> interface
+	fn _socketOfService(P0: uint32) -> obj
 	sig traceObject(P0: EventTrace)
-	sig serviceAdded(P0: uint, P1: str)
-	sig serviceRemoved(P0: uint, P1: str)
+	sig serviceAdded(P0: uint32, P1: str)
+	sig serviceRemoved(P0: uint32, P1: str)
 end
 struct MetaMethodParameter
 	name: str
 	description: str
 end
 struct MetaMethod
-	uid: uint
+	uid: uint32
 	returnSignature: str
 	name: str
 	parametersSignature: str
@@ -124,54 +124,54 @@ struct MetaMethod
 	returnDescription: str
 end
 struct MetaSignal
-	uid: uint
+	uid: uint32
 	name: str
 	signature: str
 end
 struct MetaProperty
-	uid: uint
+	uid: uint32
 	name: str
 	signature: str
 end
 struct MetaObject
-	methods: Map<uint,MetaMethod>
-	signals: Map<uint,MetaSignal>
-	properties: Map<uint,MetaProperty>
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
 	description: str
 end
 struct MinMaxSum
-	minValue: float
-	maxValue: float
-	cumulatedValue: float
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
 end
 struct MethodStatistics
-	count: uint
+	count: uint32
 	wall: MinMaxSum
 	user: MinMaxSum
 	system: MinMaxSum
 end
 struct ServiceInfo
 	name: str
-	serviceId: uint
+	serviceId: uint32
 	machineId: str
-	processId: uint
+	processId: uint32
 	endpoints: Vec<str>
 	sessionId: str
 end
 struct timeval
-	tv_sec: long
-	tv_usec: long
+	tv_sec: int64
+	tv_usec: int64
 end
 struct EventTrace
-	id: uint
-	kind: int
-	slotId: uint
-	arguments: Value
+	id: uint32
+	kind: int32
+	slotId: uint32
+	arguments: any
 	timestamp: timeval
-	userUsTime: long
-	systemUsTime: long
-	callerContext: uint
-	calleeContext: uint
+	userUsTime: int64
+	systemUsTime: int64
+	callerContext: uint32
+	calleeContext: uint32
 end
 `
 	if w.String() != expected {
