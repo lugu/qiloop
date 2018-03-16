@@ -10,7 +10,7 @@ install:
     - go generate github.com/lugu/qiloop/meta/stage2
 
 script: 
-    - go get github.com/lugu/qiloop/cmd/info
+    - go get github.com/lugu/qiloop/bus/cmd/info
     - go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
