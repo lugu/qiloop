@@ -23,11 +23,47 @@ func basicType() parsec.Parser {
 		parsec.Atom("float64", ""),
 		parsec.Atom("int64", ""),
 		parsec.Atom("uint64", ""),
+		parsec.Atom("bool", ""),
+		parsec.Atom("str", ""),
 		parsec.Atom("any", ""))
 }
 
+// required to break the recursive definition of typeParser()
+var mapParser parsec.Parser
+var vecParser parsec.Parser
+
+func init() {
+	mapParser = mapType()
+	vecParser = vecType()
+}
+
+func mapType() parsec.Parser {
+	return parsec.And(
+		nodifyMap,
+		parsec.Atom("Map<", "Map<"),
+		typeParser(),
+		parsec.Atom(",", ","),
+		typeParser(),
+		parsec.Atom(">", ">"),
+	)
+}
+
+func vecType() parsec.Parser {
+	return parsec.And(
+		nodifyVec,
+		parsec.Atom("Vec<", "Vec<"),
+		typeParser(),
+		parsec.Atom(">", ">"),
+	)
+}
+
 func typeParser() parsec.Parser {
-	return basicType()
+	return parsec.OrdChoice(
+		nodifyType,
+		basicType(),
+		&mapParser,
+		&vecParser,
+	)
 }
 
 func returns() parsec.Parser {
@@ -44,14 +80,24 @@ func returns() parsec.Parser {
 	)
 }
 
+func parameter() parsec.Parser {
+	return parsec.And(
+		nodifyParam,
+		parsec.Ident(),
+		parsec.Atom(":", ":"),
+		typeParser(),
+	)
+}
 func parameters() parsec.Parser {
-	return parsec.Kleene(
-		nodifyParams,
-		parsec.And(
-			nodifyParam,
-			parsec.Ident(),
-			parsec.Atom(":", ":"),
-			typeParser(),
+	return parsec.And(
+		nodifyAndParams,
+		parsec.Maybe(
+			nodifyMaybeParams,
+			parsec.Many(
+				nodifyParams,
+				parameter(),
+				parsec.Atom(",", ","),
+			),
 		),
 	)
 }
@@ -108,7 +154,15 @@ func nodifyReturnsType(nodes []Node) Node {
 	return nodes[1]
 }
 
+func nodifyType(nodes []Node) Node {
+	return nodes[0]
+}
+
 func nodifyMaybeReturns(nodes []Node) Node {
+	return nodes[0]
+}
+
+func nodifyMaybeParams(nodes []Node) Node {
 	return nodes[0]
 }
 
@@ -144,6 +198,31 @@ func nodifyInterface(nodes []Node) Node {
 	return metaObj
 }
 
+func nodifyVec(nodes []Node) Node {
+
+	elementNode := nodes[1]
+	elementType, ok := elementNode.(signature.Type)
+	if !ok {
+		return fmt.Errorf("invalid vector element: %v", elementNode)
+	}
+	return signature.NewListType(elementType)
+}
+
+func nodifyMap(nodes []Node) Node {
+
+	keyNode := nodes[1]
+	valueNode := nodes[3]
+	keyType, ok := keyNode.(signature.Type)
+	if !ok {
+		return fmt.Errorf("invalid map key: %v", keyNode)
+	}
+	valueType, ok := valueNode.(signature.Type)
+	if !ok {
+		return fmt.Errorf("invalid map value: %v", valueNode)
+	}
+	return signature.NewMapType(keyType, valueType)
+}
+
 func nodifyBasicType(nodes []Node) Node {
 	if len(nodes) != 1 {
 		return fmt.Errorf("basic type array size: %d: %s", len(nodes), nodes)
@@ -162,6 +241,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return signature.NewFloatType()
 	case "float64":
 		return signature.NewDoubleType()
+	case "str":
+		return signature.NewStringType()
 	case "bool":
 		return signature.NewBoolType()
 	case "any":
@@ -196,8 +277,8 @@ func nodifyMethod(nodes []Node) Node {
 
 	method := new(object.MetaMethod)
 	method.Name = nodes[1].(*parsec.Terminal).GetValue()
+	method.ParametersSignature = tupleType.Signature()
 	if len(structType.Members) != 0 {
-		method.ParametersSignature = tupleType.Signature()
 		method.Parameters = make([]object.MetaMethodParameter, len(structType.Members))
 		for i, member := range structType.Members {
 			method.Parameters[i].Name = member.Name
@@ -260,4 +341,18 @@ func nodifyParams(nodes []Node) Node {
 		}
 	}
 	return signature.NewStrucType("parameters", members)
+}
+
+func nodifyAndParams(nodes []Node) Node {
+	if err, ok := checkError(nodes); ok {
+		return err
+	}
+	if _, ok := nodes[0].(parsec.MaybeNone); ok {
+		return signature.NewStrucType("parameters", make([]signature.MemberType, 0))
+	} else if ret, ok := nodes[0].(*signature.StructType); ok {
+		return ret
+	} else {
+		return fmt.Errorf("unexpected non struct type(%s): %v",
+			reflect.TypeOf(nodes[0]), nodes[0])
+	}
 }
