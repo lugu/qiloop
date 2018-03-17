@@ -5,7 +5,6 @@ import (
 	"github.com/dave/jennifer/jen"
 	parsec "github.com/prataprc/goparsec"
 	"io"
-	"log"
 	"reflect"
 )
 
@@ -45,7 +44,7 @@ type Node = parsec.ParsecNode
 
 func nodifyBasicType(nodes []Node) Node {
 	if len(nodes) != 1 {
-		log.Panicf("wrong basic arguments %+v\n", nodes)
+		return fmt.Errorf("wrong basic arguments %+v\n", nodes)
 	}
 	signature := nodes[0].(*parsec.Terminal).GetValue()
 	switch signature {
@@ -74,7 +73,7 @@ func nodifyBasicType(nodes []Node) Node {
 	case "X":
 		return NewUnknownType()
 	default:
-		log.Panicf("wrong signature %s", signature)
+		return fmt.Errorf("wrong signature %s", signature)
 	}
 	return nil
 }
@@ -97,69 +96,75 @@ func nodifyMap(nodes []Node) Node {
 	}
 	key, err := extractValue(nodes[1])
 	if err != nil {
-		log.Panicf("key conversion failed: %s", err)
+		return fmt.Errorf("key conversion failed: %s", err)
 	}
 	value, err := extractValue(nodes[2])
 	if err != nil {
-		log.Panicf("value conversion failed: %s", err)
+		return fmt.Errorf("value conversion failed: %s", err)
 	}
 	return NewMapType(key, value)
 }
 
 func nodifyArrayType(nodes []Node) Node {
 	if len(nodes) != 3 {
-		log.Panicf("wrong arguments %+v", nodes)
+		return fmt.Errorf("wrong arguments %+v", nodes)
 	}
 	value, err := extractValue(nodes[1])
 	if err != nil {
-		log.Panicf("value conversion failed: %s", err)
+		return fmt.Errorf("value conversion failed: %s", err)
 	}
 	return NewListType(value)
 }
 
-func extractMembersTypes(node Node) []Type {
+func extractMembersTypes(node Node) ([]Type, error) {
 	typeList, ok := node.([]Node)
 	if !ok {
-		log.Panicf("member type list is not a list: %s", reflect.TypeOf(node))
+		return nil, fmt.Errorf("member type list is not a list: %s", reflect.TypeOf(node))
 	}
 	types := make([]Type, len(typeList))
 	for i := range typeList {
 		memberType, err := extractValue(typeList[i])
 		if err != nil {
-			log.Panicf("member type value conversion failed: %s", err)
+			return nil, fmt.Errorf("member type value conversion failed: %s", err)
 		}
 		types[i] = memberType
 	}
-	return types
+	return types, nil
 }
 
-func extractMembersName(node Node) []string {
+func extractMembersName(node Node) ([]string, error) {
 	baseList, ok := node.([]Node)
 	if !ok {
-		log.Panicf("member name list is not a list: %s", reflect.TypeOf(node))
+		return nil, fmt.Errorf("member name list is not a list: %s", reflect.TypeOf(node))
 	}
 	membersList, ok := baseList[0].([]Node)
 	if !ok {
-		log.Panicf("member name list is not a list: %s", reflect.TypeOf(node))
+		return nil, fmt.Errorf("member name list is not a list: %s", reflect.TypeOf(node))
 	}
 	names := make([]string, len(membersList))
 	for i, n := range membersList {
 		memberName, ok := n.(*parsec.Terminal)
 		if !ok {
-			log.Panicf("failed to convert member names %s", reflect.TypeOf(n))
+			return nil, fmt.Errorf("failed to convert member names %s", reflect.TypeOf(n))
 		}
 		names[i] = memberName.GetValue()
 	}
-	return names
+	return names, nil
 }
 
-func extractMembers(typesNode, namesNode Node) []MemberType {
+func extractMembers(typesNode, namesNode Node) ([]MemberType, error) {
 
-	types := extractMembersTypes(typesNode)
-	names := extractMembersName(namesNode)
+	types, err := extractMembersTypes(typesNode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract members types: %s", err)
+	}
+	names, err := extractMembersName(namesNode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract members name: %s", err)
+	}
 
 	if len(types) != len(names) {
-		log.Panicf("member types and names of different size: %+v, %+v", types, names)
+		return nil, fmt.Errorf("member types and names of different size: %+v, %+v", types, names)
 	}
 
 	members := make([]MemberType, len(names))
@@ -167,12 +172,15 @@ func extractMembers(typesNode, namesNode Node) []MemberType {
 	for i := range types {
 		members[i] = NewMemberType(names[i], types[i])
 	}
-	return members
+	return members, nil
 }
 
 func nodifyTupleType(nodes []Node) Node {
 
-	types := extractMembersTypes(nodes[1])
+	types, err := extractMembersTypes(nodes[1])
+	if err != nil {
+		return fmt.Errorf("failed to extract tuple member type: %s", err)
+	}
 
 	return NewTupleType(types)
 }
@@ -181,10 +189,13 @@ func nodifyTypeDefinition(nodes []Node) Node {
 
 	terminal, ok := nodes[4].(*parsec.Terminal)
 	if !ok {
-		log.Panicf("wrong name %s", reflect.TypeOf(nodes[4]))
+		return fmt.Errorf("wrong name %s", reflect.TypeOf(nodes[4]))
 	}
 	name := terminal.GetValue()
-	members := extractMembers(nodes[1], nodes[6])
+	members, err := extractMembers(nodes[1], nodes[6])
+	if err != nil {
+		return fmt.Errorf("failed to extract type definition: %s", err)
+	}
 
 	return NewStrucType(name, members)
 }
@@ -240,7 +251,11 @@ func Parse(input string) (Type, error) {
 	}
 	types, ok := root.([]Node)
 	if !ok {
-		return nil, fmt.Errorf("failed to convert array: %+v", reflect.TypeOf(root))
+		err, ok := root.(error)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert array: %+v", reflect.TypeOf(root))
+		}
+		return nil, err
 	}
 	if len(types) != 1 {
 		return nil, fmt.Errorf("did not parse only one type: %+v", root)
