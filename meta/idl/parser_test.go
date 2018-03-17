@@ -31,7 +31,10 @@ func helpParserTest(t *testing.T, label, idlFileName string, expectedMetaObj *ob
 }
 
 func TestParseEmptyService(t *testing.T) {
-	helpParserTest(t, "Empty interface", "empty.idl", new(object.MetaObject))
+	empty := object.MetaObject{
+		Description: "Empty",
+	}
+	helpParserTest(t, "Empty interface", "empty.idl", &empty)
 }
 
 func TestParseService0(t *testing.T) {

@@ -28,7 +28,42 @@ func nodifyInterfaceList(nodes []Node) Node {
 }
 
 func nodifyInterface(nodes []Node) Node {
-	return new(object.MetaObject)
+	metaObj := new(object.MetaObject)
+	metaObj.Description = nodes[1].(*parsec.Terminal).GetValue()
+	return metaObj
+}
+
+func methodParser() parsec.Parser {
+	return parsec.And(
+		nil,
+		parsec.Atom("fn", "fn"),
+		parsec.Ident(),
+	)
+}
+
+func nodifyMethodList(nodes []Node) Node {
+	methods := make([]object.MetaMethod, 0, len(nodes))
+	for _, node := range nodes {
+		if err, ok := node.(error); ok {
+			return err
+		}
+		if method, ok := node.(object.MetaMethod); ok {
+			methods = append(methods, method)
+		} else {
+			return fmt.Errorf("Expecting MetaMethod, got %+v: %#v", reflect.TypeOf(node), node)
+		}
+	}
+	return methods
+}
+
+func interfaceParser() parsec.Parser {
+	return parsec.And(
+		nodifyInterface,
+		parsec.Atom("interface", "interface"),
+		parsec.Ident(),
+		parsec.Kleene(nodifyMethodList, methodParser()),
+		parsec.Atom("end", "end"),
+	)
 }
 
 // ParseIDL read an IDL definition from a reader and returns the
@@ -39,14 +74,7 @@ func Parse(reader io.Reader) ([]object.MetaObject, error) {
 		return nil, fmt.Errorf("cannot read input: %s", err)
 	}
 
-	interfaceSignature := parsec.And(
-		nodifyInterface,
-		parsec.Atom("interface", "interface"),
-		parsec.Ident(),
-		parsec.Atom("end", "end"),
-	)
-
-	interfaceList := parsec.Many(nodifyInterfaceList, &interfaceSignature)
+	interfaceList := parsec.Many(nodifyInterfaceList, interfaceParser())
 
 	root, _ := interfaceList(parsec.NewScanner(input))
 	if root == nil {
