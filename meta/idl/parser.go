@@ -31,22 +31,26 @@ func typeParser() parsec.Parser {
 }
 
 func returns() parsec.Parser {
-	return parsec.Maybe(
-		nodifyMaybeReturns,
-		parsec.And(
-			nodifyReturns,
-			parsec.Atom("->", "->"),
-			typeParser(),
+	return parsec.And(
+		nodifyReturns,
+		parsec.Maybe(
+			nodifyMaybeReturns,
+			parsec.And(
+				nodifyReturnsType,
+				parsec.Atom("->", "->"),
+				typeParser(),
+			),
 		),
 	)
 }
 
 func parameters() parsec.Parser {
 	return parsec.Kleene(
-		nil,
+		nodifyParams,
 		parsec.And(
-			nil,
-			parsec.Token(`[0-9a-zA-Z_]*:`, "return type"),
+			nodifyParam,
+			parsec.Ident(),
+			parsec.Atom(":", ":"),
 			typeParser(),
 		),
 	)
@@ -100,17 +104,22 @@ func Parse(reader io.Reader) ([]object.MetaObject, error) {
 	return metas, nil
 }
 
-func nodifyReturns(nodes []Node) Node {
+func nodifyReturnsType(nodes []Node) Node {
 	return nodes[1]
 }
 
 func nodifyMaybeReturns(nodes []Node) Node {
+	return nodes[0]
+}
+
+func nodifyReturns(nodes []Node) Node {
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {
 		return signature.NewVoidType()
 	} else if ret, ok := nodes[0].(signature.Type); ok {
 		return ret
 	} else {
-		return fmt.Errorf("unexpected return value: %v", nodes[0])
+		return fmt.Errorf("unexpected return value (%s): %v",
+			reflect.TypeOf(nodes[0]), nodes[0])
 	}
 }
 
@@ -165,8 +174,36 @@ func nodifyBasicType(nodes []Node) Node {
 }
 
 func nodifyMethod(nodes []Node) Node {
+	if err, ok := checkError(nodes); ok {
+		return fmt.Errorf("failed to parse method: %s", err)
+	}
+	retNode := nodes[5]
+	paramNode := nodes[3]
+	structType, ok := paramNode.(*signature.StructType)
+	if !ok {
+		return fmt.Errorf("failed to convert param type (%s): %v", reflect.TypeOf(paramNode), paramNode)
+	}
+	retType, ok := retNode.(signature.Type)
+	if !ok {
+		return fmt.Errorf("failed to convert return type (%s): %v", reflect.TypeOf(retNode), retNode)
+	}
+
+	params := make([]signature.Type, len(structType.Members))
+	for i, member := range structType.Members {
+		params[i] = member.Value
+	}
+	tupleType := signature.NewTupleType(params)
+
 	method := new(object.MetaMethod)
 	method.Name = nodes[1].(*parsec.Terminal).GetValue()
+	if len(structType.Members) != 0 {
+		method.ParametersSignature = tupleType.Signature()
+		method.Parameters = make([]object.MetaMethodParameter, len(structType.Members))
+		for i, member := range structType.Members {
+			method.Parameters[i].Name = member.Name
+		}
+	}
+	method.ReturnSignature = retType.Signature()
 	return method
 }
 
@@ -183,4 +220,44 @@ func nodifyMethodList(nodes []Node) Node {
 		}
 	}
 	return methods
+}
+
+func checkError(nodes []Node) (error, bool) {
+	if len(nodes) == 1 {
+		if err, ok := nodes[0].(error); ok {
+			return err, true
+		}
+	}
+	return nil, false
+}
+
+func nodifyParam(nodes []Node) Node {
+	if err, ok := checkError(nodes); ok {
+		return err
+	}
+	if typ, ok := nodes[2].(signature.Type); ok {
+		return signature.MemberType{
+			Name:  nodes[0].(*parsec.Terminal).GetValue(),
+			Value: typ,
+		}
+	} else {
+		return fmt.Errorf("failed to parse param: %s", nodes[2])
+	}
+}
+
+func nodifyParams(nodes []Node) Node {
+	if err, ok := checkError(nodes); ok {
+		return err
+	}
+	members := make([]signature.MemberType, len(nodes))
+	for i, node := range nodes {
+		if err, ok := checkError([]Node{node}); ok {
+			return fmt.Errorf("failed to parse parameter %d: %s", i, err)
+		} else if member, ok := node.(signature.MemberType); ok {
+			members[i] = member
+		} else {
+			return fmt.Errorf("failed to parse parameter %d: %s", i, node)
+		}
+	}
+	return signature.NewStrucType("parameters", members)
 }
