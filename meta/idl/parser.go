@@ -12,6 +12,10 @@ import (
 // Node is an alias to parsec.ParsecNode
 type Node = parsec.ParsecNode
 
+func nodifyInterface(nodes []Node) Node {
+	return fmt.Errorf("nodifyInterface not yet implemented\n")
+}
+
 // ParseIDL read an IDL definition from a reader and returns the
 // MetaObject associated with the IDL.
 func Parse(reader io.Reader) (*object.MetaObject, error) {
@@ -20,7 +24,12 @@ func Parse(reader io.Reader) (*object.MetaObject, error) {
 		return nil, fmt.Errorf("cannot read input: %s", err)
 	}
 
-	interfaceSignature := parsec.Atom("not implmemented", "TypeParameterClose")
+	interfaceSignature := parsec.And(
+		nodifyInterface,
+		parsec.Atom("interface", "interface"),
+		parsec.Ident(),
+		parsec.Atom("end", "end"),
+	)
 
 	root, _ := interfaceSignature(parsec.NewScanner(input))
 	if root == nil {
@@ -28,7 +37,11 @@ func Parse(reader io.Reader) (*object.MetaObject, error) {
 	}
 	types, ok := root.([]Node)
 	if !ok {
-		return nil, fmt.Errorf("failed to convert array: %+v", reflect.TypeOf(root))
+		err, ok := root.(error)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert array: %+v", reflect.TypeOf(root))
+		}
+		return nil, err
 	}
 	if len(types) != 1 {
 		return nil, fmt.Errorf("did not parse only one IDL: %+v", root)

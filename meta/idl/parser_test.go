@@ -1,28 +1,48 @@
 package idl_test
 
 import (
-	"github.com/lugu/qiloop/meta/idl"
+	. "github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/type/object"
+	"os"
+	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 )
 
-func helpParserTest(t *testing.T, label, idlSignature string, metaObj *object.MetaObject) {
-	reader := strings.NewReader(idlSignature)
-	metaObj, err := idl.Parse(reader)
+func helpParserTest(t *testing.T, label, idlFileName string, expectedMetaObj *object.MetaObject) {
+	t.Skip("Not yet implemented")
+	path := filepath.Join("testdata", idlFileName)
+	file, err := os.Open(path)
 	if err != nil {
-		t.Errorf("%s: failed to parse idl", label)
+		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(metaObj, object.MetaService0) {
-		t.Errorf("%s: expected %#v, got %#v", label, object.MetaService0, metaObj)
+	metaObj, err := Parse(file)
+	if err != nil {
+		t.Errorf("%s: failed to parse idl:%s", label, err)
+	}
+	if !reflect.DeepEqual(metaObj, expectedMetaObj) {
+		t.Errorf("%s: expected %#v, got %#v", label, expectedMetaObj, metaObj)
 	}
 }
 
-func TestParseServiceServer(t *testing.T) {
-	var idl string = `interface Server
-	fn authenticate(P0: Map<str,any>) -> Map<str,any>
-end
-`
-	helpParserTest(t, "Service 0", idl, &object.MetaService0)
+func TestParseEmptyService(t *testing.T) {
+	helpParserTest(t, "Empty interface", "empty.idl", new(object.MetaObject))
+}
+
+func TestParseService0(t *testing.T) {
+	helpParserTest(t, "Service 0", "service0.idl", &object.MetaService0)
+}
+
+func TestParseService1(t *testing.T) {
+	path := filepath.Join("testdata", "meta-object.bin")
+	file, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	metaObj, err := object.ReadMetaObject(file)
+	helpParserTest(t, "Service 1", "service1.idl", &metaObj)
+}
+
+func TestParseObject(t *testing.T) {
+	helpParserTest(t, "Object", "object.idl", &object.ObjectMetaObject)
 }
