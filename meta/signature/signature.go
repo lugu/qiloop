@@ -22,10 +22,10 @@ type Statement = jen.Statement
 func basicType() parsec.Parser {
 	return parsec.OrdChoice(nodifyBasicType,
 		parsec.Atom("I", "uint32"),
-		parsec.Atom("i", "uint32"),
+		parsec.Atom("i", "int32"),
 		parsec.Atom("s", "string"),
 		parsec.Atom("L", "uint64"),
-		parsec.Atom("l", "uint64"),
+		parsec.Atom("l", "int64"),
 		parsec.Atom("b", "bool"),
 		parsec.Atom("f", "float32"),
 		parsec.Atom("d", "float64"),
