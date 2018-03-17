@@ -10,18 +10,23 @@ import (
 )
 
 func helpParserTest(t *testing.T, label, idlFileName string, expectedMetaObj *object.MetaObject) {
-	t.Skip("Not yet implemented")
 	path := filepath.Join("testdata", idlFileName)
 	file, err := os.Open(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	metaObj, err := Parse(file)
+	metaList, err := Parse(file)
 	if err != nil {
-		t.Errorf("%s: failed to parse idl:%s", label, err)
+		t.Fatalf("%s: failed to parse idl: %s", label, err)
 	}
-	if !reflect.DeepEqual(metaObj, expectedMetaObj) {
-		t.Errorf("%s: expected %#v, got %#v", label, expectedMetaObj, metaObj)
+	if len(metaList) < 1 {
+		t.Fatalf("%s: no interface found", label)
+	}
+	if len(metaList) > 1 {
+		t.Fatalf("%s: too many interfaces: %d", label, len(metaList))
+	}
+	if !reflect.DeepEqual(metaList[0], *expectedMetaObj) {
+		t.Fatalf("%s: expected %#v, got %#v", label, expectedMetaObj, metaList[0])
 	}
 }
 
