@@ -23,7 +23,7 @@ func (p Proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
 
 // Call translates the name into an action id and send it to the client endpoint.
 func (p Proxy) Call(action string, payload []byte) ([]byte, error) {
-	id, err := p.meta.MethodUid(action)
+	id, err := p.MethodUid(action)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find call %s: %s", action, err)
 	}
@@ -40,18 +40,18 @@ func (p Proxy) ObjectID() uint32 {
 	return p.object
 }
 
-// SignalStream returns a channel with the values of a signal
-func (p Proxy) SignalStreamID(signal uint32, cancel chan int) (chan []byte, error) {
-	return p.client.Stream(p.service, p.object, signal, cancel)
+// Subscribe returns a channel with the values of a signal
+func (p Proxy) SubscribeID(signal uint32, cancel chan int) (chan []byte, error) {
+	return p.client.Subscribe(p.service, p.object, signal, cancel)
 }
 
-// SignalStream returns a channel with the values of a signal
-func (p Proxy) SignalStream(signal string, cancel chan int) (chan []byte, error) {
-	id, err := p.meta.SignalUid(signal)
+// Subscribe returns a channel with the values of a signal
+func (p Proxy) Subscribe(signal string, cancel chan int) (chan []byte, error) {
+	id, err := p.SignalUid(signal)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find signal %s: %s", signal, err)
 	}
-	return p.client.Stream(p.service, p.object, id, cancel)
+	return p.client.Subscribe(p.service, p.object, id, cancel)
 }
 
 func (p Proxy) MethodUid(name string) (uint32, error) {

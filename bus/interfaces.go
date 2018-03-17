@@ -10,16 +10,16 @@ import (
 // Client represents a client connection to a service.
 type Client interface {
 	Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error)
-	Stream(serviceID, objectID, signalID uint32, cancel chan int) (chan []byte, error)
+	Subscribe(serviceID, objectID, signalID uint32, cancel chan int) (chan []byte, error)
 }
 
 type Proxy interface {
 	Call(action string, payload []byte) ([]byte, error)
 	CallID(action uint32, payload []byte) ([]byte, error)
 
-	// SignalStream returns a channel with the values of a signal
-	SignalStream(signal string, cancel chan int) (chan []byte, error)
-	SignalStreamID(signal uint32, cancel chan int) (chan []byte, error)
+	// SignalSubscribe returns a channel with the values of a signal
+	Subscribe(signal string, cancel chan int) (chan []byte, error)
+	SubscribeID(signal uint32, cancel chan int) (chan []byte, error)
 
 	MethodUid(name string) (uint32, error)
 	SignalUid(name string) (uint32, error)

@@ -693,7 +693,7 @@ func (p *ServiceDirectoryProxy) SignalTraceObject(cancel chan int) (chan struct 
 	ch := make(chan struct {
 		P0 EventTrace
 	})
-	chPay, err := p.SignalStreamID(signalID, cancel)
+	chPay, err := p.SubscribeID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}
@@ -746,7 +746,7 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 		P0 uint32
 		P1 string
 	})
-	chPay, err := p.SignalStreamID(signalID, cancel)
+	chPay, err := p.SubscribeID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}
@@ -804,7 +804,7 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 		P0 uint32
 		P1 string
 	})
-	chPay, err := p.SignalStreamID(signalID, cancel)
+	chPay, err := p.SubscribeID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}
@@ -1231,7 +1231,7 @@ func (p *LogManagerProxy) SignalTraceObject(cancel chan int) (chan struct {
 	ch := make(chan struct {
 		P0 EventTrace
 	})
-	chPay, err := p.SignalStreamID(signalID, cancel)
+	chPay, err := p.SubscribeID(signalID, cancel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request signal: %s", err)
 	}

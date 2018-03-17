@@ -61,10 +61,10 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 	return buf, nil
 }
 
-// Stream returns a channel which returns the future value of a
+// Subscribe returns a channel which returns the future value of a
 // given signal. To stop the stream one must send a value in the
 // cancel channel. Do not close the message channel.
-func (c *client) Stream(serviceID, objectID, actionID uint32, cancel chan int) (chan []byte, error) {
+func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int) (chan []byte, error) {
 	stream := make(chan []byte)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {

@@ -82,14 +82,14 @@ func (p dummyProxy) ObjectID() uint32 {
 	return p.objectID
 }
 
-// SignalStreamID is not implemented. Does nothing in stage3.
-func (p dummyProxy) SignalStreamID(signal uint32, cancel chan int) (chan []byte, error) {
-	return nil, fmt.Errorf("SignalStreamID not available during stage 3")
+// SubscribeID is not implemented. Does nothing in stage3.
+func (p dummyProxy) SubscribeID(signal uint32, cancel chan int) (chan []byte, error) {
+	return nil, fmt.Errorf("SubscribeID not available during stage 3")
 }
 
-// SignalStream is not implemented. Does nothing in stage3.
-func (p dummyProxy) SignalStream(signal string, cancel chan int) (chan []byte, error) {
-	return nil, fmt.Errorf("SignalStream not available during stage 3")
+// Subscribe is not implemented. Does nothing in stage3.
+func (p dummyProxy) Subscribe(signal string, cancel chan int) (chan []byte, error) {
+	return nil, fmt.Errorf("Subscribe not available during stage 3")
 }
 
 // MethodUid is not implemented. Does nothing in stage3.

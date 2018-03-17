@@ -282,7 +282,7 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 			return nil, fmt.Errorf("failed to register event for %s: %s", "`+s.Name+`", err)
 		}`),
 		jen.Id("ch").Op(":=").Make(jen.Chan().Add(signalType.TypeName())),
-		jen.List(jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SignalStreamID").Call(jen.Id("signalID"), jen.Id("cancel")),
+		jen.List(jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SubscribeID").Call(jen.Id("signalID"), jen.Id("cancel")),
 		jen.Id(`if err != nil {
 			return nil, fmt.Errorf("failed to request signal: %s", err)
 		}`),
