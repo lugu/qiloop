@@ -7,6 +7,13 @@ import (
 	"github.com/lugu/qiloop/type/object"
 )
 
+// Service represents a service which can answer call and emit signal
+// events.
+type Service interface {
+	Reply(objectID uint32, actionID uint32, payload []byte) ([]byte, error)
+	Emit(objectID, signalID uint32, cancel chan int) (chan []byte, error)
+}
+
 // Client represents a client connection to a service.
 type Client interface {
 	Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error)
