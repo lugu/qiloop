@@ -1,0 +1,39 @@
+interface Object
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64)
+	fn metaObject(P0: uint32) -> MetaObject
+	fn terminate(P0: uint32)
+	fn property(P0: any) -> any
+	fn setProperty(P0: any, P1: any)
+	fn properties() -> Vec<str>
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64
+end
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint32
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
+	description: str
+end

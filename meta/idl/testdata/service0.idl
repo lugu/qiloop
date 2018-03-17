@@ -1,0 +1,3 @@
+interface Server
+	fn authenticate(P0: Map<str,any>) -> Map<str,any>
+end
