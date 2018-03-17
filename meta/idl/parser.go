@@ -33,11 +33,43 @@ func nodifyInterface(nodes []Node) Node {
 	return metaObj
 }
 
+func parameters() parsec.Parser {
+	return parsec.Kleene(
+		nil,
+		parsec.And(
+			nil,
+			parsec.Token(`[0-9a-zA-Z_]*:`, "return type"),
+			parsec.Token(`[<>\[\],0-9a-zA-Z_]*`, "return type"),
+		),
+	)
+}
+
+func returns() parsec.Parser {
+	return parsec.Maybe(
+		nil,
+		parsec.And(
+			nil,
+			parsec.Atom("->", "->"),
+			parsec.Token(`[<>\[\],0-9a-zA-Z_]*`, "return type"),
+		),
+	)
+}
+
+func nodifyMethod(nodes []Node) Node {
+	method := new(object.MetaMethod)
+	method.Name = nodes[1].(*parsec.Terminal).GetValue()
+	return method
+}
+
 func methodParser() parsec.Parser {
 	return parsec.And(
-		nil,
+		nodifyMethod,
 		parsec.Atom("fn", "fn"),
 		parsec.Ident(),
+		parsec.Atom("(", "("),
+		parameters(),
+		parsec.Atom(")", ")"),
+		returns(),
 	)
 }
 
