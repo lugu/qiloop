@@ -87,9 +87,3 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 	}
 	return nil
 }
-
-// ParseIDL read an IDL definition from a reader and returns the
-// MetaObject associated with the IDL.
-func ParseIDL(reader io.Reader) (*object.MetaObject, error) {
-	return nil, fmt.Errorf("Not yet implemented")
-}
