@@ -21,9 +21,9 @@ func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMetho
 		return fmt.Errorf("failed to parse return of %s: %s", m.Name, err)
 	}
 	if retType.Signature() == "v" {
-		fmt.Fprintf(writer, "\tfn %s(%s)\n", m.Name, paramType.SignatureIDL())
+		fmt.Fprintf(writer, "\tfn %s(%s) //uid:%d\n", m.Name, paramType.SignatureIDL(), m.Uid)
 	} else {
-		fmt.Fprintf(writer, "\tfn %s(%s) -> %s\n", m.Name, paramType.SignatureIDL(), retType.SignatureIDL())
+		fmt.Fprintf(writer, "\tfn %s(%s) -> %s //uid:%d\n", m.Name, paramType.SignatureIDL(), retType.SignatureIDL(), m.Uid)
 	}
 	paramType.RegisterTo(set)
 	retType.RegisterTo(set)
@@ -40,7 +40,7 @@ func generateSignal(writer io.Writer, set *signature.TypeSet, s object.MetaSigna
 		return fmt.Errorf("failed to parse signal of %s: %s", s.Name, err)
 	}
 	signalType.RegisterTo(set)
-	fmt.Fprintf(writer, "\tsig %s(%s)\n", s.Name, signalType.SignatureIDL())
+	fmt.Fprintf(writer, "\tsig %s(%s) //uid:%d\n", s.Name, signalType.SignatureIDL(), s.Uid)
 	return nil
 }
 

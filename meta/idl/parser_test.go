@@ -26,7 +26,7 @@ func helpParserTest(t *testing.T, label, idlFileName string, expectedMetaObj *ob
 		t.Fatalf("%s: too many interfaces: %d", label, len(metaList))
 	}
 	if !reflect.DeepEqual(metaList[0], *expectedMetaObj) {
-		t.Fatalf("%s: expected %#v, got %#v", label, expectedMetaObj, metaList[0])
+		t.Fatalf("%s:\nexpected: %#v\nobserved: %#v", label, *expectedMetaObj, metaList[0])
 	}
 }
 

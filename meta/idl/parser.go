@@ -10,7 +10,6 @@ import (
 	"reflect"
 )
 
-// Node is an alias to parsec.ParsecNode
 type Node = parsec.ParsecNode
 
 func basicType() parsec.Parser {
@@ -66,6 +65,20 @@ func typeParser() parsec.Parser {
 	)
 }
 
+func comment() parsec.Parser {
+	return parsec.And(
+		nodifyComment,
+		parsec.Maybe(
+			nodifyMaybeComment,
+			parsec.And(
+				nodifyCommentContent,
+				parsec.Atom("//", "//"),
+				parsec.Token(`.*$`, "comment"),
+			),
+		),
+	)
+}
+
 func returns() parsec.Parser {
 	return parsec.And(
 		nodifyReturns,
@@ -88,6 +101,7 @@ func parameter() parsec.Parser {
 		typeParser(),
 	)
 }
+
 func parameters() parsec.Parser {
 	return parsec.And(
 		nodifyAndParams,
@@ -111,6 +125,27 @@ func method() parsec.Parser {
 		parameters(),
 		parsec.Atom(")", ")"),
 		returns(),
+		comment(),
+	)
+}
+
+func signal() parsec.Parser {
+	return parsec.And(
+		nodifySignal,
+		parsec.Atom("sig", "sig"),
+		parsec.Ident(),
+		parsec.Atom("(", "("),
+		parameters(),
+		parsec.Atom(")", ")"),
+		comment(),
+	)
+}
+
+func action() parsec.Parser {
+	return parsec.OrdChoice(
+		nodifyAction,
+		method(),
+		signal(),
 	)
 }
 
@@ -119,7 +154,7 @@ func interfaceParser() parsec.Parser {
 		nodifyInterface,
 		parsec.Atom("interface", "interface"),
 		parsec.Ident(),
-		parsec.Kleene(nodifyMethodList, method()),
+		parsec.Kleene(nodifyActionList, action()),
 		parsec.Atom("end", "end"),
 	)
 }
@@ -150,8 +185,16 @@ func Parse(reader io.Reader) ([]object.MetaObject, error) {
 	return metas, nil
 }
 
+func nodifyMaybeComment(nodes []Node) Node {
+	return nodes[0]
+}
+
 func nodifyReturnsType(nodes []Node) Node {
 	return nodes[1]
+}
+
+func nodifyAction(nodes []Node) Node {
+	return nodes[0]
 }
 
 func nodifyType(nodes []Node) Node {
@@ -164,6 +207,28 @@ func nodifyMaybeReturns(nodes []Node) Node {
 
 func nodifyMaybeParams(nodes []Node) Node {
 	return nodes[0]
+}
+
+func nodifyComment(nodes []Node) Node {
+	if _, ok := nodes[0].(parsec.MaybeNone); ok {
+		return ""
+	} else if comment, ok := nodes[0].(string); ok {
+		return comment
+	} else if uid, ok := nodes[0].(uint32); ok {
+		return uid
+	} else {
+		return nodes[0]
+	}
+}
+
+func nodifyCommentContent(nodes []Node) Node {
+	comment := nodes[1].(*parsec.Terminal).GetValue()
+	var uid uint32
+	_, err := fmt.Sscanf(comment, "uid:%d", &uid)
+	if err == nil {
+		return uid
+	}
+	return comment
 }
 
 func nodifyReturns(nodes []Node) Node {
@@ -186,14 +251,17 @@ func nodifyInterfaceList(nodes []Node) Node {
 		if metaObj, ok := node.(*object.MetaObject); ok {
 			interfaces = append(interfaces, *metaObj)
 		} else {
-			return fmt.Errorf("Expecting MetaObject, got %+v: %#v", reflect.TypeOf(node), node)
+			return fmt.Errorf("Expecting MetaObject, got %+v: %+v", reflect.TypeOf(node), node)
 		}
 	}
 	return interfaces
 }
 
 func nodifyInterface(nodes []Node) Node {
-	metaObj := new(object.MetaObject)
+	metaObj, ok := nodes[2].(*object.MetaObject)
+	if !ok {
+		return fmt.Errorf("Expecting MetaObject, got %+v: %+v", reflect.TypeOf(nodes[2]), nodes[2])
+	}
 	metaObj.Description = nodes[1].(*parsec.Terminal).GetValue()
 	return metaObj
 }
@@ -254,12 +322,14 @@ func nodifyBasicType(nodes []Node) Node {
 	}
 }
 
+// nodifyMethod returns either a MetaMethod or an error.
 func nodifyMethod(nodes []Node) Node {
 	if err, ok := checkError(nodes); ok {
 		return fmt.Errorf("failed to parse method: %s", err)
 	}
 	retNode := nodes[5]
 	paramNode := nodes[3]
+	commentNode := nodes[6]
 	structType, ok := paramNode.(*signature.StructType)
 	if !ok {
 		return fmt.Errorf("failed to convert param type (%s): %v", reflect.TypeOf(paramNode), paramNode)
@@ -284,23 +354,73 @@ func nodifyMethod(nodes []Node) Node {
 			method.Parameters[i].Name = member.Name
 		}
 	}
+	if uid, ok := commentNode.(uint32); ok {
+		method.Uid = uid
+	}
 	method.ReturnSignature = retType.Signature()
 	return method
 }
 
-func nodifyMethodList(nodes []Node) Node {
-	methods := make([]object.MetaMethod, 0, len(nodes))
+// nodifySignal returns either a MetaSignal or an error.
+func nodifySignal(nodes []Node) Node {
+	if err, ok := checkError(nodes); ok {
+		return fmt.Errorf("failed to parse method: %s", err)
+	}
+	commentNode := nodes[5]
+	paramNode := nodes[3]
+	structType, ok := paramNode.(*signature.StructType)
+	if !ok {
+		return fmt.Errorf("failed to convert param type (%s): %v", reflect.TypeOf(paramNode), paramNode)
+	}
+
+	params := make([]signature.Type, len(structType.Members))
+	for i, member := range structType.Members {
+		params[i] = member.Value
+	}
+	tupleType := signature.NewTupleType(params)
+
+	signal := new(object.MetaSignal)
+	signal.Name = nodes[1].(*parsec.Terminal).GetValue()
+	signal.Signature = tupleType.Signature()
+	if uid, ok := commentNode.(uint32); ok {
+		signal.Uid = uid
+	}
+	return signal
+}
+
+// nodifyActionList returns either a MetaObject or an error.
+func nodifyActionList(nodes []Node) Node {
+	metaObj := new(object.MetaObject)
+	methods := make(map[uint32]object.MetaMethod)
+	signals := make(map[uint32]object.MetaSignal)
+	var customAction uint32 = 100
 	for _, node := range nodes {
 		if err, ok := node.(error); ok {
 			return err
 		}
-		if method, ok := node.(object.MetaMethod); ok {
-			methods = append(methods, method)
+		if method, ok := node.(*object.MetaMethod); ok {
+			if method.Uid == 0 && method.Name != "registerEvent" {
+				method.Uid = customAction
+				customAction++
+			}
+			methods[method.Uid] = *method
+		} else if signal, ok := node.(*object.MetaSignal); ok {
+			if signal.Uid == 0 {
+				signal.Uid = customAction
+				customAction++
+			}
+			signals[signal.Uid] = *signal
 		} else {
-			return fmt.Errorf("Expecting MetaMethod, got %+v: %#v", reflect.TypeOf(node), node)
+			return fmt.Errorf("Expecting MetaMethod or MetaSignal, got %+v: %+v", reflect.TypeOf(node), node)
 		}
 	}
-	return methods
+	if len(methods) != 0 {
+		metaObj.Methods = methods
+	}
+	if len(signals) != 0 {
+		metaObj.Signals = signals
+	}
+	return metaObj
 }
 
 func checkError(nodes []Node) (error, bool) {

@@ -11,7 +11,8 @@ import (
 func TestParseReturns(t *testing.T) {
 	input := "-> int32"
 	expected := signature.NewIntType()
-	root, _ := returns()(parsec.NewScanner([]byte(input)))
+	parser := returns()
+	root, _ := parser(parsec.NewScanner([]byte(input)))
 	if root == nil {
 		t.Fatalf("error parsing returns:\n%s", input)
 	}
@@ -84,6 +85,17 @@ func TestParseMethod0(t *testing.T) {
 	helpParseMethod(t, "TestParseMethod0", input, expected)
 }
 
+func TestParseMethod0bis(t *testing.T) {
+	input := `fn methodName() //uid:100`
+	expected := object.MetaMethod{
+		Uid:                 100,
+		Name:                "methodName",
+		ReturnSignature:     "v",
+		ParametersSignature: "()",
+	}
+	helpParseMethod(t, "TestParseMethod0bis", input, expected)
+}
+
 func TestParseMethod1(t *testing.T) {
 	input := `fn methodName() -> int32`
 	expected := object.MetaMethod{
@@ -147,4 +159,22 @@ func TestParseMethod3(t *testing.T) {
 		},
 	}
 	helpParseMethod(t, "TestParseMethod3", input, expected)
+}
+func TestParseMethod3bis(t *testing.T) {
+	input := `fn methodName(param1: int32, param2: float64) -> bool //uid:10`
+	expected := object.MetaMethod{
+		Uid:                 10,
+		Name:                "methodName",
+		ParametersSignature: "(id)",
+		ReturnSignature:     "b",
+		Parameters: []object.MetaMethodParameter{
+			object.MetaMethodParameter{
+				Name: "param1",
+			},
+			object.MetaMethodParameter{
+				Name: "param2",
+			},
+		},
+	}
+	helpParseMethod(t, "TestParseMethod3bis", input, expected)
 }
