@@ -626,15 +626,14 @@ type StructType struct {
 
 // Signature returns the signature of the struct.
 func (s *StructType) Signature() string {
+	if len(s.Members) == 0 {
+		return fmt.Sprintf("()<%s>", s.Name)
+	}
 	types := ""
 	names := make([]string, 0, len(s.Members))
 	for _, v := range s.Members {
 		names = append(names, v.Name)
-		if s, ok := v.Value.(*StructType); ok {
-			types += "[" + s.Signature() + "]"
-		} else {
-			types += v.Value.Signature()
-		}
+		types += v.Value.Signature()
 	}
 	return fmt.Sprintf("(%s)<%s,%s>", types,
 		s.Name, strings.Join(names, ","))

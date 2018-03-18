@@ -30,6 +30,8 @@ var mapParser parsec.Parser
 var vecParser parsec.Parser
 var referenceParser parsec.Parser
 
+var types *TypeSet = NewTypeSet()
+
 func init() {
 	mapParser = mapType()
 	vecParser = vecType()
@@ -207,15 +209,16 @@ func declarations() parsec.Parser {
 }
 
 func resolve(declarations *Declarations, struc *StructType) *StructType {
+	if len(struc.Members) == 0 {
+		for _, otherStruct := range declarations.Struct {
+			if otherStruct.Name == struc.Name {
+				return resolve(declarations, &otherStruct)
+			}
+		}
+	}
 	for i, member := range struc.Members {
 		if substruc, ok := member.Value.(*StructType); ok {
-			if len(substruc.Members) == 0 {
-				for _, otherStruct := range declarations.Struct {
-					if otherStruct.Name == substruc.Name {
-						struc.Members[i].Value = resolve(declarations, &otherStruct)
-					}
-				}
-			}
+			struc.Members[i].Value = resolve(declarations, substruc)
 		}
 	}
 	return struc
@@ -228,11 +231,11 @@ func resolveMeta(declarations *Declarations, metaObj *object.MetaObject) *object
 // reunify analyze the different StructType and MetaObject to generate
 // the appropriate signature.
 func reunify(declarations *Declarations) error {
-	for i, struc := range declarations.Struct {
-		declarations.Struct[i] = *resolve(declarations, &struc)
+	for i, _ := range declarations.Struct {
+		declarations.Struct[i] = *resolve(declarations, &declarations.Struct[i])
 	}
-	for i, metaObj := range declarations.Interfaces {
-		declarations.Interfaces[i] = *resolveMeta(declarations, &metaObj)
+	for _, struc := range declarations.Struct {
+		struc.RegisterTo(types)
 	}
 	return nil
 }
@@ -245,12 +248,14 @@ func ParseIDL(reader io.Reader) ([]object.MetaObject, error) {
 		return nil, fmt.Errorf("cannot read input: %s", err)
 	}
 
+	// first pass needed to generate the TypeStruct correctly.
+	types = NewTypeSet()
 	root, _ := declarations()(parsec.NewScanner(input))
 	if root == nil {
 		return nil, fmt.Errorf("cannot parse input:\n%s", input)
 	}
 
-	declarations, ok := root.(*Declarations)
+	definitions, ok := root.(*Declarations)
 	if !ok {
 		if err, ok := root.(error); ok {
 			return nil, err
@@ -258,11 +263,24 @@ func ParseIDL(reader io.Reader) ([]object.MetaObject, error) {
 		return nil, fmt.Errorf("cannot parse IDL: %+v", reflect.TypeOf(root))
 	}
 
-	if err := reunify(declarations); err != nil {
+	if err := reunify(definitions); err != nil {
 		return nil, fmt.Errorf("failed to resolve symbols: %s", err)
 	}
 
-	return declarations.Interfaces, nil
+	// second pass needed to generate the MetaObject correctly.
+	root, _ = declarations()(parsec.NewScanner(input))
+	if root == nil {
+		return nil, fmt.Errorf("cannot parse input:\n%s", input)
+	}
+
+	definitions, ok = root.(*Declarations)
+	if !ok {
+		if err, ok := root.(error); ok {
+			return nil, err
+		}
+		return nil, fmt.Errorf("cannot parse IDL: %+v", reflect.TypeOf(root))
+	}
+	return definitions.Interfaces, nil
 }
 
 func nodifyDeclaration(nodes []Node) Node {
@@ -358,10 +376,19 @@ func nodifyDeclarationList(nodes []Node) Node {
 	}
 }
 
-// nodifyTypeReference returns a Type or an error. The type can be a
+// nodifyTypeReference returns a Type or an error. The type can be
+// found in the global types variable (TypeSet) or it is returned a
 // StructType with empty Members field waiting to be reunified.
 func nodifyTypeReference(nodes []Node) Node {
 	typeNode := nodes[0]
+	typeName := typeNode.(*parsec.Terminal).GetValue()
+	if sig, ok := types.Signatures[typeName]; ok {
+		typ, err := Parse(sig)
+		if err != nil {
+			return fmt.Errorf("%s: failed to parse %s: %s", typeName, sig, err)
+		}
+		return typ
+	}
 	return NewStructType(typeNode.(*parsec.Terminal).GetValue(), nil)
 }
 

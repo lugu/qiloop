@@ -15,7 +15,7 @@ func testUtil(t *testing.T, input string, expected Type) {
 	} else if strings.ToLower(result.Signature()) != strings.ToLower(expected.Signature()) {
 		buf := bytes.NewBufferString("")
 		result.TypeName().Render(buf)
-		t.Error("invalid type: " + buf.String())
+		t.Errorf("invalid type: %s (%s)", buf.String(), result.Signature())
 	}
 }
 
@@ -77,6 +77,7 @@ func TestParseTuple(t *testing.T) {
 }
 
 func TestParseDefinition(t *testing.T) {
+	testUtil(t, "()<test>", NewStructType("test", []MemberType{}))
 	testUtil(t, "(s)<test,a>", NewStructType("test", []MemberType{NewMemberType("a", NewStringType())}))
 	testUtil(t, "(ss)<test,a,a>", NewStructType("test", []MemberType{
 		NewMemberType("a", NewStringType()),

@@ -133,11 +133,7 @@ func extractMembersTypes(node Node) ([]Type, error) {
 }
 
 func extractMembersName(node Node) ([]string, error) {
-	baseList, ok := node.([]Node)
-	if !ok {
-		return nil, fmt.Errorf("member name list is not a list: %s", reflect.TypeOf(node))
-	}
-	membersList, ok := baseList[0].([]Node)
+	membersList, ok := node.([]Node)
 	if !ok {
 		return nil, fmt.Errorf("member name list is not a list: %s", reflect.TypeOf(node))
 	}
@@ -185,6 +181,10 @@ func nodifyTupleType(nodes []Node) Node {
 	return NewTupleType(types)
 }
 
+func nodifyTypeMember(nodes []Node) Node {
+	return nodes[1]
+}
+
 func nodifyTypeDefinition(nodes []Node) Node {
 
 	terminal, ok := nodes[4].(*parsec.Terminal)
@@ -192,7 +192,7 @@ func nodifyTypeDefinition(nodes []Node) Node {
 		return fmt.Errorf("wrong name %s", reflect.TypeOf(nodes[4]))
 	}
 	name := terminal.GetValue()
-	members, err := extractMembers(nodes[1], nodes[6])
+	members, err := extractMembers(nodes[1], nodes[5])
 	if err != nil {
 		return fmt.Errorf("failed to extract type definition: %s", err)
 	}
@@ -220,8 +220,12 @@ func Parse(input string) (Type, error) {
 
 	var listType = parsec.Kleene(nil, &declarationType)
 
-	var typeMemberList = parsec.Maybe(nil,
-		parsec.Many(nil, typeName(), parsec.Atom(",", "Separator")))
+	var typeMemberList = parsec.Kleene(
+		nil, parsec.And(
+			nodifyTypeMember,
+			parsec.Atom(",", "TypeComa"),
+			typeName(),
+		))
 
 	tupleType = parsec.And(nodifyTupleType,
 		parsec.Atom("(", "TypeParameterStart"),
@@ -234,7 +238,6 @@ func Parse(input string) (Type, error) {
 		parsec.Atom(")", "TypeParameterClose"),
 		parsec.Atom("<", "TypeDefinitionStart"),
 		typeName(),
-		parsec.Atom(",", "TypeName"),
 		&typeMemberList,
 		parsec.Atom(">", "TypeDefinitionClose"))
 

@@ -1,7 +1,7 @@
 package idl
 
 import (
-	"github.com/lugu/qiloop/meta/signature"
+	. "github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	parsec "github.com/prataprc/goparsec"
 	"os"
@@ -34,7 +34,7 @@ func helpParseType(t *testing.T, lang, sign string) {
 	if err, ok := root.(error); ok {
 		t.Fatalf("%s: parsing error: %v", label, err)
 	}
-	if typ, ok := root.(signature.Type); !ok {
+	if typ, ok := root.(Type); !ok {
 		t.Fatalf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
 	} else if typ.Signature() != sign {
 		t.Fatalf("%s: expected %#v, got %#v", label, sign, typ.Signature())
@@ -271,7 +271,7 @@ func TestParseObject(t *testing.T) {
 
 func TestParseReturns(t *testing.T) {
 	input := "-> int32"
-	expected := signature.NewIntType()
+	expected := NewIntType()
 	parser := returns()
 	root, _ := parser(parsec.NewScanner([]byte(input)))
 	if root == nil {
@@ -280,7 +280,7 @@ func TestParseReturns(t *testing.T) {
 	if err, ok := root.(error); ok {
 		t.Fatalf("cannot parse returns: %v", err)
 	}
-	if ret, ok := root.(signature.Type); !ok {
+	if ret, ok := root.(Type); !ok {
 		t.Fatalf("return type error: %+v", root)
 	} else if ret.Signature() != expected.Signature() {
 		t.Fatalf("cannot generate signature: %+v", ret)
@@ -297,7 +297,7 @@ func helpParseStruct(t *testing.T, label, input, expected string) {
 		t.Errorf("%s: cannot parse returns: %v", label, err)
 		return
 	}
-	if structType, ok := root.(*signature.StructType); !ok {
+	if structType, ok := root.(*StructType); !ok {
 		t.Errorf("%s: return type error: %+v", label, root)
 		return
 	} else if structType.Signature() != expected {
@@ -309,7 +309,7 @@ func helpParseStruct(t *testing.T, label, input, expected string) {
 
 func TestStructureParser(t *testing.T) {
 	helpParseStruct(t, "1", `struct Test
-	end`, "()<Test,>")
+	end`, "()<Test>")
 	helpParseStruct(t, "2", `struct Test
 	a: int32
 	b: str
@@ -321,5 +321,150 @@ func TestStructureParser(t *testing.T) {
 	helpParseStruct(t, "3", `struct Test
 	c: AnotherStruct
 	d: bool
-	end`, "([()<AnotherStruct,>]b)<Test,c,d>")
+	end`, "(()<AnotherStruct>b)<Test,c,d>")
+}
+
+func TestResolve(t *testing.T) {
+	input := Declarations{
+		Struct: []StructType{
+			StructType{
+				Name: "basic",
+				Members: []MemberType{
+					MemberType{
+						Name:  "a",
+						Value: NewIntType(),
+					},
+					MemberType{
+						Name:  "b",
+						Value: NewIntType(),
+					},
+				},
+			},
+			StructType{
+				Name: "complex",
+				Members: []MemberType{
+					MemberType{
+						Name: "simple",
+						Value: &StructType{
+							Name:    "basic",
+							Members: nil,
+						},
+					},
+					MemberType{
+						Name:  "b",
+						Value: NewIntType(),
+					},
+				},
+			},
+		},
+	}
+	result := resolve(&input, &input.Struct[1])
+	expected := StructType{
+		Name: "complex",
+		Members: []MemberType{
+			MemberType{
+				Name: "simple",
+				Value: &StructType{
+					Name: "basic",
+					Members: []MemberType{
+						MemberType{
+							Name:  "a",
+							Value: NewIntType(),
+						},
+						MemberType{
+							Name:  "b",
+							Value: NewIntType(),
+						},
+					},
+				},
+			},
+			MemberType{
+				Name:  "b",
+				Value: NewIntType(),
+			},
+		},
+	}
+	if result.Signature() != expected.Signature() {
+		t.Fatalf("\nexpected: %#v\nobserved: %#v", expected.Signature(), result.Signature())
+	}
+}
+
+func TestResolve2(t *testing.T) {
+	input := Declarations{
+		Struct: []StructType{
+			StructType{
+				Name: "basic1",
+				Members: []MemberType{
+					MemberType{
+						Name:  "a",
+						Value: NewIntType(),
+					},
+					MemberType{
+						Name:  "b",
+						Value: NewIntType(),
+					},
+				},
+			},
+			StructType{
+				Name: "basic2",
+				Members: []MemberType{
+					MemberType{
+						Name:  "a",
+						Value: NewIntType(),
+					},
+					MemberType{
+						Name:  "b",
+						Value: NewIntType(),
+					},
+				},
+			},
+			StructType{
+				Name: "complex1",
+				Members: []MemberType{
+					MemberType{
+						Name: "simple",
+						Value: &StructType{
+							Name:    "basic1",
+							Members: nil,
+						},
+					},
+					MemberType{
+						Name:  "b",
+						Value: NewIntType(),
+					},
+				},
+			},
+			StructType{
+				Name: "complex2",
+				Members: []MemberType{
+					MemberType{
+						Name: "notSimple",
+						Value: &StructType{
+							Name:    "complex1",
+							Members: nil,
+						},
+					},
+					MemberType{
+						Name: "simple",
+						Value: &StructType{
+							Name:    "basic2",
+							Members: nil,
+						},
+					},
+					MemberType{
+						Name:  "b",
+						Value: NewIntType(),
+					},
+				},
+			},
+		},
+	}
+	for i, _ := range input.Struct {
+		input.Struct[i] = *resolve(&input, &input.Struct[i])
+	}
+	result := input.Struct[3]
+	expected := "(((ii)<basic1,a,b>i)<complex1,simple,b>(ii)<basic2,a,b>i)<complex2,notSimple,simple,b>"
+	if result.Signature() != expected {
+		t.Fatalf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
+	}
 }
