@@ -169,7 +169,7 @@ func helpParserTest(t *testing.T, label, idlFileName string, expectedMetaObj *ob
 	if err != nil {
 		t.Fatal(err)
 	}
-	metaList, err := Parse(file)
+	metaList, err := ParseIDL(file)
 	if err != nil {
 		t.Fatalf("%s: failed to parse idl: %s", label, err)
 	}
@@ -318,4 +318,8 @@ func TestStructureParser(t *testing.T) {
 	c: float32 // test
 	d: bool
 	end`, "(fb)<Test,c,d>")
+	helpParseStruct(t, "3", `struct Test
+	c: AnotherStruct
+	d: bool
+	end`, "([()<AnotherStruct,>]b)<Test,c,d>")
 }
