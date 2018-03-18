@@ -5,6 +5,7 @@ import (
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
+	"reflect"
 )
 
 // generateMethod writes the method declaration. Does not use
@@ -12,6 +13,9 @@ import (
 // conflicts. QiMessage do not have such constraint and thus we don't
 // use this name when creating IDL files.
 func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMethod, methodName string) error {
+
+	// paramType is a tuple it needs to be unified with
+	// m.MetaMethodParameter.
 	paramType, err := signature.Parse(m.ParametersSignature)
 	if err != nil {
 		return fmt.Errorf("failed to parse parms of %s: %s", m.Name, err)
@@ -20,11 +24,30 @@ func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMetho
 	if err != nil {
 		return fmt.Errorf("failed to parse return of %s: %s", m.Name, err)
 	}
-	if retType.Signature() == "v" {
-		fmt.Fprintf(writer, "\tfn %s(%s) //uid:%d\n", m.Name, paramType.SignatureIDL(), m.Uid)
-	} else {
-		fmt.Fprintf(writer, "\tfn %s(%s) -> %s //uid:%d\n", m.Name, paramType.SignatureIDL(), retType.SignatureIDL(), m.Uid)
+
+	tupleType, ok := paramType.(*signature.TupleType)
+	if !ok {
+		return fmt.Errorf("parameter signature must be a tuple (%s): %+v", reflect.TypeOf(paramType), paramType)
 	}
+
+	paramSignature := paramType.SignatureIDL()
+	if m.Parameters != nil && len(m.Parameters) != 0 {
+		paramSignature = ""
+		for i, p := range m.Parameters {
+			if paramSignature != "" {
+				paramSignature += ","
+			}
+			paramSignature += p.Name + ": " + tupleType.Members()[i].Value.SignatureIDL()
+		}
+	}
+
+	returnSignature := "-> " + retType.SignatureIDL() + " "
+	if retType.Signature() == "v" {
+		returnSignature = ""
+	}
+
+	fmt.Fprintf(writer, "\tfn %s(%s) %s//uid:%d\n", m.Name, paramSignature, returnSignature, m.Uid)
+
 	paramType.RegisterTo(set)
 	retType.RegisterTo(set)
 	return nil

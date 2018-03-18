@@ -1,3 +1,3 @@
 interface Server
-	fn authenticate(P0: Map<str,any>) -> Map<str,any> //uid:8
+	fn authenticate(capability: Map<str,any>) -> Map<str,any> //uid:8
 end

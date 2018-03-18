@@ -12,6 +12,11 @@ var MetaService0 MetaObject = MetaObject{
 			ReturnSignature:     "{sm}",
 			Name:                "authenticate",
 			ParametersSignature: "({sm})",
+			Parameters: []MetaMethodParameter{
+				MetaMethodParameter{
+					Name: "capability",
+				},
+			},
 		},
 	},
 }

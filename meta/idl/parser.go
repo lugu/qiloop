@@ -65,7 +65,7 @@ func typeParser() parsec.Parser {
 	)
 }
 
-func comment() parsec.Parser {
+func comments() parsec.Parser {
 	return parsec.And(
 		nodifyComment,
 		parsec.Maybe(
@@ -73,7 +73,7 @@ func comment() parsec.Parser {
 			parsec.And(
 				nodifyCommentContent,
 				parsec.Atom("//", "//"),
-				parsec.Token(`.*$`, "comment"),
+				parsec.Token(`.*`, "comment"),
 			),
 		),
 	)
@@ -125,7 +125,7 @@ func method() parsec.Parser {
 		parameters(),
 		parsec.Atom(")", ")"),
 		returns(),
-		comment(),
+		comments(),
 	)
 }
 
@@ -137,7 +137,7 @@ func signal() parsec.Parser {
 		parsec.Atom("(", "("),
 		parameters(),
 		parsec.Atom(")", ")"),
-		comment(),
+		comments(),
 	)
 }
 
@@ -154,8 +154,10 @@ func interfaceParser() parsec.Parser {
 		nodifyInterface,
 		parsec.Atom("interface", "interface"),
 		parsec.Ident(),
+		comments(),
 		parsec.Kleene(nodifyActionList, action()),
 		parsec.Atom("end", "end"),
+		comments(),
 	)
 }
 
@@ -258,11 +260,13 @@ func nodifyInterfaceList(nodes []Node) Node {
 }
 
 func nodifyInterface(nodes []Node) Node {
-	metaObj, ok := nodes[2].(*object.MetaObject)
+	nameNode := nodes[1]
+	objNode := nodes[3]
+	metaObj, ok := objNode.(*object.MetaObject)
 	if !ok {
-		return fmt.Errorf("Expecting MetaObject, got %+v: %+v", reflect.TypeOf(nodes[2]), nodes[2])
+		return fmt.Errorf("Expecting MetaObject, got %+v: %+v", reflect.TypeOf(objNode), objNode)
 	}
-	metaObj.Description = nodes[1].(*parsec.Terminal).GetValue()
+	metaObj.Description = nameNode.(*parsec.Terminal).GetValue()
 	return metaObj
 }
 
@@ -350,6 +354,7 @@ func nodifyMethod(nodes []Node) Node {
 	method.ParametersSignature = tupleType.Signature()
 	if len(structType.Members) != 0 {
 		method.Parameters = make([]object.MetaMethodParameter, len(structType.Members))
+
 		for i, member := range structType.Members {
 			method.Parameters[i].Name = member.Name
 		}
