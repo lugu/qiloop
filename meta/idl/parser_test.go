@@ -286,3 +286,36 @@ func TestParseReturns(t *testing.T) {
 		t.Fatalf("cannot generate signature: %+v", ret)
 	}
 }
+
+func helpParseStruct(t *testing.T, label, input, expected string) {
+	root, _ := structure()(parsec.NewScanner([]byte(input)))
+	if root == nil {
+		t.Errorf("%s: error parsing struuture:\n%s", label, input)
+		return
+	}
+	if err, ok := root.(error); ok {
+		t.Errorf("%s: cannot parse returns: %v", label, err)
+		return
+	}
+	if structType, ok := root.(*signature.StructType); !ok {
+		t.Errorf("%s: return type error: %+v", label, root)
+		return
+	} else if structType.Signature() != expected {
+		t.Errorf("%s: invalid signature: expected: %s, got %s",
+			label, expected, structType.Signature())
+		return
+	}
+}
+
+func TestStructureParser(t *testing.T) {
+	helpParseStruct(t, "1", `struct Test
+	end`, "()<Test,>")
+	helpParseStruct(t, "2", `struct Test
+	a: int32
+	b: str
+	end`, "(is)<Test,a,b>")
+	helpParseStruct(t, "3", `struct Test
+	c: float32 // test
+	d: bool
+	end`, "(fb)<Test,c,d>")
+}

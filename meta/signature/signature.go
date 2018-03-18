@@ -197,7 +197,7 @@ func nodifyTypeDefinition(nodes []Node) Node {
 		return fmt.Errorf("failed to extract type definition: %s", err)
 	}
 
-	return NewStrucType(name, members)
+	return NewStructType(name, members)
 }
 
 // Parse reads a signature contained in a string and constructs its

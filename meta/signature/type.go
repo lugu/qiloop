@@ -613,8 +613,8 @@ func (t *TupleType) ConvertMetaObjects() {
 	}
 }
 
-// NewStrucType is a contructor for the representation of a struct.
-func NewStrucType(name string, members []MemberType) *StructType {
+// NewStructType is a contructor for the representation of a struct.
+func NewStructType(name string, members []MemberType) *StructType {
 	return &StructType{name, members}
 }
 

@@ -77,12 +77,12 @@ func TestParseTuple(t *testing.T) {
 }
 
 func TestParseDefinition(t *testing.T) {
-	testUtil(t, "(s)<test,a>", NewStrucType("test", []MemberType{NewMemberType("a", NewStringType())}))
-	testUtil(t, "(ss)<test,a,a>", NewStrucType("test", []MemberType{
+	testUtil(t, "(s)<test,a>", NewStructType("test", []MemberType{NewMemberType("a", NewStringType())}))
+	testUtil(t, "(ss)<test,a,a>", NewStructType("test", []MemberType{
 		NewMemberType("a", NewStringType()),
 		NewMemberType("a", NewStringType()),
 	}))
-	testUtil(t, "(sss)<test,a,a,a>", NewStrucType("test", []MemberType{
+	testUtil(t, "(sss)<test,a,a,a>", NewStructType("test", []MemberType{
 		NewMemberType("a", NewStringType()),
 		NewMemberType("a", NewStringType()),
 		NewMemberType("a", NewStringType()),
@@ -90,9 +90,9 @@ func TestParseDefinition(t *testing.T) {
 }
 
 func TestParseEmbeddedDefinition(t *testing.T) {
-	testUtil(t, "([s])<test,a>", NewStrucType("test", []MemberType{
+	testUtil(t, "([s])<test,a>", NewStructType("test", []MemberType{
 		NewMemberType("a", NewListType(NewStringType()))}))
-	testUtil(t, "({si})<test,a>", NewStrucType("test", []MemberType{
+	testUtil(t, "({si})<test,a>", NewStructType("test", []MemberType{
 		NewMemberType("a", NewMapType(NewStringType(), NewIntType()))}))
 }
 

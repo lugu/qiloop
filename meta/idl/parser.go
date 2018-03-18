@@ -161,6 +161,49 @@ func interfaceParser() parsec.Parser {
 	)
 }
 
+func member() parsec.Parser {
+	return parsec.And(
+		nodifyMember,
+		parsec.Ident(),
+		parsec.Atom(":", ":"),
+		typeParser(),
+		comments(),
+	)
+}
+
+func structure() parsec.Parser {
+	return parsec.And(
+		nodifyStructure,
+		parsec.Atom("struct", "struct"),
+		parsec.Ident(),
+		comments(),
+		parsec.Kleene(nodifyMemberList, member()),
+		parsec.Atom("end", "end"),
+		comments(),
+	)
+}
+
+func declaration() parsec.Parser {
+	return parsec.OrdChoice(
+		nodifyDeclaration,
+		structure(),
+		interfaceParser(),
+	)
+}
+
+func declarations() parsec.Parser {
+	return parsec.Many(
+		nodifyDeclarationList,
+		declaration(),
+	)
+}
+
+// reunify analyze the different StructType and MetaObject to generate
+// the appropriate signature.
+func reunify(declarations *Declarations) error {
+	return nil
+}
+
 // ParseIDL read an IDL definition from a reader and returns the
 // MetaObject associated with the IDL.
 func Parse(reader io.Reader) ([]object.MetaObject, error) {
@@ -169,22 +212,28 @@ func Parse(reader io.Reader) ([]object.MetaObject, error) {
 		return nil, fmt.Errorf("cannot read input: %s", err)
 	}
 
-	interfaceList := parsec.Many(nodifyInterfaceList, interfaceParser())
-
-	root, _ := interfaceList(parsec.NewScanner(input))
+	root, _ := declarations()(parsec.NewScanner(input))
 	if root == nil {
 		return nil, fmt.Errorf("cannot parse input:\n%s", input)
 	}
 
-	metas, ok := root.([]object.MetaObject)
+	declarations, ok := root.(*Declarations)
 	if !ok {
-		err, ok := root.(error)
-		if !ok {
-			return nil, fmt.Errorf("cannot parse IDL: %+v", reflect.TypeOf(root))
+		if err, ok := root.(error); ok {
+			return nil, err
 		}
-		return nil, err
+		return nil, fmt.Errorf("cannot parse IDL: %+v", reflect.TypeOf(root))
 	}
-	return metas, nil
+
+	if err := reunify(declarations); err != nil {
+		return nil, fmt.Errorf("failed to resolve symbols: %s", err)
+	}
+
+	return declarations.Interfaces, nil
+}
+
+func nodifyDeclaration(nodes []Node) Node {
+	return nodes[0]
 }
 
 func nodifyMaybeComment(nodes []Node) Node {
@@ -244,19 +293,76 @@ func nodifyReturns(nodes []Node) Node {
 	}
 }
 
-func nodifyInterfaceList(nodes []Node) Node {
-	interfaces := make([]object.MetaObject, 0, len(nodes))
+// Declarations represent the result of the IDL parsing. It contains a
+// list of MetaObject and a list of StructType. The embedded
+// MetaObjects and StructTypes can not be use: their signatures need to
+// be re-unified.
+type Declarations struct {
+	Interfaces []object.MetaObject
+	Struct     []signature.StructType
+}
+
+// nodifyDeclarationList returns a Declarations structure holding a
+// list of MetaObject and StructType.
+func nodifyDeclarationList(nodes []Node) Node {
+	interfaces := make([]object.MetaObject, 0)
+	struc := make([]signature.StructType, 0)
 	for _, node := range nodes {
 		if err, ok := node.(error); ok {
 			return err
 		}
 		if metaObj, ok := node.(*object.MetaObject); ok {
 			interfaces = append(interfaces, *metaObj)
+		} else if s, ok := node.(*signature.StructType); ok {
+			struc = append(struc, *s)
 		} else {
 			return fmt.Errorf("Expecting MetaObject, got %+v: %+v", reflect.TypeOf(node), node)
 		}
 	}
-	return interfaces
+	return &Declarations{
+		Interfaces: interfaces,
+		Struct:     struc,
+	}
+}
+
+// nodifyMember returns a MemberType or an error.
+func nodifyMember(nodes []Node) Node {
+	nameNode := nodes[0]
+	typeNode := nodes[2]
+	var member signature.MemberType
+	var ok bool
+	member.Name = nameNode.(*parsec.Terminal).GetValue()
+	member.Value, ok = typeNode.(signature.Type)
+	if !ok {
+		return fmt.Errorf("Expecting Type, got %+v: %+v", reflect.TypeOf(typeNode), typeNode)
+	}
+	return member
+}
+
+// nodifyMemberList returns a StructType or an error.
+func nodifyMemberList(nodes []Node) Node {
+	members := make([]signature.MemberType, len(nodes))
+	for i, node := range nodes {
+		if member, ok := node.(signature.MemberType); ok {
+			members[i] = member
+		} else {
+			return fmt.Errorf("MemberList: unexpected type, got %+v: %+v", reflect.TypeOf(node), node)
+		}
+	}
+	return signature.NewStructType("parameters", members)
+}
+
+// nodifyStructure returns a StructType of an error.
+func nodifyStructure(nodes []Node) Node {
+	nameNode := nodes[1]
+	structNode := nodes[3]
+	structType, ok := structNode.(*signature.StructType)
+	if !ok {
+		return fmt.Errorf("unexpected non struct type(%s): %v",
+			reflect.TypeOf(structNode), structNode)
+	}
+	structType.Name = nameNode.(*parsec.Terminal).GetValue()
+	return structType
 }
 
 func nodifyInterface(nodes []Node) Node {
@@ -465,7 +571,7 @@ func nodifyParams(nodes []Node) Node {
 			return fmt.Errorf("failed to parse parameter %d: %s", i, node)
 		}
 	}
-	return signature.NewStrucType("parameters", members)
+	return signature.NewStructType("parameters", members)
 }
 
 func nodifyAndParams(nodes []Node) Node {
@@ -473,7 +579,7 @@ func nodifyAndParams(nodes []Node) Node {
 		return err
 	}
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {
-		return signature.NewStrucType("parameters", make([]signature.MemberType, 0))
+		return signature.NewStructType("parameters", make([]signature.MemberType, 0))
 	} else if ret, ok := nodes[0].(*signature.StructType); ok {
 		return ret
 	} else {
