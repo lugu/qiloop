@@ -318,10 +318,10 @@ func TestStructureParser(t *testing.T) {
 	c: float32 // test
 	d: bool
 	end`, "(fb)<Test,c,d>")
-	helpParseStruct(t, "3", `struct Test
-	c: AnotherStruct
+	helpParseStruct(t, "4", `struct Test
+	c: UnknownType
 	d: bool
-	end`, "(()<AnotherStruct>b)<Test,c,d>")
+	end`, "(()<UnknownType_not_found>b)<Test,c,d>")
 }
 
 func TestResolve(t *testing.T) {

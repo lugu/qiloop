@@ -231,9 +231,21 @@ func resolveMeta(declarations *Declarations, metaObj *object.MetaObject) *object
 // reunify analyze the different StructType and MetaObject to generate
 // the appropriate signature.
 func reunify(declarations *Declarations) error {
+	types = NewTypeSet()
+	for _, struc := range declarations.Struct {
+		struc.RegisterTo(types)
+	}
+	newStructs := make([]StructType, 0)
+	for _, typ := range types.Types {
+		if struc, ok := typ.(*StructType); ok {
+			newStructs = append(newStructs, *struc)
+		}
+	}
+	declarations.Struct = newStructs
 	for i, _ := range declarations.Struct {
 		declarations.Struct[i] = *resolve(declarations, &declarations.Struct[i])
 	}
+	types = NewTypeSet()
 	for _, struc := range declarations.Struct {
 		struc.RegisterTo(types)
 	}
@@ -249,7 +261,7 @@ func ParseIDL(reader io.Reader) ([]object.MetaObject, error) {
 	}
 
 	// first pass needed to generate the TypeStruct correctly.
-	types = NewTypeSet()
+	types = nil
 	root, _ := declarations()(parsec.NewScanner(input))
 	if root == nil {
 		return nil, fmt.Errorf("cannot parse input:\n%s", input)
@@ -391,7 +403,7 @@ func nodifyTypeReference(nodes []Node) Node {
 			return typ
 		}
 	}
-	return NewStructType(typeName, nil)
+	return NewRefType(typeName, nil)
 }
 
 // nodifyMember returns a MemberType or an error.
