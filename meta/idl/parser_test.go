@@ -435,6 +435,18 @@ func TestResolve2(t *testing.T) {
 				},
 			},
 			StructType{
+				Name: "complex3",
+				Members: []MemberType{
+					MemberType{
+						Name: "notSimple",
+						Value: &StructType{
+							Name:    "complex2",
+							Members: nil,
+						},
+					},
+				},
+			},
+			StructType{
 				Name: "complex2",
 				Members: []MemberType{
 					MemberType{
@@ -462,9 +474,29 @@ func TestResolve2(t *testing.T) {
 	for i, _ := range input.Struct {
 		input.Struct[i] = *resolve(&input, &input.Struct[i])
 	}
-	result := input.Struct[3]
+	result := input.Struct[4]
 	expected := "(((ii)<basic1,a,b>i)<complex1,simple,b>(ii)<basic2,a,b>i)<complex2,notSimple,simple,b>"
 	if result.Signature() != expected {
-		t.Fatalf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
+		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
+	}
+	result = input.Struct[3]
+	expected = "((((ii)<basic1,a,b>i)<complex1,simple,b>(ii)<basic2,a,b>i)<complex2,notSimple,simple,b>)<complex3,notSimple>"
+	if result.Signature() != expected {
+		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
+	}
+	result = input.Struct[2]
+	expected = "((ii)<basic1,a,b>i)<complex1,simple,b>"
+	if result.Signature() != expected {
+		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
+	}
+	result = input.Struct[1]
+	expected = "(ii)<basic2,a,b>"
+	if result.Signature() != expected {
+		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
+	}
+	result = input.Struct[0]
+	expected = "(ii)<basic1,a,b>"
+	if result.Signature() != expected {
+		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
 	}
 }

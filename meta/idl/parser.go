@@ -30,7 +30,7 @@ var mapParser parsec.Parser
 var vecParser parsec.Parser
 var referenceParser parsec.Parser
 
-var types *TypeSet = NewTypeSet()
+var types *TypeSet = nil
 
 func init() {
 	mapParser = mapType()
@@ -382,14 +382,16 @@ func nodifyDeclarationList(nodes []Node) Node {
 func nodifyTypeReference(nodes []Node) Node {
 	typeNode := nodes[0]
 	typeName := typeNode.(*parsec.Terminal).GetValue()
-	if sig, ok := types.Signatures[typeName]; ok {
-		typ, err := Parse(sig)
-		if err != nil {
-			return fmt.Errorf("%s: failed to parse %s: %s", typeName, sig, err)
+	if types != nil {
+		if sig, ok := types.Signatures[typeName]; ok {
+			typ, err := Parse(sig)
+			if err != nil {
+				return fmt.Errorf("%s: failed to parse %s: %s", typeName, sig, err)
+			}
+			return typ
 		}
-		return typ
 	}
-	return NewStructType(typeNode.(*parsec.Terminal).GetValue(), nil)
+	return NewStructType(typeName, nil)
 }
 
 // nodifyMember returns a MemberType or an error.
