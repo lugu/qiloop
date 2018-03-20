@@ -266,7 +266,6 @@ func TestParseService1(t *testing.T) {
 }
 
 func TestParseObject(t *testing.T) {
-	t.Skip("not yet implemented")
 	helpParserTest(t, "Object", "object.idl", &object.ObjectMetaObject)
 }
 
@@ -322,19 +321,19 @@ func TestStructureParser(t *testing.T) {
 }
 
 func newDeclaration(t *testing.T) *Declarations {
-	basic1, err := NewRefType("basic1", nil)
+	basic1, err := NewRefType("basic1")
 	if err != nil {
 		t.Fatalf("%s, %s", "basic1", err)
 	}
-	basic2, err := NewRefType("basic2", nil)
+	basic2, err := NewRefType("basic2")
 	if err != nil {
 		t.Fatalf("%s, %s", "basic2", err)
 	}
-	complex1, err := NewRefType("complex1", nil)
+	complex1, err := NewRefType("complex1")
 	if err != nil {
 		t.Fatalf("%s, %s", "complex1", err)
 	}
-	complex2, err := NewRefType("complex2", nil)
+	complex2, err := NewRefType("complex2")
 	if err != nil {
 		t.Fatalf("%s, %s", "complex2", err)
 	}

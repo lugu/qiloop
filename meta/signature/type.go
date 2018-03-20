@@ -11,8 +11,8 @@ import (
 // Type currently generated. It is used to generate the
 // type declaration only once.
 type TypeSet struct {
-	Signatures map[string]string // maps type name with signatures
-	Types      []Type
+	Names []string
+	Types []Type
 }
 
 // Declare writes all the registered Type into the jen.File.
@@ -22,11 +22,51 @@ func (s *TypeSet) Declare(f *jen.File) {
 	}
 }
 
+// returns the registerred name after collision resolution.
+// Register search if a type is in the TypeSet under a given name. If
+// the same name and signature is already present it does nothing.
+// otherwise it adds the type and search for a new which does not
+// conflict with the names already present. The new name is returned.
+func (s *TypeSet) Register(originalName string, typ *StructType) string {
+	name := originalName
+	for i := 0; i < 100; i++ {
+		ok := true // can use the name
+		for i, n := range s.Names {
+			if n == name {
+				if s.Types[i].Signature() == typ.Signature() {
+					// already registered
+					return name
+				}
+				ok = false
+				break
+			}
+		}
+		if ok {
+			// name is not taken
+			// BUG: StructType is duplicated else it mess-up s.TYpes.
+			s.Types = append(s.Types, NewStructType(typ.Name, typ.Members))
+			s.Names = append(s.Names, name)
+			return name
+		}
+		name = fmt.Sprintf("%s_%d", originalName, i)
+	}
+	return "can_not_register_name_" + name
+}
+
+func (s *TypeSet) Search(name string) Type {
+	for i, n := range s.Names {
+		if n == name {
+			return s.Types[i]
+		}
+	}
+	return nil
+}
+
 // NewTypeSet construct a new TypeSet.
 func NewTypeSet() *TypeSet {
-	sig := make(map[string]string)
 	typ := make([]Type, 0)
-	return &TypeSet{sig, typ}
+	nam := make([]string, 0)
+	return &TypeSet{nam, typ}
 }
 
 // Type represents a type of a signature or a type
@@ -655,22 +695,7 @@ func (s *StructType) RegisterTo(set *TypeSet) {
 		v.Value.RegisterTo(set)
 	}
 
-	// register the name of the struct. if the name is used by a
-	// struct of a different signature, change the name.
-	for i := 0; i < 100; i++ {
-		if sgn, ok := set.Signatures[s.Name]; !ok {
-			// name not yet used
-			set.Signatures[s.Name] = s.Signature()
-			// FIXME: here is a work around
-			set.Types = append(set.Types, NewStructType(s.Name, s.Members))
-			break
-		} else if sgn == s.Signature() {
-			// same name and same signatures
-			break
-		} else {
-			s.Name = fmt.Sprintf("%s_%d", s.Name, i)
-		}
-	}
+	s.Name = set.Register(s.Name, s)
 	return
 }
 

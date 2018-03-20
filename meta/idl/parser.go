@@ -349,7 +349,7 @@ func nodifyDeclarationList(nodes []Node) Node {
 func nodifyTypeReference(nodes []Node) Node {
 	typeNode := nodes[0]
 	typeName := typeNode.(*parsec.Terminal).GetValue()
-	if ref, err := NewRefType(typeName, nil); err != nil {
+	if ref, err := NewRefType(typeName); err != nil {
 		return err
 	} else {
 		return ref
