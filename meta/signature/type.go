@@ -660,6 +660,7 @@ func (s *StructType) RegisterTo(set *TypeSet) {
 	for i := 0; i < 100; i++ {
 		if sgn, ok := set.Signatures[s.Name]; !ok {
 			// name not yet used
+			fmt.Printf("register 0: %s => %s\n", s.Name, s.Signature())
 			set.Signatures[s.Name] = s.Signature()
 			set.Types = append(set.Types, s)
 			break
@@ -721,60 +722,4 @@ func (s *StructType) Marshal(structID string, writer string) *Statement {
 // read and an error.
 func (s *StructType) Unmarshal(reader string) *Statement {
 	return jen.Id("Read" + s.Name).Call(jen.Id(reader))
-}
-
-// RefType represents a struct.
-type RefType struct {
-	Name string
-	ref  Type
-}
-
-// NewRefType is a contructor for the representation of a type reference to be
-// resolved with a TypeSet.
-func NewRefType(name string, ref Type) *RefType {
-	return &RefType{name, ref}
-}
-
-func (r *RefType) Signature() string {
-	if r.ref == nil {
-		return NewStructType(r.Name+"_not_found", nil).Signature()
-	}
-	return r.ref.Signature()
-}
-
-func (r *RefType) SignatureIDL() string {
-	if r.ref == nil {
-		return NewStructType(r.Name, nil).SignatureIDL()
-	}
-	return r.ref.SignatureIDL()
-}
-
-func (r *RefType) TypeName() *Statement {
-	return jen.Id(r.Name)
-}
-
-func (r *RefType) RegisterTo(set *TypeSet) {
-	if r.ref != nil {
-		r.ref.RegisterTo(set)
-	}
-}
-
-func (r *RefType) TypeDeclaration(file *jen.File) {
-	if r.ref != nil {
-		r.ref.TypeDeclaration(file)
-	}
-}
-
-func (r *RefType) Marshal(id string, writer string) *Statement {
-	if r.ref != nil {
-		return r.ref.Marshal(id, writer)
-	}
-	return jen.Qual("fmt", "Errorf").Call(jen.Lit("reference type serialization not implemented: %v"), jen.Id(id))
-}
-
-func (r *RefType) Unmarshal(reader string) *Statement {
-	if r.ref != nil {
-		return r.ref.Unmarshal(reader)
-	}
-	return jen.Return(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("reference type not implemented")))
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -318,185 +319,47 @@ func TestStructureParser(t *testing.T) {
 	c: float32 // test
 	d: bool
 	end`, "(fb)<Test,c,d>")
-	helpParseStruct(t, "4", `struct Test
-	c: UnknownType
-	d: bool
-	end`, "(()<UnknownType_not_found>b)<Test,c,d>")
 }
 
-func TestResolve(t *testing.T) {
-	input := Declarations{
-		Struct: []StructType{
-			StructType{
-				Name: "basic",
-				Members: []MemberType{
-					MemberType{
-						Name:  "a",
-						Value: NewIntType(),
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
-				},
-			},
-			StructType{
-				Name: "complex",
-				Members: []MemberType{
-					MemberType{
-						Name: "simple",
-						Value: &StructType{
-							Name:    "basic",
-							Members: nil,
-						},
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
+func TestParseSimpleIDL(t *testing.T) {
+	expected := object.MetaObject{
+		Description: "I",
+		Methods: map[uint32]object.MetaMethod{
+			100: object.MetaMethod{
+				Uid:                 100,
+				ReturnSignature:     "v",
+				Name:                "c",
+				ParametersSignature: "((if)<A,a,b>)",
+				Parameters: []object.MetaMethodParameter{
+					object.MetaMethodParameter{
+						Name: "d",
 					},
 				},
 			},
 		},
 	}
-	result := resolve(&input, &input.Struct[1])
-	expected := StructType{
-		Name: "complex",
-		Members: []MemberType{
-			MemberType{
-				Name: "simple",
-				Value: &StructType{
-					Name: "basic",
-					Members: []MemberType{
-						MemberType{
-							Name:  "a",
-							Value: NewIntType(),
-						},
-						MemberType{
-							Name:  "b",
-							Value: NewIntType(),
-						},
-					},
-				},
-			},
-			MemberType{
-				Name:  "b",
-				Value: NewIntType(),
-			},
-		},
+	idl := `
+	interface I
+		fn c(d: B)
+	end
+	struct B
+		a: A
+		b: float32
+	end
+	struct A
+		a: int32
+		b: float32
+	end
+	`
+	metaList, err := ParseIDL(strings.NewReader(idl))
+	if err != nil {
+		t.Fatalf("Failed to parse input: %s", err)
 	}
-	if result.Signature() != expected.Signature() {
-		t.Fatalf("\nexpected: %#v\nobserved: %#v", expected.Signature(), result.Signature())
+	if len(metaList) != 1 {
+		t.Fatalf("Failed to parse I (%d)", len(metaList))
 	}
-}
-
-func TestResolve2(t *testing.T) {
-	input := Declarations{
-		Struct: []StructType{
-			StructType{
-				Name: "basic1",
-				Members: []MemberType{
-					MemberType{
-						Name:  "a",
-						Value: NewIntType(),
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
-				},
-			},
-			StructType{
-				Name: "basic2",
-				Members: []MemberType{
-					MemberType{
-						Name:  "a",
-						Value: NewIntType(),
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
-				},
-			},
-			StructType{
-				Name: "complex1",
-				Members: []MemberType{
-					MemberType{
-						Name: "simple",
-						Value: &StructType{
-							Name:    "basic1",
-							Members: nil,
-						},
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
-				},
-			},
-			StructType{
-				Name: "complex3",
-				Members: []MemberType{
-					MemberType{
-						Name: "notSimple",
-						Value: &StructType{
-							Name:    "complex2",
-							Members: nil,
-						},
-					},
-				},
-			},
-			StructType{
-				Name: "complex2",
-				Members: []MemberType{
-					MemberType{
-						Name: "notSimple",
-						Value: &StructType{
-							Name:    "complex1",
-							Members: nil,
-						},
-					},
-					MemberType{
-						Name: "simple",
-						Value: &StructType{
-							Name:    "basic2",
-							Members: nil,
-						},
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
-				},
-			},
-		},
-	}
-	for i, _ := range input.Struct {
-		input.Struct[i] = *resolve(&input, &input.Struct[i])
-	}
-	result := input.Struct[4]
-	expected := "(((ii)<basic1,a,b>i)<complex1,simple,b>(ii)<basic2,a,b>i)<complex2,notSimple,simple,b>"
-	if result.Signature() != expected {
-		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
-	}
-	result = input.Struct[3]
-	expected = "((((ii)<basic1,a,b>i)<complex1,simple,b>(ii)<basic2,a,b>i)<complex2,notSimple,simple,b>)<complex3,notSimple>"
-	if result.Signature() != expected {
-		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
-	}
-	result = input.Struct[2]
-	expected = "((ii)<basic1,a,b>i)<complex1,simple,b>"
-	if result.Signature() != expected {
-		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
-	}
-	result = input.Struct[1]
-	expected = "(ii)<basic2,a,b>"
-	if result.Signature() != expected {
-		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
-	}
-	result = input.Struct[0]
-	expected = "(ii)<basic1,a,b>"
-	if result.Signature() != expected {
-		t.Errorf("\nexpected: %#v\nobserved: %#v", expected, result.Signature())
+	metaObj := metaList[0]
+	if !reflect.DeepEqual(metaObj, expected) {
+		t.Fatalf("\nexpected: %#v\nobserved: %#v", expected, metaObj)
 	}
 }
