@@ -452,9 +452,6 @@ func TestParseSimpleIDL(t *testing.T) {
 		},
 	}
 	idl := `
-	interface I
-		fn c(d: B)
-	end
 	struct B
 		a: A
 		b: float32
@@ -462,6 +459,9 @@ func TestParseSimpleIDL(t *testing.T) {
 	struct A
 		a: int32
 		b: float32
+	end
+	interface I
+		fn c(d: B)
 	end
 	`
 	metaList, err := ParseIDL(strings.NewReader(idl))
