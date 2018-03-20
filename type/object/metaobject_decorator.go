@@ -1,6 +1,7 @@
 package object
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -36,6 +37,11 @@ func registerName(name string, names map[string]bool) string {
 	}
 	names[newName] = true
 	return newName
+}
+
+func (metaObj *MetaObject) Json() string {
+	json, _ := json.MarshalIndent(metaObj, "", "    ")
+	return string(json)
 }
 
 // ForEachMethodAndSignal call methodCall and signalCall for each
