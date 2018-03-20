@@ -435,7 +435,6 @@ func TestSimpleTest(t *testing.T) {
 }
 
 func TestParseSimpleIDL(t *testing.T) {
-	t.Skip("not working")
 	expected := object.MetaObject{
 		Description: "I",
 		Methods: map[uint32]object.MetaMethod{
@@ -443,7 +442,7 @@ func TestParseSimpleIDL(t *testing.T) {
 				Uid:                 100,
 				ReturnSignature:     "v",
 				Name:                "c",
-				ParametersSignature: "((if)<A,a,b>)",
+				ParametersSignature: "(((if)<A,a,b>f)<B,a,b>)",
 				Parameters: []object.MetaMethodParameter{
 					object.MetaMethodParameter{
 						Name: "d",

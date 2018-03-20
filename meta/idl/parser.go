@@ -216,7 +216,11 @@ func ParseIDL(reader io.Reader) ([]object.MetaObject, error) {
 
 	// first pass needed to generate the TypeStruct correctly.
 	unregsterTypeNames()
-	root, _ := declarations()(parsec.NewScanner(input))
+	root, scanner := declarations()(parsec.NewScanner(input).TrackLineno())
+	_, scanner = scanner.SkipWS()
+	if !scanner.Endof() {
+		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
+	}
 	if root == nil {
 		return nil, fmt.Errorf("cannot parse input:\n%s", input)
 	}
@@ -232,7 +236,11 @@ func ParseIDL(reader io.Reader) ([]object.MetaObject, error) {
 	registerTypeNames(definitions)
 
 	// second pass needed to generate the MetaObject correctly.
-	root, _ = declarations()(parsec.NewScanner(input))
+	root, scanner = declarations()(parsec.NewScanner(input).TrackLineno())
+	_, scanner = scanner.SkipWS()
+	if !scanner.Endof() {
+		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
+	}
 	if root == nil {
 		return nil, fmt.Errorf("cannot parse input:\n%s", input)
 	}
