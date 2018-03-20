@@ -22,6 +22,7 @@ func basicType() parsec.Parser {
 		parsec.Atom("uint64", ""),
 		parsec.Atom("bool", ""),
 		parsec.Atom("str", ""),
+		parsec.Atom("obj", ""),
 		parsec.Atom("any", ""))
 }
 
@@ -97,7 +98,7 @@ func returns() parsec.Parser {
 func parameter() parsec.Parser {
 	return parsec.And(
 		nodifyParam,
-		parsec.Ident(),
+		Ident(),
 		parsec.Atom(":", ":"),
 		typeParser(),
 	)
@@ -117,11 +118,15 @@ func parameters() parsec.Parser {
 	)
 }
 
+func Ident() parsec.Parser {
+	return parsec.Token(`[_A-Za-z][0-9a-zA-Z_]*`, "IDENT")
+}
+
 func method() parsec.Parser {
 	return parsec.And(
 		nodifyMethod,
 		parsec.Atom("fn", "fn"),
-		parsec.Ident(),
+		Ident(),
 		parsec.Atom("(", "("),
 		parameters(),
 		parsec.Atom(")", ")"),
@@ -134,7 +139,7 @@ func signal() parsec.Parser {
 	return parsec.And(
 		nodifySignal,
 		parsec.Atom("sig", "sig"),
-		parsec.Ident(),
+		Ident(),
 		parsec.Atom("(", "("),
 		parameters(),
 		parsec.Atom(")", ")"),
@@ -154,7 +159,7 @@ func interfaceParser() parsec.Parser {
 	return parsec.And(
 		nodifyInterface,
 		parsec.Atom("interface", "interface"),
-		parsec.Ident(),
+		Ident(),
 		comments(),
 		parsec.Kleene(nodifyActionList, action()),
 		parsec.Atom("end", "end"),
@@ -165,14 +170,14 @@ func interfaceParser() parsec.Parser {
 func referenceType() parsec.Parser {
 	return parsec.And(
 		nodifyTypeReference,
-		parsec.Ident(),
+		Ident(),
 	)
 }
 
 func member() parsec.Parser {
 	return parsec.And(
 		nodifyMember,
-		parsec.Ident(),
+		Ident(),
 		parsec.Atom(":", ":"),
 		typeParser(),
 		comments(),
@@ -183,7 +188,7 @@ func structure() parsec.Parser {
 	return parsec.And(
 		nodifyStructure,
 		parsec.Atom("struct", "struct"),
-		parsec.Ident(),
+		Ident(),
 		comments(),
 		parsec.Kleene(nodifyMemberList, member()),
 		parsec.Atom("end", "end"),
@@ -457,7 +462,7 @@ func nodifyBasicType(nodes []Node) Node {
 	case "any":
 		return NewValueType()
 	case "obj":
-		return NewValueType()
+		return NewObjectType()
 	default:
 		return fmt.Errorf("unknown type: %s", sig)
 	}

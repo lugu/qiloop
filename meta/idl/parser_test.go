@@ -187,6 +187,8 @@ func helpParserTest(t *testing.T, label, idlFileName string, expected *object.Me
 		}
 		if result.Methods[i].ReturnSignature != expected.Methods[i].ReturnSignature {
 			t.Errorf("%s: wrong return signature %d", label, i)
+			t.Errorf("%s: observed: %s", label, result.Methods[i].ReturnSignature)
+			t.Errorf("%s: expected: %s", label, expected.Methods[i].ReturnSignature)
 		}
 	}
 	for i, _ := range result.Signals {
