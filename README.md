@@ -60,16 +60,19 @@ one should be able to use qiloop to call a service and subscribe to a
 signal. Don't expect more than this.
 
 What is working:
-    - TCP connection
-    - Proxy generation
-    - Call and signals
-    - IDL generation
+
+- TCP connection
+- Proxy generation
+- Call and signals
+- IDL generation
 
 What is under development:
-    - IDL parsing
+
+- IDL parsing
 
 What is yet to be done:
-    - Service stub generation
-    - Service properties
-    - SSL transport
-    - authentication
+
+- Service stub generation
+- Service properties
+- SSL transport
+- authentication
