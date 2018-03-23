@@ -12,6 +12,8 @@ For more information about QiMessaging, here are some notes [about QiMessaging](
 Installation
 ------------
 
+Please install [Go 1.10](https://golang.org/dl/).
+
 ```
 go get -d github.com/lugu/qiloop/...
 go generate github.com/lugu/qiloop/type/object
