@@ -88,7 +88,7 @@ func (p dummyProxy) SubscribeID(signal uint32, cancel chan int) (chan []byte, er
 }
 
 // Subscribe is not implemented. Does nothing in stage3.
-func (p dummyProxy) Subscribe(signal string, cancel chan int) (chan []byte, error) {
+func (p dummyProxy) SubscribeSignal(signal string, cancel chan int) (chan []byte, error) {
 	return nil, fmt.Errorf("Subscribe not available during stage 3")
 }
 

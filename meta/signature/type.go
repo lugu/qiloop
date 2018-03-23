@@ -44,7 +44,7 @@ func (s *TypeSet) RegisterStructType(originalName string, typ *StructType) strin
 		if ok {
 			// name is not taken
 			// BUG: StructType is duplicated else it mess-up s.TYpes.
-			s.Types = append(s.Types, NewStructType(typ.Name, typ.Members))
+			s.Types = append(s.Types, NewStructType(name, typ.Members))
 			s.Names = append(s.Names, name)
 			return name
 		}
