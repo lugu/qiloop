@@ -186,6 +186,7 @@ func NewServiceDirectory(addr string, serviceID, objectID, actionID uint32) (d s
 func main() {
 	var outputImplementation io.Writer
 	var outputInterface io.Writer
+	var addr string
 
 	if len(os.Args) > 1 {
 		filename := os.Args[1]
@@ -215,7 +216,12 @@ func main() {
 		outputImplementation = os.Stdout
 	}
 
-	addr := ":9559"
+	if len(os.Args) > 3 {
+		addr = os.Args[3]
+	} else {
+		addr = ":9559"
+	}
+
 	// directoryServiceID := 1
 	// directoryObjectID := 1
 	dir, err := NewServiceDirectory(addr, 1, 1, 101)
@@ -232,12 +238,7 @@ func main() {
 	objects = append(objects, object.MetaService0)
 	objects = append(objects, object.ObjectMetaObject)
 
-	for i, s := range serviceInfoList {
-
-		// FIXME: change me to 100
-		if i > 1 {
-			continue
-		}
+	for _, s := range serviceInfoList {
 
 		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
 		obj, err := NewObject(addr, s.ServiceId, 1, 2)
