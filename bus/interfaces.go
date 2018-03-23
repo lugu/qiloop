@@ -1,18 +1,8 @@
 package bus
 
 import (
-	"bytes"
-	"fmt"
-	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 )
-
-// Service represents a service which can answer call and emit signal
-// events.
-type Service interface {
-	Reply(objectID uint32, actionID uint32, payload []byte) ([]byte, error)
-	Emit(objectID, signalID uint32, cancel chan int) (chan []byte, error)
-}
 
 // Client represents a client connection to a service.
 type Client interface {
@@ -41,19 +31,14 @@ type Proxy interface {
 type Session interface {
 	Proxy(name string, objectID uint32) (Proxy, error)
 	Object(ref object.ObjectReference) (object.Object, error)
+	Register(name string, service Service) error
 }
 
-func MetaObject(client Client, serviceID uint32, objectID uint32) (m object.MetaObject, err error) {
-	buf := bytes.NewBuffer(make([]byte, 4))
-	basic.WriteUint32(objectID, buf)
-	response, err := client.Call(serviceID, objectID, object.MetaObjectMethodID, buf.Bytes())
-	if err != nil {
-		return m, fmt.Errorf("Can not call MetaObject: %s", err)
-	}
-	buf = bytes.NewBuffer(response)
-	m, err = object.ReadMetaObject(buf)
-	if err != nil {
-		return m, fmt.Errorf("failed to parse metaObject response: %s", err)
-	}
-	return m, nil
+type ActionWrapper func([]byte) ([]byte, error)
+type Wrapper interface {
+	Actions() map[uint32]ActionWrapper
+}
+
+type Service interface {
+	Unregister() error
 }

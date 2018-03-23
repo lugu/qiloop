@@ -3,6 +3,7 @@
 *.ext
 *.so
 *.swp
+*.swo
 *~
 /main
 /debug.test

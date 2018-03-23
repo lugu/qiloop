@@ -3,13 +3,14 @@
 set -e
 
 rm -f \
-    meta/stage2/interfaces.go \
-    meta/stage2/services.go   \
-    meta/stage3/interfaces.go \
-    meta/stage3/services.go   \
-    bus/services/interfaces.go    \
-    bus/services/services.go      \
-    type/object/metaobject.go      \
+    meta/stage1/metaobject.go  \
+    meta/stage2/interfaces.go  \
+    meta/stage2/services.go    \
+    meta/stage3/interfaces.go  \
+    meta/stage3/services.go    \
+    bus/services/interfaces.go \
+    bus/services/services.go   \
+    type/object/metaobject.go
 
 go get -d github.com/lugu/qiloop/...
 go generate github.com/lugu/qiloop/type/object

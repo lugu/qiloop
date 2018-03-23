@@ -77,6 +77,8 @@ func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err er
 	return proxy, nil
 }
 
+// FIXME: objectID does not seems needed: it can be deduce from the
+// name
 func (d *staticSession) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
 
 	for _, service := range d.services {
@@ -94,6 +96,10 @@ func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err
 		}
 	}
 	return o, fmt.Errorf("Not yet implemented")
+}
+
+func (d *staticSession) Register(name string, service bus.Service) error {
+	return fmt.Errorf("not yet implemented")
 }
 
 func newProxy(e net.EndPoint, meta object.MetaObject, serviceID, objectID uint32) bus.Proxy {
