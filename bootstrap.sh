@@ -12,7 +12,7 @@ rm -f \
     bus/services/services.go   \
     type/object/metaobject.go
 
-go get -d github.com/lugu/qiloop/...
+go get -d -t github.com/lugu/qiloop/...
 go generate github.com/lugu/qiloop/type/object
 go generate github.com/lugu/qiloop/meta/stage2
 go generate github.com/lugu/qiloop/meta/stage3
