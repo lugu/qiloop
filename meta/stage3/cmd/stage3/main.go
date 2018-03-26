@@ -126,8 +126,8 @@ func (s dummySession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 func (d dummySession) Object(ref object.ObjectReference) (o object.Object, err error) {
 	return o, fmt.Errorf("Not yet implemented")
 }
-func (d dummySession) Register(name string, service bus.Service) error {
-	return fmt.Errorf("Not yet implemented")
+func (d dummySession) Register(name string, meta object.MetaObject, wrapper bus.Wrapper) (bus.Service, error) {
+	return nil, fmt.Errorf("not yet implemented")
 }
 
 func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) bus.Session {
