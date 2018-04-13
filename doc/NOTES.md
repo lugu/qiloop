@@ -232,6 +232,14 @@ Messages start with a constant value of 4 bytes used to identify
 QiMessaging headers. This value is always `0x42dead42` and it is
 encoded in big endian.
 
+#### Message ID
+
+The message ID identify the transaction the message belongs to. A
+`call` message is replied with a `reply` (or an `error`) message
+having the same message ID as the `call` message. Transactions
+composed of only one message (such as `event` and `post` messages)
+have their own message ID.
+
 #### Size
 
 The size of the payload. Can be zero.
@@ -240,7 +248,7 @@ The size of the payload. Can be zero.
 
 The version of the protocol used. This document describes version 0.
 
-#### Message Type
+#### Type
 
 Each message have a type. Possible types are:
 
