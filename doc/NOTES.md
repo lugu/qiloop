@@ -53,6 +53,9 @@
   - [SSL](#ssl)
 - [Authentication](#authentication)
   - [CapabilityMap](#capabilitymap)
+    - [Authentication state](#authentication-state)
+    - [Authentication credentials](#authentication-credentials)
+    - [Protocol feature negotiation](#protocol-feature-negotiation)
   - [Token](#token)
 - [Routing](#routing)
   - [Message destination](#message-destination)
@@ -567,7 +570,7 @@ Here is a list of methods shared by almost every object:
   of the object is controlled by the client.
 
 - 5: `property(Value) Value`: returns the value associated with the
-  property. 
+  property.
 
 - 6: `setProperty(Value,Value) Void `: sets the value of a property.
 
@@ -576,7 +579,7 @@ Here is a list of methods shared by almost every object:
 - 8: `registerEventWithSignature(UInt32,UInt32,UInt64,String) UInt64`
 
 Notice: one exception is the the object 0 of service 0 which does not
-supports those methods. 
+supports those methods.
 
 The `MetaObject` is useful to interact with an object. Especially it
 gives access to the list of methods and signals as well as their
@@ -697,7 +700,7 @@ directory:
 - 108: `machineId() String`: returns the unique identifier of the
   machine.
 
-- 109: `_socketOfService(UInt32) Object`: 
+- 109: `_socketOfService(UInt32) Object`:
 
 #### Signals
 
@@ -709,7 +712,7 @@ signals:
 
 - 107: `serviceRemoved(UInt32,String)`: informs when a service has
   quitted the bus.
- 
+
 
 ### Example (LogManager)
 
@@ -745,9 +748,55 @@ argument. This data structure is called the `CapabilityMap`:
 type CapabilityMap map[string]value
 ```
 
-The list of capabilities is not fixed in the protocol. It represents
-allows a client to annonce the non mandatory feature of the protocol
-which are supported. Possible values are:
+The capability map is used to exchange information during the
+authentication procedure.
+
+#### Authentication state
+
+The status of the authentication procedure is stored in this
+capability map under the key:
+
+- `"__qi_auth_state"`: integer `value`
+
+Possible values are:
+
+- `1`: Error: an error occurs during the authentication. Possible
+  cause of error is an invalid credential.
+
+- `2`: Continue: the server request the client to provide further
+  information. Possible reason is to request an acknowledgment
+  required for the client.
+
+- `3`: Done: the authentication procedure is completed. The client can
+  access the bus.
+
+#### Authentication credentials
+
+The authentication to a service may be required. If so, the client is
+expected to complete the capability map with the following keys:
+
+- `"user"`: string `value`: the user (ex: `nao`, `tablet`)
+
+- `"token"`: string `value`: a password
+
+If the token is correct, the authentication state pass to `3` (done)
+else it become `1` (error).
+
+It is possible, if the server has no password defined, to generate a
+random password and return it to the client via the following key:
+
+- `"newToken"`: string `value`: the new password to use
+
+In such case, the authentication state pass to `2` (continue) and the
+client must retry to authenticate using the new password.
+
+![Example of token generation](/doc/examples-token-generation.png)
+
+#### Protocol feature negotiation
+
+The list of capabilities is not fixed in the protocol. This allow a
+client to announce the non mandatory feature of the protocol which are
+supported. Possible values are:
 
 - `"ClientServerSocket"`: boolean `value`
 
@@ -756,14 +805,6 @@ which are supported. Possible values are:
 - `"MetaObjectCache"`: boolean `value`
 
 - `"RemoteCancelableCalls"`: boolean `value`
-
-The server 0 responds to the `authenticate` method with its
-`CapabilityMap` including:
-
-- `"__qi_authh_state"`: integer `value`
-
-
-### Token
 
 ## Routing
 ### Message destination
@@ -779,7 +820,7 @@ There is a set of methods used for tracing (index ranging from 80 to
 - 80 `isStatsEnabled() Bool`: returns true if the statistics are
   enabled.
 
-- 81: `enableStats(Bool) Void`: enables statistics. 
+- 81: `enableStats(Bool) Void`: enables statistics.
 
 - 82: `stats() Map<UInt32,MethodStatistics> `: returns the current
   statistics

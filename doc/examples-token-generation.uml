@@ -1,0 +1,11 @@
+@startuml
+    ...
+
+    Client  -> Service0: **call**: server0.authenticate()\nCapabilityMap:\nuser->'tablet'
+    Client <-  Service0: **reply**: CapabilityMap:\n__qi_auth_state->2\nnewToken->'abc'
+    ...
+    Client  -> Service0: **call**: server0.authenticate()\nCapabilityMap:\nuser->'tablet'\ntoken->'abc'
+    Client <-  Service0: **reply**: CapabilityMap:\n__qi_auth_state->3
+
+    ...
+@enduml
