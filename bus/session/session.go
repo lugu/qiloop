@@ -1,15 +1,53 @@
 package session
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
+	"io"
+	"os"
+	"os/user"
+	"strings"
+)
+
+const (
+	KeyState string = "__qi_auth_state"
+	KeyUser  string = "user"
+	KeyToken string = "token"
+
+	StateError    uint32 = 1
+	StateContinue uint32 = 2
+	StateDone     uint32 = 3
 )
 
 type CapabilityMap map[string]value.Value
+
+func GetUserToken() (string, string) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", ""
+	}
+	file, err := os.Open(usr.HomeDir + "/.qi-auth.conf")
+	if err != nil {
+		return "", ""
+	}
+	defer file.Close()
+	r := bufio.NewReader(file)
+	user, err := r.ReadString('\n')
+	if err != nil {
+		return "", ""
+	}
+	pwd, err := r.ReadString('\n')
+	if err != io.EOF && err != nil {
+		return "", ""
+	}
+	// FIXME: don't trim space from pwd
+	return strings.TrimSpace(user), strings.TrimSpace(pwd)
+}
 
 func Authenticate(endpoint net.EndPoint) error {
 
@@ -26,10 +64,29 @@ func Authenticate(endpoint net.EndPoint) error {
 		"MetaObjectCache":       value.Bool(true),
 		"RemoteCancelableCalls": value.Bool(true),
 	}
-	if _, err := server0.Authenticate(permissions); err != nil {
-		fmt.Errorf("authentication failed: %s", err)
+	user, token := GetUserToken()
+	if user != "" {
+		permissions[KeyUser] = value.String(user)
 	}
-	return nil
+	if token != "" {
+		permissions[KeyToken] = value.String(token)
+	}
+	resp, err := server0.Authenticate(permissions)
+	if err != nil {
+		return fmt.Errorf("authentication failed: %s", err)
+	}
+	if status, ok := resp[KeyState]; ok {
+		if s, ok := status.(value.IntValue); ok {
+			if s.Value() == StateDone {
+				return nil
+			} else {
+				return fmt.Errorf("authentication state: %d", s)
+			}
+		} else {
+			return fmt.Errorf("invalid state type")
+		}
+	}
+	return fmt.Errorf("missing authentication state")
 }
 
 // staticSession implements the Session interface. It is an
