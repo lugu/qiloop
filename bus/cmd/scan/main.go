@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -67,8 +66,7 @@ func main() {
 
 	for _, s := range serviceInfoList {
 
-		addr := strings.TrimPrefix(s.Endpoints[0], "tcp://")
-		obj, err := basic.NewObject(addr, s.ServiceId, 1, 2)
+		obj, err := basic.NewObject(s.Endpoints[0], s.ServiceId, 1, 2)
 		if err != nil {
 			log.Printf("failed to create servinceof %s: %s", s.Name, err)
 			continue

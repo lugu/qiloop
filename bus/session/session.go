@@ -7,7 +7,6 @@ import (
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
-	"strings"
 )
 
 type CapabilityMap map[string]value.Value
@@ -45,10 +44,9 @@ func newEndPoint(info services.ServiceInfo) (endpoint net.EndPoint, err error) {
 	if len(info.Endpoints) == 0 {
 		return endpoint, fmt.Errorf("missing address for service %s", info.Name)
 	}
-	addr := strings.TrimPrefix(info.Endpoints[0], "tcp://")
-	endpoint, err = net.DialEndPoint(addr)
+	endpoint, err = net.DialEndPoint(info.Endpoints[0])
 	if err != nil {
-		return endpoint, fmt.Errorf("%s: connection failed (%s) : %s", info.Name, addr, err)
+		return endpoint, fmt.Errorf("%s: connection failed (%s) : %s", info.Name, info.Endpoints[0], err)
 	}
 	if err = Authenticate(endpoint); err != nil {
 		return endpoint, fmt.Errorf("authentication error (%s): %s", info.Name, err)
