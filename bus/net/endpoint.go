@@ -1,10 +1,12 @@
 package net
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
 	gonet "net"
+	"net/url"
 	"sync"
 )
 
@@ -61,13 +63,41 @@ func NewEndPoint(conn gonet.Conn) EndPoint {
 	return e
 }
 
-// DialEndPoint construct an endpoint by contacting a given address.
-func DialEndPoint(addr string) (EndPoint, error) {
+func dialTCP(addr string) (EndPoint, error) {
 	conn, err := gonet.Dial("tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect %s: %s", addr, err)
 	}
 	return NewEndPoint(conn), nil
+}
+
+// dialTCPS connects regardless of the certificate.
+func dialTCPS(addr string) (EndPoint, error) {
+	conf := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	conn, err := tls.Dial("tcp", addr, conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect %s: %s", addr, err)
+	}
+	return NewEndPoint(conn), nil
+}
+
+// DialEndPoint construct an endpoint by contacting a given address.
+func DialEndPoint(addr string) (EndPoint, error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return dialTCP(addr)
+	} else {
+		switch u.Scheme {
+		case "tcp":
+			return dialTCP(u.Host)
+		case "tcps":
+			return dialTCPS(u.Host)
+		default:
+			return nil, fmt.Errorf("unknown URL scheme: %s", addr)
+		}
+	}
 }
 
 // Send post a message to the other side of the endpoint.
