@@ -1,20 +1,26 @@
 unsorted to do list:
+- meta:
+    - add list of imports into the packageDeclaration
+    - for each file extract the PackageDeclaration
+    - for each package:
+        - create a typeset per package.
+        - for each pacakge declaration within the package:
+            - add the types to the typeset
+    - for each package declaration:
+        - for each import:
+            - add the imported package typeset
 - meta: allow for unresolved meta object
 - meta: generate proxy using type set information
 - meta: generate enum types
 - meta: generate proxy with enum types
 - meta: generate proxy with object reference
-- services: add a disconnect callback
 - proxy: implements Disconnect
 - server: implement service directory to validate the approach
-- NOTES.md: authentication sequence + document values
 - NOTES.md: machine id discussion
 - NOTES.md: sequence diagram with multiple process
 - NODES.md: document the capability event type
 - client: an API to make cancellable call (not the default way?)
 - server: handle cancel message types
-- net: add tcps
-- authentication: implement tokens
 - tests: use passive service to complement proxy test
 - session: register callback for service disconnection
 - doc: restore the bootstrap discussion
@@ -26,4 +32,3 @@ unsorted to do list:
 - service: handle properties
 - service: signals registration
 - session: refactor session namespace with minimal deps
-- session: extract basic implementation from fully functionnal
