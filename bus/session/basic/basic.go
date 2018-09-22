@@ -78,24 +78,29 @@ func (p basicProxy) ObjectID() uint32 {
 	return p.objectID
 }
 
-// SubscribeID is not implemented. Does nothing in stage3.
+// SubscribeID is not implemented.
 func (p basicProxy) SubscribeID(signal uint32, cancel chan int) (chan []byte, error) {
 	return nil, fmt.Errorf("SubscribeID not available during stage 3")
 }
 
-// Subscribe is not implemented. Does nothing in stage3.
+// Subscribe is not implemented.
 func (p basicProxy) SubscribeSignal(signal string, cancel chan int) (chan []byte, error) {
 	return nil, fmt.Errorf("Subscribe not available during stage 3")
 }
 
-// MethodUid is not implemented. Does nothing in stage3.
+// MethodUid is not implemented.
 func (p basicProxy) MethodUid(name string) (uint32, error) {
 	return 0, fmt.Errorf("MethodUid not available during stage 3")
 }
 
-// SignalUid is not implemented. Does nothing in stage3.
+// SignalUid is not implemented.
 func (p basicProxy) SignalUid(name string) (uint32, error) {
 	return 0, fmt.Errorf("SignalUid not available during stage 3")
+}
+
+// Disconnect is not implemented.
+func (p basicProxy) Disconnect() error {
+	return fmt.Errorf("SignalUid not available during stage 3")
 }
 
 type basicSession struct {
@@ -124,6 +129,9 @@ func (d basicSession) Object(ref object.ObjectReference) (o object.Object, err e
 }
 func (d basicSession) Register(name string, meta object.MetaObject, wrapper bus.Wrapper) (bus.Service, error) {
 	return nil, fmt.Errorf("not yet implemented")
+}
+func (d basicSession) Destroy() error {
+	return d.endpoint.Close()
 }
 
 func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) bus.Session {

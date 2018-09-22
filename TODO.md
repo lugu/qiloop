@@ -4,6 +4,8 @@ unsorted to do list:
 - meta: generate enum types
 - meta: generate proxy with enum types
 - meta: generate proxy with object reference
+- services: add a disconnect callback
+- proxy: implements Disconnect
 - server: implement service directory to validate the approach
 - NOTES.md: authentication sequence + document values
 - NOTES.md: machine id discussion
@@ -14,7 +16,6 @@ unsorted to do list:
 - net: add tcps
 - authentication: implement tokens
 - tests: use passive service to complement proxy test
-- session: replace staticSesssion with dynamicSession
 - session: register callback for service disconnection
 - doc: restore the bootstrap discussion
 - example: fuzzy tester

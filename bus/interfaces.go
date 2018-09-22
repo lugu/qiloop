@@ -26,12 +26,16 @@ type Proxy interface {
 	// ServiceID returns object identifier within the service
 	// namespace.
 	ObjectID() uint32
+
+	// Disconnect stop the network connection to the remote object.
+	Disconnect() error
 }
 
 type Session interface {
 	Proxy(name string, objectID uint32) (Proxy, error)
 	Object(ref object.ObjectReference) (object.Object, error)
 	Register(name string, meta object.MetaObject, wrapper Wrapper) (Service, error)
+	Destroy() error
 }
 
 type ActionWrapper func(Service, []byte) ([]byte, error)

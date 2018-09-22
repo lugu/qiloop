@@ -58,6 +58,10 @@ func (p Proxy) MethodUid(name string) (uint32, error) {
 	return p.meta.MethodUid(name)
 }
 
+func (p Proxy) Disconnect() error {
+	return fmt.Errorf("Proxy.Disconnect not yet implemented")
+}
+
 func (p Proxy) SignalUid(name string) (uint32, error) {
 	return p.meta.SignalUid(name)
 }

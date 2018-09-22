@@ -9,9 +9,11 @@ import (
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 	"io"
+	"log"
 	"os"
 	"os/user"
 	"strings"
+	"sync"
 )
 
 const (
@@ -89,12 +91,23 @@ func Authenticate(endpoint net.EndPoint) error {
 	return fmt.Errorf("missing authentication state")
 }
 
-// staticSession implements the Session interface. It is an
+// Session implements the Session interface. It is an
 // implementation of Session. It does not update the list of services
 // and returns clients.
 
-type staticSession struct {
-	services []services.ServiceInfo
+type Session struct {
+	serviceList      []services.ServiceInfo
+	serviceListMutex sync.Mutex
+	Directory        services.ServiceDirectory
+	cancel           chan int
+	added            chan struct {
+		P0 uint32
+		P1 string
+	}
+	removed chan struct {
+		P0 uint32
+		P1 string
+	}
 }
 
 func newEndPoint(info services.ServiceInfo) (endpoint net.EndPoint, err error) {
@@ -132,11 +145,12 @@ func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err er
 	return proxy, nil
 }
 
-// FIXME: objectID does not seems needed: it can be deduce from the
-// name
-func (d *staticSession) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
+// FIXME: objectID does not seems needed
+func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
+	s.serviceListMutex.Lock()
+	defer s.serviceListMutex.Unlock()
 
-	for _, service := range d.services {
+	for _, service := range s.serviceList {
 		if service.Name == name {
 			return newService(service, objectID)
 		}
@@ -144,8 +158,10 @@ func (d *staticSession) Proxy(name string, objectID uint32) (p bus.Proxy, err er
 	return p, fmt.Errorf("service not found: %s", name)
 }
 
-func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err error) {
-	for _, service := range d.services {
+func (s *Session) Object(ref object.ObjectReference) (o object.Object, err error) {
+	s.serviceListMutex.Lock()
+	defer s.serviceListMutex.Unlock()
+	for _, service := range s.serviceList {
 		if service.ServiceId == ref.ServiceID {
 			return newObject(service, ref)
 		}
@@ -153,7 +169,7 @@ func (d *staticSession) Object(ref object.ObjectReference) (o object.Object, err
 	return o, fmt.Errorf("Not yet implemented")
 }
 
-func (d *staticSession) Register(name string, meta object.MetaObject,
+func (s *Session) Register(name string, meta object.MetaObject,
 	wrapper bus.Wrapper) (bus.Service, error) {
 
 	return nil, fmt.Errorf("not yet implemented")
@@ -174,25 +190,78 @@ func metaProxy(e net.EndPoint, serviceID, objectID uint32) (p bus.Proxy, err err
 	return NewProxy(client, meta, serviceID, objectID), nil
 }
 
-func NewSession(addr string) (s *staticSession, err error) {
+func NewSession(addr string) (bus.Session, error) {
 
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
-		return s, fmt.Errorf("failed to contact %s: %s", addr, err)
+		return nil, fmt.Errorf("failed to contact %s: %s", addr, err)
 	}
 	if err = Authenticate(endpoint); err != nil {
-		return s, fmt.Errorf("authenitcation failed: %s", err)
+		endpoint.Close()
+		return nil, fmt.Errorf("authenitcation failed: %s", err)
 	}
 
 	proxy, err := metaProxy(endpoint, 1, 1)
 	if err != nil {
-		return s, fmt.Errorf("failed to get directory meta object: %s", err)
+		endpoint.Close()
+		return nil, fmt.Errorf("failed to get directory meta object: %s", err)
 	}
-	directory := services.ServiceDirectoryProxy{proxy}
-	s = new(staticSession)
-	s.services, err = directory.Services()
+	s := new(Session)
+	s.Directory = &services.ServiceDirectoryProxy{proxy}
+
+	s.serviceList, err = s.Directory.Services()
 	if err != nil {
-		return s, fmt.Errorf("failed to list services: %s", err)
+		endpoint.Close()
+		return nil, fmt.Errorf("failed to list services: %s", err)
+	}
+	s.cancel = make(chan int)
+	s.removed, err = s.Directory.SignalServiceRemoved(s.cancel)
+	if err != nil {
+		endpoint.Close()
+		return nil, fmt.Errorf("failed to subscribe remove signal: %s", err)
+	}
+	s.added, err = s.Directory.SignalServiceAdded(s.cancel)
+	if err != nil {
+		endpoint.Close()
+		return nil, fmt.Errorf("failed to subscribe added signal: %s", err)
 	}
 	return s, nil
+}
+
+func (s *Session) updateServiceList() {
+	var err error
+	s.serviceListMutex.Lock()
+	defer s.serviceListMutex.Unlock()
+	s.serviceList, err = s.Directory.Services()
+	if err != nil {
+		log.Printf("error: failed to update service directory list: %s", err)
+		log.Printf("error: closing session.")
+		if err := s.Destroy(); err != nil {
+			log.Printf("error: session destruction: %s", err)
+		}
+	}
+}
+
+func (s *Session) Destroy() error {
+	// cancel both add and remove services
+	s.cancel <- 1
+	s.cancel <- 1
+	return s.Directory.Disconnect()
+}
+
+func (s *Session) updateLoop() {
+	for {
+		select {
+		case _, ok := <-s.removed:
+			if !ok {
+				return
+			}
+			s.updateServiceList()
+		case _, ok := <-s.added:
+			if !ok {
+				return
+			}
+			s.updateServiceList()
+		}
+	}
 }
