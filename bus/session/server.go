@@ -6,6 +6,7 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/object"
+	"github.com/lugu/qiloop/type/value"
 	"log"
 	"math/rand"
 	gonet "net"
@@ -28,6 +29,31 @@ var ActionNotFound error = errors.New("Action not found")
 //     func ActionAuthenticate([]byte) ([]byte, error)
 // }
 
+type Authenticator struct {
+	passwords map[string]string
+}
+
+func (a *Authenticator) Authenticate(cap CapabilityMap) CapabilityMap {
+	if userValue, ok := cap[KeyUser]; ok {
+		if userStr, ok := userValue.(value.StringValue); ok {
+			if tokenValue, ok := cap[KeyToken]; ok {
+				if tokenStr, ok := tokenValue.(value.StringValue); ok {
+					if pwd, ok := a.passwords[string(userStr)]; ok {
+						if pwd == string(tokenStr) {
+							return CapabilityMap{
+								KeyState: value.Int(StateDone),
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return CapabilityMap{
+		KeyState: value.Int(StateError),
+	}
+}
+
 func NewObject(meta object.MetaObject) ObjectWrapper {
 	panic("not yet implemented")
 	return nil
@@ -37,13 +63,45 @@ func NewObject(meta object.MetaObject) ObjectWrapper {
 type ObjectWrapper interface {
 	// UpdateSignal let an implementation update a signal without
 	// having to know who listen to it.
-	UpdateSignal(signalID uint32, value []byte)
+	UpdateSignal(signalID uint32, value []byte) error
 	// Terminate let an implementation destroy itself.
 	Terminate()
 	// Wrapper returns the wrapper for the actions of bus.Object.
 	// Other actions need to be consolidated before the creation of
 	// the ObjectDispather.
 	Wrapper() bus.Wrapper
+}
+
+type GenericObject struct {
+	signals map[uint32][]*ClientSession
+	meta    object.MetaObject
+	wrapper bus.Wrapper // TODO: implements object.Object
+}
+
+func (o *GenericObject) UpdateSignal(signal uint32, value []byte) (ret error) {
+	if clients, ok := o.signals[signal]; ok {
+
+		// FIXME: find service, object and id
+		hdr := net.NewHeader(net.Event, 0, 0, signal, 0)
+		msg := net.NewMessage(hdr, value)
+
+		for _, client := range clients {
+			err := client.EndPoint.Send(msg)
+			if err != nil {
+				ret = err
+			}
+		}
+	}
+	return ret
+}
+
+func (o *GenericObject) Terminate() {
+	panic("not yet implemented")
+}
+
+func (o *GenericObject) Wrapper() bus.Wrapper {
+	panic("not yet implemented")
+	return nil
 }
 
 type Object interface {
