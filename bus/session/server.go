@@ -17,7 +17,10 @@ var ServiceNotFound error = errors.New("Service not found")
 var ObjectNotFound error = errors.New("Object not found")
 var ActionNotFound error = errors.New("Action not found")
 
-// TODO: fill the gap between this interface, the object.Object
+// TODO:
+// - make a plan for service stub generation.
+// - make generic object stub generate
+//
 // interface and the bus.Proxy interface.
 //
 // ServiceZero {
@@ -28,6 +31,11 @@ var ActionNotFound error = errors.New("Action not found")
 //     wrapper Wrapper
 //     func ActionAuthenticate([]byte) ([]byte, error)
 // }
+
+type ActionHelper interface {
+	Unregister() error
+	NewHeader(typ uint8, action, id uint32) net.Header
+}
 
 type Authenticator struct {
 	passwords map[string]string
@@ -73,16 +81,22 @@ type ObjectWrapper interface {
 }
 
 type GenericObject struct {
-	signals map[uint32][]*ClientSession
-	meta    object.MetaObject
-	wrapper bus.Wrapper // TODO: implements object.Object
+	signals      map[uint32][]*ClientSession
+	meta         object.MetaObject
+	wrapper      bus.Wrapper // TODO: implements object.Object
+	actionHelper ActionHelper
+}
+
+func (o *GenericObject) MetaObject() (object.MetaObject, error) {
+	return o.meta, nil
 }
 
 func (o *GenericObject) UpdateSignal(signal uint32, value []byte) (ret error) {
 	if clients, ok := o.signals[signal]; ok {
 
-		// FIXME: find service, object and id
-		hdr := net.NewHeader(net.Event, 0, 0, signal, 0)
+		// FIXME: which id to use ? shall we record the register id
+		// value?
+		hdr := o.actionHelper.NewHeader(net.Event, signal, 0)
 		msg := net.NewMessage(hdr, value)
 
 		for _, client := range clients {
@@ -95,8 +109,9 @@ func (o *GenericObject) UpdateSignal(signal uint32, value []byte) (ret error) {
 	return ret
 }
 
+// FIXME: must as well call the implementation's Terminate method.
 func (o *GenericObject) Terminate() {
-	panic("not yet implemented")
+	o.actionHelper.Unregister()
 }
 
 func (o *GenericObject) Wrapper() bus.Wrapper {
