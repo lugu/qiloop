@@ -1,6 +1,7 @@
 package session
 
 import (
+	"errors"
 	"github.com/lugu/qiloop/bus/net"
 	"log"
 	gonet "net"
@@ -20,17 +21,15 @@ func NewClientSession(c gonet.Conn) *ClientSession {
 // forward the EndPoint to the dispatcher.
 type Server struct {
 	listen        gonet.Listener
-	firewall      Firewall
 	Router        Router
 	sessions      map[*ClientSession]bool
 	sessionsMutex sync.Mutex
 }
 
-func NewServer(l gonet.Listener, f Firewall, r Router) *Server {
+func NewServer(l gonet.Listener, r Router) *Server {
 	s := make(map[*ClientSession]bool)
 	return &Server{
 		listen:        l,
-		firewall:      f,
 		Router:        r,
 		sessions:      s,
 		sessionsMutex: sync.Mutex{},
@@ -47,7 +46,7 @@ func (s *Server) handle(c gonet.Conn) error {
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {
-		err := s.firewall.Inspect(msg, session)
+		err := Firewall(msg, session)
 		if err != nil {
 			return err
 		}
@@ -91,10 +90,13 @@ func (s *Server) Stop() error {
 	return err
 }
 
-// Firewall ensures an endpoint talks only to the autorized service.
+// Firewall ensures an endpoint talks only to autorized services.
 // Especially, it ensure authentication is passed.
-type Firewall interface {
-	Inspect(m *net.Message, from *ClientSession) error
+func Firewall(m *net.Message, from *ClientSession) error {
+	if from.Authenticated == false && m.Header.Service != 0 {
+		return errors.New("Client not yet authenticated")
+	}
+	return nil
 }
 
 // Router dispatch the incomming messages.
