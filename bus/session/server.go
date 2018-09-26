@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/type/object"
 	"log"
 	"math/rand"
 	gonet "net"
@@ -24,10 +25,27 @@ var ActionNotFound error = errors.New("Action not found")
 // type ServiceZeroStub struct {
 //     impl ServiceZero
 //     wrapper Wrapper
+//     func ActionAuthenticate([]byte) ([]byte, error)
 // }
-// type interface Stub {
-// 		Wrapper Wrapper
-// }
+
+func NewObject(meta object.MetaObject) ObjectWrapper {
+	panic("not yet implemented")
+	return nil
+}
+
+// ObjectWrapper implements the methods of type.Object
+type ObjectWrapper interface {
+	// UpdateSignal let an implementation update a signal without
+	// having to know who listen to it.
+	UpdateSignal(signalID uint32, value []byte)
+	// Terminate let an implementation destroy itself.
+	Terminate()
+	// Wrapper returns the wrapper for the actions of bus.Object.
+	// Other actions need to be consolidated before the creation of
+	// the ObjectDispather.
+	Wrapper() bus.Wrapper
+}
+
 type Object interface {
 	Receive(m *net.Message, from *ClientSession) error
 }

@@ -169,12 +169,6 @@ func (s *Session) Object(ref object.ObjectReference) (o object.Object, err error
 	return o, fmt.Errorf("Not yet implemented")
 }
 
-func (s *Session) Register(name string, meta object.MetaObject,
-	wrapper bus.Wrapper) (bus.Service, error) {
-
-	return nil, fmt.Errorf("not yet implemented")
-}
-
 func newProxy(e net.EndPoint, meta object.MetaObject, serviceID, objectID uint32) bus.Proxy {
 	return NewProxy(newClient(e), meta, serviceID, objectID)
 }
