@@ -34,16 +34,8 @@ type Proxy interface {
 type Session interface {
 	Proxy(name string, objectID uint32) (Proxy, error)
 	Object(ref object.ObjectReference) (object.Object, error)
-	Register(name string, meta object.MetaObject, wrapper Wrapper) (Service, error)
 	Destroy() error
 }
 
-type ActionWrapper func(s Service, payload []byte) ([]byte, error)
+type ActionWrapper func(payload []byte) ([]byte, error)
 type Wrapper map[uint32]ActionWrapper
-
-type Service interface {
-	Unregister() error
-	Emit(actionID uint32, data []byte) error
-	ServiceID() uint32
-	ObjectID() uint32
-}

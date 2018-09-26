@@ -3,6 +3,7 @@ package session
 import (
 	"errors"
 	"fmt"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"log"
 	"math/rand"
@@ -10,11 +11,43 @@ import (
 	"sync"
 )
 
-var ObjectNotFound error = errors.New("Object not found")
 var ServiceNotFound error = errors.New("Service not found")
+var ObjectNotFound error = errors.New("Object not found")
+var ActionNotFound error = errors.New("Action not found")
 
+// TODO: fill the gap between this interface, the object.Object
+// interface and the bus.Proxy interface.
+//
+// ServiceZero {
+// 	Authenticate(CapabilityMap) CapabilityMap
+// }
+// type ServiceZeroStub struct {
+//     impl ServiceZero
+//     wrapper Wrapper
+// }
+// type interface Stub {
+// 		Wrapper Wrapper
+// }
 type Object interface {
 	Receive(m *net.Message, from *ClientSession) error
+}
+
+type ObjectDispather struct {
+	Wrapper bus.Wrapper
+}
+
+func (o *ObjectDispather) Receive(m *net.Message, from *ClientSession) error {
+	a, ok := o.Wrapper[m.Header.Object]
+	if !ok {
+		return ActionNotFound
+	}
+	response, err := a(m.Payload)
+	if err != nil {
+		return err
+	}
+	reply := net.NewMessage(m.Header, response)
+	reply.Header.Type = net.Reply
+	return from.EndPoint.Send(reply)
 }
 
 type Namespace struct {
