@@ -18,8 +18,8 @@ import (
 
 const (
 	KeyState string = "__qi_auth_state"
-	KeyUser  string = "user"
-	KeyToken string = "token"
+	KeyUser  string = "auth_user"
+	KeyToken string = "auth_token"
 
 	StateError    uint32 = 1
 	StateContinue uint32 = 2

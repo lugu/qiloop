@@ -775,9 +775,9 @@ Possible values are:
 The authentication to a service may be required. If so, the client is
 expected to complete the capability map with the following keys:
 
-- `"user"`: string `value`: the user (ex: `nao`, `tablet`)
+- `"auth_user"`: string `value`: the user (ex: `nao`, `tablet`)
 
-- `"token"`: string `value`: a password
+- `"auth_token"`: string `value`: a password
 
 If the token is correct, the authentication state pass to `3` (done)
 else it become `1` (error).
@@ -803,6 +803,8 @@ supported. Possible values are:
 - `"MessageFlags"`: boolean `value`
 
 - `"MetaObjectCache"`: boolean `value`
+
+- `"ObjectPtrUID"`: boolean `value`
 
 - `"RemoteCancelableCalls"`: boolean `value`
 
