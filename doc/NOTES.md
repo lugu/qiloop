@@ -783,12 +783,12 @@ If the token is correct, the authentication state pass to `3` (done)
 else it become `1` (error).
 
 It is possible, if the server has no password defined, to generate a
-random password and return it to the client via the following key:
+random password and replies the client with the key:
 
-- `"newToken"`: string `value`: the new password to use
+- `"auth_newToken"`: string `value`: the new password to use
 
 In such case, the authentication state pass to `2` (continue) and the
-client must retry to authenticate using the new password.
+client must authenticate again using the new password.
 
 ![Example of token generation](/doc/examples-token-generation.png)
 
