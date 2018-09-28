@@ -185,6 +185,10 @@ func (s *Server) handle(c gonet.Conn) error {
 	s.sessions[session] = true
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
+		if hdr == nil {
+			// FIXME: remote connection closed. remove session
+			// from session list.
+		}
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {

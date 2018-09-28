@@ -14,6 +14,7 @@ import (
 // Consumer. Returns two values:
 // - matched: true if the message should be processed by the Consumer.
 // - keep: true if the handler shall be kept in the dispatcher.
+// If hdr is null, it means the remote connection is closed.
 type Filter func(hdr *Header) (matched bool, keep bool)
 
 // Consumer process a message which has been selected by a filter.
@@ -147,7 +148,10 @@ func (e *endPoint) dispatch(msg *Message) error {
 	e.handlerMutex.Lock()
 	defer e.handlerMutex.Unlock()
 	for i, f := range e.filters {
-		if f != nil {
+		if msg == nil {
+			// in case the connection is closed.
+			f(nil)
+		} else if f != nil {
 			matched, keep := f(&msg.Header)
 			consumer := e.consumers[i]
 			if !keep {
@@ -159,6 +163,9 @@ func (e *endPoint) dispatch(msg *Message) error {
 				return nil
 			}
 		}
+	}
+	if msg == nil {
+		return nil
 	}
 	return fmt.Errorf("failed to dispatch message: %#v", msg.Header)
 }
@@ -179,17 +186,20 @@ func (e *endPoint) process() {
 		msg := new(Message)
 		err := msg.Read(e.conn)
 		if err == io.EOF {
-			e.Close()
+			log.Printf("remote connection closed")
 			break
 		} else if err != nil {
 			// FIXME: proper error management: recover from a
 			// currupted message by discarding the crap.
-			log.Printf("closing connection: %s", err)
-			e.Close()
+			log.Printf("errpr: closing connection: %s", err)
 			break
 		}
 		queue <- msg
 	}
+	e.Close()
+	// send nil header to inform handlers the connection is
+	// closed.
+	e.dispatch(nil)
 }
 
 // Receive wait for a message to be received.

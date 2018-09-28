@@ -33,6 +33,12 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 	reply := make(chan []byte)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
+		if hdr == nil {
+			// FIXME: remote connection closed: shall set
+			// the client as unusable
+			close(reply)
+			return false, false
+		}
 		if hdr.Service == serviceID && hdr.Object == objectID &&
 			hdr.Action == actionID && hdr.ID == messageID {
 			return true, false
@@ -56,9 +62,11 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 	}
 
 	// 3. wait for a response
-	buf := <-reply
-
-	return buf, nil
+	buf, ok := <-reply
+	if ok {
+		return buf, nil
+	}
+	return nil, fmt.Errorf("Remote connection closed")
 }
 
 // Subscribe returns a channel which returns the future value of a
@@ -68,6 +76,12 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int
 	stream := make(chan []byte)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
+		if hdr == nil {
+			// FIXME: set the client as unusable: remote
+			// connection closed
+			close(stream)
+			return false, false
+		}
 		if hdr.Service == serviceID && hdr.Object == objectID &&
 			hdr.Action == actionID {
 			return true, true
@@ -82,6 +96,7 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int
 	go func(id int) {
 		<-cancel
 		c.endpoint.RemoveHandler(id)
+		// FIXME: could be already closed
 		close(stream)
 	}(c.endpoint.AddHandler(filter, consumer))
 
