@@ -27,7 +27,14 @@ const (
 	StateDone     uint32 = 3
 )
 
+var userLogin string = ""
+var userToken string = ""
+
 type CapabilityMap map[string]value.Value
+
+func init() {
+	userLogin, userToken = GetUserToken()
+}
 
 func SaveNewUserToken(login string, token string) error {
 	usr, err := user.Current()
@@ -36,14 +43,18 @@ func SaveNewUserToken(login string, token string) error {
 	}
 
 	var flag = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	file, err := os.OpenFile(usr.HomeDir+"/.qi-auth.conf.new", flag, 0600)
+	file, err := os.OpenFile(usr.HomeDir+"/.qi-auth.conf", flag, 0600)
 	if err != nil {
 		return fmt.Errorf("Failed to open auth file: %s", err)
 	}
-	_, err = file.WriteString(login + "\n" + token)
+	_, err = file.WriteString(login + "\n" + token + "\n")
 	if err != nil {
 		return fmt.Errorf("Failed to write auth file: %s", err)
 	}
+
+	userLogin = login
+	userToken = token
+
 	return nil
 }
 
@@ -70,7 +81,7 @@ func GetUserToken() (string, string) {
 	return strings.TrimSpace(user), strings.TrimSpace(pwd)
 }
 
-func AuthenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap, error) {
+func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap, error) {
 	permissions := CapabilityMap{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
@@ -83,11 +94,11 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap,
 	if token != "" {
 		permissions[KeyToken] = value.String(token)
 	}
-	return AuthenticateCall(endpoint, permissions)
+	return authenticateCall(endpoint, permissions)
 
 }
 
-func AuthenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
+func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
 	const serviceID = 0
 	const objectID = 0
 
@@ -97,7 +108,7 @@ func AuthenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 	return server0.Authenticate(permissions)
 }
 
-func AuthenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap) error {
+func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap) error {
 	newTokenValue, ok := resp[KeyNewToken]
 	if !ok {
 		return fmt.Errorf("missing authentication new token")
@@ -106,11 +117,11 @@ func AuthenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	if !ok {
 		return fmt.Errorf("new token format error")
 	}
-	resp, err := AuthenticateUser(endpoint, user, string(newToken))
+	resp2, err := authenticateUser(endpoint, user, string(newToken))
 	if err != nil {
-		return fmt.Errorf("authentication failed: %s", err)
+		return fmt.Errorf("new token authentication failed: %s", err)
 	}
-	statusValue, ok := resp[KeyState]
+	statusValue, ok := resp2[KeyState]
 	if !ok {
 		return fmt.Errorf("missing authentication state")
 	}
@@ -122,18 +133,16 @@ func AuthenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	case StateDone:
 		return SaveNewUserToken(user, string(newToken))
 	case StateContinue:
-		return fmt.Errorf("Authentication dropped")
+		return fmt.Errorf("new token authentication dropped")
 	case StateError:
-		return fmt.Errorf("Authentication failed")
+		return fmt.Errorf("new token authentication failed")
 	default:
 		return fmt.Errorf("invalid state type: %d", status)
 	}
 }
 
-func Authenticate(endpoint net.EndPoint) error {
-
-	user, token := GetUserToken()
-	resp, err := AuthenticateUser(endpoint, user, token)
+func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
+	resp, err := authenticateUser(endpoint, user, token)
 	if err != nil {
 		return fmt.Errorf("authentication failed: %s", err)
 	}
@@ -149,12 +158,16 @@ func Authenticate(endpoint net.EndPoint) error {
 	case StateDone:
 		return nil
 	case StateContinue:
-		return AuthenticateContinue(endpoint, user, resp)
+		return authenticateContinue(endpoint, userLogin, resp)
 	case StateError:
 		return fmt.Errorf("Authentication failed")
 	default:
 		return fmt.Errorf("invalid state type: %d", status)
 	}
+}
+
+func Authenticate(endpoint net.EndPoint) error {
+	return AuthenticateUser(endpoint, userLogin, userToken)
 }
 
 // Session implements the Session interface. It is an
