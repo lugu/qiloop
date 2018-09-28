@@ -27,8 +27,12 @@ func NewValue(r io.Reader) (Value, error) {
 	case "i":
 		return newInt(r)
 	case "I":
+		// FIXME: must be unsigned int here
 		return newInt(r)
+	case "l":
+		return newLong(r)
 	case "L":
+		// FIXME: must be unsigned long here
 		return newLong(r)
 	case "s":
 		return newString(r)
@@ -73,7 +77,7 @@ func (b BoolValue) Value() bool {
 // IntValue represents a Value of an uint32.
 type IntValue uint32
 
-// Int constructs a Value.
+// Int constructs a Value. FIXME: Int shall be int32
 func Int(i uint32) Value {
 	return IntValue(i)
 }
