@@ -29,6 +29,24 @@ const (
 
 type CapabilityMap map[string]value.Value
 
+func SaveNewUserToken(login string, token string) error {
+	usr, err := user.Current()
+	if err != nil {
+		return err
+	}
+
+	var flag = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	file, err := os.OpenFile(usr.HomeDir+"/.qi-auth.conf.new", flag, 0600)
+	if err != nil {
+		return fmt.Errorf("Failed to open auth file: %s", err)
+	}
+	_, err = file.WriteString(login + "\n" + token)
+	if err != nil {
+		return fmt.Errorf("Failed to write auth file: %s", err)
+	}
+	return nil
+}
+
 func GetUserToken() (string, string) {
 	usr, err := user.Current()
 	if err != nil {
@@ -52,44 +70,91 @@ func GetUserToken() (string, string) {
 	return strings.TrimSpace(user), strings.TrimSpace(pwd)
 }
 
-func Authenticate(endpoint net.EndPoint) error {
-
-	const serviceID = 0
-	const objectID = 0
-
-	client0 := newClient(endpoint)
-	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
-	server0 := services.ServerProxy{proxy0}
-
+func AuthenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap, error) {
 	permissions := CapabilityMap{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
 		"MetaObjectCache":       value.Bool(true),
 		"RemoteCancelableCalls": value.Bool(true),
 	}
-	user, token := GetUserToken()
 	if user != "" {
 		permissions[KeyUser] = value.String(user)
 	}
 	if token != "" {
 		permissions[KeyToken] = value.String(token)
 	}
-	resp, err := server0.Authenticate(permissions)
+	return AuthenticateCall(endpoint, permissions)
+
+}
+
+func AuthenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
+	const serviceID = 0
+	const objectID = 0
+
+	client0 := newClient(endpoint)
+	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
+	server0 := services.ServerProxy{proxy0}
+	return server0.Authenticate(permissions)
+}
+
+func AuthenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap) error {
+	newTokenValue, ok := resp[KeyNewToken]
+	if !ok {
+		return fmt.Errorf("missing authentication new token")
+	}
+	newToken, ok := newTokenValue.(value.StringValue)
+	if !ok {
+		return fmt.Errorf("new token format error")
+	}
+	resp, err := AuthenticateUser(endpoint, user, string(newToken))
 	if err != nil {
 		return fmt.Errorf("authentication failed: %s", err)
 	}
-	if status, ok := resp[KeyState]; ok {
-		if s, ok := status.(value.IntValue); ok {
-			if s.Value() == StateDone {
-				return nil
-			} else {
-				return fmt.Errorf("authentication state: %d", s)
-			}
-		} else {
-			return fmt.Errorf("invalid state type")
-		}
+	statusValue, ok := resp[KeyState]
+	if !ok {
+		return fmt.Errorf("missing authentication state")
 	}
-	return fmt.Errorf("missing authentication state")
+	status, ok := statusValue.(value.IntValue)
+	if !ok {
+		return fmt.Errorf("authentication state format error")
+	}
+	switch uint32(status) {
+	case StateDone:
+		return SaveNewUserToken(user, string(newToken))
+	case StateContinue:
+		return fmt.Errorf("Authentication dropped")
+	case StateError:
+		return fmt.Errorf("Authentication failed")
+	default:
+		return fmt.Errorf("invalid state type: %d", status)
+	}
+}
+
+func Authenticate(endpoint net.EndPoint) error {
+
+	user, token := GetUserToken()
+	resp, err := AuthenticateUser(endpoint, user, token)
+	if err != nil {
+		return fmt.Errorf("authentication failed: %s", err)
+	}
+	statusValue, ok := resp[KeyState]
+	if !ok {
+		return fmt.Errorf("missing authentication state")
+	}
+	status, ok := statusValue.(value.IntValue)
+	if !ok {
+		return fmt.Errorf("authentication status error")
+	}
+	switch uint32(status) {
+	case StateDone:
+		return nil
+	case StateContinue:
+		return AuthenticateContinue(endpoint, user, resp)
+	case StateError:
+		return fmt.Errorf("Authentication failed")
+	default:
+		return fmt.Errorf("invalid state type: %d", status)
+	}
 }
 
 // Session implements the Session interface. It is an
