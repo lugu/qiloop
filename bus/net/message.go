@@ -209,8 +209,12 @@ func (m *Message) Read(r io.Reader) error {
 	}
 	m.Payload = make([]byte, m.Header.Size)
 	size, err := r.Read(m.Payload)
-	if err != nil {
-		return fmt.Errorf("failed to read message payload: %s", err)
+	if size == int(m.Header.Size) {
+		return nil
+	} else if err == io.EOF {
+		return err
+	} else if err != nil {
+		return fmt.Errorf("failed to read message payload: %v", err)
 	} else if size != int(m.Header.Size) {
 		// BUG: must re-try to read from the reader until the full
 		// payload is read.
