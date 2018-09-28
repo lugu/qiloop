@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/type/object"
 	"log"
-	"os"
 )
 
 func Print(i interface{}) {
@@ -19,13 +19,16 @@ func Print(i interface{}) {
 }
 
 func main() {
-	sess, err := session.NewSession(":9559")
+	var serverURL = flag.String("qi-url", "tcp://127.0.0.1:9559", "server URL")
+	flag.Parse()
+
+	sess, err := session.NewSession(*serverURL)
 	if err != nil {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	if len(os.Args) > 1 {
-		serviceName := os.Args[1]
+	if len(flag.Args()) > 1 {
+		serviceName := flag.Args()[1]
 		proxy, err := sess.Proxy(serviceName, 1)
 		if err != nil {
 			log.Fatalf("failed to connect service (%s): %s", serviceName, err)
