@@ -38,7 +38,7 @@ type Session interface {
 	Destroy() error
 }
 
-type ActionWrapper func(Service, payload []byte) ([]byte, error)
+type ActionWrapper func(s Service, payload []byte) ([]byte, error)
 type Wrapper map[uint32]ActionWrapper
 
 type Service interface {
