@@ -57,10 +57,10 @@ Examples
 Status
 ------
 
-The project is under rapid development. Currently, the client part if
-mostly working (except the properties which are not yet supported). So
-one should be able to use qiloop to call a service and subscribe to a
-signal. Don't expect more than this.
+The project is under rapid evolution. Currently, the client part is
+mostly working (except properties). So one should be able to use
+qiloop to call a service and subscribe to a signal. Don't expect more
+than this.
 
 What is working:
 
@@ -68,6 +68,8 @@ What is working:
 - Proxy generation
 - Call and signals
 - IDL generation
+- TLS transport
+- Authentication
 
 What is under development:
 
@@ -77,5 +79,3 @@ What is yet to be done:
 
 - Service stub generation
 - Service properties
-- SSL transport
-- authentication
