@@ -13,24 +13,30 @@ import (
 	"sync"
 )
 
+// Wording:
+// 	Service => Namespace
+// 	Object => Moniker
+
 var ServiceNotFound error = errors.New("Service not found")
 var ObjectNotFound error = errors.New("Object not found")
 var ActionNotFound error = errors.New("Action not found")
 
-// TODO:
-// - make a plan for service stub generation.
-// - make generic object stub generate
-//
-// interface and the bus.Proxy interface.
-//
-// ServiceZero {
-// 	Authenticate(CapabilityMap) CapabilityMap
-// }
-// type ServiceZeroStub struct {
-//     impl ServiceZero
-//     wrapper Wrapper
-//     func ActionAuthenticate([]byte) ([]byte, error)
-// }
+// From IDL file, generate stub interfaces like:
+type MonikerA interface {
+}
+
+func NewMonikerAConstructor(impl MonikerA) MonikerConstructor {
+	return nil
+}
+
+type MonikerConstructor interface {
+	Instanciate(service, object uint32, namespace Namespace) Moniker
+}
+
+type Moniker interface {
+	Destroy() error
+	Ref() object.ObjectReference
+}
 
 type ActionHelper interface {
 	Unregister() error
@@ -123,6 +129,7 @@ type Object interface {
 	Receive(m *net.Message, from *ClientSession) error
 }
 
+// ObjectDispather implements Object interface
 type ObjectDispather struct {
 	Wrapper bus.Wrapper
 }
@@ -214,6 +221,7 @@ func (r Router) Dispatch(m *net.Message, from *ClientSession) error {
 	return ServiceNotFound
 }
 
+// ClientSession represents the context of the request
 type ClientSession struct {
 	EndPoint      net.EndPoint
 	Authenticated bool
@@ -259,8 +267,10 @@ func (s *Server) handle(c gonet.Conn) error {
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr == nil {
-			// FIXME: remote connection closed. remove session
-			// from session list.
+			if _, ok := s.sessions[session]; ok {
+				delete(s.sessions, session)
+			}
+			return false, false
 		}
 		return true, true
 	}
