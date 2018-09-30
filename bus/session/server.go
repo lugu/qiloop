@@ -153,6 +153,13 @@ type Namespace struct {
 	mutex   sync.Mutex
 }
 
+func NewNamespace(o Object) Namespace {
+	var ns Namespace
+	ns.objects = make(map[uint32]Object)
+	ns.objects[1] = o
+	return ns
+}
+
 func (n *Namespace) Add(o Object) (uint32, error) {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
@@ -191,6 +198,19 @@ type Router struct {
 	services  map[uint32]Namespace
 	nextIndex uint32
 	mutex     sync.Mutex
+}
+
+func NewDirectoryService() Namespace {
+	// FIXME: implement the service
+	var o Object
+	return NewNamespace(o)
+}
+
+func NewRouter() *Router {
+	var router Router
+	router.services = make(map[uint32]Namespace)
+	router.nextIndex = 1
+	return &router
 }
 
 func (r *Router) Add(n Namespace) (uint32, error) {
@@ -244,12 +264,12 @@ func Firewall(m *net.Message, from *ClientSession) error {
 // forward the EndPoint to the dispatcher.
 type Server struct {
 	listen        gonet.Listener
-	Router        Router
+	Router        *Router
 	sessions      map[*ClientSession]bool
 	sessionsMutex sync.Mutex
 }
 
-func NewServer(l gonet.Listener, r Router) *Server {
+func NewServer(l gonet.Listener, r *Router) *Server {
 	s := make(map[*ClientSession]bool)
 	return &Server{
 		listen:        l,
