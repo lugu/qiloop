@@ -54,13 +54,19 @@ func listenRAW(addr, remoteAddr string) {
 			log.Fatalf("%s", err)
 			continue
 		}
-		go forwardConnection(conn, connectRemote(remoteAddr))
+		forwardConnection(conn, connectRemote(remoteAddr))
+	}
+}
+
+func copyAndClose(reader io.Reader, writer io.WriteCloser) {
+	if _, err := io.Copy(writer, bufio.NewReader(reader)); err == nil {
+		writer.Close()
 	}
 }
 
 func forwardConnection(client, server net.Conn) {
-	go io.Copy(client, bufio.NewReader(server))
-	go io.Copy(server, bufio.NewReader(client))
+	go copyAndClose(client, server)
+	go copyAndClose(server, client)
 }
 
 func connectLocal() net.Conn {
