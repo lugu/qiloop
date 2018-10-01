@@ -1,18 +1,14 @@
 package session
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/session/token"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
-	"io"
 	"log"
-	"os"
-	"os/user"
-	"strings"
 	"sync"
 )
 
@@ -27,59 +23,7 @@ const (
 	StateDone     uint32 = 3
 )
 
-var userLogin string = ""
-var userToken string = ""
-
 type CapabilityMap map[string]value.Value
-
-func init() {
-	userLogin, userToken = GetUserToken()
-}
-
-func SaveNewUserToken(login string, token string) error {
-	usr, err := user.Current()
-	if err != nil {
-		return err
-	}
-
-	var flag = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	file, err := os.OpenFile(usr.HomeDir+"/.qi-auth.conf", flag, 0600)
-	if err != nil {
-		return fmt.Errorf("Failed to open auth file: %s", err)
-	}
-	_, err = file.WriteString(login + "\n" + token + "\n")
-	if err != nil {
-		return fmt.Errorf("Failed to write auth file: %s", err)
-	}
-
-	userLogin = login
-	userToken = token
-
-	return nil
-}
-
-func GetUserToken() (string, string) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", ""
-	}
-	file, err := os.Open(usr.HomeDir + "/.qi-auth.conf")
-	if err != nil {
-		return "", ""
-	}
-	defer file.Close()
-	r := bufio.NewReader(file)
-	user, err := r.ReadString('\n')
-	if err != nil {
-		return "", ""
-	}
-	pwd, err := r.ReadString('\n')
-	if err != io.EOF && err != nil {
-		return "", ""
-	}
-	// FIXME: don't trim space from pwd
-	return strings.TrimSpace(user), strings.TrimSpace(pwd)
-}
 
 func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap, error) {
 	permissions := CapabilityMap{
@@ -87,12 +31,8 @@ func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap,
 		"MessageFlags":          value.Bool(true),
 		"MetaObjectCache":       value.Bool(true),
 		"RemoteCancelableCalls": value.Bool(true),
-	}
-	if user != "" {
-		permissions[KeyUser] = value.String(user)
-	}
-	if token != "" {
-		permissions[KeyToken] = value.String(token)
+		KeyUser:                 value.String(user),
+		KeyToken:                value.String(token),
 	}
 	return authenticateCall(endpoint, permissions)
 
@@ -131,7 +71,7 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	}
 	switch uint32(status) {
 	case StateDone:
-		return SaveNewUserToken(user, string(newToken))
+		return token.WriteUserToken(user, string(newToken))
 	case StateContinue:
 		return fmt.Errorf("new token authentication dropped")
 	case StateError:
@@ -158,7 +98,7 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 	case StateDone:
 		return nil
 	case StateContinue:
-		return authenticateContinue(endpoint, userLogin, resp)
+		return authenticateContinue(endpoint, user, resp)
 	case StateError:
 		return fmt.Errorf("Authentication failed")
 	default:
@@ -167,7 +107,8 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 }
 
 func Authenticate(endpoint net.EndPoint) error {
-	return AuthenticateUser(endpoint, userLogin, userToken)
+	user, token := token.GetUserToken()
+	return AuthenticateUser(endpoint, user, token)
 }
 
 // Session implements the Session interface. It is an

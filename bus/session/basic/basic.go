@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/session/token"
 	"github.com/lugu/qiloop/meta/stage2"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
@@ -139,11 +140,15 @@ func NewSession(conn net.EndPoint, serviceID, objectID, actionID uint32) bus.Ses
 	if err != nil {
 		log.Fatalf("failed to create proxy: %s", err)
 	}
+	user, token := token.GetUserToken()
+
 	permissions := map[string]value.Value{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
 		"MetaObjectCache":       value.Bool(true),
 		"RemoteCancelableCalls": value.Bool(true),
+		"auth_user":             value.String(user),
+		"auth_token":            value.String(token),
 	}
 	_, err = service0.Authenticate(permissions)
 	if err != nil {
