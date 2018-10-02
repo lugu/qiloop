@@ -1,7 +1,9 @@
 package main
 
 import (
+	"flag"
 	"github.com/lugu/qiloop/bus/session/basic"
+	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/type/object"
 	"io"
@@ -9,48 +11,45 @@ import (
 	"os"
 )
 
+func open(filename string) io.WriteCloser {
+	switch filename {
+	case "":
+		file, err := os.Create(os.DevNull)
+		if err != nil {
+			log.Fatalf("failed to open %s: %s", os.DevNull, err)
+		}
+		return file
+	case "-":
+		return os.Stdout
+	default:
+		file, err := os.Create(filename)
+		if err != nil {
+			log.Fatalf("failed to open %s: %s", filename, err)
+		}
+		return file
+	}
+}
+
 func main() {
-	var outputImplementation io.Writer
-	var outputInterface io.Writer
-	var addr string
+	var serverURL = flag.String("qi-url", "tcp://localhost:9559", "server URL")
+	var interfaceFile = flag.String("interface", "", "File to write interface")
+	var implemFile = flag.String("proxy", "", "File to write proxy")
+	var idlFile = flag.String("idl", "-", "File to write IDL definition")
 
-	if len(os.Args) > 1 {
-		filename := os.Args[1]
+	flag.Parse()
 
-		file, err := os.Create(filename)
-		if err != nil {
-			log.Fatalf("failed to open %s: %s", filename, err)
-			return
-		}
-		outputInterface = file
-		defer file.Close()
-	} else {
-		outputInterface = os.Stdout
-	}
+	outputInterface := open(*interfaceFile)
+	defer outputInterface.Close()
 
-	if len(os.Args) > 2 {
-		filename := os.Args[2]
+	outputImplementation := open(*implemFile)
+	defer outputImplementation.Close()
 
-		file, err := os.Create(filename)
-		if err != nil {
-			log.Fatalf("failed to open %s: %s", filename, err)
-			return
-		}
-		outputImplementation = file
-		defer file.Close()
-	} else {
-		outputImplementation = os.Stdout
-	}
+	outputIDL := open(*idlFile)
+	defer outputIDL.Close()
 
-	if len(os.Args) > 3 {
-		addr = os.Args[3]
-	} else {
-		addr = ":9559"
-	}
-
-	// directoryServiceID := 1
-	// directoryObjectID := 1
-	dir, err := basic.NewServiceDirectory(addr, 1, 1, 101)
+	// service direction id = 1
+	// object id = 1
+	dir, err := basic.NewServiceDirectory(*serverURL, 1, 1, 101)
 	if err != nil {
 		log.Fatalf("failed to create directory: %s", err)
 	}
@@ -78,6 +77,9 @@ func main() {
 		}
 		meta.Description = s.Name
 		objects = append(objects, meta)
+		if err := idl.GenerateIDL(outputIDL, s.Name, meta); err != nil {
+			log.Printf("failed to generate IDL of %s: %s", s.Name, err)
+		}
 	}
 	proxy.GenerateInterfaces(objects, "services", outputInterface)
 	proxy.GenerateProxys(objects, "services", outputImplementation)
