@@ -1,25 +1,55 @@
 package session_test
 
 import (
+	"bytes"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/type/value"
+	"io/ioutil"
+	gonet "net"
+	"os"
 	"testing"
 )
 
-func TestNewService(t *testing.T) {
-	server, client := net.NewPipe()
-	defer server.Close()
-	defer client.Close()
+func TestNewServer(t *testing.T) {
 
-	wrapper := map[uint32]bus.ActionWrapper{
-		3: func(s bus.Service, d []byte) ([]byte, error) {
+	f, err := ioutil.TempFile("", "go-server-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := f.Name()
+	f.Close()
+	os.Remove(name)
+
+	listener, err := gonet.Listen("unix", name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wrapper := bus.Wrapper{
+		3: func(d []byte) ([]byte, error) {
 			return []byte{0xab, 0xcd}, nil
 		},
 	}
-	service := session.NewService(1, 2, server, wrapper)
+	object := &session.ObjectDispather{
+		Wrapper: wrapper,
+	}
 
-	h := net.NewHeader(net.Call, 1, 2, 3, 4)
+	ns := session.NewNamespace(object)
+	router := session.NewRouter()
+	router.Add(ns)
+	server := session.NewServer(listener, router)
+	go server.Run()
+
+	conn, err := gonet.Dial("unix", name)
+	if err != nil {
+		panic(err)
+	}
+
+	client := net.NewEndPoint(conn)
+
+	h := net.NewHeader(net.Call, 0, 0, 3, 4)
 	mSent := net.NewMessage(h, make([]byte, 0))
 
 	// client is prepared to receive a message
@@ -40,7 +70,20 @@ func TestNewService(t *testing.T) {
 	// server replied
 	mReceived := <-received
 
-	service.Unregister()
+	server.Stop()
+
+	if mReceived.Header.Type == net.Error {
+		buf := bytes.NewBuffer(mReceived.Payload)
+		errV, err := value.NewValue(buf)
+		if err != nil {
+			t.Errorf("invalid error value: %v", mReceived.Payload)
+		}
+		if str, ok := errV.(value.StringValue); ok {
+			t.Errorf("error: %s", string(str))
+		} else {
+			t.Errorf("invalid error: %v", mReceived.Payload)
+		}
+	}
 
 	if mSent.Header.ID != mReceived.Header.ID {
 		t.Errorf("invalid message id: %d", mReceived.Header.ID)

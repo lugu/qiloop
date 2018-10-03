@@ -1,6 +1,7 @@
 package session
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
@@ -135,7 +136,7 @@ type ObjectDispather struct {
 }
 
 func (o *ObjectDispather) Receive(m *net.Message, from *ClientSession) error {
-	a, ok := o.Wrapper[m.Header.Object]
+	a, ok := o.Wrapper[m.Header.Action]
 	if !ok {
 		return ActionNotFound
 	}
@@ -156,7 +157,7 @@ type Namespace struct {
 func NewNamespace(o Object) Namespace {
 	var ns Namespace
 	ns.objects = make(map[uint32]Object)
-	ns.objects[1] = o
+	ns.objects[0] = o
 	return ns
 }
 
@@ -209,7 +210,7 @@ func NewDirectoryService() Namespace {
 func NewRouter() *Router {
 	var router Router
 	router.services = make(map[uint32]Namespace)
-	router.nextIndex = 1
+	router.nextIndex = 0
 	return &router
 }
 
@@ -299,7 +300,17 @@ func (s *Server) handle(c gonet.Conn) error {
 		if err != nil {
 			return err
 		}
-		return s.Router.Dispatch(msg, session)
+		err = s.Router.Dispatch(msg, session)
+		if err != nil {
+			buf := bytes.NewBuffer(make([]byte, 0))
+			val := value.String(err.Error())
+			val.Write(buf)
+			mError := net.NewMessage(msg.Header, buf.Bytes())
+			mError.Header.Type = net.Error
+			session.EndPoint.Send(mError)
+		}
+		return nil
+
 	}
 	session.EndPoint.AddHandler(filter, consumer)
 	return nil
