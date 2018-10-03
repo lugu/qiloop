@@ -1,29 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
-	"github.com/lugu/qiloop/bus"
+	"fmt"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
-	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/type/object"
 	"log"
-	"os"
 )
 
-func PrintService(sess bus.Session, serviceName string) {
-	proxy, err := sess.Proxy(serviceName, 1)
+func Print(i interface{}) {
+	json, err := json.MarshalIndent(i, "", "    ")
 	if err != nil {
-		log.Fatalf("failed to connect service (%s): %s", serviceName, err)
+		log.Fatalf("json encoding failed: %s", err)
 	}
-	var obj object.Object = &services.ObjectProxy{proxy}
-	meta, err := obj.MetaObject(1)
-	if err != nil {
-		log.Fatalf("failed to get metaobject (%s): %s", serviceName, err)
-	}
-	if err := idl.GenerateIDL(os.Stdout, serviceName, meta); err != nil {
-		log.Printf("failed to generate IDL of %s: %s", serviceName, err)
-	}
+	fmt.Println(string(json))
 }
 
 func main() {
@@ -36,7 +28,17 @@ func main() {
 	}
 
 	if len(flag.Args()) > 0 {
-		PrintService(sess, flag.Args()[0])
+		serviceName := flag.Args()[0]
+		proxy, err := sess.Proxy(serviceName, 1)
+		if err != nil {
+			log.Fatalf("failed to connect service (%s): %s", serviceName, err)
+		}
+		var obj object.Object = &services.ObjectProxy{proxy}
+		meta, err := obj.MetaObject(1)
+		if err != nil {
+			log.Fatalf("failed to get metaobject (%s): %s", serviceName, err)
+		}
+		Print(meta)
 	} else {
 		directory, err := services.NewServiceDirectory(sess, 1)
 		if err != nil {
@@ -46,8 +48,6 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to list services: %s", err)
 		}
-		for _, s := range services {
-			PrintService(sess, s.Name)
-		}
+		Print(services)
 	}
 }
