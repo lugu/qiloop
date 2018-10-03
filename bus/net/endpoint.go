@@ -191,7 +191,7 @@ func (e *endPoint) process() {
 		} else if err != nil {
 			// FIXME: proper error management: recover from a
 			// currupted message by discarding the crap.
-			log.Printf("errpr: closing connection: %s", err)
+			log.Printf("error: closing connection: %s", err)
 			break
 		}
 		queue <- msg
@@ -206,6 +206,9 @@ func (e *endPoint) process() {
 func (e *endPoint) ReceiveAny() (*Message, error) {
 	found := make(chan *Message)
 	filter := func(msg *Header) (matched bool, keep bool) {
+		if msg == nil {
+			close(found)
+		}
 		return true, false
 	}
 	consumer := func(msg *Message) error {
@@ -213,7 +216,10 @@ func (e *endPoint) ReceiveAny() (*Message, error) {
 		return nil
 	}
 	_ = e.AddHandler(filter, consumer)
-	msg := <-found
+	msg, ok := <-found
+	if !ok {
+		return nil, io.EOF
+	}
 	return msg, nil
 }
 
