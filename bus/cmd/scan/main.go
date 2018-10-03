@@ -32,9 +32,10 @@ func open(filename string) io.WriteCloser {
 
 func main() {
 	var serverURL = flag.String("qi-url", "tcp://localhost:9559", "server URL")
-	var interfaceFile = flag.String("interface", "", "File to write interface")
-	var implemFile = flag.String("proxy", "", "File to write proxy")
-	var idlFile = flag.String("idl", "-", "File to write IDL definition")
+	var interfaceFile = flag.String("interface", "", "File to write interface (default none)")
+	var implemFile = flag.String("proxy", "", "File to write proxy (default none)")
+	var idlFile = flag.String("idl", "-", "File to write IDL definition (default stdout)")
+	var serviceName = flag.String("service", "", "Name of the service (default all)")
 
 	flag.Parse()
 
@@ -64,6 +65,10 @@ func main() {
 	objects = append(objects, object.ObjectMetaObject)
 
 	for _, s := range serviceInfoList {
+
+		if *serviceName != "" && *serviceName != s.Name {
+			continue
+		}
 
 		obj, err := basic.NewObject(s.Endpoints[0], s.ServiceId, 1, 2)
 		if err != nil {
