@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func open(filename string) io.WriteCloser {
@@ -70,20 +71,30 @@ func main() {
 			continue
 		}
 
-		obj, err := basic.NewObject(s.Endpoints[0], s.ServiceId, 1, 2)
-		if err != nil {
-			log.Printf("failed to create servinceof %s: %s", s.Name, err)
-			continue
-		}
-		meta, err := obj.MetaObject(1)
-		if err != nil {
-			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
-			continue
-		}
-		meta.Description = s.Name
-		objects = append(objects, meta)
-		if err := idl.GenerateIDL(outputIDL, s.Name, meta); err != nil {
-			log.Printf("failed to generate IDL of %s: %s", s.Name, err)
+		// sort the addresses based on their value
+		for _, ep := range s.Endpoints {
+			// do not connect the test range.
+			// FIXME: unless a local interface has such IP
+			// address.
+			if strings.Contains(ep, "198.18.0") {
+				continue
+			}
+			obj, err := basic.NewObject(ep, s.ServiceId, 1, 2)
+			if err != nil {
+				// log.Printf("failed to create service of %s: %s", s.Name, err)
+				continue
+			}
+			meta, err := obj.MetaObject(1)
+			if err != nil {
+				log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
+				break
+			}
+			meta.Description = s.Name
+			objects = append(objects, meta)
+			if err := idl.GenerateIDL(outputIDL, s.Name, meta); err != nil {
+				log.Printf("failed to generate IDL of %s: %s", s.Name, err)
+			}
+			break
 		}
 	}
 	proxy.GenerateInterfaces(objects, "services", outputInterface)
