@@ -35,8 +35,8 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	if len(flag.Args()) > 1 {
-		PrintService(sess, flag.Args()[1])
+	if len(flag.Args()) > 0 {
+		PrintService(sess, flag.Args()[0])
 	} else {
 		directory, err := services.NewServiceDirectory(sess, 1)
 		if err != nil {
