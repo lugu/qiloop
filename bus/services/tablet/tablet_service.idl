@@ -1,0 +1,178 @@
+interface ALTabletService
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn showWebview() -> bool //uid:100
+	fn showWebview(P0: str) -> bool //uid:101
+	fn hideWebview() -> bool //uid:102
+	fn cleanWebview() //uid:103
+	fn _clearWebviewCache(P0: bool) //uid:104
+	fn loadUrl(P0: str) -> bool //uid:105
+	fn reloadPage(P0: bool) //uid:106
+	fn loadApplication(P0: str) -> bool //uid:107
+	fn executeJS(P0: str) //uid:108
+	fn getOnTouchScaleFactor() -> float32 //uid:109
+	fn setOnTouchWebviewScaleFactor(P0: float32) //uid:110
+	fn _setAnimatedCrossWalkView(P0: bool) //uid:111
+	fn _setDebugCrossWalkViewEnable(P0: bool) //uid:112
+	fn playVideo(P0: str) -> bool //uid:113
+	fn resumeVideo() -> bool //uid:114
+	fn pauseVideo() -> bool //uid:115
+	fn stopVideo() -> bool //uid:116
+	fn getVideoPosition() -> int32 //uid:117
+	fn getVideoLength() -> int32 //uid:118
+	fn preLoadImage(P0: str) -> bool //uid:119
+	fn showImage(P0: str) -> bool //uid:120
+	fn showImageNoCache(P0: str) -> bool //uid:121
+	fn hideImage() //uid:122
+	fn resumeGif() //uid:123
+	fn pauseGif() //uid:124
+	fn setBackgroundColor(P0: str) -> bool //uid:125
+	fn _startAnimation(P0: str) -> bool //uid:126
+	fn _stopAnimation() //uid:127
+	fn hide() //uid:128
+	fn setBrightness(P0: float32) -> bool //uid:129
+	fn getBrightness() -> float32 //uid:130
+	fn turnScreenOn(P0: bool) //uid:131
+	fn goToSleep() //uid:132
+	fn wakeUp() //uid:133
+	fn _displayToast(P0: str, P1: int32) //uid:134
+	fn _displayToast(P0: str, P1: int32, P2: int32) //uid:135
+	fn getWifiStatus() -> str //uid:136
+	fn enableWifi() //uid:137
+	fn disableWifi() //uid:138
+	fn forgetWifi(P0: str) -> bool //uid:139
+	fn connectWifi(P0: str) -> bool //uid:140
+	fn disconnectWifi() -> bool //uid:141
+	fn configureWifi(P0: str, P1: str, P2: str) -> bool //uid:142
+	fn getWifiMacAddress() -> str //uid:143
+	fn showInputDialog(P0: str, P1: str, P2: str, P3: str) //uid:144
+	fn showInputTextDialog(P0: str, P1: str, P2: str) //uid:145
+	fn showInputTextDialog(P0: str, P1: str, P2: str, P3: str, P4: int32) //uid:146
+	fn showInputDialog(P0: str, P1: str, P2: str, P3: str, P4: str, P5: int32) //uid:147
+	fn hideDialog() //uid:148
+	fn setKeyboard(P0: str) -> bool //uid:149
+	fn getAvailableKeyboards() -> Vec<str> //uid:150
+	fn setTabletLanguage(P0: str) -> bool //uid:151
+	fn _openSettings() //uid:152
+	fn setVolume(P0: int32) -> bool //uid:153
+	fn _setDebugEnabled(P0: bool) //uid:154
+	fn _setTimeZone(P0: str) //uid:155
+	fn _setStackTraceDepth(P0: int32) -> bool //uid:156
+	fn _ping() -> str //uid:157
+	fn robotIp() -> str //uid:158
+	fn version() -> str //uid:159
+	fn _firmwareVersion() -> str //uid:160
+	fn resetTablet() //uid:161
+	fn _enableResetTablet(P0: bool) //uid:162
+	fn _cancelReset() //uid:163
+	fn _setOpenGLState(P0: int32) //uid:164
+	fn _updateFirmware(P0: str) -> bool //uid:165
+	fn _getTabletSerialno() -> str //uid:166
+	fn _getTabletModelName() -> str //uid:167
+	fn _uninstallApps() //uid:168
+	fn _uninstallLauncher() //uid:169
+	fn _uninstallBrowser() //uid:170
+	fn _wipeData() //uid:171
+	fn _fingerPrint() -> str //uid:172
+	fn _powerOff() //uid:173
+	fn _installApk(P0: str) -> bool //uid:174
+	fn _installSystemApk(P0: str) -> bool //uid:175
+	fn _launchApk(P0: str) -> bool //uid:176
+	fn _removeApk(P0: str) //uid:177
+	fn _listApks() -> str //uid:178
+	fn _stopApk(P0: str) //uid:179
+	fn _isApkExist(P0: str) -> bool //uid:180
+	fn _getApkVersion(P0: str) -> str //uid:181
+	fn _getApkVersionCode(P0: str) -> str //uid:182
+	fn _purgeInstallTabletUpdater() -> bool //uid:183
+	fn _test() -> str //uid:184
+	fn _crash() //uid:185
+	fn enableWebviewTouch() //uid:186
+	fn disableWebviewTouch() //uid:187
+	sig traceObject(P0: EventTrace) //uid:86
+	sig onTouch(P0: float32, P1: float32) //uid:188
+	sig onTouchDown(P0: float32, P1: float32) //uid:189
+	sig onTouchDownRatio(P0: float32, P1: float32, P2: str) //uid:190
+	sig onTouchUp(P0: float32, P1: float32) //uid:191
+	sig onTouchMove(P0: float32, P1: float32) //uid:192
+	sig videoFinished() //uid:193
+	sig videoStarted() //uid:194
+	sig onPageStarted() //uid:195
+	sig onPageFinished() //uid:196
+	sig onLoadPageError(P0: int32, P1: str, P2: str) //uid:197
+	sig onWifiStatusChange(P0: str) //uid:198
+	sig onConsoleMessage(P0: str) //uid:199
+	sig onInputText(P0: int32, P1: str) //uid:200
+	sig onApkInstalled(P0: str) //uid:201
+	sig onSystemApkInstalled(P0: str) //uid:202
+	sig onSystemApkInstallError(P0: int32) //uid:203
+	sig onImageLoaded() //uid:204
+	sig onJSEvent(P0: str) //uid:205
+end
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint32
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
+	description: str
+end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
+struct timeval
+	tv_sec: int64
+	tv_usec: int64
+end
+struct EventTrace
+	id: uint32
+	kind: int32
+	slotId: uint32
+	arguments: any
+	timestamp: timeval
+	userUsTime: int64
+	systemUsTime: int64
+	callerContext: uint32
+	calleeContext: uint32
+end
