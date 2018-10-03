@@ -4,9 +4,19 @@ import (
 	"flag"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/proxy"
+	"github.com/lugu/qiloop/meta/stub"
+	"io"
 	"log"
 	"os"
 )
+
+func open(filename string) io.WriteCloser {
+	file, err := os.Create(filename)
+	if err != nil {
+		log.Fatalf("failed to open %s: %s", filename, err)
+	}
+	return file
+}
 
 func main() {
 
@@ -24,16 +34,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to open %s: %s", directory, err)
 	}
-	proxies, err := os.Create("implementations.go")
-	if err != nil {
-		log.Fatalf("failed to create implementations.go: %s", err)
-	}
+
+	proxies := open("implementations.go")
 	defer proxies.Close()
-	interfaces, err := os.Create("interfaces.go")
-	if err != nil {
-		log.Fatalf("failed to create interfaces.go: %s", err)
-	}
+
+	interfaces := open("interfaces.go")
 	defer interfaces.Close()
+
+	stubs := open("stubs.go")
+	defer stubs.Close()
+
 	for _, file := range files {
 		f, err := os.Open(file)
 		if err != nil {
@@ -43,5 +53,6 @@ func main() {
 		f.Close()
 		proxy.GenerateProxys(metas, goBasePackageName, proxies)
 		proxy.GenerateInterfaces(metas, goBasePackageName, interfaces)
+		stub.GenerateStubs(metas, goBasePackageName, stubs)
 	}
 }
