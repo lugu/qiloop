@@ -3,6 +3,7 @@ package impl
 import (
 	"fmt"
 	. "github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 )
 
@@ -21,6 +22,14 @@ type ServiceDirectoryImpl struct {
 	staging  map[uint32]ServiceInfo
 	services map[uint32]ServiceInfo
 	lastUuid uint32
+}
+
+func NewServiceDirectoryImpl() ServiceDirectoryInterface {
+	return &ServiceDirectoryImpl{
+		staging:  make(map[uint32]ServiceInfo),
+		services: make(map[uint32]ServiceInfo),
+		lastUuid: 1,
+	}
 }
 
 func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err error) {
@@ -88,4 +97,12 @@ func (s *ServiceDirectoryImpl) UpdateServiceInfo(i ServiceInfo) error {
 		}
 	}
 	return fmt.Errorf("Service not found: %s", i.Name)
+}
+
+func (s *ServiceDirectoryImpl) MachineId() (string, error) {
+	return util.MachineID(), nil
+}
+
+func (s *ServiceDirectoryImpl) _socketOfService(P0 uint32) (o object.ObjectReference, err error) {
+	return o, fmt.Errorf("_socketOfService not yet implemented")
 }
