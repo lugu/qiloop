@@ -1,13 +1,12 @@
 package session
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
-	"github.com/lugu/qiloop/type/value"
 	"log"
 	"math/rand"
 	gonet "net"
@@ -42,31 +41,6 @@ type Moniker interface {
 type ActionHelper interface {
 	Unregister() error
 	NewHeader(typ uint8, action, id uint32) net.Header
-}
-
-type Authenticator struct {
-	passwords map[string]string
-}
-
-func (a *Authenticator) Authenticate(cap CapabilityMap) CapabilityMap {
-	if userValue, ok := cap[KeyUser]; ok {
-		if userStr, ok := userValue.(value.StringValue); ok {
-			if tokenValue, ok := cap[KeyToken]; ok {
-				if tokenStr, ok := tokenValue.(value.StringValue); ok {
-					if pwd, ok := a.passwords[string(userStr)]; ok {
-						if pwd == string(tokenStr) {
-							return CapabilityMap{
-								KeyState: value.Int(StateDone),
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return CapabilityMap{
-		KeyState: value.Int(StateError),
-	}
 }
 
 func NewObject(meta object.MetaObject) ObjectWrapper {
@@ -141,8 +115,11 @@ func (o *ObjectDispather) Receive(m *net.Message, from *ClientSession) error {
 		return ActionNotFound
 	}
 	response, err := a(m.Payload)
+
 	if err != nil {
-		return err
+		mError := net.NewMessage(m.Header, util.ErrorPaylad(err))
+		mError.Header.Type = net.Error
+		return from.EndPoint.Send(mError)
 	}
 	reply := net.NewMessage(m.Header, response)
 	reply.Header.Type = net.Reply
@@ -302,12 +279,7 @@ func (s *Server) handle(c gonet.Conn) error {
 		}
 		err = s.Router.Dispatch(msg, session)
 		if err != nil {
-			buf := bytes.NewBuffer(make([]byte, 0))
-			val := value.String(err.Error())
-			val.Write(buf)
-			mError := net.NewMessage(msg.Header, buf.Bytes())
-			mError.Header.Type = net.Error
-			session.EndPoint.Send(mError)
+			log.Printf("server warning: %s", err)
 		}
 		return nil
 

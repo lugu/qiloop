@@ -2,56 +2,24 @@ package fuzz
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
-	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 	"log"
 )
 
-var serverURL string = "tcps://10.0.165.120:9503"
-
-var user string = "tablet"
-var token string = "0ee88b39-831d-4f36-a813-3cf92a84810d"
+var ServerURL string = "tcps://127.0.0.1:9503"
 
 const serviceID = 0
 const objectID = 0
 const actionID = 8
 
-func ParseCapabilityMap(data []byte) (session.CapabilityMap, error) {
-	buf := bytes.NewBuffer(data)
-	ret, err := func() (m map[string]value.Value, err error) {
-		size, err := basic.ReadUint32(buf)
-		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
-		}
-		m = make(map[string]value.Value, size)
-		for i := 0; i < int(size); i++ {
-			k, err := basic.ReadString(buf)
-			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
-			}
-			v, err := value.NewValue(buf)
-			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
-			}
-			m[k] = v
-		}
-		return m, nil
-	}()
-	if err != nil {
-		return ret, fmt.Errorf("failed to parse authenticate response: %s", err)
-	}
-	return ret, nil
-}
-
 func Fuzz(data []byte) int {
-	endpoint, err := net.DialEndPoint(serverURL)
+	endpoint, err := net.DialEndPoint(ServerURL)
 	if err != nil {
-		log.Fatalf("failed to contact %s: %s", serverURL, err)
+		log.Fatalf("failed to contact %s: %s", ServerURL, err)
 	}
 
 	client0, _ := session.NewClient(endpoint)
@@ -61,7 +29,8 @@ func Fuzz(data []byte) int {
 	data, err0 := server0.CallID(actionID, data)
 
 	// check response
-	capability, err := ParseCapabilityMap(data)
+	buf := bytes.NewBuffer(data)
+	capability, err := session.ReadCapabilityMap(buf)
 	if err == nil {
 		statusValue, ok := capability[session.KeyState]
 		if ok {
@@ -78,7 +47,7 @@ func Fuzz(data []byte) int {
 	}
 
 	// check if everything is still OK.
-	endpoint2, err := net.DialEndPoint(serverURL)
+	endpoint2, err := net.DialEndPoint(ServerURL)
 	if err != nil {
 		panic("gateway has crashed")
 	}

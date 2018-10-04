@@ -6,8 +6,8 @@ import (
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/services/impl"
 	"github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
-	"github.com/lugu/qiloop/type/value"
 )
 
 // ServiceDirectoryStub implements session.Object
@@ -25,14 +25,6 @@ func NewServiceDirectory(impl impl.ServiceDirectoryInterface) session.Object {
 	return &stub
 }
 
-// FIXME: move ino utils
-func ErrorPaylad(err error) []byte {
-	buf := bytes.NewBuffer(make([]byte, 0))
-	errV := value.String(err.Error())
-	errV.Write(buf)
-	return buf.Bytes()
-}
-
 // Service unmarshall the argument, call the real implementation
 // and marshall the response
 func (s ServiceDirectoryStub) Service(payload []byte) ([]byte, error) {
@@ -40,18 +32,18 @@ func (s ServiceDirectoryStub) Service(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	serviceID, err := basic.ReadString(buf)
 	if err != nil {
-		return ErrorPaylad(err), nil
+		return util.ErrorPaylad(err), nil
 	}
 
 	info, err := s.impl.Service(serviceID)
 	if err != nil {
-		return ErrorPaylad(err), nil
+		return util.ErrorPaylad(err), nil
 	}
 
 	buf = bytes.NewBuffer(make([]byte, 0))
 	err = services.WriteServiceInfo(info, buf)
 	if err != nil {
-		return ErrorPaylad(err), nil
+		return util.ErrorPaylad(err), nil
 	}
 
 	return buf.Bytes(), nil
