@@ -30,16 +30,16 @@ func exit(status int) {
 }
 
 func filter(hdr *net.Header) (matched bool, keep bool) {
-	if hdr == nil {
-		exit(1)
-	} else {
-		log.Printf("received response (%d)", hdr.ID)
-	}
+	log.Printf("received response (%d)", hdr.ID)
 	return false, true
 }
 
 func consumer(msg *net.Message) error {
 	return nil
+}
+
+func closer() {
+	exit(1)
 }
 
 func main() {
@@ -51,11 +51,10 @@ func main() {
 		log.Fatalf("failed to contact %s: %s", *serverURL, err)
 	}
 
-	endpoint.AddHandler(filter, consumer)
+	endpoint.AddHandler(filter, consumer, closer)
 
-	user := "tablet"
-	// token := "0ee88b39-831d-4f36-a813-3cf92a84810d"
-	token := "abc"
+	user := "nao"
+	token := "nao"
 
 	for i := 0; i < 10; i++ {
 		go test(endpoint, user, token, i)

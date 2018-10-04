@@ -264,12 +264,6 @@ func (s *Server) handle(c gonet.Conn) error {
 	s.sessions[session] = true
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
-		if hdr == nil {
-			if _, ok := s.sessions[session]; ok {
-				delete(s.sessions, session)
-			}
-			return false, false
-		}
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {
@@ -284,7 +278,14 @@ func (s *Server) handle(c gonet.Conn) error {
 		return nil
 
 	}
-	session.EndPoint.AddHandler(filter, consumer)
+	closer := func() {
+		s.sessionsMutex.Lock()
+		defer s.sessionsMutex.Unlock()
+		if _, ok := s.sessions[session]; ok {
+			delete(s.sessions, session)
+		}
+	}
+	session.EndPoint.AddHandler(filter, consumer, closer)
 	return nil
 }
 

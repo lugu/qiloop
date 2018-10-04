@@ -2,6 +2,7 @@ package net
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -14,11 +15,13 @@ import (
 // Consumer. Returns two values:
 // - matched: true if the message should be processed by the Consumer.
 // - keep: true if the handler shall be kept in the dispatcher.
-// If hdr is null, it means the remote connection is closed.
 type Filter func(hdr *Header) (matched bool, keep bool)
 
 // Consumer process a message which has been selected by a filter.
 type Consumer func(msg *Message) error
+
+// Closer informs the handler about a disconnection
+type Closer func()
 
 // EndPoint reprensents a network socket capable of sending and
 // receiving messages.
@@ -34,7 +37,7 @@ type EndPoint interface {
 	// AddHandler registers the associated Filter and Consumer to the
 	// EndPoint. Do not attempt to add another handler from within a
 	// Filter.
-	AddHandler(f Filter, c Consumer) int
+	AddHandler(f Filter, c Consumer, cl Closer) int
 
 	// RemoveHandler removes the associated Filter and Consumer.
 	// RemoveHandler must not be called from within the Filter: use
@@ -49,6 +52,7 @@ type endPoint struct {
 	conn      gonet.Conn
 	filters   []Filter
 	consumers []Consumer
+	closers   []Closer
 	// handlerMutex: protect filters and consumers which must stay synchronized.
 	handlerMutex sync.Mutex
 }
@@ -108,6 +112,14 @@ func (e *endPoint) Send(m Message) error {
 
 // Close wait for a message to be received.
 func (e *endPoint) Close() error {
+	e.handlerMutex.Lock()
+	defer e.handlerMutex.Unlock()
+	for _, c := range e.closers {
+		if c == nil {
+			continue
+		}
+		go c()
+	}
 	return e.conn.Close()
 }
 
@@ -120,6 +132,7 @@ func (e *endPoint) RemoveHandler(id int) error {
 	if id >= 0 && id < len(e.filters) {
 		e.filters[id] = nil
 		e.consumers[id] = nil
+		e.closers[id] = nil
 		return nil
 	}
 	return fmt.Errorf("invalid handler id: %d", id)
@@ -127,47 +140,54 @@ func (e *endPoint) RemoveHandler(id int) error {
 
 // AddHandler register the associated Filter and Consumer to the
 // EndPoint.
-func (e *endPoint) AddHandler(f Filter, c Consumer) int {
+func (e *endPoint) AddHandler(f Filter, c Consumer, cl Closer) int {
 	e.handlerMutex.Lock()
 	defer e.handlerMutex.Unlock()
 	for i, filter := range e.filters {
 		if filter == nil {
 			e.filters[i] = f
 			e.consumers[i] = c
+			e.closers[i] = cl
 			return i
 		}
 	}
 	e.filters = append(e.filters, f)
 	e.consumers = append(e.consumers, c)
+	e.closers = append(e.closers, cl)
 	return len(e.filters) - 1
 }
+
+var MessageDropped error = errors.New("message dropped")
 
 // dispatch test all destinations for someone interrested in the
 // message.
 func (e *endPoint) dispatch(msg *Message) error {
+	ret := MessageDropped
 	e.handlerMutex.Lock()
 	defer e.handlerMutex.Unlock()
 	for i, f := range e.filters {
-		if msg == nil {
-			// in case the connection is closed.
-			f(nil)
-		} else if f != nil {
-			matched, keep := f(&msg.Header)
-			consumer := e.consumers[i]
-			if !keep {
-				e.filters[i] = nil
-				e.consumers[i] = nil
-			}
-			if matched {
-				go consumer(msg)
-				return nil
-			}
+		if f == nil {
+			continue
+		}
+		matched, keep := f(&msg.Header)
+		consumer := e.consumers[i]
+		if !keep {
+			e.filters[i] = nil
+			e.consumers[i] = nil
+		}
+		if matched {
+			ret = nil
+			go func() {
+				if err := consumer(msg); err != nil {
+					log.Printf("message consumer: %s", err)
+				}
+			}()
 		}
 	}
-	if msg == nil {
+	if ret == nil {
 		return nil
 	}
-	return fmt.Errorf("failed to dispatch message: %#v", msg.Header)
+	return fmt.Errorf("dropping message: %#v", msg.Header)
 }
 
 // process read all messages from the end point and dispatch them one
@@ -197,25 +217,22 @@ func (e *endPoint) process() {
 		queue <- msg
 	}
 	e.Close()
-	// send nil header to inform handlers the connection is
-	// closed.
-	e.dispatch(nil)
 }
 
 // Receive wait for a message to be received.
 func (e *endPoint) ReceiveAny() (*Message, error) {
 	found := make(chan *Message)
 	filter := func(msg *Header) (matched bool, keep bool) {
-		if msg == nil {
-			close(found)
-		}
 		return true, false
 	}
 	consumer := func(msg *Message) error {
 		found <- msg
 		return nil
 	}
-	_ = e.AddHandler(filter, consumer)
+	closer := func() {
+		close(found)
+	}
+	_ = e.AddHandler(filter, consumer, closer)
 	msg, ok := <-found
 	if !ok {
 		return nil, io.EOF
