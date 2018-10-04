@@ -4,6 +4,7 @@ import (
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/type/object"
+	"io"
 	"testing"
 )
 
@@ -17,7 +18,9 @@ func TestProxyCall(t *testing.T) {
 	go func() {
 		for i := 0; i < 2; i++ {
 			m, err := serviceEndpoint.ReceiveAny()
-			if err != nil {
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				t.Errorf("failed to receive meesage: %s", err)
 			}
 			m.Header.Type = net.Reply
