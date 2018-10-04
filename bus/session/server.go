@@ -278,7 +278,7 @@ func (s *Server) handle(c gonet.Conn) error {
 		return nil
 
 	}
-	closer := func() {
+	closer := func(err error) {
 		s.sessionsMutex.Lock()
 		defer s.sessionsMutex.Unlock()
 		if _, ok := s.sessions[session]; ok {

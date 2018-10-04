@@ -21,7 +21,7 @@ type Filter func(hdr *Header) (matched bool, keep bool)
 type Consumer func(msg *Message) error
 
 // Closer informs the handler about a disconnection
-type Closer func()
+type Closer func(err error)
 
 // EndPoint reprensents a network socket capable of sending and
 // receiving messages.
@@ -111,16 +111,24 @@ func (e *endPoint) Send(m Message) error {
 }
 
 // Close wait for a message to be received.
-func (e *endPoint) Close() error {
+func (e *endPoint) closeWith(err error) error {
 	e.handlerMutex.Lock()
 	defer e.handlerMutex.Unlock()
-	for _, c := range e.closers {
+	for id, c := range e.closers {
 		if c == nil {
 			continue
 		}
-		go c()
+		e.filters[id] = nil
+		e.consumers[id] = nil
+		e.closers[id] = nil
+		go c(err)
 	}
 	return e.conn.Close()
+}
+
+// Close wait for a message to be received.
+func (e *endPoint) Close() error {
+	return e.closeWith(io.EOF)
 }
 
 // RemoveHandler unregister the associated Filter and Consumer.
@@ -201,6 +209,7 @@ func (e *endPoint) process() {
 			e.dispatch(msg)
 		}
 	}()
+	var err error
 
 	for {
 		msg := new(Message)
@@ -210,13 +219,13 @@ func (e *endPoint) process() {
 			break
 		} else if err != nil {
 			// FIXME: proper error management: recover from a
-			// currupted message by discarding the crap.
+			// corrupted message by discarding the crap.
 			log.Printf("error: closing connection: %s", err)
 			break
 		}
 		queue <- msg
 	}
-	e.Close()
+	e.closeWith(err)
 }
 
 // Receive wait for a message to be received.
@@ -229,7 +238,7 @@ func (e *endPoint) ReceiveAny() (*Message, error) {
 		found <- msg
 		return nil
 	}
-	closer := func() {
+	closer := func(err error) {
 		close(found)
 	}
 	_ = e.AddHandler(filter, consumer, closer)

@@ -38,7 +38,7 @@ func consumer(msg *net.Message) error {
 	return nil
 }
 
-func closer() {
+func closer(err error) {
 	exit(1)
 }
 

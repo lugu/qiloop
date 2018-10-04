@@ -45,7 +45,7 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 		return nil
 	}
 
-	closer := func() {
+	closer := func(err error) {
 		// FIXME: remote connection closed: shall set
 		// the client as unusable
 		close(reply)
@@ -86,7 +86,7 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int
 		stream <- msg.Payload
 		return nil
 	}
-	closer := func() {
+	closer := func(err error) {
 		// FIXME: set the client as unusable: remote
 		// connection closed
 		close(stream)
