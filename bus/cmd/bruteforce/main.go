@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"log"
+	"os"
 	"time"
 )
 
@@ -43,7 +45,11 @@ func closer(err error) {
 }
 
 func main() {
-	var serverURL = flag.String("qi-url", "tcp://127.0.0.1:9559", "server URL")
+	var serverURL = flag.String("qi-url", "tcp://127.0.0.1:9559",
+		"server address")
+	var dictionnary = flag.String("dictionary", "", "dictionary file")
+	var user = flag.String("user", "", "auth user")
+
 	flag.Parse()
 
 	endpoint, err := net.DialEndPoint(*serverURL)
@@ -53,12 +59,20 @@ func main() {
 
 	endpoint.AddHandler(filter, consumer, closer)
 
-	user := "nao"
-	token := "nao"
+	file, err := os.Open(*dictionnary)
+	if err != nil {
+		log.Fatalf("failed to open %s: %s", *dictionnary, err)
+	}
+
+	defer file.Close()
+	r := bufio.NewReader(file)
 
 	for i := 0; i < 10; i++ {
-		go test(endpoint, user, token, i)
+		password, err := r.ReadString('\n')
+		if err != nil {
+			log.Fatalf("failed to read password: %s", err)
+		}
+		go test(endpoint, *user, password, i)
 	}
-	hours, _ := time.ParseDuration("10h")
-	time.Sleep(hours)
+	time.Sleep(time.Hour * 10)
 }
