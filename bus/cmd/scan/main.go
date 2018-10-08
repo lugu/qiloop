@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/lugu/qiloop/bus/session/basic"
+	"github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/type/object"
@@ -49,11 +50,15 @@ func main() {
 	outputIDL := open(*idlFile)
 	defer outputIDL.Close()
 
-	// service direction id = 1
-	// object id = 1
-	dir, err := basic.NewServiceDirectory(*serverURL, 1, 1, 101)
+	sess, err := session.NewSession(*serverURL)
 	if err != nil {
-		log.Fatalf("failed to create directory: %s", err)
+		log.Fatalf("failed to create session: %s", err)
+	}
+
+	// service direction id = 1
+	dir, err := services.NewServiceDirectory(sess, 1)
+	if err != nil {
+		log.Fatalf("failed to create proxy: %s", err)
 	}
 
 	serviceInfoList, err := dir.Services()
@@ -79,14 +84,20 @@ func main() {
 			if strings.Contains(ep, "198.18.0") {
 				continue
 			}
-			obj, err := basic.NewObject(ep, s.ServiceId, 1, 2)
+			sess, err := session.NewSession(ep)
 			if err != nil {
-				// log.Printf("failed to create service of %s: %s", s.Name, err)
+				continue
+			}
+			obj, err := services.NewObject(sess, s.ServiceId)
+			if err != nil {
+				log.Printf("failed to create service of %s: %s",
+					s.Name, err)
 				continue
 			}
 			meta, err := obj.MetaObject(1)
 			if err != nil {
-				log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
+				log.Printf("failed to query MetaObject of %s: %s",
+					s.Name, err)
 				break
 			}
 			meta.Description = s.Name
