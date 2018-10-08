@@ -1,4 +1,4 @@
-package session
+package client
 
 import (
 	"fmt"
@@ -102,16 +102,9 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int
 	return stream, nil
 }
 
-func NewClient(endpoint net.EndPoint) (bus.Client, error) {
+func NewClient(endpoint net.EndPoint) bus.Client {
 	return &client{
 		endpoint:  endpoint,
 		messageID: 1,
-	}, nil
-}
-
-func newClient(endpoint net.EndPoint) bus.Client {
-	return &client{
-		endpoint:  endpoint,
-		messageID: 3,
 	}
 }

@@ -2,9 +2,9 @@
 package object
 
 import (
-	fmt "fmt"
+	"fmt"
 	basic "github.com/lugu/qiloop/type/basic"
-	io "io"
+	"io"
 )
 
 type MetaMethodParameter struct {

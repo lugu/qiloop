@@ -11,6 +11,10 @@ type Object interface {
 	object.Object
 	bus.Proxy
 }
+type Server interface {
+	bus.Proxy
+	Authenticate(P0 map[string]value.Value) (map[string]value.Value, error)
+}
 type ServiceDirectory interface {
 	object.Object
 	bus.Proxy
@@ -57,8 +61,4 @@ type LogManager interface {
 	SignalTraceObject(cancel chan int) (chan struct {
 		P0 EventTrace
 	}, error)
-}
-type Server interface {
-	bus.Proxy
-	Authenticate(P0 map[string]value.Value) (map[string]value.Value, error)
 }

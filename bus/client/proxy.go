@@ -1,4 +1,4 @@
-package session
+package client
 
 import (
 	"fmt"
@@ -67,7 +67,7 @@ func (p Proxy) SignalUid(name string) (uint32, error) {
 }
 
 // NewProxy construct a Proxy.
-func NewProxy(client bus.Client, meta object.MetaObject, service uint32, object uint32) Proxy {
+func NewProxy(client bus.Client, meta object.MetaObject, service, object uint32) Proxy {
 	methods := make(map[string]uint32)
 	for id, method := range meta.Methods {
 		methods[method.Name] = id

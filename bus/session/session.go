@@ -3,6 +3,7 @@ package session
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session/token"
@@ -43,8 +44,8 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 	const serviceID = 0
 	const objectID = 0
 
-	client0 := newClient(endpoint)
-	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
+	client0 := client.NewClient(endpoint)
+	proxy0 := client.NewProxy(client0, object.MetaService0, serviceID, objectID)
 	server0 := services.ServerProxy{proxy0}
 	return server0.Authenticate(permissions)
 }
@@ -133,7 +134,8 @@ type Session struct {
 
 func newEndPoint(info services.ServiceInfo) (endpoint net.EndPoint, err error) {
 	if len(info.Endpoints) == 0 {
-		return endpoint, fmt.Errorf("missing address for service %s", info.Name)
+		return endpoint, fmt.Errorf("missing address for service %s",
+			info.Name)
 	}
 	// sort the addresses based on their value
 	for _, ep := range info.Endpoints {
@@ -149,7 +151,8 @@ func newEndPoint(info services.ServiceInfo) (endpoint net.EndPoint, err error) {
 		}
 		err = Authenticate(endpoint)
 		if err != nil {
-			return endpoint, fmt.Errorf("authentication error (%s): %s", info.Name, err)
+			return endpoint, fmt.Errorf("authentication error (%s): %s",
+				info.Name, err)
 		}
 		return endpoint, nil
 	}
@@ -159,9 +162,11 @@ func newEndPoint(info services.ServiceInfo) (endpoint net.EndPoint, err error) {
 func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Object, error) {
 	endpoint, err := newEndPoint(info)
 	if err != nil {
-		return nil, fmt.Errorf("object connection error (%s): %s", info.Name, err)
+		return nil, fmt.Errorf("object connection error (%s): %s",
+			info.Name, err)
 	}
-	proxy := newProxy(endpoint, ref.MetaObject, ref.ServiceID, ref.ObjectID)
+	proxy := client.NewProxy(client.NewClient(endpoint), ref.MetaObject,
+		ref.ServiceID, ref.ObjectID)
 	return &services.ObjectProxy{proxy}, nil
 }
 
@@ -201,19 +206,15 @@ func (s *Session) Object(ref object.ObjectReference) (o object.Object, err error
 	return o, fmt.Errorf("Not yet implemented")
 }
 
-func newProxy(e net.EndPoint, meta object.MetaObject, serviceID, objectID uint32) bus.Proxy {
-	return NewProxy(newClient(e), meta, serviceID, objectID)
-}
-
 // metaProxy is to create proxies to the directory and server
 // services needed for a session.
 func metaProxy(e net.EndPoint, serviceID, objectID uint32) (p bus.Proxy, err error) {
-	client := newClient(e)
-	meta, err := bus.MetaObject(client, serviceID, objectID)
+	c := client.NewClient(e)
+	meta, err := bus.MetaObject(c, serviceID, objectID)
 	if err != nil {
 		return p, fmt.Errorf("Can not reach metaObject: %s", err)
 	}
-	return NewProxy(client, meta, serviceID, objectID), nil
+	return client.NewProxy(c, meta, serviceID, objectID), nil
 }
 
 func NewSession(addr string) (bus.Session, error) {

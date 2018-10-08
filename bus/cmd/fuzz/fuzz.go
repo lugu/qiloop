@@ -2,6 +2,7 @@ package fuzz
 
 import (
 	"bytes"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
@@ -22,8 +23,8 @@ func Fuzz(data []byte) int {
 		log.Fatalf("failed to contact %s: %s", ServerURL, err)
 	}
 
-	client0, _ := session.NewClient(endpoint)
-	proxy0 := session.NewProxy(client0, object.MetaService0, serviceID, objectID)
+	client0 := client.NewClient(endpoint)
+	proxy0 := client.NewProxy(client0, object.MetaService0, serviceID, objectID)
 	server0 := services.ServerProxy{proxy0}
 
 	data, err0 := server0.CallID(actionID, data)
