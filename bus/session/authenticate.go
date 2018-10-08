@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
+	. "github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/value"
 	"io"

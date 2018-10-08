@@ -1,12 +1,41 @@
 package main
 
 import (
-	"github.com/lugu/qiloop/bus/session/basic"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/meta/idl"
+	"github.com/lugu/qiloop/meta/stage2"
+	"github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
 	"os"
 )
+
+var ServicesActionID = uint32(101)
+
+var metaServiceDirectory object.MetaObject = object.MetaObject{
+	Description: "ServiceDirectory",
+	Methods: map[uint32]object.MetaMethod{
+		ServicesActionID: object.MetaMethod{
+			Uid:  ServicesActionID,
+			Name: "services",
+		},
+	},
+}
+
+func NewServiceDirectory(addr string, serviceID uint32) (d stage2.ServiceDirectory, err error) {
+
+	cache, err := client.NewCachedSession(addr)
+	if err != nil {
+		log.Fatalf("authentication failed: %s", err)
+	}
+
+	err = cache.Lookup("ServiceDirectory", serviceID)
+	if err != nil {
+		log.Fatalf("failed to query meta object of ServiceDirectory: %s", err)
+	}
+
+	return stage2.NewServiceDirectory(cache.Session(), serviceID)
+}
 
 func main() {
 	var output io.Writer
@@ -31,9 +60,8 @@ func main() {
 		output = os.Stdout
 	}
 
-	// directoryServiceID := 1
-	// directoryObjectID := 1
-	dir, err := basic.NewServiceDirectory(addr, 1, 1, 101)
+	directoryServiceID := uint32(1)
+	dir, err := NewServiceDirectory(addr, directoryServiceID)
 	if err != nil {
 		log.Fatalf("failed to create directory: %s", err)
 	}
@@ -49,17 +77,16 @@ func main() {
 		if i > 1 {
 			continue
 		}
+		cache, err := client.NewCachedSession(s.Endpoints[0])
+		if err != nil {
+			log.Fatalf("authentication failed: %s", err)
+		}
+		err = cache.Lookup(s.Name, s.ServiceId)
+		if err != nil {
+			log.Fatalf("failed to query meta object: %s", err)
+		}
 
-		obj, err := basic.NewObject(s.Endpoints[0], s.ServiceId, 1, 2)
-		if err != nil {
-			log.Printf("failed to create servinceof %s: %s", s.Name, err)
-			continue
-		}
-		meta, err := obj.MetaObject(1)
-		if err != nil {
-			log.Printf("failed to query MetaObject of %s: %s", s.Name, err)
-			continue
-		}
+		meta := cache.Services[s.ServiceId]
 		if err := idl.GenerateIDL(output, s.Name, meta); err != nil {
 			log.Printf("failed to generate IDL of %s: %s", s.Name, err)
 			continue

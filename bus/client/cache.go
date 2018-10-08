@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
 )
 
@@ -35,12 +36,52 @@ func (s *Cache) Destroy() error {
 
 func (s *Cache) AddService(name string, serviceID uint32,
 	meta object.MetaObject) {
+
 	s.Names[name] = serviceID
 	s.Services[serviceID] = meta
 }
 
-func NewCache(e net.EndPoint) Cache {
-	return Cache{
+func (s *Cache) Lookup(name string, serviceID uint32) error {
+
+	// 1. register the service as a basic object in order to query its
+	// MetaObject.
+	s.AddService(name, serviceID, object.ObjectMetaObject)
+
+	// 2. instanciate a proxy
+	obj, err := services.NewObject(s.Session(), serviceID)
+	if err != nil {
+		return fmt.Errorf("failed to create service of %s: %s", name, err)
+	}
+
+	// 3. query the MetaObject
+	meta, err := obj.MetaObject(1)
+	if err != nil {
+		return fmt.Errorf("failed to query MetaObject of %s: %s", name, err)
+	}
+	meta.Description = name
+
+	// 4. update the cache
+	s.Services[serviceID] = meta
+	return nil
+}
+
+// NewCachedSession authenticate to the address and returns a Cache
+// object which can act as a Session.
+func NewCachedSession(addr string) (*Cache, error) {
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect: %s", err)
+	}
+	err = Authenticate(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("authentication failed: %s", err)
+	}
+
+	return NewCache(endpoint), nil
+}
+
+func NewCache(e net.EndPoint) *Cache {
+	return &Cache{
 		Names:    make(map[string]uint32),
 		Services: make(map[uint32]object.MetaObject),
 		Endpoint: e,

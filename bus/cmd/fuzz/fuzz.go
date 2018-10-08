@@ -33,14 +33,14 @@ func Fuzz(data []byte) int {
 	buf := bytes.NewBuffer(data)
 	capability, err := session.ReadCapabilityMap(buf)
 	if err == nil {
-		statusValue, ok := capability[session.KeyState]
+		statusValue, ok := capability[client.KeyState]
 		if ok {
 			status, ok := statusValue.(value.IntValue)
 			if ok {
 				switch uint32(status) {
-				case session.StateDone:
+				case client.StateDone:
 					panic("password found")
-				case session.StateContinue:
+				case client.StateContinue:
 					panic("token renewal")
 				}
 			}
@@ -53,7 +53,7 @@ func Fuzz(data []byte) int {
 		panic("gateway has crashed")
 	}
 
-	err = session.Authenticate(endpoint2)
+	err = client.Authenticate(endpoint2)
 	endpoint2.Close()
 	if err != nil {
 		panic("gateway is broken")

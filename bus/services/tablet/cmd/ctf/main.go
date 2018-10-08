@@ -3,30 +3,30 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/client"
 	tablet "github.com/lugu/qiloop/bus/services/tablet"
-	"github.com/lugu/qiloop/bus/session/basic"
 	"log"
 )
 
 func findTabletService(addr string) (tablet.ALTabletService, error) {
-	objectID := uint32(1)
-
-	// FIXME: broken: shall the the actionID of the call need to
-	// querry the MetaObject to resolve the actionID
-	actionID := uint32(143)
 
 	serviceID, err := findTabletServiceID(addr)
 	if err != nil {
 		return nil, err
 	}
 
-	endpoint, err := net.DialEndPoint(addr)
+	cache, err := client.NewCachedSession(addr)
 	if err != nil {
-		log.Fatalf("failed to contact %s: %s", addr, err)
+		log.Fatalf("authentication failed: %s", err)
 	}
-	session := basic.NewSession(endpoint, serviceID, objectID, actionID)
-	return tablet.NewALTabletService(session, objectID)
+
+	err = cache.Lookup("ALTabletService", serviceID)
+	if err != nil {
+		log.Fatalf("failed to query meta object of ALTabletService: %s", err)
+	}
+
+	objectID := uint32(1)
+	return tablet.NewALTabletService(cache, objectID)
 
 }
 
@@ -46,16 +46,18 @@ func test(addr string, serviceID uint32) (ret bool) {
 		}
 	}()
 
-	endpoint, err := net.DialEndPoint(addr)
+	cache, err := client.NewCachedSession(addr)
 	if err != nil {
-		log.Fatalf("failed to contact %s: %s", addr, err)
+		log.Fatalf("authentication failed: %s", err)
+	}
+
+	err = cache.Lookup("ALTabletService", serviceID)
+	if err != nil {
+		log.Fatalf("failed to query meta object of ALTabletService: %s", err)
 	}
 
 	objectID := uint32(1)
-	actionID := uint32(143) // getWifiMacAddress
-	session := basic.NewSession(endpoint, serviceID, objectID, actionID)
-
-	tablet, err := tablet.NewALTabletService(session, objectID)
+	tablet, err := tablet.NewALTabletService(cache, objectID)
 	if err != nil {
 		panic(err)
 	}
