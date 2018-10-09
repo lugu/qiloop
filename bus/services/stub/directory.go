@@ -19,9 +19,7 @@ type ServiceDirectoryStub struct {
 func NewServiceDirectory(impl impl.ServiceDirectoryInterface) session.Object {
 	var stub ServiceDirectoryStub
 	stub.Wrapper = bus.Wrapper(make(map[uint32]bus.ActionWrapper))
-
-	stub.Wrapper[1] = nil // FIXME: name of the corresponding method
-	// of ServiceDirectoryStub
+	stub.Wrapper[100] = stub.Service
 	return &stub
 }
 
@@ -49,8 +47,8 @@ func (s ServiceDirectoryStub) Service(payload []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// type ServiceDirectoryInterface interface {
-// 	Service(P0 string) (ServiceInfo, error)
+// FIXME: the rest of the methods to bind:
+//
 // 	Services() ([]ServiceInfo, error)
 // 	RegisterService(P0 ServiceInfo) (uint32, error)
 // 	UnregisterService(P0 uint32) error
@@ -58,4 +56,3 @@ func (s ServiceDirectoryStub) Service(payload []byte) ([]byte, error) {
 // 	UpdateServiceInfo(P0 ServiceInfo) error
 // 	MachineId() (string, error)
 // 	_socketOfService(P0 uint32) (object.ObjectReference, error)
-// }
