@@ -17,6 +17,7 @@ unsorted to do list:
 - proxy: implements Disconnect
 - server: implement service directory to validate the approach
 - NOTES.md: machine id discussion
+- NOTES.md: IDL section: syntax, ref to libqi doc and sample
 - NOTES.md: sequence diagram with multiple process
 - NODES.md: document the capability event type
 - client: an API to make cancellable call (not the default way?)
