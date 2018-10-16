@@ -101,7 +101,7 @@ func unregsterTypeNames() {
 
 // EnumType represents a const.
 type EnumType struct {
-	Name string
+	Name   string
 	Values map[string]int
 }
 
@@ -112,7 +112,7 @@ type EnumMember struct {
 
 func NewEnumType(name string, values map[string]int) Type {
 	return &EnumType{
-		Name: name,
+		Name:   name,
 		Values: values,
 	}
 }
@@ -134,8 +134,9 @@ func (e *EnumType) RegisterTo(set *TypeSet) {
 }
 
 func (e *EnumType) TypeDeclaration(file *jen.File) {
+	// TODO: implement me
 	file.Id(`type ` + e.Name + ` int
-	cont (
+	const (
 		XX = YY
 	)`)
 }
