@@ -114,6 +114,10 @@ func (e *endPoint) Send(m Message) error {
 func (e *endPoint) closeWith(err error) error {
 	e.handlerMutex.Lock()
 	defer e.handlerMutex.Unlock()
+
+	ret := e.conn.Close()
+	var wait sync.WaitGroup
+	wait.Add(len(e.closers))
 	for id, c := range e.closers {
 		if c == nil {
 			continue
@@ -121,9 +125,13 @@ func (e *endPoint) closeWith(err error) error {
 		e.filters[id] = nil
 		e.consumers[id] = nil
 		e.closers[id] = nil
-		go c(err)
+		go func() {
+			c(err)
+			wait.Done()
+		}()
 	}
-	return e.conn.Close()
+	wait.Wait()
+	return ret
 }
 
 // Close wait for a message to be received.
