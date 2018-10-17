@@ -1,5 +1,9 @@
 package idl
 
+import (
+	"github.com/lugu/qiloop/meta/signature"
+)
+
 // Proxy were generated from MetaObjects. This is convinient from a
 // boostraping point of view. Since the data structures are well
 // known, we introduce the InterfaceType which contains the
