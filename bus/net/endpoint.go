@@ -120,6 +120,7 @@ func (e *endPoint) closeWith(err error) error {
 	wait.Add(len(e.closers))
 	for id, c := range e.closers {
 		if c == nil {
+			wait.Done()
 			continue
 		}
 		e.filters[id] = nil
