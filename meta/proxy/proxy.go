@@ -169,6 +169,26 @@ func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Wr
 	return nil
 }
 
+func Generate(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
+	file, set := newFileAndSet(packageName)
+
+	for _, metaObj := range metaObjList {
+		generateObjectInterface(metaObj, metaObj.Description, set, file)
+	}
+
+	for i, metaObj := range metaObjList {
+		if err := generateProxyObject(metaObj, metaObj.Description, set, file); err != nil {
+			return fmt.Errorf("failed to render %s (%d): %s", metaObj.Description, i, err)
+		}
+	}
+	set.Declare(file)
+
+	if err := file.Render(w); err != nil {
+		return fmt.Errorf("failed to render %s: %s", packageName, err)
+	}
+	return nil
+}
+
 func methodBodyBlock(m object.MetaMethod, params *signature.TupleType, ret signature.Type) (*Statement, error) {
 	writing := make([]jen.Code, 0)
 	writing = append(writing, jen.Var().Err().Error())

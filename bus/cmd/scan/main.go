@@ -34,18 +34,14 @@ func open(filename string) io.WriteCloser {
 
 func main() {
 	var serverURL = flag.String("qi-url", "tcp://localhost:9559", "server URL")
-	var interfaceFile = flag.String("interface", "", "File to write interface (default none)")
-	var implemFile = flag.String("proxy", "", "File to write proxy (default none)")
+	var proxyFile = flag.String("proxy", "", "File to write proxy (default none)")
 	var idlFile = flag.String("idl", "-", "File to write IDL definition (default stdout)")
 	var serviceName = flag.String("service", "", "Name of the service (default all)")
 
 	flag.Parse()
 
-	outputInterface := open(*interfaceFile)
-	defer outputInterface.Close()
-
-	outputImplementation := open(*implemFile)
-	defer outputImplementation.Close()
+	output := open(*proxyFile)
+	defer output.Close()
 
 	outputIDL := open(*idlFile)
 	defer outputIDL.Close()
@@ -108,6 +104,5 @@ func main() {
 			break
 		}
 	}
-	proxy.GenerateInterfaces(objects, "services", outputInterface)
-	proxy.GenerateProxys(objects, "services", outputImplementation)
+	proxy.Generate(objects, "services", output)
 }
