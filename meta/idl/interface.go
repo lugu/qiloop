@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/signature"
+	"github.com/lugu/qiloop/type/object"
 )
 
 // Proxy were generated from MetaObjects. This is convinient from a
@@ -18,11 +19,28 @@ import (
 
 type Namespace map[string]Scope
 
-type Function struct {
+type Method struct {
 	Name     string
-	Return   string
+	Return   signature.Type
 	ArgNames []string
 	ArgTypes []signature.Type
+}
+
+func (m Method) Meta(id uint32) object.MetaMethod {
+	var meta object.MetaMethod
+	meta.Uid = id
+	meta.Name = m.Name
+	meta.ReturnSignature = m.Return.Signature()
+	meta.ReturnDescription = m.Return.SignatureIDL()
+	meta.ParametersSignature = signature.NewTupleType(m.ArgTypes).Signature()
+	meta.Parameters = make([]object.MetaMethodParameter, 0)
+	for id, p := range m.ArgNames {
+		var param object.MetaMethodParameter
+		param.Name = p
+		param.Description = m.ArgTypes[id].SignatureIDL()
+		meta.Parameters = append(meta.Parameters, param)
+	}
+	return meta
 }
 
 type Signal struct {
@@ -31,15 +49,31 @@ type Signal struct {
 	ArgTypes []signature.Type
 }
 
+func (s Signal) Meta(id uint32) object.MetaSignal {
+	var meta object.MetaSignal
+	meta.Uid = id
+	meta.Name = s.Name
+	meta.Signature = s.Name
+	return meta
+}
+
 type Property struct {
 	Name   string
-	Return string
+	Return signature.Type
+}
+
+func (p Property) Meta(id uint32) object.MetaProperty {
+	var meta object.MetaProperty
+	meta.Uid = id
+	meta.Name = p.Name
+	meta.Signature = p.Return.Signature()
+	return meta
 }
 
 type InterfaceType struct {
 	name        string
 	packageName string
-	functions   map[uint32]Function
+	methods     map[uint32]Method
 	signals     map[uint32]Signal
 	properties  map[uint32]Property
 	scope       Scope
@@ -104,4 +138,18 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	// TODO: see Marshall
 	panic("not yet implemented")
 	return nil
+}
+func (s *InterfaceType) MetaObject() object.MetaObject {
+	var meta object.MetaObject
+	meta.Description = s.name
+	for id, m := range s.methods {
+		meta.Methods[id] = m.Meta(id)
+	}
+	for id, s := range s.signals {
+		meta.Signals[id] = s.Meta(id)
+	}
+	for id, p := range s.signals {
+		meta.Signals[id] = p.Meta(id)
+	}
+	return meta
 }
