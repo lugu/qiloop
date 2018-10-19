@@ -20,11 +20,6 @@ func helpParseMethod(t *testing.T, label, input string, expected object.MetaMeth
 		t.Fatalf("%s: parsing error: %v", label, err)
 	}
 	if method, ok := root.(*object.MetaMethod); !ok {
-		t.Fatalf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
-	} else if !reflect.DeepEqual(*method, expected) {
-		t.Fatalf("%s: expected %#v, got %#v", label, expected, *method)
-	}
-}
 
 func helpParseType(t *testing.T, lang, sign string) {
 	label := lang

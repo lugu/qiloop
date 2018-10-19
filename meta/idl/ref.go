@@ -10,46 +10,37 @@ var types *TypeSet = nil
 
 // RefType represents a struct.
 type RefType struct {
-	Name string
+	Scope Scope
+	Name  string
 }
 
 // NewRefType is a contructor for the representation of a type reference to be
 // resolved with a TypeSet.
-func NewRefType(name string) (Type, error) {
-	ref := &RefType{name}
-	if types != nil {
-		if typ, err := ref.resolve(types); err != nil {
-			return nil, fmt.Errorf("unknown reference %s: %s", name, err)
-		} else {
-			return typ, nil
-		}
-	}
-	return ref, nil
+func NewRefType(name string, scope Scope) Type {
+	return &RefType{scope, name}
 }
 
 func (r *RefType) Signature() string {
-	if types == nil {
-		return NewStructType(r.Name+"_reference", nil).Signature()
+	t, err := r.Scope.Search(r.Name)
+	if err == nil {
+		return t.Signature()
 	}
-	typ, err := r.resolve(types)
-	if err != nil {
-		return NewStructType(err.Error(), nil).Signature()
-	}
-	return typ.Signature()
+	return NewStructType(err.Error(), nil).Signature()
 }
 
 func (r *RefType) SignatureIDL() string {
-	if types == nil {
-		return NewStructType(r.Name+"_reference", nil).SignatureIDL()
+	t, err := r.Scope.Search(r.Name)
+	if err == nil {
+		return t.SignatureIDL()
 	}
-	typ, err := r.resolve(types)
-	if err != nil {
-		return NewStructType(err.Error(), nil).SignatureIDL()
-	}
-	return typ.Signature()
+	return NewStructType(err.Error(), nil).SignatureIDL()
 }
 
 func (r *RefType) TypeName() *Statement {
+	t, err := r.Scope.Search(r.Name)
+	if err == nil {
+		return t.TypeName()
+	}
 	return jen.Id(r.Name)
 }
 
@@ -60,12 +51,20 @@ func (r *RefType) TypeDeclaration(file *jen.File) {
 }
 
 func (r *RefType) Marshal(id string, writer string) *Statement {
+	t, err := r.Scope.Search(r.Name)
+	if err == nil {
+		return t.Marshal(id, writer)
+	}
 	return jen.Qual("fmt", "Errorf").Call(
 		jen.Lit("reference type serialization not implemented: %v"), jen.Id(id),
 	)
 }
 
 func (r *RefType) Unmarshal(reader string) *Statement {
+	t, err := r.Scope.Search(r.Name)
+	if err == nil {
+		return t.Unmarshal(reader)
+	}
 	return jen.Return(
 		jen.Nil(),
 		jen.Qual("fmt", "Errorf").Call(jen.Lit("reference type not implemented")),

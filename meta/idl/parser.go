@@ -27,44 +27,49 @@ func basicType() parsec.Parser {
 		parsec.Atom("any", ""))
 }
 
-// required to break the recursive definition of typeParser()
-var mapParser parsec.Parser
-var vecParser parsec.Parser
-var referenceParser parsec.Parser
-
-func init() {
-	mapParser = mapType()
-	vecParser = vecType()
-	referenceParser = referenceType()
+type Context struct {
+	scope      Scope
+	typeParser parsec.Parser
 }
 
-func mapType() parsec.Parser {
+func NewContext() *Context {
+	var ctx Context
+	parser := func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+		return ctx.typeParser(s)
+	}
+	ctx.scope = NewScope()
+	ctx.typeParser = parser
+	ctx.typeParser = typeParser(&ctx)
+	return &ctx
+}
+
+func mapType(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyMap,
 		parsec.Atom("Map<", "Map<"),
-		typeParser(),
+		ctx.typeParser,
 		parsec.Atom(",", ","),
-		typeParser(),
+		ctx.typeParser,
 		parsec.Atom(">", ">"),
 	)
 }
 
-func vecType() parsec.Parser {
+func vecType(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyVec,
 		parsec.Atom("Vec<", "Vec<"),
-		typeParser(),
+		ctx.typeParser,
 		parsec.Atom(">", ">"),
 	)
 }
 
-func typeParser() parsec.Parser {
+func typeParser(ctx *Context) parsec.Parser {
 	return parsec.OrdChoice(
 		nodifyType,
 		basicType(),
-		&mapParser,
-		&vecParser,
-		&referenceParser,
+		mapType(ctx),
+		vecType(ctx),
+		referenceType(ctx),
 	)
 }
 
@@ -82,7 +87,7 @@ func comments() parsec.Parser {
 	)
 }
 
-func returns() parsec.Parser {
+func returns(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyReturns,
 		parsec.Maybe(
@@ -90,29 +95,29 @@ func returns() parsec.Parser {
 			parsec.And(
 				nodifyReturnsType,
 				parsec.Atom("->", "->"),
-				typeParser(),
+				ctx.typeParser,
 			),
 		),
 	)
 }
 
-func parameter() parsec.Parser {
+func parameter(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyParam,
 		Ident(),
 		parsec.Atom(":", ":"),
-		typeParser(),
+		ctx.typeParser,
 	)
 }
 
-func parameters() parsec.Parser {
+func parameters(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyAndParams,
 		parsec.Maybe(
 			nodifyMaybeParams,
 			parsec.Many(
 				nodifyParams,
-				parameter(),
+				parameter(ctx),
 				parsec.Atom(",", ","),
 			),
 		),
@@ -123,64 +128,64 @@ func Ident() parsec.Parser {
 	return parsec.Token(`[_A-Za-z][0-9a-zA-Z_]*`, "IDENT")
 }
 
-func method() parsec.Parser {
+func method(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyMethod,
 		parsec.Atom("fn", "fn"),
 		Ident(),
 		parsec.Atom("(", "("),
-		parameters(),
+		parameters(ctx),
 		parsec.Atom(")", ")"),
-		returns(),
+		returns(ctx),
 		comments(),
 	)
 }
 
-func signal() parsec.Parser {
+func signal(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifySignal,
 		parsec.Atom("sig", "sig"),
 		Ident(),
 		parsec.Atom("(", "("),
-		parameters(),
+		parameters(ctx),
 		parsec.Atom(")", ")"),
 		comments(),
 	)
 }
 
-func action() parsec.Parser {
+func action(ctx *Context) parsec.Parser {
 	return parsec.OrdChoice(
 		nodifyAction,
-		method(),
-		signal(),
+		method(ctx),
+		signal(ctx),
 	)
 }
 
-func interfaceParser() parsec.Parser {
+func interfaceParser(ctx *Context) parsec.Parser {
 	return parsec.And(
-		nodifyInterface,
+		makeNodifyInterface(ctx.scope),
 		parsec.Atom("interface", "interface"),
 		Ident(),
 		comments(),
-		parsec.Kleene(nodifyActionList, action()),
+		parsec.Kleene(nodifyActionList, action(ctx)),
 		parsec.Atom("end", "end"),
 		comments(),
 	)
 }
 
-func referenceType() parsec.Parser {
+func referenceType(ctx *Context) parsec.Parser {
 	return parsec.And(
-		nodifyTypeReference,
+		makeNodifyTypeReference(ctx.scope),
 		Ident(),
 	)
 }
 
-func member() parsec.Parser {
+func member(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyMember,
 		Ident(),
 		parsec.Atom(":", ":"),
-		typeParser(),
+		ctx.typeParser,
 		comments(),
 	)
 }
@@ -211,38 +216,38 @@ func enum() parsec.Parser {
 	)
 }
 
-func structure() parsec.Parser {
+func structure(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyStructure,
 		parsec.Atom("struct", "struct"),
 		Ident(),
 		comments(),
-		parsec.Kleene(nodifyMemberList, member()),
+		parsec.Kleene(nodifyMemberList, member(ctx)),
 		parsec.Atom("end", "end"),
 		comments(),
 	)
 }
 
-func declaration() parsec.Parser {
+func declaration(ctx *Context) parsec.Parser {
 	return parsec.OrdChoice(
 		nodifyDeclaration,
-		structure(),
+		structure(ctx),
 		enum(),
-		interfaceParser(),
+		interfaceParser(ctx),
 	)
 }
 
-func declarationsList() parsec.Parser {
+func declarationsList(ctx *Context) parsec.Parser {
 	return parsec.Kleene(
 		nodifyDeclarationList,
-		declaration(),
+		declaration(ctx),
 	)
 }
 
-func declarationStruct() parsec.Parser {
+func declarationStruct(ctx *Context) parsec.Parser {
 	return parsec.Kleene(
 		nodifyDeclarationStruct,
-		declaration(),
+		declaration(ctx),
 	)
 }
 
@@ -258,11 +263,12 @@ func packageName() parsec.Parser {
 	)
 }
 
-func packageParser() parsec.Parser {
+func packageParser(ctx *Context) parsec.Parser {
+	// TODO: add package name to scope in the forme of a scope
 	return parsec.And(nodifyPackage,
 		packageName(),
 		// imports(),
-		declarationsList(),
+		declarationsList(ctx),
 	)
 }
 
@@ -272,7 +278,8 @@ type PackageDeclaration struct {
 }
 
 func parse2(input []byte) (*PackageDeclaration, error) {
-	root, scanner := packageParser()(parsec.NewScanner(input).TrackLineno())
+	context := NewContext()
+	root, scanner := packageParser(context)(parsec.NewScanner(input).TrackLineno())
 	_, scanner = scanner.SkipWS()
 	if !scanner.Endof() {
 		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
@@ -304,7 +311,8 @@ func ParseIDL2(reader io.Reader) (*PackageDeclaration, error) {
 }
 
 func parse(input []byte) (*Declarations, error) {
-	root, scanner := declarationStruct()(parsec.NewScanner(input).TrackLineno())
+	context := NewContext()
+	root, scanner := declarationStruct(context)(parsec.NewScanner(input).TrackLineno())
 	_, scanner = scanner.SkipWS()
 	if !scanner.Endof() {
 		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
@@ -505,15 +513,11 @@ func nodifyDeclarationStruct(nodes []Node) Node {
 	}
 }
 
-// nodifyTypeReference returns a Type or an error. The type is a
-// RefType.
-func nodifyTypeReference(nodes []Node) Node {
-	typeNode := nodes[0]
-	typeName := typeNode.(*parsec.Terminal).GetValue()
-	if ref, err := NewRefType(typeName); err != nil {
-		return err
-	} else {
-		return ref
+func makeNodifyTypeReference(sc Scope) func([]Node) Node {
+	return func(nodes []Node) Node {
+		typeNode := nodes[0]
+		typeName := typeNode.(*parsec.Terminal).GetValue()
+		return NewRefType(typeName, sc)
 	}
 }
 
@@ -599,15 +603,21 @@ func nodifyStructure(nodes []Node) Node {
 	return structType
 }
 
-func nodifyInterface(nodes []Node) Node {
-	nameNode := nodes[1]
-	objNode := nodes[3]
-	metaObj, ok := objNode.(*object.MetaObject)
-	if !ok {
-		return fmt.Errorf("Expecting MetaObject, got %+v: %+v", reflect.TypeOf(objNode), objNode)
+// TODO: should receive an InterfaceType here. Give it
+// a name and add it to the scope. Then return the
+// MetaObject associated.
+func makeNodifyInterface(sc Scope) func([]Node) Node {
+	return func(nodes []Node) Node {
+		nameNode := nodes[1]
+		objNode := nodes[3]
+		metaObj, ok := objNode.(*object.MetaObject)
+		if !ok {
+			return fmt.Errorf("Expecting MetaObject, got %+v: %+v",
+				reflect.TypeOf(objNode), objNode)
+		}
+		metaObj.Description = nameNode.(*parsec.Terminal).GetValue()
+		return metaObj
 	}
-	metaObj.Description = nameNode.(*parsec.Terminal).GetValue()
-	return metaObj
 }
 
 func nodifyVec(nodes []Node) Node {
@@ -734,6 +744,9 @@ func nodifySignal(nodes []Node) Node {
 }
 
 // nodifyActionList returns either a MetaObject or an error.
+//
+// TODO: returns an InterfaceType instead of a MetaObject. The meta
+// object will be retreive from the InterfaceType.
 func nodifyActionList(nodes []Node) Node {
 	metaObj := new(object.MetaObject)
 	methods := make(map[uint32]object.MetaMethod)
