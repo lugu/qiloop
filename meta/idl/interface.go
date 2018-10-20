@@ -158,6 +158,9 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 func (s *InterfaceType) MetaObject() object.MetaObject {
 	var meta object.MetaObject
 	meta.Description = s.name
+	meta.Methods = make(map[uint32]object.MetaMethod)
+	meta.Signals = make(map[uint32]object.MetaSignal)
+	meta.Properties = make(map[uint32]object.MetaProperty)
 	for id, m := range s.methods {
 		meta.Methods[id] = m.Meta(id)
 	}

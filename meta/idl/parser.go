@@ -257,13 +257,6 @@ func declarationsList(ctx *Context) parsec.Parser {
 	)
 }
 
-func declarationStruct(ctx *Context) parsec.Parser {
-	return parsec.Kleene(
-		nodifyDeclarationStruct,
-		declaration(ctx),
-	)
-}
-
 func packageName() parsec.Parser {
 	return parsec.And(nodifyPackageName,
 		parsec.Maybe(nodifyPackageNameMaybe,
@@ -277,7 +270,6 @@ func packageName() parsec.Parser {
 }
 
 func packageParser(ctx *Context) parsec.Parser {
-	// TODO: add package name to scope in the forme of a scope
 	return parsec.And(nodifyPackage,
 		packageName(),
 		// imports(),
@@ -290,9 +282,10 @@ type PackageDeclaration struct {
 	Types []Type
 }
 
-func parse2(input []byte) (*PackageDeclaration, error) {
+func ParsePackage(input []byte) (*PackageDeclaration, error) {
 	context := NewContext()
-	root, scanner := packageParser(context)(parsec.NewScanner(input).TrackLineno())
+	parser := packageParser(context)
+	root, scanner := parser(parsec.NewScanner(input).TrackLineno())
 	_, scanner = scanner.SkipWS()
 	if !scanner.Endof() {
 		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
@@ -312,61 +305,25 @@ func parse2(input []byte) (*PackageDeclaration, error) {
 
 // ParseIDL read an IDL definition from a reader and returns the
 // MetaObject associated with the IDL.
-func ParseIDL2(reader io.Reader) (*PackageDeclaration, error) {
-	input, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read input: %s", err)
-	}
-
-	unregsterTypeNames()
-	// first pass needed to generate the TypeStruct correctly.
-	return parse2(input)
-}
-
-func parse(input []byte) (*Declarations, error) {
-	context := NewContext()
-	root, scanner := declarationStruct(context)(parsec.NewScanner(input).TrackLineno())
-	_, scanner = scanner.SkipWS()
-	if !scanner.Endof() {
-		return nil, fmt.Errorf("parsing error at line: %d", scanner.Lineno())
-	}
-	if root == nil {
-		return nil, fmt.Errorf("cannot parse input:\n%s", input)
-	}
-
-	definitions, ok := root.(*Declarations)
-	if !ok {
-		if err, ok := root.(error); ok {
-			return nil, err
-		}
-		return nil, fmt.Errorf("cannot parse IDL: %+v", reflect.TypeOf(root))
-	}
-	return definitions, nil
-}
-
-// ParseIDL read an IDL definition from a reader and returns the
-// MetaObject associated with the IDL.
 func ParseIDL(reader io.Reader) ([]object.MetaObject, error) {
 	input, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read input: %s", err)
 	}
-
-	unregsterTypeNames()
-	// first pass needed to generate the TypeStruct correctly.
-	definitions, err := parse(input)
+	pkg, err := ParsePackage(input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing error: %s", err)
 	}
 
-	registerTypeNames(definitions)
-	// second pass needed to generate the MetaObject correctly.
-	definitions, err = parse(input)
-	if err != nil {
-		return nil, err
+	metas := make([]object.MetaObject, 0)
+	for _, decl := range pkg.Types {
+		itf, ok := decl.(*InterfaceType)
+		if ok {
+			meta := itf.MetaObject()
+			metas = append(metas, meta)
+		}
 	}
-
-	return definitions.Interfaces, nil
+	return metas, nil
 }
 
 func nodifyDeclaration(nodes []Node) Node {
@@ -431,16 +388,6 @@ func nodifyReturns(nodes []Node) Node {
 	}
 }
 
-// Declarations represent the result of the IDL parsing. It contains a
-// list of MetaObject and a list of StructType. The embedded
-// MetaObjects and StructTypes can not be use: their signatures need to
-// be re-unified.
-type Declarations struct {
-	Interfaces []object.MetaObject
-	Struct     []StructType
-	Types      []Type
-}
-
 // nodifyDeclarationList returns a list of signature.Type.
 func nodifyDeclarationList(nodes []Node) Node {
 	if err, ok := checkError(nodes); ok {
@@ -493,37 +440,6 @@ func nodifyPackage(nodes []Node) Node {
 			Name:  packageName,
 			Types: typeList,
 		}
-	}
-}
-
-// nodifyDeclarationStruct returns a Declarations structure holding a
-// list of MetaObject and StructType.
-func nodifyDeclarationStruct(nodes []Node) Node {
-	interfaces := make([]object.MetaObject, 0)
-	struc := make([]StructType, 0)
-	types := make([]Type, 0)
-	for _, node := range nodes {
-		if err, ok := node.(error); ok {
-			return err
-		}
-		if typ, ok := node.(Type); ok {
-			types = append(types, typ)
-		}
-		if metaObj, ok := node.(*object.MetaObject); ok {
-			interfaces = append(interfaces, *metaObj)
-		} else if s, ok := node.(*StructType); ok {
-			struc = append(struc, *s)
-		} else if _, ok := node.(*EnumType); ok {
-			continue
-		} else {
-			return fmt.Errorf("Expecting type declaration, got %+v: %+v",
-				reflect.TypeOf(node), node)
-		}
-	}
-	return &Declarations{
-		Interfaces: interfaces,
-		Struct:     struc,
-		Types:      types,
 	}
 }
 

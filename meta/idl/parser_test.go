@@ -11,19 +11,44 @@ import (
 	"testing"
 )
 
-func helpParseMethod(t *testing.T, label, input string, expected object.MetaMethod) {
-	root, _ := method()(parsec.NewScanner([]byte(input)))
+func helpParseMethod(t *testing.T, label, input string, expected Method) {
+	ctx := NewContext()
+	root, _ := method(ctx)(parsec.NewScanner([]byte(input)))
 	if root == nil {
 		t.Fatalf("%s: cannot parse input:\n%s", label, input)
 	}
 	if err, ok := root.(error); ok {
 		t.Fatalf("%s: parsing error: %v", label, err)
 	}
-	if method, ok := root.(*object.MetaMethod); !ok {
+	function, ok := root.(Method)
+	if !ok {
+		t.Fatalf("%s; type error %+v: %+v", label, reflect.TypeOf(root),
+			root)
+	}
+	if function.Name != expected.Name {
+		t.Fatalf("%s: wrong name %s, got %s", label, expected.Name,
+			function.Name)
+	}
+	if function.Return.Signature() != expected.Return.Signature() {
+		t.Fatalf("%s: wrong return %s, got %s", label,
+			expected.Return.Signature(), function.Return.Signature())
+	}
+	if len(function.Params) != len(expected.Params) {
+		t.Fatalf("%s: wrong number of parameter", label)
+	}
+	for i, p := range function.Params {
+		if p.Type.Signature() != expected.Params[i].Type.Signature() {
+			t.Fatalf("%s: wrong param %d: %s, got %s", label, i,
+				p.Type.Signature(),
+				expected.Params[i].Type.Signature())
+		}
+	}
+}
 
 func helpParseType(t *testing.T, lang, sign string) {
 	label := lang
-	root, _ := typeParser()(parsec.NewScanner([]byte(lang)))
+	ctx := NewContext()
+	root, _ := ctx.typeParser(parsec.NewScanner([]byte(lang)))
 	if root == nil {
 		t.Fatalf("%s: cannot parse input:\n%s", label, lang)
 	}
@@ -57,67 +82,73 @@ func TestParseCompoundType(t *testing.T) {
 
 func TestParseMethod0(t *testing.T) {
 	input := `fn methodName()`
-	expected := object.MetaMethod{
-		Name:                "methodName",
-		ReturnSignature:     "v",
-		ParametersSignature: "()",
+	expected := Method{
+		Name:   "methodName",
+		Id:     0,
+		Return: NewVoidType(),
+		Params: []Parameter{},
 	}
 	helpParseMethod(t, "TestParseMethod0", input, expected)
 }
 
 func TestParseMethod0bis(t *testing.T) {
-	input := `fn methodName() //uid:100`
-	expected := object.MetaMethod{
-		Uid:                 100,
-		Name:                "methodName",
-		ReturnSignature:     "v",
-		ParametersSignature: "()",
+	input := `fn methodName() //uid:200`
+	expected := Method{
+		Name:   "methodName",
+		Id:     200,
+		Return: NewVoidType(),
+		Params: []Parameter{},
 	}
 	helpParseMethod(t, "TestParseMethod0bis", input, expected)
 }
 
 func TestParseMethod1(t *testing.T) {
 	input := `fn methodName() -> int32`
-	expected := object.MetaMethod{
-		Name:                "methodName",
-		ParametersSignature: "()",
-		ReturnSignature:     "i",
+	expected := Method{
+		Name:   "methodName",
+		Id:     0,
+		Return: NewIntType(),
+		Params: []Parameter{},
 	}
 	helpParseMethod(t, "TestParseMethod1", input, expected)
 }
 
 func TestParseMethod1ter(t *testing.T) {
 	input := `fn methodName() -> float64`
-	expected := object.MetaMethod{
-		Name:                "methodName",
-		ParametersSignature: "()",
-		ReturnSignature:     "d",
+	expected := Method{
+		Name:   "methodName",
+		Id:     0,
+		Return: NewDoubleType(),
+		Params: []Parameter{},
 	}
 	helpParseMethod(t, "TestParseMethod1ter", input, expected)
 }
 
 func TestParseMethod1bis(t *testing.T) {
 	input := `fn methodName() -> bool`
-	expected := object.MetaMethod{
-		Name:                "methodName",
-		ParametersSignature: "()",
-		ReturnSignature:     "b",
+	expected := Method{
+		Name:   "methodName",
+		Id:     0,
+		Return: NewBoolType(),
+		Params: []Parameter{},
 	}
 	helpParseMethod(t, "TestParseMethod1bis", input, expected)
 }
 
 func TestParseMethod2(t *testing.T) {
 	input := `fn methodName(param1: int32, param2: float64)`
-	expected := object.MetaMethod{
-		Name:                "methodName",
-		ParametersSignature: "(id)",
-		ReturnSignature:     "v",
-		Parameters: []object.MetaMethodParameter{
-			object.MetaMethodParameter{
-				Name: "param1",
+	expected := Method{
+		Name:   "methodName",
+		Id:     0,
+		Return: NewVoidType(),
+		Params: []Parameter{
+			Parameter{
+				"param1",
+				NewIntType(),
 			},
-			object.MetaMethodParameter{
-				Name: "param2",
+			Parameter{
+				"param2",
+				NewDoubleType(),
 			},
 		},
 	}
@@ -125,16 +156,18 @@ func TestParseMethod2(t *testing.T) {
 }
 func TestParseMethod3(t *testing.T) {
 	input := `fn methodName(param1: int32, param2: float64) -> bool`
-	expected := object.MetaMethod{
-		Name:                "methodName",
-		ParametersSignature: "(id)",
-		ReturnSignature:     "b",
-		Parameters: []object.MetaMethodParameter{
-			object.MetaMethodParameter{
-				Name: "param1",
+	expected := Method{
+		Name:   "methodName",
+		Id:     0,
+		Return: NewBoolType(),
+		Params: []Parameter{
+			Parameter{
+				"param1",
+				NewIntType(),
 			},
-			object.MetaMethodParameter{
-				Name: "param2",
+			Parameter{
+				"param2",
+				NewDoubleType(),
 			},
 		},
 	}
@@ -142,21 +175,48 @@ func TestParseMethod3(t *testing.T) {
 }
 func TestParseMethod3bis(t *testing.T) {
 	input := `fn methodName(param1: int32, param2: float64) -> bool //uid:10`
-	expected := object.MetaMethod{
-		Uid:                 10,
-		Name:                "methodName",
-		ParametersSignature: "(id)",
-		ReturnSignature:     "b",
-		Parameters: []object.MetaMethodParameter{
-			object.MetaMethodParameter{
-				Name: "param1",
+	expected := Method{
+		Name:   "methodName",
+		Id:     10,
+		Return: NewBoolType(),
+		Params: []Parameter{
+			Parameter{
+				"param1",
+				NewIntType(),
 			},
-			object.MetaMethodParameter{
-				Name: "param2",
+			Parameter{
+				"param2",
+				NewDoubleType(),
 			},
 		},
 	}
 	helpParseMethod(t, "TestParseMethod3bis", input, expected)
+}
+
+func helpParseComment(t *testing.T, label, input, expected string) {
+	root, _ := comments()(parsec.NewScanner([]byte(input)))
+	if root == nil {
+		t.Errorf("%s: cannot parse input:\n%s", label, input)
+		return
+	}
+	if err, ok := root.(error); ok {
+		t.Errorf("%s: parsing error: %v", label, err)
+		return
+	}
+	if comment, ok := root.(string); !ok {
+		t.Errorf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
+		return
+	} else if comment != expected {
+		t.Errorf(`%s; expected: "%s", got: "%s"`, label, expected, comment)
+		return
+	}
+}
+
+func TestParseComments(t *testing.T) {
+	helpParseComment(t, "1", "// test", "test")
+	helpParseComment(t, "2", "//test", "test")
+	helpParseComment(t, "3", "// this test is long", "this test is long")
+	helpParseComment(t, "4", "// this test \n is long", "this test ")
 }
 
 func helpParserTest(t *testing.T, label, idlFileName string, expected *object.MetaObject) {
@@ -193,69 +253,11 @@ func helpParserTest(t *testing.T, label, idlFileName string, expected *object.Me
 	}
 }
 
-func helpParseComment(t *testing.T, label, input, expected string) {
-	root, _ := comments()(parsec.NewScanner([]byte(input)))
-	if root == nil {
-		t.Errorf("%s: cannot parse input:\n%s", label, input)
-		return
-	}
-	if err, ok := root.(error); ok {
-		t.Errorf("%s: parsing error: %v", label, err)
-		return
-	}
-	if comment, ok := root.(string); !ok {
-		t.Errorf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
-		return
-	} else if comment != expected {
-		t.Errorf(`%s; expected: "%s", got: "%s"`, label, expected, comment)
-		return
-	}
-}
-
-func TestParseComments(t *testing.T) {
-	helpParseComment(t, "1", "// test", "test")
-	helpParseComment(t, "2", "//test", "test")
-	helpParseComment(t, "3", "// this test is long", "this test is long")
-	helpParseComment(t, "4", "// this test \n is long", "this test ")
-}
-
 func TestParseEmptyService(t *testing.T) {
 	empty := object.MetaObject{
 		Description: "Empty",
 	}
 	helpParserTest(t, "Empty interface", "empty.idl", &empty)
-}
-
-func helpParseInterface(t *testing.T, label, input, description string) {
-	root, _ := interfaceParser()(parsec.NewScanner([]byte(input)))
-	if root == nil {
-		t.Errorf("%s: cannot parse input:\n%s", label, input)
-		return
-	}
-	if err, ok := root.(error); ok {
-		t.Errorf("%s: parsing error: %v", label, err)
-		return
-	}
-	if metaObj, ok := root.(*object.MetaObject); !ok {
-		t.Errorf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
-		return
-	} else if metaObj.Description != description {
-		t.Errorf("%s; expected :%s: got: %s", label, description, metaObj.Description)
-		return
-	}
-}
-
-func TestParseInterfaces(t *testing.T) {
-	idl := `interface Test
-	end`
-	helpParseInterface(t, "1", idl, "Test")
-	idl = `interface Test
-	// this is a comment.
-	end`
-	helpParseInterface(t, "2", idl, "Test")
-	idl = `interface Test // this is a comment.
-	end`
-	helpParseInterface(t, "3", idl, "Test")
 }
 
 func TestParseService0(t *testing.T) {
@@ -276,10 +278,43 @@ func TestParseObject(t *testing.T) {
 	helpParserTest(t, "Object", "object.idl", &object.ObjectMetaObject)
 }
 
+func helpParseInterface(t *testing.T, label, input, name string) {
+	ctx := NewContext()
+	root, _ := interfaceParser(ctx)(parsec.NewScanner([]byte(input)))
+	if root == nil {
+		t.Errorf("%s: cannot parse input:\n%s", label, input)
+		return
+	}
+	if err, ok := root.(error); ok {
+		t.Errorf("%s: parsing error: %v", label, err)
+		return
+	}
+	if itf, ok := root.(*InterfaceType); !ok {
+		t.Errorf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
+		return
+	} else if itf.name != name {
+		t.Errorf("%s; expected :%s: got: %s", label, name, itf.name)
+		return
+	}
+}
+
+func TestParseInterfaces(t *testing.T) {
+	idl := `interface Test1
+	end`
+	helpParseInterface(t, "1", idl, "Test1")
+	idl = `interface Test2
+	// this is a comment.
+	end`
+	helpParseInterface(t, "2", idl, "Test2")
+	idl = `interface Test3 // this is a comment.
+	end`
+	helpParseInterface(t, "3", idl, "Test3")
+}
+
 func TestParseReturns(t *testing.T) {
 	input := "-> int32"
 	expected := NewIntType()
-	parser := returns()
+	parser := returns(NewContext())
 	root, _ := parser(parsec.NewScanner([]byte(input)))
 	if root == nil {
 		t.Fatalf("error parsing returns:\n%s", input)
@@ -295,7 +330,7 @@ func TestParseReturns(t *testing.T) {
 }
 
 func helpParseStruct(t *testing.T, label, input, expected string) {
-	root, _ := structure()(parsec.NewScanner([]byte(input)))
+	root, _ := structure(NewContext())(parsec.NewScanner([]byte(input)))
 	if root == nil {
 		t.Errorf("%s: error parsing struuture:\n%s", label, input)
 		return
@@ -327,100 +362,88 @@ func TestStructureParser(t *testing.T) {
 	end`, "(fb)<Test,c,d>")
 }
 
-func newDeclaration(t *testing.T) *Declarations {
-	basic1, err := NewRefType("basic1")
-	if err != nil {
-		t.Fatalf("%s, %s", "basic1", err)
-	}
-	basic2, err := NewRefType("basic2")
-	if err != nil {
-		t.Fatalf("%s, %s", "basic2", err)
-	}
-	complex1, err := NewRefType("complex1")
-	if err != nil {
-		t.Fatalf("%s, %s", "complex1", err)
-	}
-	complex2, err := NewRefType("complex2")
-	if err != nil {
-		t.Fatalf("%s, %s", "complex2", err)
-	}
+func newDeclaration(t *testing.T) []*StructType {
+	scope := NewScope()
+	basic1 := NewRefType("basic1", scope)
+	basic2 := NewRefType("basic2", scope)
+	complex1 := NewRefType("complex1", scope)
+	complex2 := NewRefType("complex2", scope)
 
-	return &Declarations{
-		Struct: []StructType{
-			StructType{
-				Name: "basic1",
-				Members: []MemberType{
-					MemberType{
-						Name:  "a",
-						Value: NewIntType(),
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
+	structs := []*StructType{
+		&StructType{
+			Name: "basic1",
+			Members: []MemberType{
+				MemberType{
+					Name:  "a",
+					Value: NewIntType(),
+				},
+				MemberType{
+					Name:  "b",
+					Value: NewIntType(),
 				},
 			},
-			StructType{
-				Name: "basic2",
-				Members: []MemberType{
-					MemberType{
-						Name:  "a",
-						Value: NewIntType(),
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
+		},
+		&StructType{
+			Name: "basic2",
+			Members: []MemberType{
+				MemberType{
+					Name:  "a",
+					Value: NewIntType(),
+				},
+				MemberType{
+					Name:  "b",
+					Value: NewIntType(),
 				},
 			},
-			StructType{
-				Name: "complex1",
-				Members: []MemberType{
-					MemberType{
-						Name:  "simple1",
-						Value: basic1,
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
+		},
+		&StructType{
+			Name: "complex1",
+			Members: []MemberType{
+				MemberType{
+					Name:  "simple1",
+					Value: basic1,
+				},
+				MemberType{
+					Name:  "b",
+					Value: NewIntType(),
 				},
 			},
-			StructType{
-				Name: "complex3",
-				Members: []MemberType{
-					MemberType{
-						Name:  "notSimple2",
-						Value: complex2,
-					},
+		},
+		&StructType{
+			Name: "complex3",
+			Members: []MemberType{
+				MemberType{
+					Name:  "notSimple2",
+					Value: complex2,
 				},
 			},
-			StructType{
-				Name: "complex2",
-				Members: []MemberType{
-					MemberType{
-						Name:  "notSimple1",
-						Value: complex1,
-					},
-					MemberType{
-						Name:  "simple2",
-						Value: basic2,
-					},
-					MemberType{
-						Name:  "b",
-						Value: NewIntType(),
-					},
+		},
+		&StructType{
+			Name: "complex2",
+			Members: []MemberType{
+				MemberType{
+					Name:  "notSimple1",
+					Value: complex1,
+				},
+				MemberType{
+					Name:  "simple2",
+					Value: basic2,
+				},
+				MemberType{
+					Name:  "b",
+					Value: NewIntType(),
 				},
 			},
 		},
 	}
+	for _, str := range structs {
+		scope.Add(str.Name, str)
+	}
+	return structs
 }
 
 func TestSimpleTest(t *testing.T) {
-	unregsterTypeNames()
-	input := newDeclaration(t)
-	registerTypeNames(input)
-	result := newDeclaration(t)
+	types := newDeclaration(t)
 
 	expected := []string{
 		"(ii)<basic1,a,b>",
@@ -429,13 +452,10 @@ func TestSimpleTest(t *testing.T) {
 		"((((ii)<basic1,a,b>i)<complex1,simple1,b>(ii)<basic2,a,b>i)<complex2,notSimple1,simple2,b>)<complex3,notSimple2>",
 		"(((ii)<basic1,a,b>i)<complex1,simple1,b>(ii)<basic2,a,b>i)<complex2,notSimple1,simple2,b>",
 	}
-
-	if len(expected) != len(result.Struct) {
-		t.Fatalf("invalid lenght")
-	}
-	for i, s := range result.Struct {
+	for i, s := range types {
 		if s.Signature() != expected[i] {
-			t.Errorf("%d: invalid: \nobserved: %s, \nexpected: %s", i, s.Signature(), expected[i])
+			t.Errorf("%d: invalid: \nobserved: %s, \nexpected: %s",
+				i, s.Signature(), expected[i])
 		}
 	}
 }
@@ -451,11 +471,15 @@ func TestParseSimpleIDL(t *testing.T) {
 				ParametersSignature: "(((if)<A,a,b>f)<B,a,b>)",
 				Parameters: []object.MetaMethodParameter{
 					object.MetaMethodParameter{
-						Name: "d",
+						Name:        "d",
+						Description: "B",
 					},
 				},
+				ReturnDescription: "nothing",
 			},
 		},
+		Signals:    map[uint32]object.MetaSignal{},
+		Properties: map[uint32]object.MetaProperty{},
 	}
 	idl := `
 	struct B
@@ -490,7 +514,7 @@ func TestParseEnum(t *testing.T) {
 		valueB = 2
 	end
 	`
-	declarations, err := ParseIDL2(strings.NewReader(input))
+	declarations, err := ParsePackage([]byte(input))
 	if err != nil {
 		t.Fatalf("Failed to parse input: %s", err)
 	}
@@ -523,7 +547,7 @@ func TestParseEnum(t *testing.T) {
 
 func TestPackageName(t *testing.T) {
 	input := `package bla_bla.te-st // comment test `
-	declarations, err := ParseIDL2(strings.NewReader(input))
+	declarations, err := ParsePackage([]byte(input))
 	if err != nil {
 		t.Fatalf("Failed to parse input: %s", err)
 	}

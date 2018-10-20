@@ -6,8 +6,6 @@ import (
 	. "github.com/lugu/qiloop/meta/signature"
 )
 
-var types *TypeSet = nil
-
 // RefType represents a struct.
 type RefType struct {
 	Scope Scope
@@ -77,25 +75,6 @@ func (r *RefType) resolve(set *TypeSet) (Type, error) {
 		return nil, fmt.Errorf("%s: not found in typeset (size: %d).", r.Name, len(set.Types))
 	}
 	return typ, nil
-}
-
-// Register associates the StructType of declarations into a global
-// variable which will be used to resolve RefType during the second
-// pass.
-//
-// TODO: register MetaObject as well in order to allow interfaces to
-// refer to other interfaces.
-func registerTypeNames(declarations *Declarations) {
-	set := NewTypeSet()
-	for _, struc := range declarations.Struct {
-		struc.RegisterTo(set)
-	}
-	types = set
-}
-
-// Unregster erase all the previously registered StrucType.
-func unregsterTypeNames() {
-	types = nil
 }
 
 // EnumType represents a const.
