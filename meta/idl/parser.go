@@ -153,11 +153,24 @@ func signal(ctx *Context) parsec.Parser {
 	)
 }
 
+func property(ctx *Context) parsec.Parser {
+	return parsec.And(
+		nodifyProperty,
+		parsec.Atom("prop", "prop"),
+		Ident(),
+		parsec.Atom("(", "("),
+		parameters(ctx),
+		parsec.Atom(")", ")"),
+		comments(),
+	)
+}
+
 func action(ctx *Context) parsec.Parser {
 	return parsec.OrdChoice(
 		nodifyAction,
 		method(ctx),
 		signal(ctx),
+		property(ctx),
 	)
 }
 
@@ -218,7 +231,7 @@ func enum() parsec.Parser {
 
 func structure(ctx *Context) parsec.Parser {
 	return parsec.And(
-		nodifyStructure,
+		makeNodifyStructure(ctx.scope),
 		parsec.Atom("struct", "struct"),
 		Ident(),
 		comments(),
@@ -406,6 +419,7 @@ func nodifyCommentContent(nodes []Node) Node {
 	return comment
 }
 
+// returns a signature.Type or an error
 func nodifyReturns(nodes []Node) Node {
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {
 		return NewVoidType()
@@ -590,33 +604,38 @@ func nodifyMemberList(nodes []Node) Node {
 	return NewStructType("parameters", members)
 }
 
-// nodifyStructure returns a StructType of an error.
-func nodifyStructure(nodes []Node) Node {
-	nameNode := nodes[1]
-	structNode := nodes[3]
-	structType, ok := structNode.(*StructType)
-	if !ok {
-		return fmt.Errorf("unexpected non struct type(%s): %v",
-			reflect.TypeOf(structNode), structNode)
+// makeNodifyStructure returns a *StructType of an error.
+// the structure is added to the scope
+func makeNodifyStructure(sc Scope) func([]Node) Node {
+	return func(nodes []Node) Node {
+		nameNode := nodes[1]
+		structNode := nodes[3]
+		structType, ok := structNode.(*StructType)
+		if !ok {
+			return fmt.Errorf("unexpected non struct type(%s): %v",
+				reflect.TypeOf(structNode), structNode)
+		}
+		structType.Name = nameNode.(*parsec.Terminal).GetValue()
+		sc.Add(structType.Name, structType)
+		return structType
 	}
-	structType.Name = nameNode.(*parsec.Terminal).GetValue()
-	return structType
 }
 
-// TODO: should receive an InterfaceType here. Give it
-// a name and add it to the scope. Then return the
-// MetaObject associated.
+// makeNodifyInterface returns an *InterfaceType or an error
+// the InterfaceType is added to the scope
 func makeNodifyInterface(sc Scope) func([]Node) Node {
 	return func(nodes []Node) Node {
 		nameNode := nodes[1]
-		objNode := nodes[3]
-		metaObj, ok := objNode.(*object.MetaObject)
+		itfNode := nodes[3]
+		itf, ok := itfNode.(*InterfaceType)
 		if !ok {
-			return fmt.Errorf("Expecting MetaObject, got %+v: %+v",
-				reflect.TypeOf(objNode), objNode)
+			return fmt.Errorf("Expecting InterfaceType, got %+v: %+v",
+				reflect.TypeOf(itfNode), itfNode)
 		}
-		metaObj.Description = nameNode.(*parsec.Terminal).GetValue()
-		return metaObj
+		itf.name = nameNode.(*parsec.Terminal).GetValue()
+		itf.scope = sc
+		sc.Add(itf.name, itf)
+		return itf
 	}
 }
 
@@ -676,7 +695,7 @@ func nodifyBasicType(nodes []Node) Node {
 	}
 }
 
-// nodifyMethod returns either a MetaMethod or an error.
+// nodifyMethod returns a Method or an error.
 func nodifyMethod(nodes []Node) Node {
 	if err, ok := checkError(nodes); ok {
 		return fmt.Errorf("failed to parse method: %s", err)
@@ -684,101 +703,108 @@ func nodifyMethod(nodes []Node) Node {
 	retNode := nodes[5]
 	paramNode := nodes[3]
 	commentNode := nodes[6]
-	structType, ok := paramNode.(*StructType)
+	params, ok := paramNode.([]Parameter)
 	if !ok {
-		return fmt.Errorf("failed to convert param type (%s): %v", reflect.TypeOf(paramNode), paramNode)
+		return fmt.Errorf("method: failed to convert param type (%s): %v",
+			reflect.TypeOf(paramNode), paramNode)
 	}
 	retType, ok := retNode.(Type)
 	if !ok {
-		return fmt.Errorf("failed to convert return type (%s): %v", reflect.TypeOf(retNode), retNode)
+		return fmt.Errorf("method: failed to convert return type (%s): %v",
+			reflect.TypeOf(retNode), retNode)
 	}
 
-	params := make([]Type, len(structType.Members))
-	for i, member := range structType.Members {
-		params[i] = member.Value
-	}
-	tupleType := NewTupleType(params)
-
-	method := new(object.MetaMethod)
+	var method Method
 	method.Name = nodes[1].(*parsec.Terminal).GetValue()
-	method.ParametersSignature = tupleType.Signature()
-	if len(structType.Members) != 0 {
-		method.Parameters = make([]object.MetaMethodParameter, len(structType.Members))
+	method.Params = params
+	method.Return = retType
 
-		for i, member := range structType.Members {
-			method.Parameters[i].Name = member.Name
-		}
-	}
 	if uid, ok := commentNode.(uint32); ok {
-		method.Uid = uid
+		method.Id = uid
 	}
-	method.ReturnSignature = retType.Signature()
 	return method
 }
 
-// nodifySignal returns either a MetaSignal or an error.
+// nodifySignal returns either a Signal or an error.
 func nodifySignal(nodes []Node) Node {
 	if err, ok := checkError(nodes); ok {
 		return fmt.Errorf("failed to parse method: %s", err)
 	}
-	commentNode := nodes[5]
 	paramNode := nodes[3]
-	structType, ok := paramNode.(*StructType)
+	commentNode := nodes[5]
+	params, ok := paramNode.([]Parameter)
 	if !ok {
-		return fmt.Errorf("failed to convert param type (%s): %v", reflect.TypeOf(paramNode), paramNode)
+		return fmt.Errorf("signal: failed to convert param type (%s): %v",
+			reflect.TypeOf(paramNode), paramNode)
 	}
-
-	params := make([]Type, len(structType.Members))
-	for i, member := range structType.Members {
-		params[i] = member.Value
-	}
-	tupleType := NewTupleType(params)
-
-	signal := new(object.MetaSignal)
+	var signal Signal
 	signal.Name = nodes[1].(*parsec.Terminal).GetValue()
-	signal.Signature = tupleType.Signature()
+	signal.Params = params
 	if uid, ok := commentNode.(uint32); ok {
-		signal.Uid = uid
+		signal.Id = uid
 	}
 	return signal
 }
 
-// nodifyActionList returns either a MetaObject or an error.
-//
-// TODO: returns an InterfaceType instead of a MetaObject. The meta
-// object will be retreive from the InterfaceType.
+// nodifyProperty returns either a Property or an error.
+func nodifyProperty(nodes []Node) Node {
+	if err, ok := checkError(nodes); ok {
+		return fmt.Errorf("failed to parse method: %s", err)
+	}
+	paramNode := nodes[3]
+	commentNode := nodes[5]
+	params, ok := paramNode.([]Parameter)
+	if !ok {
+		return fmt.Errorf("signal: failed to convert param type (%s): %v",
+			reflect.TypeOf(paramNode), paramNode)
+	}
+	var prop Property
+	prop.Name = nodes[1].(*parsec.Terminal).GetValue()
+	prop.Params = params
+	if uid, ok := commentNode.(uint32); ok {
+		prop.Id = uid
+	}
+	return prop
+}
+
+// nodifyActionList returns an *InterfaceType or an error
+// the InterfaceType has no name or namespce.
 func nodifyActionList(nodes []Node) Node {
-	metaObj := new(object.MetaObject)
-	methods := make(map[uint32]object.MetaMethod)
-	signals := make(map[uint32]object.MetaSignal)
+	var itf InterfaceType
+
+	itf.methods = make(map[uint32]Method)
+	itf.signals = make(map[uint32]Signal)
+	itf.properties = make(map[uint32]Property)
+
 	var customAction uint32 = 100
 	for _, node := range nodes {
 		if err, ok := node.(error); ok {
 			return err
 		}
-		if method, ok := node.(*object.MetaMethod); ok {
-			if method.Uid == 0 && method.Name != "registerEvent" {
-				method.Uid = customAction
+		if method, ok := node.(Method); ok {
+			if method.Id == 0 && method.Name != "registerEvent" {
+				method.Id = customAction
 				customAction++
 			}
-			methods[method.Uid] = *method
-		} else if signal, ok := node.(*object.MetaSignal); ok {
-			if signal.Uid == 0 {
-				signal.Uid = customAction
+			itf.methods[method.Id] = method
+		} else if signal, ok := node.(Signal); ok {
+			if signal.Id == 0 {
+				signal.Id = customAction
 				customAction++
 			}
-			signals[signal.Uid] = *signal
+			itf.signals[signal.Id] = signal
+		} else if property, ok := node.(Property); ok {
+			if property.Id == 0 {
+				property.Id = customAction
+				customAction++
+			}
+			itf.properties[property.Id] = property
 		} else {
-			return fmt.Errorf("Expecting MetaMethod or MetaSignal, got %+v: %+v", reflect.TypeOf(node), node)
+			return fmt.Errorf("Expecting action, got %+v: %+v",
+				reflect.TypeOf(node), node)
 		}
 	}
-	if len(methods) != 0 {
-		metaObj.Methods = methods
-	}
-	if len(signals) != 0 {
-		metaObj.Signals = signals
-	}
-	return metaObj
+	return &itf
 }
 
 func checkError(nodes []Node) (error, bool) {
@@ -795,39 +821,41 @@ func nodifyParam(nodes []Node) Node {
 		return err
 	}
 	if typ, ok := nodes[2].(Type); ok {
-		return MemberType{
-			Name:  nodes[0].(*parsec.Terminal).GetValue(),
-			Value: typ,
+		return Parameter{
+			Name: nodes[0].(*parsec.Terminal).GetValue(),
+			Type: typ,
 		}
 	} else {
 		return fmt.Errorf("failed to parse param: %s", nodes[2])
 	}
 }
 
+// nodifyParams returns an slice of Parameter
 func nodifyParams(nodes []Node) Node {
 	if err, ok := checkError(nodes); ok {
 		return err
 	}
-	members := make([]MemberType, len(nodes))
+	params := make([]Parameter, len(nodes))
 	for i, node := range nodes {
 		if err, ok := checkError([]Node{node}); ok {
 			return fmt.Errorf("failed to parse parameter %d: %s", i, err)
-		} else if member, ok := node.(MemberType); ok {
-			members[i] = member
+		} else if member, ok := node.(Parameter); ok {
+			params[i] = member
 		} else {
 			return fmt.Errorf("failed to parse parameter %d: %s", i, node)
 		}
 	}
-	return NewStructType("parameters", members)
+	return params
 }
 
+// return a slice of Parameter
 func nodifyAndParams(nodes []Node) Node {
 	if err, ok := checkError(nodes); ok {
 		return err
 	}
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {
-		return NewStructType("parameters", make([]MemberType, 0))
-	} else if ret, ok := nodes[0].(*StructType); ok {
+		return make([]Parameter, 0)
+	} else if ret, ok := nodes[0].([]Parameter); ok {
 		return ret
 	} else {
 		return fmt.Errorf("unexpected non struct type(%s): %v",

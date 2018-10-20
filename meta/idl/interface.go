@@ -19,11 +19,16 @@ import (
 
 type Namespace map[string]Scope
 
+type Parameter struct {
+	Name string
+	Type signature.Type
+}
+
 type Method struct {
-	Name     string
-	Return   signature.Type
-	ArgNames []string
-	ArgTypes []signature.Type
+	Name   string
+	Id     uint32
+	Return signature.Type
+	Params []Parameter
 }
 
 func (m Method) Meta(id uint32) object.MetaMethod {
@@ -32,41 +37,52 @@ func (m Method) Meta(id uint32) object.MetaMethod {
 	meta.Name = m.Name
 	meta.ReturnSignature = m.Return.Signature()
 	meta.ReturnDescription = m.Return.SignatureIDL()
-	meta.ParametersSignature = signature.NewTupleType(m.ArgTypes).Signature()
+	params := make([]signature.Type, 0)
 	meta.Parameters = make([]object.MetaMethodParameter, 0)
-	for id, p := range m.ArgNames {
+	for _, p := range m.Params {
 		var param object.MetaMethodParameter
-		param.Name = p
-		param.Description = m.ArgTypes[id].SignatureIDL()
+		param.Name = p.Name
+		param.Description = p.Type.SignatureIDL()
 		meta.Parameters = append(meta.Parameters, param)
+		params = append(params, p.Type)
 	}
+	meta.ParametersSignature = signature.NewTupleType(params).Signature()
 	return meta
 }
 
 type Signal struct {
-	Name     string
-	ArgNames []string
-	ArgTypes []signature.Type
+	Name   string
+	Id     uint32
+	Params []Parameter
 }
 
 func (s Signal) Meta(id uint32) object.MetaSignal {
 	var meta object.MetaSignal
 	meta.Uid = id
 	meta.Name = s.Name
-	meta.Signature = s.Name
+	types := make([]signature.Type, 0)
+	for _, p := range s.Params {
+		types = append(types, p.Type)
+	}
+	meta.Signature = signature.NewTupleType(types).Signature()
 	return meta
 }
 
 type Property struct {
 	Name   string
-	Return signature.Type
+	Id     uint32
+	Params []Parameter
 }
 
 func (p Property) Meta(id uint32) object.MetaProperty {
 	var meta object.MetaProperty
 	meta.Uid = id
 	meta.Name = p.Name
-	meta.Signature = p.Return.Signature()
+	types := make([]signature.Type, 0)
+	for _, p := range p.Params {
+		types = append(types, p.Type)
+	}
+	meta.Signature = signature.NewTupleType(types).Signature()
 	return meta
 }
 
