@@ -5,7 +5,6 @@ import (
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
-	"reflect"
 )
 
 // generateMethod writes the method declaration. Does not use
@@ -27,7 +26,8 @@ func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMetho
 
 	tupleType, ok := paramType.(*signature.TupleType)
 	if !ok {
-		return fmt.Errorf("parameter signature must be a tuple (%s): %+v", reflect.TypeOf(paramType), paramType)
+		// some buggy service don' t return tupples
+		tupleType = signature.NewTupleType([]signature.Type{paramType})
 	}
 
 	paramSignature := paramType.SignatureIDL()
