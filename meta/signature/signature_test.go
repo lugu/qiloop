@@ -148,3 +148,18 @@ func TestParseMetaObject(t *testing.T) {
 func TestParseServiceInfo(t *testing.T) {
 	testSignature(t, "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
 }
+func TestParseTextProcessingContext(t *testing.T) {
+	testSignature(t, "{sc}")
+	testSignature(t, "({sc}fs)<AgentGrd,concepts,confidence,userId>")
+	testSignature(t, "(s(({sc}fs)<AgentGrd,concepts,confidence,userId>({sc}fs)<AgentGrd,concepts,confidence,userId>i)<TextProcessingContext,author,recever,language>)")
+	testSignature(t, "((iis({sc}fs)<AgentGrd,concepts,confidence,userId>({sc}f({ii})<Duration,timeInfos>)<TimeGrd,concepts,confidence,reference>(im)<Expression,type,exp>)<Knowledge,fromSource,fromLanguage,fromText,author,time,exp>(({sc}fs)<AgentGrd,concepts,confidence,userId>({sc}fs)<AgentGrd,concepts,confidence,userId>i)<TextProcessingContext,author,recever,language>m)")
+}
+func TestParseKnowledge(t *testing.T) {
+	testSignature(t, "((iis({sc}fs)<AgentGrd,concepts,confidence,userId>({sc}f({ii})<Duration,timeInfos>)<TimeGrd,concepts,confidence,reference>(im)<Expression,type,exp>)<Knowledge,fromSource,fromLanguage,fromText,author,time,exp>)")
+}
+func TestParsePersonState(t *testing.T) {
+	testSignature(t, "((ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>((ff)<BodyLanguageEase,level,confidence>)<BodyLanguageState,ease>(ff)<Smile,value,confidence>((ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>)<Expressions,calm,anger,joy,sorrow,laughter,excitement,surprise>)<PersonState,valence,attention,bodyLanguageState,smile,expressions>")
+}
+func TestParseRobotFullState(t *testing.T) {
+	testSignature(t, "((ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>)<RobotFullState,pleasure,excitement>")
+}
