@@ -20,6 +20,7 @@ func Print(i interface{}) {
 
 func main() {
 	var serverURL = flag.String("qi-url", "tcp://127.0.0.1:9559", "server URL")
+	var serviceName = flag.String("service", "", "name of the service to lookup")
 	flag.Parse()
 
 	sess, err := session.NewSession(*serverURL)
@@ -27,16 +28,15 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	if len(flag.Args()) > 0 {
-		serviceName := flag.Args()[0]
-		proxy, err := sess.Proxy(serviceName, 1)
+	if *serviceName != "" {
+		proxy, err := sess.Proxy(*serviceName, 1)
 		if err != nil {
-			log.Fatalf("failed to connect service (%s): %s", serviceName, err)
+			log.Fatalf("failed to connect service (%s): %s", *serviceName, err)
 		}
 		var obj object.Object = &services.ObjectProxy{proxy}
 		meta, err := obj.MetaObject(1)
 		if err != nil {
-			log.Fatalf("failed to get metaobject (%s): %s", serviceName, err)
+			log.Fatalf("failed to get metaobject (%s): %s", *serviceName, err)
 		}
 		Print(meta)
 	} else {
