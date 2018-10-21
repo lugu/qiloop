@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
 )
 
@@ -42,26 +41,13 @@ func (s *Cache) AddService(name string, serviceID uint32,
 }
 
 func (s *Cache) Lookup(name string, serviceID uint32) error {
-
-	// 1. register the service as a basic object in order to query its
-	// MetaObject.
-	s.AddService(name, serviceID, object.ObjectMetaObject)
-
-	// 2. instanciate a proxy
-	obj, err := services.NewObject(s.Session(), serviceID)
+	objectID := uint32(1)
+	meta, err := bus.MetaObject(NewClient(s.Endpoint),
+		serviceID, objectID)
 	if err != nil {
-		return fmt.Errorf("failed to create service of %s: %s", name, err)
+		return fmt.Errorf("Can not reach metaObject: %s", err)
 	}
-
-	// 3. query the MetaObject
-	meta, err := obj.MetaObject(1)
-	if err != nil {
-		return fmt.Errorf("failed to query MetaObject of %s: %s", name, err)
-	}
-	meta.Description = name
-
-	// 4. update the cache
-	s.Services[serviceID] = meta
+	s.AddService(name, serviceID, meta)
 	return nil
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/meta/idl"
@@ -73,33 +74,26 @@ func main() {
 		}
 
 		// sort the addresses based on their value
-		for _, ep := range s.Endpoints {
+		for _, addr := range s.Endpoints {
 			// do not connect the test range.
-			// FIXME: unless a local interface has such IP
-			// address.
-			if strings.Contains(ep, "198.18.0") {
+			if strings.Contains(addr, "198.18.0") {
 				continue
 			}
-			sess, err := session.NewSession(ep)
+			cache, err := client.NewCachedSession(addr)
 			if err != nil {
 				continue
 			}
-			obj, err := services.NewObject(sess, s.ServiceId)
+			err = cache.Lookup(s.Name, s.ServiceId)
 			if err != nil {
-				log.Printf("failed to create service of %s: %s",
-					s.Name, err)
 				continue
 			}
-			meta, err := obj.MetaObject(1)
-			if err != nil {
-				log.Printf("failed to query MetaObject of %s: %s",
-					s.Name, err)
-				break
-			}
-			meta.Description = s.Name
+
+			meta := cache.Services[s.ServiceId]
 			objects = append(objects, meta)
-			if err := idl.GenerateIDL(outputIDL, s.Name, meta); err != nil {
-				log.Printf("failed to generate IDL of %s: %s", s.Name, err)
+			err = idl.GenerateIDL(outputIDL, s.Name, meta)
+			if err != nil {
+				log.Printf("failed to generate IDL of %s: %s",
+					s.Name, err)
 			}
 			break
 		}
