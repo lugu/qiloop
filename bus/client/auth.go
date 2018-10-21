@@ -28,11 +28,14 @@ func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap,
 		"MessageFlags":          value.Bool(true),
 		"MetaObjectCache":       value.Bool(true),
 		"RemoteCancelableCalls": value.Bool(true),
-		KeyUser:                 value.String(user),
-		KeyToken:                value.String(token),
+	}
+	if user != "" {
+		permissions[KeyUser] = value.String(user)
+	}
+	if token != "" {
+		permissions[KeyToken] = value.String(token)
 	}
 	return authenticateCall(endpoint, permissions)
-
 }
 
 func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
