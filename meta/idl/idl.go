@@ -30,9 +30,10 @@ func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMetho
 		tupleType = signature.NewTupleType([]signature.Type{paramType})
 	}
 
-	paramSignature := paramType.SignatureIDL()
-	if m.Parameters != nil && len(m.Parameters) != 0 {
-		paramSignature = ""
+	paramSignature := ""
+	if m.Parameters == nil || len(m.Parameters) != len(tupleType.Members()) {
+		paramSignature = tupleType.SignatureIDL()
+	} else {
 		for i, p := range m.Parameters {
 			if paramSignature != "" {
 				paramSignature += ","
