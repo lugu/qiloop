@@ -72,12 +72,12 @@ What is working:
 - IDL generation
 - TLS transport
 - Authentication
+- IDL parsing
 
 What is under development:
 
-- IDL parsing
+- Service stub generation
 
 What is yet to be done:
 
-- Service stub generation
-- Service properties
+- Support for properties
