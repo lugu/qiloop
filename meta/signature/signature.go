@@ -40,6 +40,19 @@ func typeName() parsec.Parser {
 	return parsec.Ident()
 }
 
+func structName() parsec.Parser {
+	patterns := []string{
+		// Allow C++ style name (ex: List<double>)
+		`[A-Za-z][0-9a-zA-Z_]*\<[A-Za-z][0-9a-zA-Z_]*>`,
+		`[A-Za-z][0-9a-zA-Z_]*`,
+	}
+	names := []string{
+		"structTemplateName",
+		"structName",
+	}
+	return parsec.OrdTokens(patterns, names)
+}
+
 // Node is an alias to parsec.ParsecNode
 type Node = parsec.ParsecNode
 
@@ -188,7 +201,7 @@ func nodifyTypeMember(nodes []Node) Node {
 	return nodes[1]
 }
 
-func nodifyTypeDefinition(nodes []Node) Node {
+func nodifyStrucType(nodes []Node) Node {
 
 	terminal, ok := nodes[4].(*parsec.Terminal)
 	if !ok {
@@ -210,11 +223,11 @@ func Parse(input string) (Type, error) {
 
 	var arrayType parsec.Parser
 	var mapType parsec.Parser
-	var typeDefinition parsec.Parser
+	var structType parsec.Parser
 	var tupleType parsec.Parser
 
 	var declarationType = parsec.OrdChoice(nil,
-		basicType(), &mapType, &arrayType, &typeDefinition, &tupleType)
+		basicType(), &mapType, &arrayType, &structType, &tupleType)
 
 	arrayType = parsec.And(nodifyArrayType,
 		parsec.Atom("[", "MapStart"),
@@ -235,12 +248,12 @@ func Parse(input string) (Type, error) {
 		&listType,
 		parsec.Atom(")", "TypeParameterClose"))
 
-	typeDefinition = parsec.And(nodifyTypeDefinition,
+	structType = parsec.And(nodifyStrucType,
 		parsec.Atom("(", "TypeParameterStart"),
 		&listType,
 		parsec.Atom(")", "TypeParameterClose"),
 		parsec.Atom("<", "TypeDefinitionStart"),
-		typeName(),
+		structName(),
 		&typeMemberList,
 		parsec.Atom(">", "TypeDefinitionClose"))
 

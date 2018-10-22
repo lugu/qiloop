@@ -2,6 +2,8 @@ package signature
 
 import (
 	"bytes"
+	parsec "github.com/prataprc/goparsec"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -26,8 +28,33 @@ func testSignature(t *testing.T, signature string) {
 	} else if result == nil {
 		t.Error("wrong return")
 	} else if result.Signature() != signature {
-		t.Error("invalid signature: " + result.Signature())
+		t.Errorf("invalid signature: %s for %s",
+			result.Signature(), signature)
 	}
+}
+
+func helpStructName(t *testing.T, input string) {
+	text := []byte(input)
+	root, _ := structName()(parsec.NewScanner(text))
+	if root == nil {
+		t.Errorf("failed to parse signature: %s", input)
+	}
+	terminal, ok := root.(*parsec.Terminal)
+	if !ok {
+		t.Errorf("failed to parse signature: %s: %+v",
+			input, reflect.TypeOf(root))
+	}
+	if input != terminal.GetValue() {
+		t.Errorf("failed to parse signature name: %s instead of %s",
+			terminal.GetValue(), input)
+	}
+}
+
+func TestStructName(t *testing.T) {
+	helpStructName(t, "random_name")
+	helpStructName(t, "RandomName2")
+	helpStructName(t, "RandomName3<float>")
+	helpStructName(t, "a<a>")
 }
 
 func TestParseBasics(t *testing.T) {
@@ -155,9 +182,5 @@ func TestParseTextProcessingContext(t *testing.T) {
 }
 
 func TestParseRobotFullState(t *testing.T) {
-	testSignature(t, "((ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>)<RobotFullState,pleasure,excitement>")
-}
-
-func TestParsePersonState(t *testing.T) {
-	testSignature(t, "((ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>((ff)<BodyLanguageEase,level,confidence>)<BodyLanguageState,ease>(ff)<Smile,value,confidence>((ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>(ff)<ValueConfidence<float>,value,confidence>)<Expressions,calm,anger,joy,sorrow,laughter,excitement,surprise>)<PersonState,valence,attention,bodyLanguageState,smile,expressions>")
+	testSignature(t, "(ff)<ValueConfidence<float>,value,confidence>")
 }
