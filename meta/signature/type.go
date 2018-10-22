@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/dave/jennifer/jen"
+	"log"
+	"strconv"
 	"strings"
 )
 
@@ -747,4 +749,71 @@ func (s *StructType) Marshal(structID string, writer string) *Statement {
 // read and an error.
 func (s *StructType) Unmarshal(reader string) *Statement {
 	return jen.Id("Read" + s.Name).Call(jen.Id(reader))
+}
+
+// EnumType represents a const.
+type EnumType struct {
+	Name   string
+	Values map[string]int
+}
+
+// used during Enum parsing
+type EnumMember struct {
+	Const string
+	Value int
+}
+
+func NewEnumType(name string, values map[string]int) Type {
+	return &EnumType{
+		Name:   name,
+		Values: values,
+	}
+}
+
+func (e *EnumType) Signature() string {
+	return "c"
+}
+
+func (e *EnumType) SignatureIDL() string {
+	return e.Name
+}
+
+func (e *EnumType) TypeName() *Statement {
+	return jen.Id(e.Name)
+}
+
+func (e *EnumType) RegisterTo(set *TypeSet) {
+	// do not register anonymous enum
+	if e.Name == "" {
+		return
+	}
+	for i, name := range set.Names {
+		if name == e.Name {
+			if set.Types[i].Signature() != e.Signature() {
+				log.Printf("type set collision %s: %s vs %s",
+					name, set.Types[i].Signature(),
+					e.Signature())
+			}
+			return
+		}
+	}
+	set.Names = append(set.Names, e.Name)
+	set.Types = append(set.Types, e)
+}
+
+func (e *EnumType) TypeDeclaration(file *jen.File) {
+	file.Type().Id(e.Name).Int()
+	var defs []jen.Code = make([]jen.Code, 0)
+	for i, v := range e.Values {
+		defs = append(defs, jen.Id(i).Op("=").Lit(strconv.Itoa(v)))
+	}
+	file.Const().Defs(defs...)
+}
+
+func (e *EnumType) Marshal(id string, writer string) *Statement {
+	return NewIntType().Marshal(id, writer)
+}
+
+func (e *EnumType) Unmarshal(reader string) *Statement {
+	return NewIntType().Unmarshal(reader)
 }

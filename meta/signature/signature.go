@@ -32,7 +32,8 @@ func basicType() parsec.Parser {
 		parsec.Atom("m", "value"),
 		parsec.Atom("o", "github.com/lugu/qiloop/type/object.Object"),
 		parsec.Atom("X", "interface{}"),
-		parsec.Atom("v", "void"))
+		parsec.Atom("v", "void"),
+		parsec.Atom("c", "enum"))
 }
 
 func typeName() parsec.Parser {
@@ -72,6 +73,8 @@ func nodifyBasicType(nodes []Node) Node {
 		return NewObjectType()
 	case "X":
 		return NewUnknownType()
+	case "c":
+		return NewEnumType("", make(map[string]int, 0))
 	default:
 		return fmt.Errorf("wrong signature %s", signature)
 	}

@@ -220,7 +220,7 @@ func enumConst() parsec.Parser {
 func enum() parsec.Parser {
 	return parsec.And(
 		nodifyEnum,
-		parsec.Atom("enum", "enumm"),
+		parsec.Atom("enum", "enum"),
 		Ident(),
 		comments(),
 		parsec.Kleene(nodifyEnumMembers, enumConst()),
