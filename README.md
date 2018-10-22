@@ -2,12 +2,9 @@
 
 # qiloop
 
-This is work in progress, you have been warned.
+`qiloop` is an implementation of the QiMessaging written in Go.
 
-`qiloop` is an implementation of the QiMessaging protocol written in the
-Go programming language.
-
-For more information about QiMessaging, here are some notes [about QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
+For a detailed analysis of the QiMessaging protocol, here are some notes [about QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
 
 Installation
 ------------
@@ -35,7 +32,7 @@ the running services.
 Here is how to generate proxies given a running server on port 9559:
 
 ```
-go run github.com/lugu/qiloop/bus/scan -qi-url localhost:9559 -proxy proxy.go
+go run github.com/lugu/qiloop/bus/scan -qi-url tcp://localhost:9559 -proxy proxy.go
 ```
 
 This generates `proxy.go` which gives access to all the discovered
@@ -56,19 +53,27 @@ Examples
   illustrates how to subscribe to a signal: it prints a log each time
   a service is removed from the service directory.
 
+Authentication
+--------------
+
+If you need to authenticate to a server using a login and a password,
+create a file `$HOME/.qi-auth.conf` with you login on the first line
+and your password on the second.
+
 Status
 ------
 
-The project is under rapid evolution. Currently, the client part is
-mostly working (except properties). So one should be able to use
-qiloop to call a service and subscribe to a signal. Don't expect more
-than this.
+This is work in progress, you have been warned.
+
+The client part is functional at the exception of the properties. So
+one should be able to use qiloop to call a service and subscribe to a
+signal. Don't expect more than this.
 
 What is working:
 
 - TCP connection
 - Proxy generation
-- Call and signals
+- Calls and signals
 - IDL generation
 - TLS transport
 - Authentication
