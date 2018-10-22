@@ -5,24 +5,15 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/value"
-	"io/ioutil"
-	gonet "net"
-	"os"
 	"testing"
 )
 
 func TestNewServer(t *testing.T) {
 
-	f, err := ioutil.TempFile("", "go-server-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	name := f.Name()
-	f.Close()
-	os.Remove(name)
-
-	listener, err := gonet.Listen("unix", name)
+	name := util.MakeTempFileName()
+	listener, err := net.Listen("unix://" + name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,12 +33,10 @@ func TestNewServer(t *testing.T) {
 	server := session.NewServer(listener, router)
 	go server.Run()
 
-	conn, err := gonet.Dial("unix", name)
+	client, err := net.DialEndPoint("unix://" + name)
 	if err != nil {
 		panic(err)
 	}
-
-	client := net.NewEndPoint(conn)
 
 	h := net.NewHeader(net.Call, 0, 0, 3, 4)
 	mSent := net.NewMessage(h, make([]byte, 0))

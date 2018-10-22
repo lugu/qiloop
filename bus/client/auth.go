@@ -81,6 +81,9 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	}
 }
 
+// AuthenticateUser trigger an authentication procedure using the user
+// and token. If user or token is empty, it is not included in the
+// request.
 func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 	resp, err := authenticateUser(endpoint, user, token)
 	if err != nil {
