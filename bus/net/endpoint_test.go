@@ -2,6 +2,9 @@ package net_test
 
 import (
 	"github.com/lugu/qiloop/bus/net"
+	"io/ioutil"
+	gonet "net"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -49,4 +52,24 @@ func TestPingPong(t *testing.T) {
 	if !reflect.DeepEqual(mSent, *mReceived) {
 		t.Errorf("expected %#v, go %#v", mSent, mReceived)
 	}
+}
+
+func TestConnectUnix(t *testing.T) {
+	f, err := ioutil.TempFile("", "go-net-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := f.Name()
+	f.Close()
+	os.Remove(name)
+
+	listener, err := gonet.Listen("unix", name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = net.DialEndPoint("unix://" + name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	listener.Close()
 }

@@ -8,6 +8,7 @@ import (
 	"log"
 	gonet "net"
 	"net/url"
+	"strings"
 	"sync"
 )
 
@@ -68,6 +69,15 @@ func NewEndPoint(conn gonet.Conn) EndPoint {
 	return e
 }
 
+func dialUNIX(name string) (EndPoint, error) {
+	conn, err := gonet.Dial("unix", name)
+	if err != nil {
+		return nil, fmt.Errorf(`failed to connect unix socket "%s": %s`,
+			name, err)
+	}
+	return NewEndPoint(conn), nil
+}
+
 func dialTCP(addr string) (EndPoint, error) {
 	conn, err := gonet.Dial("tcp", addr)
 	if err != nil {
@@ -99,6 +109,8 @@ func DialEndPoint(addr string) (EndPoint, error) {
 			return dialTCP(u.Host)
 		case "tcps":
 			return dialTCPS(u.Host)
+		case "unix":
+			return dialUNIX(strings.TrimPrefix(addr, "unix://"))
 		default:
 			return nil, fmt.Errorf("unknown URL scheme: %s", addr)
 		}
