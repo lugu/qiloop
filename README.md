@@ -19,7 +19,7 @@ Installation
 ------------
 
 ```
-go get -d -t github.com/lugu/qiloop/...
+go get github.com/lugu/qiloop/...
 ```
 
 Try it now !
