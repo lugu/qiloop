@@ -28,18 +28,7 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	if *serviceName != "" {
-		proxy, err := sess.Proxy(*serviceName, 1)
-		if err != nil {
-			log.Fatalf("failed to connect service (%s): %s", *serviceName, err)
-		}
-		var obj object.Object = &services.ObjectProxy{proxy}
-		meta, err := obj.MetaObject(1)
-		if err != nil {
-			log.Fatalf("failed to get metaobject (%s): %s", *serviceName, err)
-		}
-		Print(meta)
-	} else {
+	if *serviceName == "" {
 		directory, err := services.NewServiceDirectory(sess, 1)
 		if err != nil {
 			log.Fatalf("directory creation failed: %s", err)
@@ -49,5 +38,18 @@ func main() {
 			log.Fatalf("failed to list services: %s", err)
 		}
 		Print(services)
+	} else {
+		proxy, err := sess.Proxy(*serviceName, 1)
+		if err != nil {
+			log.Fatalf("failed to connect service (%s): %s",
+				*serviceName, err)
+		}
+		var obj object.Object = &services.ObjectProxy{proxy}
+		meta, err := obj.MetaObject(1)
+		if err != nil {
+			log.Fatalf("failed to get metaobject (%s): %s",
+				*serviceName, err)
+		}
+		Print(meta)
 	}
 }
