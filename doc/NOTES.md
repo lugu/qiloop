@@ -130,12 +130,16 @@ How does QiMessaging compares with:
 
 * **Component Object Model (COM)**: Both COM and QiMessaging offer an
   IPC mechanism independent of a particular programming language which
-  can be easily binded into various languages. libqi supports C++ and
+  can be easily binded to various languages. libqi supports C++ and
   Python. NAOqi has JavaScript binding among many other binding. Both
   COM and QiMessaging can use reference counting to manage the life
   time of an object.
 
-// TODO: ROS comparison
+* **ROS**: Both ROS and QiMessaging offer a publisher/subscriber model
+  as well as an RPC mecanism. Conceptually, the two solutions have a
+  lot in common. ROS 1 uses XMLRPC (i.e. XML over HTTP) while
+  QiMessaging use a binary format over TCP connections. QiMessaging
+  does not timestamp messages as opposed to ROS.
 
 ### OSI Model
 
@@ -531,7 +535,7 @@ Within the libqi framework objects are called
 
 ### Methods
 
-At the heart of QiMessage is the feature of remote procedure calls:
+At the heart of QiMessaging is the feature of remote procedure calls:
 
 - authentication is done by calling the method `authenticate` to the
   service 0.
