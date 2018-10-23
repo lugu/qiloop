@@ -1,10 +1,19 @@
-[![Build Status](https://travis-ci.org/lugu/qiloop.svg?branch=master)](https://travis-ci.org/lugu/qiloop) [![Go Report Card](https://goreportcard.com/badge/github.com/lugu/qiloop)](https://goreportcard.com/report/github.com/lugu/qiloop) [![codecov](https://codecov.io/gh/lugu/qiloop/branch/master/graph/badge.svg)](https://codecov.io/gh/lugu/qiloop) [![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)](https://github.com/emersion/stability-badges#experimental)
+![qiloop](https://github.com/lugu/qiloop/blob/master/doc/logo.jpg)
+
+-----
 
 # qiloop
 
-`qiloop` is an implementation of the QiMessaging written in Go.
+[![Build Status](https://travis-ci.org/lugu/qiloop.svg?branch=master)](https://travis-ci.org/lugu/qiloop) [![Go Report Card](https://goreportcard.com/badge/github.com/lugu/qiloop)](https://goreportcard.com/report/github.com/lugu/qiloop) [![codecov](https://codecov.io/gh/lugu/qiloop/branch/master/graph/badge.svg)](https://codecov.io/gh/lugu/qiloop) [![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)](https://github.com/emersion/stability-badges#experimental)
 
-For a detailed analysis of the QiMessaging protocol, here are some notes [about QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
+
+**`qiloop`** is an implementation of QiMessaging written in [Go](https://golang.org).
+
+QiMessaging is a network protocol used to build rich distributed
+applications. It was created by Aldebaran Robotics (currently SoftBank
+Robotics) and is the foundation of the NAOqi SDK. For more details
+about QiMessaging, visit this [analysis of the
+protocol](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
 
 Installation
 ------------

@@ -71,7 +71,7 @@
 
 ### Introduction
 
-QiMessaging is a network protocol used to create rich distributed
+QiMessaging is a network protocol used to build rich distributed
 applications. It was created by Aldebaran Robotics (currently SoftBank
 Robotics) and is the foundation of the NAOqi SDK. SoftBank Robotics
 uses it inside Romeo, NAO and Pepper robots. QiMessaging is also used
