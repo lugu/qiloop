@@ -58,7 +58,7 @@ type ObjectWrapper interface {
 }
 
 type GenericObject struct {
-	signals      map[uint32][]*ClientSession
+	signals      map[uint32][]*Context
 	meta         object.MetaObject
 	wrapper      bus.Wrapper // TODO: implements object.Object
 	actionHelper ActionHelper
@@ -97,7 +97,7 @@ func (o *GenericObject) Wrapper() bus.Wrapper {
 }
 
 type Object interface {
-	Receive(m *net.Message, from *ClientSession) error
+	Receive(m *net.Message, from *Context) error
 }
 
 // ObjectDispather implements Object interface
@@ -105,7 +105,7 @@ type ObjectDispather struct {
 	Wrapper bus.Wrapper
 }
 
-func (o *ObjectDispather) Receive(m *net.Message, from *ClientSession) error {
+func (o *ObjectDispather) Receive(m *net.Message, from *Context) error {
 	a, ok := o.Wrapper[m.Header.Action]
 	if !ok {
 		return ActionNotFound
@@ -158,7 +158,7 @@ func (n *ServiceImpl) Remove(objectID uint32) error {
 	return fmt.Errorf("Namespace: cannot remove object %d", objectID)
 }
 
-func (n *ServiceImpl) Dispatch(m *net.Message, from *ClientSession) error {
+func (n *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 	n.mutex.Lock()
 	o, ok := n.objects[m.Header.Object]
 	n.mutex.Unlock()
@@ -206,7 +206,7 @@ func (r *Router) Remove(serviceID uint32) error {
 	return fmt.Errorf("Router: cannot remove service %d", serviceID)
 }
 
-func (r *Router) Dispatch(m *net.Message, from *ClientSession) error {
+func (r *Router) Dispatch(m *net.Message, from *Context) error {
 	r.mutex.Lock()
 	s, ok := r.services[m.Header.Service]
 	r.mutex.Unlock()
@@ -216,19 +216,19 @@ func (r *Router) Dispatch(m *net.Message, from *ClientSession) error {
 	return ServiceNotFound
 }
 
-// ClientSession represents the context of the request
-type ClientSession struct {
+// Context represents the context of the request
+type Context struct {
 	EndPoint      net.EndPoint
 	Authenticated bool
 }
 
-func NewClientSession(c gonet.Conn) *ClientSession {
-	return &ClientSession{net.NewEndPoint(c), false}
+func NewClientSession(c gonet.Conn) *Context {
+	return &Context{net.NewEndPoint(c), false}
 }
 
 // Firewall ensures an endpoint talks only to autorized services.
 // Especially, it ensure authentication is passed.
-func Firewall(m *net.Message, from *ClientSession) error {
+func Firewall(m *net.Message, from *Context) error {
 	if from.Authenticated == false && m.Header.Service != 0 {
 		return errors.New("Client not yet authenticated")
 	}
@@ -240,12 +240,12 @@ func Firewall(m *net.Message, from *ClientSession) error {
 type Server struct {
 	listen        gonet.Listener
 	Router        *Router
-	sessions      map[*ClientSession]bool
+	sessions      map[*Context]bool
 	sessionsMutex sync.Mutex
 }
 
 func NewServer(l gonet.Listener, r *Router) *Server {
-	s := make(map[*ClientSession]bool)
+	s := make(map[*Context]bool)
 	return &Server{
 		listen:        l,
 		Router:        r,
