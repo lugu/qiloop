@@ -36,6 +36,15 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 		}`),
 		jen.Id(`return &`+proxyName+`{ proxy }, nil`),
 	)
+	file.Func().Params(
+		jen.Id("s").Id("NewServices"),
+	).Id(
+		strings.Title(serviceName),
+	).Params().Params(
+		jen.Id(serviceName), jen.Error(),
+	).Block(
+		jen.Id(`return New` + serviceName + `(s.session, 1)`),
+	)
 }
 
 func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName string, m object.MetaMethod, methodName string) (jen.Code, error) {
@@ -126,8 +135,26 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 	return nil
 }
 
+func generateNewServices(file *jen.File) {
+	file.Type().Id(
+		"NewServices",
+	).Struct(
+		jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session"),
+	)
+	file.Func().Id(
+		"Services",
+	).Params(
+		jen.Id("s").Qual("github.com/lugu/qiloop/bus", "Session"),
+	).Id(
+		"NewServices",
+	).Block(
+		jen.Id(`return NewServices{ session: s, }`),
+	)
+}
+
 func GenerateInterfaces(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
 	file, set := newFileAndSet(packageName)
+	generateNewServices(file)
 
 	for _, metaObj := range metaObjList {
 		generateObjectInterface(metaObj, metaObj.Description, set, file)

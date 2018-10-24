@@ -7,6 +7,14 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 )
 
+type NewServices struct {
+	session bus.Session
+}
+
+func Services(s bus.Session) NewServices {
+	return NewServices{session: s}
+}
+
 type Object interface {
 	object.Object
 	bus.Proxy

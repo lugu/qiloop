@@ -12,8 +12,8 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	objectID := uint32(1)
-	directory, err := services.NewServiceDirectory(sess, objectID)
+	srv := services.Services(sess)
+	directory, err := srv.ServiceDirectory()
 	if err != nil {
 		log.Fatalf("failed to create directory: %s", err)
 	}

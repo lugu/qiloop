@@ -22,6 +22,9 @@ func NewObject(ses bus.Session, obj uint32) (Object, error) {
 	}
 	return &ObjectProxy{proxy}, nil
 }
+func (s NewServices) Object() (Object, error) {
+	return NewObject(s.session, 1)
+}
 func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
@@ -202,6 +205,9 @@ func NewServer(ses bus.Session, obj uint32) (Server, error) {
 	}
 	return &ServerProxy{proxy}, nil
 }
+func (s NewServices) Server() (Server, error) {
+	return NewServer(s.session, 1)
+}
 func (p *ServerProxy) Authenticate(P0 map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
@@ -266,6 +272,9 @@ func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) 
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
 	return &ServiceDirectoryProxy{proxy}, nil
+}
+func (s NewServices) ServiceDirectory() (ServiceDirectory, error) {
+	return NewServiceDirectory(s.session, 1)
 }
 func (p *ServiceDirectoryProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
@@ -856,6 +865,9 @@ func NewLogManager(ses bus.Session, obj uint32) (LogManager, error) {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
 	return &LogManagerProxy{proxy}, nil
+}
+func (s NewServices) LogManager() (LogManager, error) {
+	return NewLogManager(s.session, 1)
 }
 func (p *LogManagerProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error

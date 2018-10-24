@@ -12,7 +12,8 @@ func main() {
 		log.Fatalf("failed to connect: %s\n", err)
 	}
 
-	directory, err := services.NewServiceDirectory(sess, 1)
+	srv := services.Services(sess)
+	directory, err := srv.ServiceDirectory()
 	if err != nil {
 		log.Fatalf("failed to connect service manager: %s\n", err)
 	}

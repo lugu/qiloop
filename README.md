@@ -22,10 +22,10 @@ Installation
 go get github.com/lugu/qiloop/...
 ```
 
-Give it a try
--------------
+Example
+-------
 
-Here is how to connect to a local server:
+Here is how to connect to a server and list the running services:
 
 ```golang
 package main
@@ -42,8 +42,8 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	objectID := uint32(1)
-	directory, err := services.NewServiceDirectory(sess, objectID)
+	srv := services.Services(sess)
+	directory, err := srv.ServiceDirectory()
 	if err != nil {
 		log.Fatalf("failed to create directory: %s", err)
 	}
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	for _, info := range serviceList {
-		log.Print("service %s, id: %d", info.Name, info.ServiceId)
+		log.Printf("service %s, id: %d", info.Name, info.ServiceId)
 	}
 }
 ```

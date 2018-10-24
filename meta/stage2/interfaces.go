@@ -7,6 +7,14 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 )
 
+type NewServices struct {
+	session bus.Session
+}
+
+func Services(s bus.Session) NewServices {
+	return NewServices{session: s}
+}
+
 type Server interface {
 	bus.Proxy
 	Authenticate(P0 map[string]value.Value) (map[string]value.Value, error)

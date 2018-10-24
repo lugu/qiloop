@@ -27,9 +27,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect: %s", err)
 	}
+	srv := services.Services(sess)
 
 	if *serviceName == "" {
-		directory, err := services.NewServiceDirectory(sess, 1)
+		directory, err := srv.ServiceDirectory()
 		if err != nil {
 			log.Fatalf("directory creation failed: %s", err)
 		}
