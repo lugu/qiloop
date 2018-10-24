@@ -22,7 +22,7 @@ Installation
 go get github.com/lugu/qiloop/...
 ```
 
-Try it now !
+Give it a go
 ------------
 
 Here is how to connect to a local server:
