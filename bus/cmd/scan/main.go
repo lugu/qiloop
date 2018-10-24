@@ -90,6 +90,7 @@ func main() {
 			}
 
 			meta := cache.Services[s.ServiceId]
+			meta.Description = s.Name
 			objects = append(objects, meta)
 			err = idl.GenerateIDL(outputIDL, s.Name, meta)
 			if err != nil {
@@ -99,5 +100,8 @@ func main() {
 			break
 		}
 	}
-	proxy.Generate(objects, *packageName, output)
+	err = proxy.Generate(objects, *packageName, output)
+	if err != nil {
+		log.Printf("%s", err)
+	}
 }
