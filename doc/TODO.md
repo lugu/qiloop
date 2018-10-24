@@ -1,11 +1,12 @@
 Unsorted todo list:
-- enum:
-    - generate proxy with enum types
-    - add basic type
-- properties:
-    - NOTES.md: document properties (semantic, messages)
-    - client: add properties
-    - service: handle properties
+- services:
+    - service constructor without object id
+- server:
+    - add service zero by default
+    - allow for remote registration
+- session:
+    - session: register callback for service disconnection
+    - service: signals registration
 - idl:
     - NOTES.md: IDL section: syntax, ref to libqi doc and sample
     - meta: generate proxy with object reference
@@ -16,6 +17,10 @@ Unsorted todo list:
     - NOTES.md: machine id discussion
     - NOTES.md: sequence diagram with multiple process
     - doc: restore the bootstrap discussion
-- session:
-    - session: register callback for service disconnection
-    - service: signals registration
+- enum:
+    - generate proxy with enum types
+    - add basic type
+- properties:
+    - NOTES.md: document properties (semantic, messages)
+    - client: add properties
+    - service: handle properties
