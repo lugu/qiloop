@@ -473,7 +473,7 @@ func nodifyEnumMembers(nodes []Node) Node {
 		} else if err, ok := node.(error); ok {
 			return err
 		} else {
-			fmt.Errorf("unexpected member node: %v", node)
+			return fmt.Errorf("unexpected member node: %v", node)
 		}
 	}
 	return &enum

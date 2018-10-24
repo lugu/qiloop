@@ -9,6 +9,7 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"io"
+	"log"
 )
 
 type ServerProxy struct {
@@ -730,7 +731,7 @@ func (p *ServiceDirectoryProxy) SignalTraceObject(cancel chan int) (chan struct 
 				return s, nil
 			}()
 			if err != nil {
-				fmt.Errorf("failed to unmarshall tuple: %s", err)
+				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -788,7 +789,7 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 				return s, nil
 			}()
 			if err != nil {
-				fmt.Errorf("failed to unmarshall tuple: %s", err)
+				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -846,7 +847,7 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 				return s, nil
 			}()
 			if err != nil {
-				fmt.Errorf("failed to unmarshall tuple: %s", err)
+				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e

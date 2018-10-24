@@ -352,11 +352,11 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 				jen.Id("buf := bytes.NewBuffer(payload)"),
 				jen.Id("_ = buf // discard unused variable error"),
 				jen.List(jen.Id("e"), jen.Err()).Op(":=").Add(signalType.Unmarshal("buf")),
-				jen.Id(`if err != nil {
-					fmt.Errorf("failed to unmarshall tuple: %s", err)
-					continue
-				}
-				ch<- e`),
+				jen.If(jen.Id("err").Op("!=").Nil()).Block(
+					jen.Qual("log", "Printf").Call(jen.Lit("failed to unmarshall tuple: %s"), jen.Id("err")),
+					jen.Continue(),
+				),
+				jen.Id(`ch<- e`),
 			),
 		).Call(),
 		jen.Return(jen.Id("ch"), jen.Nil()),
