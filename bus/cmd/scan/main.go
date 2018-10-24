@@ -35,9 +35,10 @@ func open(filename string) io.WriteCloser {
 
 func main() {
 	var serverURL = flag.String("qi-url", "tcp://localhost:9559", "server URL")
-	var proxyFile = flag.String("proxy", "", "File to write proxy (default none)")
+	var proxyFile = flag.String("proxy", "", "File to write proxies")
 	var idlFile = flag.String("idl", "-", "File to write IDL definition (default stdout)")
-	var serviceName = flag.String("service", "", "Name of the service (default all)")
+	var serviceName = flag.String("service", "", "Use to generate a single service (default all)")
+	var packageName = flag.String("package", "services", "Name of the generated package")
 
 	flag.Parse()
 
@@ -98,5 +99,5 @@ func main() {
 			break
 		}
 	}
-	proxy.Generate(objects, "services", output)
+	proxy.Generate(objects, *packageName, output)
 }

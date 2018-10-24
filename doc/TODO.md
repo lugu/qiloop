@@ -1,6 +1,4 @@
 Unsorted todo list:
-- services:
-    - service constructor without object id
 - server:
     - add service zero by default
     - allow for remote registration

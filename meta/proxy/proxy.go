@@ -152,52 +152,9 @@ func generateNewServices(file *jen.File) {
 	)
 }
 
-func GenerateInterfaces(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
-	file, set := newFileAndSet(packageName)
-	generateNewServices(file)
-
-	for _, metaObj := range metaObjList {
-		generateObjectInterface(metaObj, metaObj.Description, set, file)
-	}
-
-	if err := file.Render(w); err != nil {
-		return fmt.Errorf("failed to render %s: %s", packageName, err)
-	}
-	return nil
-}
-
-func GenerateProxy(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
-	file, set := newFileAndSet(packageName)
-
-	if err := generateProxyObject(metaObj, serviceName, set, file); err != nil {
-		return fmt.Errorf("failed to render %s: %s", serviceName, err)
-	}
-	set.Declare(file)
-
-	if err := file.Render(w); err != nil {
-		return fmt.Errorf("failed to render %s: %s", serviceName, err)
-	}
-	return nil
-}
-
-func GenerateProxys(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
-	file, set := newFileAndSet(packageName)
-
-	for i, metaObj := range metaObjList {
-		if err := generateProxyObject(metaObj, metaObj.Description, set, file); err != nil {
-			return fmt.Errorf("failed to render %s (%d): %s", metaObj.Description, i, err)
-		}
-	}
-	set.Declare(file)
-
-	if err := file.Render(w); err != nil {
-		return fmt.Errorf("failed to render %s: %s", packageName, err)
-	}
-	return nil
-}
-
 func Generate(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
 	file, set := newFileAndSet(packageName)
+	generateNewServices(file)
 
 	for _, metaObj := range metaObjList {
 		generateObjectInterface(metaObj, metaObj.Description, set, file)

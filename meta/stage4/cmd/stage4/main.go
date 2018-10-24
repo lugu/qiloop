@@ -13,9 +13,9 @@ import (
 func main() {
 
 	var directory string
-	var goBasePackageName string
-	flag.StringVar(&directory, "directory", ".", "directory containing the IDL files")
-	flag.StringVar(&goBasePackageName, "package", "", "go base package name")
+	var packageName string
+	flag.StringVar(&directory, "directory", ".", "directory with IDL files")
+	flag.StringVar(&packageName, "package", "services", "package name")
 	flag.Parse()
 	metas := make([]object.MetaObject, 0)
 
@@ -51,16 +51,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create proxies.go: %s", err)
 	}
-	if err := proxy.GenerateProxys(metas, goBasePackageName, proxies); err != nil {
+	if err := proxy.Generate(metas, packageName, proxies); err != nil {
 		log.Printf("failed to generate proxies: %s", err)
-	}
-
-	interfaces, err := os.Create("services.go")
-	defer interfaces.Close()
-	if err != nil {
-		log.Fatalf("failed to create services.go: %s", err)
-	}
-	if err := proxy.GenerateInterfaces(metas, goBasePackageName, interfaces); err != nil {
-		log.Printf("failed to generate interfaces: %s", err)
 	}
 }
