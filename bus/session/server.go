@@ -306,12 +306,12 @@ func (s *Server) closeAll() error {
 	s.sessionsMutex.Lock()
 	defer s.sessionsMutex.Unlock()
 	for s, _ := range s.sessions {
-		go func() {
-			err := s.EndPoint.Close()
+		go func(c *Context) {
+			err := c.EndPoint.Close()
 			if err != nil && ret == nil {
 				ret = err
 			}
-		}()
+		}(s)
 	}
 	return ret
 }

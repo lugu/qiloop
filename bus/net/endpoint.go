@@ -138,10 +138,10 @@ func (e *endPoint) closeWith(err error) error {
 		e.filters[id] = nil
 		e.consumers[id] = nil
 		e.closers[id] = nil
-		go func() {
-			c(err)
+		go func(closer Closer) {
+			closer(err)
 			wait.Done()
-		}()
+		}(c)
 	}
 	wait.Wait()
 	return ret
