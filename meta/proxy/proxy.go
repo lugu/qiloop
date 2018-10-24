@@ -3,6 +3,7 @@ package proxy
 import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
@@ -152,17 +153,37 @@ func generateNewServices(file *jen.File) {
 	)
 }
 
+func cleanMetaObject(meta *object.MetaObject) {
+	meta.Description = util.CleanName(meta.Description)
+	for i, m := range meta.Methods {
+		m.Name = util.CleanName(m.Name)
+		meta.Methods[i] = m
+	}
+	for i, s := range meta.Signals {
+		s.Name = util.CleanName(s.Name)
+		meta.Signals[i] = s
+	}
+	for i, p := range meta.Properties {
+		p.Name = util.CleanName(p.Name)
+		meta.Properties[i] = p
+	}
+}
+
 func Generate(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
 	file, set := newFileAndSet(packageName)
 	generateNewServices(file)
 
+	for i := range metaObjList {
+		cleanMetaObject(&metaObjList[i])
+	}
 	for _, metaObj := range metaObjList {
 		generateObjectInterface(metaObj, metaObj.Description, set, file)
 	}
-
 	for i, metaObj := range metaObjList {
-		if err := generateProxyObject(metaObj, metaObj.Description, set, file); err != nil {
-			return fmt.Errorf("failed to render %s (%d): %s", metaObj.Description, i, err)
+		err := generateProxyObject(metaObj, metaObj.Description, set, file)
+		if err != nil {
+			return fmt.Errorf("failed to render %s (%d): %s",
+				metaObj.Description, i, err)
 		}
 	}
 	set.Declare(file)

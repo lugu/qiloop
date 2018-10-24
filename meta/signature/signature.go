@@ -87,7 +87,7 @@ func nodifyBasicType(nodes []Node) Node {
 	case "X":
 		return NewUnknownType()
 	case "c":
-		return NewEnumType("", make(map[string]int, 0))
+		return NewEnumType("int", make(map[string]int, 0))
 	default:
 		return fmt.Errorf("wrong signature %s", signature)
 	}

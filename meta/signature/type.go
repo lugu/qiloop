@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/dave/jennifer/jen"
+	"github.com/lugu/qiloop/bus/util"
 	"log"
 	"strconv"
 	"strings"
@@ -55,9 +56,10 @@ func (s *TypeSet) RegisterStructType(originalName string, typ *StructType) strin
 	return "can_not_register_name_" + name
 }
 
+// Search returns a Type if a name is associated.
 func (s *TypeSet) Search(name string) Type {
 	for i, n := range s.Names {
-		if n == name {
+		if util.CleanName(n) == util.CleanName(name) {
 			return s.Types[i]
 		}
 	}
@@ -656,7 +658,7 @@ func (t *TupleType) ConvertMetaObjects() {
 
 // NewStructType is a contructor for the representation of a struct.
 func NewStructType(name string, members []MemberType) *StructType {
-	return &StructType{name, members}
+	return &StructType{util.CleanName(name), members}
 }
 
 // StructType represents a struct.
