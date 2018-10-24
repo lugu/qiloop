@@ -13,10 +13,6 @@ import (
 	"sync"
 )
 
-// Wording:
-// 	Service => Namespace
-// 	Object => ObjectImpl
-
 var ServiceNotFound error = errors.New("Service not found")
 var ObjectNotFound error = errors.New("Object not found")
 var ActionNotFound error = errors.New("Action not found")
@@ -30,7 +26,7 @@ func NewObjectImplAConstructor(impl ObjectImplA) ObjectImplConstructor {
 }
 
 type ObjectImplConstructor interface {
-	Instanciate(service, object uint32, namespace Namespace) ObjectImpl
+	Instanciate(service, object uint32, namespace ServiceImpl) ObjectImpl
 }
 
 type ObjectImpl interface {
@@ -126,19 +122,19 @@ func (o *ObjectDispather) Receive(m *net.Message, from *ClientSession) error {
 	return from.EndPoint.Send(reply)
 }
 
-type Namespace struct {
+type ServiceImpl struct {
 	objects map[uint32]Object
 	mutex   sync.Mutex
 }
 
-func NewNamespace(o Object) Namespace {
-	var ns Namespace
+func NewService(o Object) ServiceImpl {
+	var ns ServiceImpl
 	ns.objects = make(map[uint32]Object)
 	ns.objects[0] = o
 	return ns
 }
 
-func (n *Namespace) Add(o Object) (uint32, error) {
+func (n *ServiceImpl) Add(o Object) (uint32, error) {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 	var index uint32 = 0
@@ -151,7 +147,7 @@ func (n *Namespace) Add(o Object) (uint32, error) {
 	return index, nil
 }
 
-func (n Namespace) Remove(objectID uint32) error {
+func (n ServiceImpl) Remove(objectID uint32) error {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 	if _, ok := n.objects[objectID]; ok {
@@ -161,7 +157,7 @@ func (n Namespace) Remove(objectID uint32) error {
 	return fmt.Errorf("Namespace: cannot remove object %d", objectID)
 }
 
-func (n Namespace) Dispatch(m *net.Message, from *ClientSession) error {
+func (n ServiceImpl) Dispatch(m *net.Message, from *ClientSession) error {
 	n.mutex.Lock()
 	o, ok := n.objects[m.Header.Object]
 	n.mutex.Unlock()
@@ -173,25 +169,25 @@ func (n Namespace) Dispatch(m *net.Message, from *ClientSession) error {
 
 // Router dispatch the incomming messages.
 type Router struct {
-	services  map[uint32]Namespace
+	services  map[uint32]ServiceImpl
 	nextIndex uint32
 	mutex     sync.Mutex
 }
 
-func NewDirectoryService() Namespace {
+func NewDirectoryService() ServiceImpl {
 	// FIXME: implement the service
 	var o Object
-	return NewNamespace(o)
+	return NewService(o)
 }
 
 func NewRouter() *Router {
 	var router Router
-	router.services = make(map[uint32]Namespace)
+	router.services = make(map[uint32]ServiceImpl)
 	router.nextIndex = 0
 	return &router
 }
 
-func (r *Router) Add(n Namespace) (uint32, error) {
+func (r *Router) Add(n ServiceImpl) (uint32, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	r.services[r.nextIndex] = n

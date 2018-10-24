@@ -27,7 +27,7 @@ func TestNewServer(t *testing.T) {
 		Wrapper: wrapper,
 	}
 
-	ns := session.NewNamespace(object)
+	ns := session.NewService(object)
 	router := session.NewRouter()
 	router.Add(ns)
 	server := session.NewServer(listener, router)

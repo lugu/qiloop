@@ -19,7 +19,7 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 
 	object := session.NewServiceAuthenticate(creds)
 
-	ns := session.NewNamespace(object)
+	ns := session.NewService(object)
 	router := session.NewRouter()
 	router.Add(ns)
 	server := session.NewServer(listener, router)
