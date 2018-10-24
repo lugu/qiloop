@@ -127,11 +127,12 @@ type ServiceImpl struct {
 	mutex   sync.Mutex
 }
 
-func NewService(o Object) ServiceImpl {
-	var ns ServiceImpl
-	ns.objects = make(map[uint32]Object)
-	ns.objects[0] = o
-	return ns
+func NewService(o Object) *ServiceImpl {
+	return &ServiceImpl{
+		objects: map[uint32]Object{
+			0: o,
+		},
+	}
 }
 
 func (n *ServiceImpl) Add(o Object) (uint32, error) {
@@ -147,7 +148,7 @@ func (n *ServiceImpl) Add(o Object) (uint32, error) {
 	return index, nil
 }
 
-func (n ServiceImpl) Remove(objectID uint32) error {
+func (n *ServiceImpl) Remove(objectID uint32) error {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 	if _, ok := n.objects[objectID]; ok {
@@ -157,7 +158,7 @@ func (n ServiceImpl) Remove(objectID uint32) error {
 	return fmt.Errorf("Namespace: cannot remove object %d", objectID)
 }
 
-func (n ServiceImpl) Dispatch(m *net.Message, from *ClientSession) error {
+func (n *ServiceImpl) Dispatch(m *net.Message, from *ClientSession) error {
 	n.mutex.Lock()
 	o, ok := n.objects[m.Header.Object]
 	n.mutex.Unlock()
@@ -169,25 +170,25 @@ func (n ServiceImpl) Dispatch(m *net.Message, from *ClientSession) error {
 
 // Router dispatch the incomming messages.
 type Router struct {
-	services  map[uint32]ServiceImpl
+	services  map[uint32]*ServiceImpl
 	nextIndex uint32
 	mutex     sync.Mutex
 }
 
-func NewDirectoryService() ServiceImpl {
+func NewDirectoryService() *ServiceImpl {
 	// FIXME: implement the service
 	var o Object
 	return NewService(o)
 }
 
 func NewRouter() *Router {
-	var router Router
-	router.services = make(map[uint32]ServiceImpl)
-	router.nextIndex = 0
-	return &router
+	return &Router{
+		services:  make(map[uint32]*ServiceImpl),
+		nextIndex: 0,
+	}
 }
 
-func (r *Router) Add(n ServiceImpl) (uint32, error) {
+func (r *Router) Add(n *ServiceImpl) (uint32, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	r.services[r.nextIndex] = n
@@ -195,7 +196,7 @@ func (r *Router) Add(n ServiceImpl) (uint32, error) {
 	return r.nextIndex, nil
 }
 
-func (r Router) Remove(serviceID uint32) error {
+func (r *Router) Remove(serviceID uint32) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	if _, ok := r.services[serviceID]; ok {
@@ -205,7 +206,7 @@ func (r Router) Remove(serviceID uint32) error {
 	return fmt.Errorf("Router: cannot remove service %d", serviceID)
 }
 
-func (r Router) Dispatch(m *net.Message, from *ClientSession) error {
+func (r *Router) Dispatch(m *net.Message, from *ClientSession) error {
 	r.mutex.Lock()
 	s, ok := r.services[m.Header.Service]
 	r.mutex.Unlock()

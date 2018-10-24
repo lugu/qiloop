@@ -44,7 +44,9 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 
 	client0 := NewClient(endpoint)
 	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
-	server0 := services.ServerProxy{proxy0}
+	server0 := services.ServerProxy{
+		proxy0,
+	}
 	return server0.Authenticate(permissions)
 }
 
