@@ -67,7 +67,7 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	if !ok {
 		return fmt.Errorf("missing authentication state")
 	}
-	status, ok := statusValue.(value.IntValue)
+	status, ok := statusValue.(value.UintValue)
 	if !ok {
 		return fmt.Errorf("authentication state format error")
 	}
@@ -95,7 +95,7 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 	if !ok {
 		return fmt.Errorf("missing authentication state")
 	}
-	status, ok := statusValue.(value.IntValue)
+	status, ok := statusValue.(value.UintValue)
 	if !ok {
 		return fmt.Errorf("authentication status error")
 	}

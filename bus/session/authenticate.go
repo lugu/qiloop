@@ -22,7 +22,7 @@ func (a *Authenticator) Authenticate(cap CapabilityMap) CapabilityMap {
 					if pwd, ok := a.passwords[string(userStr)]; ok {
 						if pwd == string(tokenStr) {
 							return CapabilityMap{
-								KeyState: value.Int(StateDone),
+								KeyState: value.Uint(StateDone),
 							}
 						}
 					}
@@ -31,7 +31,7 @@ func (a *Authenticator) Authenticate(cap CapabilityMap) CapabilityMap {
 		}
 	}
 	return CapabilityMap{
-		KeyState: value.Int(StateError),
+		KeyState: value.Uint(StateError),
 	}
 }
 

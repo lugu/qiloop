@@ -70,14 +70,24 @@ func TestParseBool(t *testing.T) {
 	helpParseValue(t, bytes, value.Bool(true))
 }
 
-func TestParseInt(t *testing.T) {
+func TestParseUint(t *testing.T) {
 	bytes := []byte{1, 0, 0, 0, 0x49, 0xff, 0, 0, 0xee}
-	helpParseValue(t, bytes, value.Int(0xee0000ff))
+	helpParseValue(t, bytes, value.Uint(0xee0000ff))
+}
+
+func TestParseInt(t *testing.T) {
+	bytes := []byte{1, 0, 0, 0, 0x69, 0xff, 0, 0, 0x7f}
+	helpParseValue(t, bytes, value.Int(0x7f0000ff))
+}
+
+func TestParseUlong(t *testing.T) {
+	bytes := []byte{1, 0, 0, 0, 0x4c, 0xff, 0, 0, 0, 0, 0, 0, 0xee}
+	helpParseValue(t, bytes, value.Ulong(0xee000000000000ff))
 }
 
 func TestParseLong(t *testing.T) {
-	bytes := []byte{1, 0, 0, 0, 0x4c, 0xff, 0, 0, 0, 0, 0, 0, 0xee}
-	helpParseValue(t, bytes, value.Long(0xee000000000000ff))
+	bytes := []byte{1, 0, 0, 0, 0x6C, 0xff, 0, 0, 0, 0, 0, 0, 0x77}
+	helpParseValue(t, bytes, value.Long(0x77000000000000ff))
 }
 
 func TestParseString(t *testing.T) {

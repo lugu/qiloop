@@ -27,19 +27,19 @@ func NewValue(r io.Reader) (Value, error) {
 	case "i":
 		return newInt(r)
 	case "I":
-		// FIXME: must be unsigned int here
-		return newInt(r)
+		return newUint(r)
 	case "l":
 		return newLong(r)
 	case "L":
-		// FIXME: must be unsigned long here
-		return newLong(r)
+		return newUlong(r)
 	case "s":
 		return newString(r)
 	case "b":
 		return newBool(r)
 	case "f":
 		return newFloat(r)
+	// case "[m]":
+	// return newList(r)
 	default:
 		return nil, fmt.Errorf("unsuported signature: %s", s)
 	}
@@ -74,24 +74,24 @@ func (b BoolValue) Value() bool {
 	return bool(b)
 }
 
-// IntValue represents a Value of an uint32.
-type IntValue uint32
+// UintValue represents a Value of an uint32.
+type UintValue uint32
 
 // Int constructs a Value. FIXME: Int shall be int32
-func Int(i uint32) Value {
-	return IntValue(i)
+func Uint(i uint32) Value {
+	return UintValue(i)
 }
 
-func newInt(r io.Reader) (Value, error) {
+func newUint(r io.Reader) (Value, error) {
 	i, err := basic.ReadUint32(r)
-	return Int(i), err
+	return Uint(i), err
 }
 
-func (i IntValue) signature() string {
+func (i UintValue) signature() string {
 	return "I"
 }
 
-func (i IntValue) Write(w io.Writer) error {
+func (i UintValue) Write(w io.Writer) error {
 	if err := basic.WriteString(i.signature(), w); err != nil {
 		return err
 	}
@@ -99,28 +99,57 @@ func (i IntValue) Write(w io.Writer) error {
 }
 
 // Value returns the actual value
-func (i IntValue) Value() uint32 {
+func (i UintValue) Value() uint32 {
 	return uint32(i)
 }
 
-// LongValue represents a Value of a uint64.
-type LongValue uint64
+// IntValue represents a Value of an uint32.
+type IntValue int32
 
-// Long constructs a Value.
-func Long(l uint64) Value {
-	return LongValue(l)
+// Int constructs a Value. FIXME: Int shall be int32
+func Int(i int32) Value {
+	return IntValue(i)
 }
 
-func newLong(r io.Reader) (Value, error) {
+func newInt(r io.Reader) (Value, error) {
+	i, err := basic.ReadInt32(r)
+	return Int(i), err
+}
+
+func (i IntValue) signature() string {
+	return "i"
+}
+
+func (i IntValue) Write(w io.Writer) error {
+	if err := basic.WriteString(i.signature(), w); err != nil {
+		return err
+	}
+	return basic.WriteInt32(i.Value(), w)
+}
+
+// Value returns the actual value
+func (i IntValue) Value() int32 {
+	return int32(i)
+}
+
+// UlongValue represents a Value of a uint64.
+type UlongValue uint64
+
+// Ulong constructs a Value.
+func Ulong(l uint64) Value {
+	return UlongValue(l)
+}
+
+func newUlong(r io.Reader) (Value, error) {
 	l, err := basic.ReadUint64(r)
-	return Long(l), err
+	return Ulong(l), err
 }
 
-func (l LongValue) signature() string {
+func (l UlongValue) signature() string {
 	return "L"
 }
 
-func (l LongValue) Write(w io.Writer) error {
+func (l UlongValue) Write(w io.Writer) error {
 	if err := basic.WriteString(l.signature(), w); err != nil {
 		return err
 	}
@@ -128,8 +157,37 @@ func (l LongValue) Write(w io.Writer) error {
 }
 
 // Value returns the actual value
-func (l LongValue) Value() uint64 {
+func (l UlongValue) Value() uint64 {
 	return uint64(l)
+}
+
+// LongValue represents a Value of a uint64.
+type LongValue int64
+
+// Long constructs a Value.
+func Long(l int64) Value {
+	return LongValue(l)
+}
+
+func newLong(r io.Reader) (Value, error) {
+	l, err := basic.ReadInt64(r)
+	return Long(l), err
+}
+
+func (l LongValue) signature() string {
+	return "l"
+}
+
+func (l LongValue) Write(w io.Writer) error {
+	if err := basic.WriteString(l.signature(), w); err != nil {
+		return err
+	}
+	return basic.WriteInt64(l.Value(), w)
+}
+
+// Value returns the actual value
+func (l LongValue) Value() int64 {
+	return int64(l)
 }
 
 // FloatValue represents a Value of a float32.
