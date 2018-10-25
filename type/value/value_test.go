@@ -63,6 +63,12 @@ func helpParseValue(t *testing.T, b []byte, expected value.Value) {
 	if !reflect.DeepEqual(v, expected) {
 		t.Errorf("expected %#v, got %#v", expected, v)
 	}
+	var out bytes.Buffer
+	v.Write(&out)
+	actual := out.Bytes()
+	if !reflect.DeepEqual(b, actual) {
+		t.Errorf("write: expected %#v, got %#v", b, actual)
+	}
 }
 
 func TestParseBool(t *testing.T) {
@@ -101,4 +107,20 @@ func TestParseFloat(t *testing.T) {
 	helpParseValue(t, bytes, value.Float(1.5))
 	bytes = []byte{1, 0, 0, 0, 0x66, 0, 0x3e, 0x1c, 0xc6}
 	helpParseValue(t, bytes, value.Float(-9999.5))
+}
+
+func TestParseRawData(t *testing.T) {
+	bytes := []byte{1, 0, 0, 0, 0x72, 3, 0, 0, 0, 0x61, 0x62, 0x63}
+	helpParseValue(t, bytes, value.Raw([]byte{'a', 'b', 'c'}))
+}
+
+func TestParseListValue(t *testing.T) {
+	bytes := []byte{
+		3, 0, 0, 0, 0x5b, 0x6d, 0x5d, 2, 0, 0, 0, 1, 0, 0, 0,
+		0x73, 03, 0, 0, 0, 0x4c, 0x49, 0x62, 1, 0, 0, 0, 0x62, 1,
+	}
+	helpParseValue(t, bytes, value.List([]value.Value{
+		value.String("LIb"),
+		value.Bool(true),
+	}))
 }

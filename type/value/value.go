@@ -40,8 +40,8 @@ func NewValue(r io.Reader) (Value, error) {
 		return newFloat(r)
 	case "[m]":
 		return newList(r)
-	// case "[m]":
-	// return newList(r)
+	case "r":
+		return newRaw(r)
 	default:
 		return nil, fmt.Errorf("unsuported signature: %s", s)
 	}
@@ -294,4 +294,64 @@ func (l ListValue) Write(w io.Writer) error {
 // Value returns the actual value
 func (l ListValue) Value() []Value {
 	return []Value(l)
+}
+
+type RawValue []byte
+
+const (
+	RawValueMaxSize = 10 * 1024 * 1024
+)
+
+func newRaw(r io.Reader) (Value, error) {
+	size, err := basic.ReadUint32(r)
+	if err != nil {
+		return nil, err
+	}
+	if size > RawValueMaxSize {
+		return nil, fmt.Errorf("raw value too large (%d bytes)", size)
+	}
+	buf := make([]byte, size)
+	count := 0
+	for count < int(size) {
+		read, err := r.Read(buf[count:])
+		count += read
+		if err != nil && count < int(size) {
+			return nil, fmt.Errorf("raw read: %d instead of %d: %s",
+				count, size, err)
+		}
+	}
+	return RawValue(buf), nil
+}
+
+// Raw constructs a Value.
+func Raw(b []byte) Value {
+	return RawValue(b)
+}
+
+func (b RawValue) signature() string {
+	return "r"
+}
+
+func (b RawValue) Write(w io.Writer) error {
+	if err := basic.WriteString(b.signature(), w); err != nil {
+		return err
+	}
+	if err := basic.WriteUint32(uint32(len(b)), w); err != nil {
+		return err
+	}
+	count := 0
+	for count < int(len(b)) {
+		written, err := w.Write(b[count:])
+		count += written
+		if err != nil && count < int(len(b)) {
+			return fmt.Errorf("raw write: %d instead of %d: %s",
+				count, len(b), err)
+		}
+	}
+	return nil
+}
+
+// Value returns the actual value
+func (b RawValue) Value() []byte {
+	return []byte(b)
 }

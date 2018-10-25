@@ -367,10 +367,15 @@ libqi [documentation](http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signat
 - 'L': unsigned long: 64 bits signed value
 - 'b': bool: boolean value
 - 's': string: string of character
+- 'r': raw data: array of bytes
 
 When describing the return type of a method:
 - 'v': void: the method is not returning a result other than the
   information of its successful completion.
+
+#### Value
+
+- 'm': value: a container type. It can contains any basic type.
 
 #### Composite types
 
@@ -399,6 +404,7 @@ When describing the return type of a method:
 - f: a float (`float`)
 - d: a double (`double`)
 - [s]: a vector of string (`std::vector<string>`)
+- [m]: a vector of value
 - {lb}: a map from long to boolean (`std::map<long int, bool>`)
 - (s)<Structure,field>: a structure represented C like:
 
@@ -453,10 +459,11 @@ type_value = "m"
 type_long = "l"
 type_ulong = "L"
 type_float = "f"
-type_float = "d"
+type_double = "d"
+type_raw_data = "r"
 type_object = "o"
 
-type_basic = type_int | type_uint | type_string | type_float | type_long | type_ulong | type_boolean | type_value | type_object
+type_basic = type_int | type_uint | type_string | type_float | type_double | type_long | type_ulong | type_raw_data | type_boolean | type_value | type_object
 
 type_map = "{" type_declaration type_declaration "}"
 
@@ -491,12 +498,13 @@ all values are transmitted in little endian.
 - **boolean**: 1 byte (zero for false)
 - **string**: an integer (as defined above) followed the bytes of the
   string. Not finishing with a zero.
+- **raw data**: an array of byte of a variable size
 
 ### Values
 
-A value is serialized with a string (a defined above) representing
-the signature of the concrete type followed with the serialized value
-of the type.
+A value is serialized with a string (defined above) representing the
+signature of the concrete type followed with the serialized value of
+the type.
 
 ### Composite types (map, list and struct)
 
