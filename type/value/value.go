@@ -38,6 +38,8 @@ func NewValue(r io.Reader) (Value, error) {
 		return newBool(r)
 	case "f":
 		return newFloat(r)
+	case "[m]":
+		return newList(r)
 	// case "[m]":
 	// return newList(r)
 	default:
@@ -246,4 +248,50 @@ func (s StringValue) Write(w io.Writer) error {
 // Value returns the actual value
 func (s StringValue) Value() string {
 	return string(s)
+}
+
+type ListValue []Value
+
+func newList(r io.Reader) (Value, error) {
+	size, err := basic.ReadUint32(r)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]Value, size)
+	for i := range list {
+		list[i], err = NewValue(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ListValue(list), err
+}
+
+// List constructs a Value.
+func List(l []Value) Value {
+	return ListValue(l)
+}
+
+func (l ListValue) signature() string {
+	return "[m]"
+}
+
+func (l ListValue) Write(w io.Writer) error {
+	if err := basic.WriteString(l.signature(), w); err != nil {
+		return err
+	}
+	if err := basic.WriteUint32(uint32(len(l)), w); err != nil {
+		return err
+	}
+	for _, v := range l {
+		if err := v.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Value returns the actual value
+func (l ListValue) Value() []Value {
+	return []Value(l)
 }
