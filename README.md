@@ -22,8 +22,8 @@ Installation
 go get github.com/lugu/qiloop/...
 ```
 
-Example
--------
+Demo
+----
 
 Here is how to connect to a server and list the running services:
 
@@ -59,23 +59,14 @@ func main() {
 }
 ```
 
-Proxy generation
-----------------
+Proxy generation tutorial
+-------------------------
+
 
 By default, `qiloop` comes with two proxies: ServiceDirectory and
 LogManager.
 
-The simpliest way to generate a proxy is to instrospect a running
-service. Here is how to generate proxies given a running server on
-local port 9559:
-
-
-```
-go run github.com/lugu/qiloop/bus/scan -qi-url tcp://localhost:9559 -proxy proxy.go
-```
-
-This generates `proxy.go` which gives access to all the discovered
-services.
+Follow [this tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md) to generate more proxy.
 
 Examples
 --------
