@@ -3,22 +3,38 @@ package stub
 import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
-	"github.com/lugu/qiloop/type/object"
+	"github.com/lugu/qiloop/meta/idl"
+	"github.com/lugu/qiloop/meta/signature"
 	"io"
 )
 
-func GenerateStubs(metas []object.MetaObject, packageName string, w io.Writer) error {
-	for _, meta := range metas {
-		err := GenerateStub(meta, packageName, meta.Description, w)
+func GeneratePackage(pkg *idl.PackageDeclaration, w io.Writer) error {
+	if pkg.Name == "" {
+		return fmt.Errorf("empty package name")
+	}
+	file := jen.NewFile(pkg.Name)
+	file.PackageComment("file generated. DO NOT EDIT.")
+
+	for _, typ := range pkg.Types {
+		err := generateType(typ, file)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+
+	return file.Render(w)
 }
 
-func GenerateStub(metaObj object.MetaObject, packageName, serviceName string, w io.Writer) error {
-	file := jen.NewFile(packageName)
-	file.PackageComment("file generated. DO NOT EDIT.")
-	return fmt.Errorf("GenerateStub not yet implemented")
+func generateInterface(itf *idl.InterfaceType, f *jen.File) error {
+	panic("not yet implemented")
+}
+
+func generateType(typ signature.Type, f *jen.File) error {
+
+	itf, ok := typ.(*idl.InterfaceType)
+	if ok {
+		return generateInterface(itf, f)
+	}
+	typ.TypeDeclaration(f)
+	return nil
 }
