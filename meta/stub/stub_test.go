@@ -15,7 +15,7 @@ func helpGenerate(t *testing.T, input string) string {
 		t.Fatalf("parse error: missing type")
 	}
 	var buf bytes.Buffer
-	err = GeneratePackage(pkg, &buf)
+	err = GeneratePackage(&buf, pkg)
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func helpGenerate(t *testing.T, input string) string {
 func TestEmptyPackageName(t *testing.T) {
 	var buf bytes.Buffer
 	var pkg idl.PackageDeclaration
-	err := GeneratePackage(&pkg, &buf)
+	err := GeneratePackage(&buf, &pkg)
 	if err == nil {
 		t.Errorf("shall not generate package without name")
 	}
@@ -57,6 +57,17 @@ func TestGenerateStruct(t *testing.T) {
 		b: float32
 	end
 	`
+	output := helpGenerate(t, input)
+	if output == "" {
+		t.Fatalf("missing type declaration")
+	}
+}
+
+func TestGenerateEmptyInterface(t *testing.T) {
+	input := `
+	package test
+	interface Empty
+	end`
 	output := helpGenerate(t, input)
 	if output == "" {
 		t.Fatalf("missing type declaration")
