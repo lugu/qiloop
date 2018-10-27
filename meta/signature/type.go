@@ -123,6 +123,66 @@ func Print(v Type) string {
 	return buf.String()
 }
 
+// NewInt8Type is a contructor for the representation of a uint64.
+func NewInt8Type() Type {
+	return &TypeConstructor{
+		signature:    "c",
+		signatureIDL: "int8",
+		typeName:     jen.Int8(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt8").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadInt8").Call(jen.Id(reader))
+		},
+	}
+}
+
+// NewUint8Type is a contructor for the representation of a uint64.
+func NewUint8Type() Type {
+	return &TypeConstructor{
+		signature:    "C",
+		signatureIDL: "uint8",
+		typeName:     jen.Uint8(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint8").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadUint8").Call(jen.Id(reader))
+		},
+	}
+}
+
+// NewInt16Type is a contructor for the representation of a uint64.
+func NewInt16Type() Type {
+	return &TypeConstructor{
+		signature:    "w",
+		signatureIDL: "int16",
+		typeName:     jen.Int16(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt16").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadInt16").Call(jen.Id(reader))
+		},
+	}
+}
+
+// NewUint16Type is a contructor for the representation of a uint64.
+func NewUint16Type() Type {
+	return &TypeConstructor{
+		signature:    "W",
+		signatureIDL: "uint16",
+		typeName:     jen.Uint16(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint16").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Id("basic.ReadUint16").Call(jen.Id(reader))
+		},
+	}
+}
+
 // NewLongType is a contructor for the representation of a uint64.
 func NewLongType() Type {
 	return &TypeConstructor{
@@ -773,7 +833,7 @@ func NewEnumType(name string, values map[string]int) Type {
 }
 
 func (e *EnumType) Signature() string {
-	return "c"
+	return "i"
 }
 
 func (e *EnumType) SignatureIDL() string {

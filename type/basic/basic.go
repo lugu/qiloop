@@ -31,6 +31,17 @@ func WriteUint8(i uint8, w io.Writer) error {
 	return nil
 }
 
+// ReadInt8 reads a little endian int8
+func ReadInt8(r io.Reader) (int8, error) {
+	i, err := ReadUint8(r)
+	return int8(i), err
+}
+
+// WriteInt8 writes a little endian int8
+func WriteInt8(i int8, w io.Writer) error {
+	return WriteUint8(uint8(i), w)
+}
+
 // ReadUint16 reads a little endian uint16
 func ReadUint16(r io.Reader) (uint16, error) {
 	buf := []byte{0, 0}
@@ -54,6 +65,17 @@ func WriteUint16(i uint16, w io.Writer) error {
 		return fmt.Errorf("failed to write uint16 (%d instead of 2)", bytes)
 	}
 	return nil
+}
+
+// ReadInt16 reads a little endian int16
+func ReadInt16(r io.Reader) (int16, error) {
+	i, err := ReadUint16(r)
+	return int16(i), err
+}
+
+// WriteInt16 writes a little endian int16
+func WriteInt16(i int16, w io.Writer) error {
+	return WriteUint16(uint16(i), w)
 }
 
 // ReadUint32 reads a little endian uint32

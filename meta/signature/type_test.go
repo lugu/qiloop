@@ -1,10 +1,10 @@
 package signature_test
 
 import (
-	"testing"
+	"github.com/dave/jennifer/jen"
 	. "github.com/lugu/qiloop/meta/signature"
 	"github.com/stretchr/testify/assert"
-	"github.com/dave/jennifer/jen"
+	"testing"
 )
 
 func helpTestBasics(t *testing.T, typ Type, signature, idl string,
@@ -19,6 +19,10 @@ func helpTestBasics(t *testing.T, typ Type, signature, idl string,
 }
 
 func TestBasicTypes(t *testing.T) {
+	helpTestBasics(t, NewInt8Type(), "c", "int8", jen.Int8())
+	helpTestBasics(t, NewUint8Type(), "C", "uint8", jen.Uint8())
+	helpTestBasics(t, NewInt16Type(), "w", "int16", jen.Int16())
+	helpTestBasics(t, NewUint16Type(), "W", "uint16", jen.Uint16())
 	helpTestBasics(t, NewIntType(), "i", "int32", jen.Int32())
 	helpTestBasics(t, NewUIntType(), "I", "uint32", jen.Uint32())
 	helpTestBasics(t, NewLongType(), "l", "int64", jen.Int64())
@@ -42,9 +46,9 @@ func TestListType(t *testing.T) {
 		jen.Index().Add(jen.String()))
 	helpTestBasics(t, NewMapType(NewStringType(), NewBoolType()), "{sb}", "Map<str,bool>",
 		jen.Map(jen.String()).Add(jen.Bool()))
-	helpTestBasics(t, NewTupleType([]Type{ NewStringType(), NewBoolType()}), "(sb)",
+	helpTestBasics(t, NewTupleType([]Type{NewStringType(), NewBoolType()}), "(sb)",
 		"P0: str, P1: bool",
-		jen.Struct(jen.Id("P0").Add(jen.String()),jen.Id("P1").Add(jen.Bool())))
-	helpTestBasics(t, NewStructType("test", []MemberType{ MemberType{ "a", NewIntType() } }),
+		jen.Struct(jen.Id("P0").Add(jen.String()), jen.Id("P1").Add(jen.Bool())))
+	helpTestBasics(t, NewStructType("test", []MemberType{MemberType{"a", NewIntType()}}),
 		"(i)<test,a>", "test", jen.Id("test"))
 }

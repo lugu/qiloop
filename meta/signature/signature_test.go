@@ -58,6 +58,10 @@ func TestStructName(t *testing.T) {
 }
 
 func TestParseBasics(t *testing.T) {
+	testUtil(t, "c", NewInt8Type())
+	testUtil(t, "C", NewUint8Type())
+	testUtil(t, "w", NewInt16Type())
+	testUtil(t, "W", NewUint16Type())
 	testUtil(t, "i", NewIntType())
 	testUtil(t, "I", NewUIntType())
 	testUtil(t, "s", NewStringType())
@@ -80,6 +84,8 @@ func TestParseEmpty(t *testing.T) {
 }
 
 func TestParseMap(t *testing.T) {
+	testUtil(t, "{cw}", NewMapType(NewInt8Type(), NewInt16Type()))
+	testUtil(t, "{Wc}", NewMapType(NewUint16Type(), NewUint8Type()))
 	testUtil(t, "{ss}", NewMapType(NewStringType(), NewStringType()))
 	testUtil(t, "{sI}", NewMapType(NewStringType(), NewUIntType()))
 	testUtil(t, "{is}", NewMapType(NewIntType(), NewStringType()))

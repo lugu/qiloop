@@ -2,12 +2,13 @@ package basic_test
 
 import (
 	"bytes"
-	.  "github.com/lugu/qiloop/type/basic"
-	"testing"
 	"errors"
+	. "github.com/lugu/qiloop/type/basic"
+	"testing"
 )
 
 type EmptyReaderWriter struct{}
+
 func (e EmptyReaderWriter) Read(p []byte) (n int, err error) {
 	return 0, errors.New("nothing to read from")
 }
@@ -43,7 +44,7 @@ func TestUint8(t *testing.T) {
 func TestUint16(t *testing.T) {
 	var values []uint16 = []uint16{
 		0, 1, 2, 10, 30, 50, 127,
-		1 << 11 + 127, 1 << 15,
+		1<<11 + 127, 1 << 15,
 	}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -67,8 +68,8 @@ func TestUint16(t *testing.T) {
 func TestUint32(t *testing.T) {
 	var values []uint32 = []uint32{
 		0, 1, 2, 10, 30, 50, 127,
-		1 << 11 + 127, 1 << 16,
-		1 << 21 + 321, 1 << 28, 1 << 31,
+		1<<11 + 127, 1 << 16,
+		1<<21 + 321, 1 << 28, 1 << 31,
 	}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -92,9 +93,9 @@ func TestUint32(t *testing.T) {
 func TestUint64(t *testing.T) {
 	var values []uint64 = []uint64{
 		0, 1, 2, 10, 30, 50, 127,
-		1 << 11 + 127, 1 << 16,
-		1 << 21 + 641, 1 << 28, 1 << 31,
-		1 << 51 + 641, 1 << 60, 1 << 63,
+		1<<11 + 127, 1 << 16,
+		1<<21 + 641, 1 << 28, 1 << 31,
+		1<<51 + 641, 1 << 60, 1 << 63,
 	}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -118,9 +119,9 @@ func TestUint64(t *testing.T) {
 func TestInt32(t *testing.T) {
 	var values []int32 = []int32{
 		0, 1, 2, 10, 30, 50, 127,
-		1 << 11 + 127, 1 << 16,
-		1 << 21 + 321, 1 << 28, 1 << 30,
-		- (1 << 30), -12, -1, -0, - (1 << 16),
+		1<<11 + 127, 1 << 16,
+		1<<21 + 321, 1 << 28, 1 << 30,
+		-(1 << 30), -12, -1, -0, -(1 << 16),
 	}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -144,10 +145,10 @@ func TestInt32(t *testing.T) {
 func TestInt64(t *testing.T) {
 	var values []int64 = []int64{
 		0, 1, 2, 10, 30, 50, 127,
-		1 << 11 + 127, 1 << 16,
-		1 << 21 + 641, 1 << 28, 1 << 30,
-		- (1 << 30), -12, -1, -0, - (1 << 16),
-		- (1 << 40) + 12, - (1 << 63) + 12,
+		1<<11 + 127, 1 << 16,
+		1<<21 + 641, 1 << 28, 1 << 30,
+		-(1 << 30), -12, -1, -0, -(1 << 16),
+		-(1 << 40) + 12, -(1 << 63) + 12,
 	}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -170,7 +171,7 @@ func TestInt64(t *testing.T) {
 
 func TestFloat32(t *testing.T) {
 	var values []float32 = []float32{
-		0.0, 1.0, 2.1, 10.3, 1/3, -1.5, -1/6,
+		0.0, 1.0, 2.1, 10.3, 1 / 3, -1.5, -1 / 6,
 	}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -193,7 +194,7 @@ func TestFloat32(t *testing.T) {
 
 func TestFloat64(t *testing.T) {
 	var values []float64 = []float64{
-		0.0, 1.0, 2.1, 10.3, 1/3, -1.5, -1/6,
+		0.0, 1.0, 2.1, 10.3, 1 / 3, -1.5, -1 / 6,
 	}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -215,7 +216,7 @@ func TestFloat64(t *testing.T) {
 }
 
 func TestBool(t *testing.T) {
-	var values []bool = []bool{ true, false }
+	var values []bool = []bool{true, false}
 	for _, value := range values {
 		buf := bytes.NewBuffer(make([]byte, 0))
 		if err := WriteBool(value, buf); err != nil {
@@ -260,4 +261,3 @@ func TestString(t *testing.T) {
 		}
 	}
 }
-

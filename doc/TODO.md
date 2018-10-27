@@ -1,9 +1,4 @@
 Unsorted todo list:
-- type:
-    - 'c' / 'C' : 8 bits numbers
-    - 'w' / 'W' : 16 bits numbers
-    - '_' : none type
-    - '*' : pointer
 - server:
     - add service zero by default
     - allow for remote registration

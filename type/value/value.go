@@ -24,6 +24,14 @@ func NewValue(r io.Reader) (Value, error) {
 		return nil, fmt.Errorf("value signature: %s", err)
 	}
 	switch s {
+	case "c":
+		return newInt8(r)
+	case "C":
+		return newUint8(r)
+	case "w":
+		return newInt16(r)
+	case "W":
+		return newUint16(r)
 	case "i":
 		return newInt(r)
 	case "I":
@@ -74,6 +82,122 @@ func (b BoolValue) Write(w io.Writer) error {
 // Value returns the actual value.
 func (b BoolValue) Value() bool {
 	return bool(b)
+}
+
+// Uint8Value represents a Value of an uint8.
+type Uint8Value uint8
+
+// Int constructs a Value. FIXME: Int shall be int32
+func Uint8(i uint8) Value {
+	return Uint8Value(i)
+}
+
+func newUint8(r io.Reader) (Value, error) {
+	i, err := basic.ReadUint8(r)
+	return Uint8(i), err
+}
+
+func (i Uint8Value) signature() string {
+	return "I"
+}
+
+func (i Uint8Value) Write(w io.Writer) error {
+	if err := basic.WriteString(i.signature(), w); err != nil {
+		return err
+	}
+	return basic.WriteUint8(i.Value(), w)
+}
+
+// Value returns the actual value
+func (i Uint8Value) Value() uint8 {
+	return uint8(i)
+}
+
+// Int8Value represents a Value of an int8.
+type Int8Value int8
+
+// Int constructs a Value. FIXME: Int shall be int32
+func Int8(i int8) Value {
+	return Int8Value(i)
+}
+
+func newInt8(r io.Reader) (Value, error) {
+	i, err := basic.ReadInt8(r)
+	return Int8(i), err
+}
+
+func (i Int8Value) signature() string {
+	return "i"
+}
+
+func (i Int8Value) Write(w io.Writer) error {
+	if err := basic.WriteString(i.signature(), w); err != nil {
+		return err
+	}
+	return basic.WriteInt8(i.Value(), w)
+}
+
+// Value returns the actual value
+func (i Int8Value) Value() int8 {
+	return int8(i)
+}
+
+// Uint16Value represents a Value of an uint16.
+type Uint16Value uint16
+
+// Int constructs a Value. FIXME: Int shall be int32
+func Uint16(i uint16) Value {
+	return Uint16Value(i)
+}
+
+func newUint16(r io.Reader) (Value, error) {
+	i, err := basic.ReadUint16(r)
+	return Uint16(i), err
+}
+
+func (i Uint16Value) signature() string {
+	return "W"
+}
+
+func (i Uint16Value) Write(w io.Writer) error {
+	if err := basic.WriteString(i.signature(), w); err != nil {
+		return err
+	}
+	return basic.WriteUint16(i.Value(), w)
+}
+
+// Value returns the actual value
+func (i Uint16Value) Value() uint16 {
+	return uint16(i)
+}
+
+// Int16Value represents a Value of an int16.
+type Int16Value int16
+
+// Int constructs a Value. FIXME: Int shall be int32
+func Int16(i int16) Value {
+	return Int16Value(i)
+}
+
+func newInt16(r io.Reader) (Value, error) {
+	i, err := basic.ReadInt16(r)
+	return Int16(i), err
+}
+
+func (i Int16Value) signature() string {
+	return "w"
+}
+
+func (i Int16Value) Write(w io.Writer) error {
+	if err := basic.WriteString(i.signature(), w); err != nil {
+		return err
+	}
+	return basic.WriteInt16(i.Value(), w)
+}
+
+// Value returns the actual value
+func (i Int16Value) Value() int16 {
+	return int16(i)
 }
 
 // UintValue represents a Value of an uint32.

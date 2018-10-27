@@ -44,6 +44,14 @@ func helpValueWrite(t *testing.T, expected value.Value) {
 func TestValueWrite(t *testing.T) {
 	helpValueWrite(t, value.Bool(true))
 	helpValueWrite(t, value.Bool(false))
+	helpValueWrite(t, value.Int8(0))
+	helpValueWrite(t, value.Int8(-42))
+	helpValueWrite(t, value.Uint8(0))
+	helpValueWrite(t, value.Uint8(42))
+	helpValueWrite(t, value.Int16(0))
+	helpValueWrite(t, value.Int16(-42))
+	helpValueWrite(t, value.Uint16(0))
+	helpValueWrite(t, value.Uint16(42))
 	helpValueWrite(t, value.Int(0))
 	helpValueWrite(t, value.Int(42))
 	helpValueWrite(t, value.Long(0))
@@ -51,7 +59,7 @@ func TestValueWrite(t *testing.T) {
 	helpValueWrite(t, value.Float(-1.234))
 	helpValueWrite(t, value.Float(0))
 	helpValueWrite(t, value.String(""))
-	helpValueWrite(t, value.String("testing is good"))
+	helpValueWrite(t, value.String("keep testing"))
 }
 
 func helpParseValue(t *testing.T, b []byte, expected value.Value) {
