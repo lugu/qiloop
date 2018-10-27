@@ -18,14 +18,14 @@ var ObjectNotFound error = errors.New("Object not found")
 var ActionNotFound error = errors.New("Action not found")
 
 // From IDL file, generate stub interfaces like:
-type ObjectImplA interface {
+type ServiceA interface {
 }
 
-func NewObjectImplAConstructor(impl ObjectImplA) ObjectImplConstructor {
+func NewObjectAConstructor(impl ServiceA) ObjectConstructor {
 	return nil
 }
 
-type ObjectImplConstructor interface {
+type ObjectConstructor interface {
 	Instanciate(service, object uint32, namespace ServiceImpl) ObjectImpl
 }
 
@@ -57,18 +57,18 @@ type ObjectWrapper interface {
 	Wrapper() bus.Wrapper
 }
 
-type GenericObject struct {
+type BasicObject struct {
 	signals      map[uint32][]*Context
 	meta         object.MetaObject
 	wrapper      bus.Wrapper // TODO: implements object.Object
 	actionHelper ActionHelper
 }
 
-func (o *GenericObject) MetaObject() (object.MetaObject, error) {
+func (o *BasicObject) MetaObject() (object.MetaObject, error) {
 	return o.meta, nil
 }
 
-func (o *GenericObject) UpdateSignal(signal uint32, value []byte) (ret error) {
+func (o *BasicObject) UpdateSignal(signal uint32, value []byte) (ret error) {
 	if clients, ok := o.signals[signal]; ok {
 
 		// FIXME: which id to use ? shall we record the register id
@@ -87,11 +87,11 @@ func (o *GenericObject) UpdateSignal(signal uint32, value []byte) (ret error) {
 }
 
 // FIXME: must as well call the implementation's Terminate method.
-func (o *GenericObject) Terminate() {
+func (o *BasicObject) Terminate() {
 	o.actionHelper.Unregister()
 }
 
-func (o *GenericObject) Wrapper() bus.Wrapper {
+func (o *BasicObject) Wrapper() bus.Wrapper {
 	panic("not yet implemented")
 	return nil
 }
