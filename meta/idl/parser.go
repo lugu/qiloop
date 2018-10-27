@@ -548,9 +548,9 @@ func makeNodifyInterface(sc Scope) func([]Node) Node {
 			return fmt.Errorf("Expecting InterfaceType, got %+v: %+v",
 				reflect.TypeOf(itfNode), itfNode)
 		}
-		itf.name = nameNode.(*parsec.Terminal).GetValue()
-		itf.scope = sc
-		sc.Add(itf.name, itf)
+		itf.Name = nameNode.(*parsec.Terminal).GetValue()
+		itf.Scope = sc
+		sc.Add(itf.Name, itf)
 		return itf
 	}
 }
@@ -688,9 +688,9 @@ func nodifyProperty(nodes []Node) Node {
 func nodifyActionList(nodes []Node) Node {
 	var itf InterfaceType
 
-	itf.methods = make(map[uint32]Method)
-	itf.signals = make(map[uint32]Signal)
-	itf.properties = make(map[uint32]Property)
+	itf.Methods = make(map[uint32]Method)
+	itf.Signals = make(map[uint32]Signal)
+	itf.Properties = make(map[uint32]Property)
 
 	var customAction uint32 = 100
 	for _, node := range nodes {
@@ -702,19 +702,19 @@ func nodifyActionList(nodes []Node) Node {
 				method.Id = customAction
 				customAction++
 			}
-			itf.methods[method.Id] = method
+			itf.Methods[method.Id] = method
 		} else if signal, ok := node.(Signal); ok {
 			if signal.Id == 0 {
 				signal.Id = customAction
 				customAction++
 			}
-			itf.signals[signal.Id] = signal
+			itf.Signals[signal.Id] = signal
 		} else if property, ok := node.(Property); ok {
 			if property.Id == 0 {
 				property.Id = customAction
 				customAction++
 			}
-			itf.properties[property.Id] = property
+			itf.Properties[property.Id] = property
 		} else {
 			return fmt.Errorf("Expecting action, got %+v: %+v",
 				reflect.TypeOf(node), node)

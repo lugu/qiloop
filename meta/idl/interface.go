@@ -87,13 +87,13 @@ func (p Property) Meta(id uint32) object.MetaProperty {
 }
 
 type InterfaceType struct {
-	name        string
-	packageName string
-	methods     map[uint32]Method
-	signals     map[uint32]Signal
-	properties  map[uint32]Property
-	scope       Scope
-	namespace   Namespace
+	Name        string
+	PackageName string
+	Methods     map[uint32]Method
+	Signals     map[uint32]Signal
+	Properties  map[uint32]Property
+	Scope       Scope
+	Namespace   Namespace
 }
 
 func (s *InterfaceType) Signature() string {
@@ -104,7 +104,7 @@ func (s *InterfaceType) SignatureIDL() string {
 }
 
 func (s *InterfaceType) TypeName() *jen.Statement {
-	return jen.Qual(s.packageName, s.name)
+	return jen.Qual(s.PackageName, s.Name)
 }
 
 // declare the interface as done by the proxy generation
@@ -114,7 +114,7 @@ func (s *InterfaceType) TypeDeclaration(f *jen.File) {
 }
 
 func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
-	name := s.name
+	name := s.Name
 	// loop 100 times to avoid name collision
 	for i := 0; i < 100; i++ {
 		ok := true // can use the name
@@ -134,7 +134,7 @@ func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
 			set.Names = append(set.Names, name)
 			return
 		}
-		name = fmt.Sprintf("%s_%d", s.name, i)
+		name = fmt.Sprintf("%s_%d", s.Name, i)
 	}
 	panic("failed to register " + name)
 }
@@ -157,17 +157,17 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 }
 func (s *InterfaceType) MetaObject() object.MetaObject {
 	var meta object.MetaObject
-	meta.Description = s.name
+	meta.Description = s.Name
 	meta.Methods = make(map[uint32]object.MetaMethod)
 	meta.Signals = make(map[uint32]object.MetaSignal)
 	meta.Properties = make(map[uint32]object.MetaProperty)
-	for id, m := range s.methods {
+	for id, m := range s.Methods {
 		meta.Methods[id] = m.Meta(id)
 	}
-	for id, s := range s.signals {
+	for id, s := range s.Signals {
 		meta.Signals[id] = s.Meta(id)
 	}
-	for id, p := range s.signals {
+	for id, p := range s.Signals {
 		meta.Signals[id] = p.Meta(id)
 	}
 	return meta

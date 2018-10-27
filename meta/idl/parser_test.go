@@ -292,8 +292,8 @@ func helpParseInterface(t *testing.T, label, input, name string) {
 	if itf, ok := root.(*InterfaceType); !ok {
 		t.Errorf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
 		return
-	} else if itf.name != name {
-		t.Errorf("%s; expected :%s: got: %s", label, name, itf.name)
+	} else if itf.Name != name {
+		t.Errorf("%s; expected :%s: got: %s", label, name, itf.Name)
 		return
 	}
 }
