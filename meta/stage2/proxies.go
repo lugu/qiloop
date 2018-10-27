@@ -2,14 +2,14 @@
 package stage2
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
-	log "log"
+	"io"
+	"log"
 )
 
 type NewServices struct {
@@ -909,25 +909,25 @@ type MinMaxSum struct {
 
 func ReadMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
 	if s.MinValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read MinValue field: %s", err)
+		return s, fmt.Errorf("failed to read MinValue field: " + err.Error())
 	}
 	if s.MaxValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read MaxValue field: %s", err)
+		return s, fmt.Errorf("failed to read MaxValue field: " + err.Error())
 	}
 	if s.CumulatedValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read CumulatedValue field: %s", err)
+		return s, fmt.Errorf("failed to read CumulatedValue field: " + err.Error())
 	}
 	return s, nil
 }
 func WriteMinMaxSum(s MinMaxSum, w io.Writer) (err error) {
 	if err := basic.WriteFloat32(s.MinValue, w); err != nil {
-		return fmt.Errorf("failed to write MinValue field: %s", err)
+		return fmt.Errorf("failed to write MinValue field: " + err.Error())
 	}
 	if err := basic.WriteFloat32(s.MaxValue, w); err != nil {
-		return fmt.Errorf("failed to write MaxValue field: %s", err)
+		return fmt.Errorf("failed to write MaxValue field: " + err.Error())
 	}
 	if err := basic.WriteFloat32(s.CumulatedValue, w); err != nil {
-		return fmt.Errorf("failed to write CumulatedValue field: %s", err)
+		return fmt.Errorf("failed to write CumulatedValue field: " + err.Error())
 	}
 	return nil
 }
@@ -941,31 +941,31 @@ type MethodStatistics struct {
 
 func ReadMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
 	if s.Count, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Count field: %s", err)
+		return s, fmt.Errorf("failed to read Count field: " + err.Error())
 	}
 	if s.Wall, err = ReadMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read Wall field: %s", err)
+		return s, fmt.Errorf("failed to read Wall field: " + err.Error())
 	}
 	if s.User, err = ReadMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read User field: %s", err)
+		return s, fmt.Errorf("failed to read User field: " + err.Error())
 	}
 	if s.System, err = ReadMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read System field: %s", err)
+		return s, fmt.Errorf("failed to read System field: " + err.Error())
 	}
 	return s, nil
 }
 func WriteMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Count, w); err != nil {
-		return fmt.Errorf("failed to write Count field: %s", err)
+		return fmt.Errorf("failed to write Count field: " + err.Error())
 	}
 	if err := WriteMinMaxSum(s.Wall, w); err != nil {
-		return fmt.Errorf("failed to write Wall field: %s", err)
+		return fmt.Errorf("failed to write Wall field: " + err.Error())
 	}
 	if err := WriteMinMaxSum(s.User, w); err != nil {
-		return fmt.Errorf("failed to write User field: %s", err)
+		return fmt.Errorf("failed to write User field: " + err.Error())
 	}
 	if err := WriteMinMaxSum(s.System, w); err != nil {
-		return fmt.Errorf("failed to write System field: %s", err)
+		return fmt.Errorf("failed to write System field: " + err.Error())
 	}
 	return nil
 }
@@ -981,16 +981,16 @@ type ServiceInfo struct {
 
 func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
 	}
 	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceId field: %s", err)
+		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
 	}
 	if s.MachineId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read MachineId field: %s", err)
+		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
 	}
 	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ProcessId field: %s", err)
+		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
 	}
 	if s.Endpoints, err = func() (b []string, err error) {
 		size, err := basic.ReadUint32(r)
@@ -1006,25 +1006,25 @@ func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 		}
 		return b, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Endpoints field: %s", err)
+		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
 	}
 	if s.SessionId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read SessionId field: %s", err)
+		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
 	}
 	return s, nil
 }
 func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("failed to write Name field: " + err.Error())
 	}
 	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
-		return fmt.Errorf("failed to write ServiceId field: %s", err)
+		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
 	}
 	if err := basic.WriteString(s.MachineId, w); err != nil {
-		return fmt.Errorf("failed to write MachineId field: %s", err)
+		return fmt.Errorf("failed to write MachineId field: " + err.Error())
 	}
 	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
-		return fmt.Errorf("failed to write ProcessId field: %s", err)
+		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
@@ -1039,10 +1039,10 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Endpoints field: %s", err)
+		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
 	}
 	if err := basic.WriteString(s.SessionId, w); err != nil {
-		return fmt.Errorf("failed to write SessionId field: %s", err)
+		return fmt.Errorf("failed to write SessionId field: " + err.Error())
 	}
 	return nil
 }
@@ -1054,19 +1054,19 @@ type timeval struct {
 
 func Readtimeval(r io.Reader) (s timeval, err error) {
 	if s.Tv_sec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tv_sec field: %s", err)
+		return s, fmt.Errorf("failed to read Tv_sec field: " + err.Error())
 	}
 	if s.Tv_usec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tv_usec field: %s", err)
+		return s, fmt.Errorf("failed to read Tv_usec field: " + err.Error())
 	}
 	return s, nil
 }
 func Writetimeval(s timeval, w io.Writer) (err error) {
 	if err := basic.WriteInt64(s.Tv_sec, w); err != nil {
-		return fmt.Errorf("failed to write Tv_sec field: %s", err)
+		return fmt.Errorf("failed to write Tv_sec field: " + err.Error())
 	}
 	if err := basic.WriteInt64(s.Tv_usec, w); err != nil {
-		return fmt.Errorf("failed to write Tv_usec field: %s", err)
+		return fmt.Errorf("failed to write Tv_usec field: " + err.Error())
 	}
 	return nil
 }
@@ -1085,61 +1085,61 @@ type EventTrace struct {
 
 func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Id field: %s", err)
+		return s, fmt.Errorf("failed to read Id field: " + err.Error())
 	}
 	if s.Kind, err = basic.ReadInt32(r); err != nil {
-		return s, fmt.Errorf("failed to read Kind field: %s", err)
+		return s, fmt.Errorf("failed to read Kind field: " + err.Error())
 	}
 	if s.SlotId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read SlotId field: %s", err)
+		return s, fmt.Errorf("failed to read SlotId field: " + err.Error())
 	}
 	if s.Arguments, err = value.NewValue(r); err != nil {
-		return s, fmt.Errorf("failed to read Arguments field: %s", err)
+		return s, fmt.Errorf("failed to read Arguments field: " + err.Error())
 	}
 	if s.Timestamp, err = Readtimeval(r); err != nil {
-		return s, fmt.Errorf("failed to read Timestamp field: %s", err)
+		return s, fmt.Errorf("failed to read Timestamp field: " + err.Error())
 	}
 	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read UserUsTime field: %s", err)
+		return s, fmt.Errorf("failed to read UserUsTime field: " + err.Error())
 	}
 	if s.SystemUsTime, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read SystemUsTime field: %s", err)
+		return s, fmt.Errorf("failed to read SystemUsTime field: " + err.Error())
 	}
 	if s.CallerContext, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read CallerContext field: %s", err)
+		return s, fmt.Errorf("failed to read CallerContext field: " + err.Error())
 	}
 	if s.CalleeContext, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read CalleeContext field: %s", err)
+		return s, fmt.Errorf("failed to read CalleeContext field: " + err.Error())
 	}
 	return s, nil
 }
 func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
-		return fmt.Errorf("failed to write Id field: %s", err)
+		return fmt.Errorf("failed to write Id field: " + err.Error())
 	}
 	if err := basic.WriteInt32(s.Kind, w); err != nil {
-		return fmt.Errorf("failed to write Kind field: %s", err)
+		return fmt.Errorf("failed to write Kind field: " + err.Error())
 	}
 	if err := basic.WriteUint32(s.SlotId, w); err != nil {
-		return fmt.Errorf("failed to write SlotId field: %s", err)
+		return fmt.Errorf("failed to write SlotId field: " + err.Error())
 	}
 	if err := s.Arguments.Write(w); err != nil {
-		return fmt.Errorf("failed to write Arguments field: %s", err)
+		return fmt.Errorf("failed to write Arguments field: " + err.Error())
 	}
 	if err := Writetimeval(s.Timestamp, w); err != nil {
-		return fmt.Errorf("failed to write Timestamp field: %s", err)
+		return fmt.Errorf("failed to write Timestamp field: " + err.Error())
 	}
 	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {
-		return fmt.Errorf("failed to write UserUsTime field: %s", err)
+		return fmt.Errorf("failed to write UserUsTime field: " + err.Error())
 	}
 	if err := basic.WriteInt64(s.SystemUsTime, w); err != nil {
-		return fmt.Errorf("failed to write SystemUsTime field: %s", err)
+		return fmt.Errorf("failed to write SystemUsTime field: " + err.Error())
 	}
 	if err := basic.WriteUint32(s.CallerContext, w); err != nil {
-		return fmt.Errorf("failed to write CallerContext field: %s", err)
+		return fmt.Errorf("failed to write CallerContext field: " + err.Error())
 	}
 	if err := basic.WriteUint32(s.CalleeContext, w); err != nil {
-		return fmt.Errorf("failed to write CalleeContext field: %s", err)
+		return fmt.Errorf("failed to write CalleeContext field: " + err.Error())
 	}
 	return nil
 }
