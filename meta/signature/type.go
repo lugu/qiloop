@@ -6,7 +6,6 @@ import (
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/bus/util"
 	"log"
-	"strconv"
 	"strings"
 )
 
@@ -716,13 +715,14 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 		readFields[i] = jen.If(
 			jen.Id("s."+v.Title()+", err =").Add(v.Value.Unmarshal("r")),
 			jen.Id("err != nil")).Block(
-			jen.Id(`return s, fmt.Errorf("failed to read ` + v.Title() + ` field: %s", err)`),
+			jen.Return(jen.Id("s"),
+				jen.Qual("fmt", "Errorf").Call(jen.Lit(`failed to read `+v.Title()+` field: `).Op("+").Id("err").Dot("Error").Call())),
 		)
 		writeFields[i] = jen.If(
 			jen.Id("err :=").Add(v.Value.Marshal("s."+v.Title(), "w")),
 			jen.Err().Op("!=").Nil(),
 		).Block(
-			jen.Id(`return fmt.Errorf("failed to write ` + v.Title() + ` field: %s", err)`),
+			jen.Return(jen.Qual("fmt", "Errorf").Call(jen.Lit(`failed to write ` + v.Title() + ` field: `).Op("+").Id("err").Dot("Error").Call())),
 		)
 	}
 	readFields[len(s.Members)] = jen.Return(jen.Id("s"), jen.Nil())
@@ -807,7 +807,7 @@ func (e *EnumType) TypeDeclaration(file *jen.File) {
 	file.Type().Id(e.Name).Int()
 	var defs []jen.Code = make([]jen.Code, 0)
 	for i, v := range e.Values {
-		defs = append(defs, jen.Id(i).Op("=").Lit(strconv.Itoa(v)))
+		defs = append(defs, jen.Id(strings.Title(i)).Op("=").Lit(v))
 	}
 	file.Const().Defs(defs...)
 }
