@@ -583,20 +583,26 @@ func (m MemberType) Title() string {
 // NewTupleType is a contructor for the representation of a series of
 // types. Used to describe a method parameters list.
 func NewTupleType(values []Type) *TupleType {
-	return &TupleType{values}
+	var tuple TupleType
+	tuple.Members = make([]MemberType, 0)
+	for i, v := range values {
+		tuple.Members = append(tuple.Members,
+			MemberType{fmt.Sprintf("P%d", i), v})
+	}
+	return &tuple
 }
 
 // TupleType a list of a parameter of a method.
 type TupleType struct {
-	values []Type
+	Members []MemberType
 }
 
 // Signature returns "(<signature 1><signature 2>...)" where
 // <signature X> is the signature of the elements.
 func (t *TupleType) Signature() string {
 	sig := "("
-	for _, v := range t.values {
-		sig += v.Signature()
+	for _, m := range t.Members {
+		sig += m.Value.Signature()
 	}
 	sig += ")"
 	return sig
@@ -606,35 +612,25 @@ func (t *TupleType) Signature() string {
 // signatureX is the signature of the elements.
 func (t *TupleType) SignatureIDL() string {
 	var i int = -1
-	var typ MemberType
 	sig := ""
-	for i, typ = range t.Members() {
-		if i == len(t.values)-1 {
+	for i, typ := range t.Members {
+		if i == len(t.Members)-1 {
 			break
 		}
 		sig += typ.Name + ": " + typ.Value.SignatureIDL() + ", "
 	}
-	if len(t.values) > 0 {
-		sig += t.Members()[i].Name + ": " + t.Members()[i].Value.SignatureIDL()
+	if len(t.Members) > 0 {
+		sig += t.Members[i].Name + ": " + t.Members[i].Value.SignatureIDL()
 	}
 	return sig
-}
-
-// Members returns the list of the types composing the TupleType.
-func (t *TupleType) Members() []MemberType {
-	members := make([]MemberType, len(t.values))
-	for i, v := range t.values {
-		members[i] = MemberType{fmt.Sprintf("P%d", i), v}
-	}
-	return members
 }
 
 // Params returns a statement representing the list of parameter of
 // a method.
 func (t *TupleType) Params() *Statement {
-	arguments := make([]jen.Code, len(t.values))
-	for i, v := range t.values {
-		arguments[i] = jen.Id(fmt.Sprintf("P%d", i)).Add(v.TypeName())
+	arguments := make([]jen.Code, len(t.Members))
+	for i, m := range t.Members {
+		arguments[i] = jen.Id(fmt.Sprintf("P%d", i)).Add(m.Value.TypeName())
 	}
 	return jen.Params(arguments...)
 }
@@ -643,7 +639,7 @@ func (t *TupleType) Params() *Statement {
 // declared.
 func (t *TupleType) TypeName() *Statement {
 	params := make([]jen.Code, 0)
-	for _, typ := range t.Members() {
+	for _, typ := range t.Members {
 		params = append(params, jen.Id(typ.Name).Add(typ.Value.TypeName()))
 	}
 	return jen.Struct(params...)
@@ -651,8 +647,8 @@ func (t *TupleType) TypeName() *Statement {
 
 // RegisterTo adds the type to the TypeSet.
 func (t *TupleType) RegisterTo(s *TypeSet) {
-	for _, v := range t.values {
-		v.RegisterTo(s)
+	for _, m := range t.Members {
+		m.Value.RegisterTo(s)
 	}
 	return
 }
@@ -666,7 +662,7 @@ func (t *TupleType) TypeDeclaration(*jen.File) {
 // error.
 func (t *TupleType) Marshal(tupleID string, writer string) *Statement {
 	statements := make([]jen.Code, 0)
-	for _, typ := range t.Members() {
+	for _, typ := range t.Members {
 		s1 := jen.Err().Op("=").Add(typ.Value.Marshal(tupleID+"."+typ.Name, writer))
 		s2 := jen.Id(`if (err != nil) {
 			return fmt.Errorf("failed to write tuple member: %s", err)
@@ -685,7 +681,7 @@ func (t *TupleType) Marshal(tupleID string, writer string) *Statement {
 // read and an error.
 func (t *TupleType) Unmarshal(reader string) *Statement {
 	statements := make([]jen.Code, 0)
-	for _, typ := range t.Members() {
+	for _, typ := range t.Members {
 		s1 := jen.List(jen.Id("s."+typ.Name), jen.Err()).Op("=").Add(typ.Value.Unmarshal(reader))
 		s2 := jen.Id(`if (err != nil) {
 			return s, fmt.Errorf("failed to read tuple member: %s", err)
@@ -708,9 +704,9 @@ func (t *TupleType) Unmarshal(reader string) *Statement {
 // which implements the object.Object interface and avoid a circular
 // dependancy.
 func (t *TupleType) ConvertMetaObjects() {
-	for i, member := range t.values {
-		if member.Signature() == MetaObjectSignature {
-			t.values[i] = NewMetaObjectType()
+	for i, m := range t.Members {
+		if m.Value.Signature() == MetaObjectSignature {
+			t.Members[i].Value = NewMetaObjectType()
 		}
 	}
 }

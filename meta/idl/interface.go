@@ -50,6 +50,11 @@ func (m Method) Meta(id uint32) object.MetaMethod {
 	return meta
 }
 
+func (m Method) Tuple() *signature.TupleType {
+	// signature.NewTupleType([]signature.Type{paramType})
+	panic("not implemented")
+}
+
 type Signal struct {
 	Name   string
 	Id     uint32

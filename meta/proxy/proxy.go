@@ -202,7 +202,7 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleType, ret signa
 	}
 	writing = append(writing, jen.Var().Id("buf").Op("*").Qual("bytes", "Buffer"))
 	writing = append(writing, jen.Id("buf = bytes.NewBuffer(make([]byte, 0))"))
-	for _, v := range params.Members() {
+	for _, v := range params.Members {
 		if ret.Signature() != "v" {
 			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Value.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
 				jen.Id(`return ret, fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
