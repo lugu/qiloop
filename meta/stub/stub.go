@@ -31,6 +31,20 @@ func generateInterface(f *jen.File, set *signature.TypeSet, itf *idl.InterfaceTy
 	if err := generateObjectInterface(f, set, itf); err != nil {
 		return err
 	}
+	if err := generateStub(f, itf); err != nil {
+		return err
+	}
+	return nil
+}
+
+func generateStub(f *jen.File, itf *idl.InterfaceType) error {
+	if err := generateStubType(f, itf); err != nil {
+		return err
+	}
+	if err := generateStubConstructor(f, itf); err != nil {
+		return err
+	}
+	// TODO: generate methods serializer
 	return nil
 }
 
@@ -69,6 +83,28 @@ func generateSignalDef(itf *idl.InterfaceType, set *signature.TypeSet,
 
 	retType := jen.Params(jen.Chan().Add(tuple.TypeName()), jen.Error())
 	return jen.Id(signalName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
+}
+
+func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
+	file.Func().Id("New"+itf.Name).Params(
+		jen.Id("impl").Id(itf.Name),
+	).Qual(
+		"github.com/lugu/qiloop/bus/session", "Object",
+	).Block(
+		jen.Var().Id("stb").Id(itf.Name+"Stub"),
+		jen.Id("sbt").Dot("Wrapper = bus.Wrapper(make(map[uint32]bus.ActionWrapper))"),
+		// TODO: iterate over the wrapper
+		jen.Return().Op("&").Id("stb"),
+	)
+	return nil
+}
+
+func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
+	file.Type().Id(itf.Name+"Stub").Struct(
+		jen.Qual("github.com/lugu/qiloop/bus/session", "ObjectDispather"),
+		jen.Id("impl").Id(itf.Name),
+	)
+	return nil
 }
 
 func generateObjectInterface(file *jen.File, set *signature.TypeSet,
