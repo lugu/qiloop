@@ -1,7 +1,7 @@
 language: go
 
 go:
-    - "1.10"
+    - "1.11.1"
     - tip
 
 install:
@@ -10,9 +10,8 @@ install:
     - go generate github.com/lugu/qiloop/meta/stage2
     - go generate github.com/lugu/qiloop/bus/services
 
-script: 
-    - go get github.com/lugu/qiloop/bus/cmd/info
-    - go test github.com/lugu/qiloop/... -v -race -coverprofile=coverage.txt -covermode=atomic
+script:
+    - go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
