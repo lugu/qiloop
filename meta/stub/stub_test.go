@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func helpGenerate(t *testing.T, input string) string {
+func helpGenerate(t *testing.T, input string) {
 	pkg, err := idl.ParsePackage([]byte(input))
 	if err != nil {
 		panic(err)
@@ -19,7 +19,9 @@ func helpGenerate(t *testing.T, input string) string {
 	if err != nil {
 		panic(err)
 	}
-	return string(buf.Bytes())
+	if string(buf.Bytes()) == "" {
+		t.Fatalf("missing type declaration")
+	}
 }
 
 func TestEmptyPackageName(t *testing.T) {
@@ -39,10 +41,7 @@ func TestGenerateEnum(t *testing.T) {
 		valueB = 2
 	end
 	`
-	output := helpGenerate(t, input)
-	if output == "" {
-		t.Fatalf("missing type declaration")
-	}
+	helpGenerate(t, input)
 }
 
 func TestGenerateStruct(t *testing.T) {
@@ -57,10 +56,7 @@ func TestGenerateStruct(t *testing.T) {
 		b: float32
 	end
 	`
-	output := helpGenerate(t, input)
-	if output == "" {
-		t.Fatalf("missing type declaration")
-	}
+	helpGenerate(t, input)
 }
 
 func TestGenerateEmptyInterface(t *testing.T) {
@@ -68,8 +64,45 @@ func TestGenerateEmptyInterface(t *testing.T) {
 	package test
 	interface Empty
 	end`
-	output := helpGenerate(t, input)
-	if output == "" {
-		t.Fatalf("missing type declaration")
-	}
+	helpGenerate(t, input)
+}
+
+func TestGenerateInterfaceMethod(t *testing.T) {
+	input := `
+	package test
+	interface SimpleMethod
+	    fn terminate(uid: uint32) //uid:6
+	    fn property(P0: any) -> any //uid:5
+	    fn authenticate(capability: Map<str,any>) -> Map<str,any> //uid:8
+	    fn machineId() -> str //uid:108
+	end`
+	helpGenerate(t, input)
+}
+
+func TestGenerateInterfaceMethodWithStruct(t *testing.T) {
+	input := `
+	package test
+	struct ServiceInfo
+	    name: str
+	    serviceId: uint32
+	    machineId: str
+	    processId: uint32
+	    endpoints: Vec<str>
+	    sessionId: str
+	end
+	interface StructMethod
+	    fn service(P0: str) -> ServiceInfo //uid:100
+	    fn updateServiceInfo(P0: ServiceInfo) //uid:105
+	end`
+	helpGenerate(t, input)
+}
+
+func TestGenerateInterfaceSignal(t *testing.T) {
+	input := `
+	package test
+	interface SimpleSignal
+	    sig serviceAdded(P0: uint32, P1: str) //uid:106
+	    sig serviceRemoved(P0: uint32, P1: str) //uid:107
+	end`
+	helpGenerate(t, input)
 }

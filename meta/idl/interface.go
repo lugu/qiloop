@@ -51,14 +51,29 @@ func (m Method) Meta(id uint32) object.MetaMethod {
 }
 
 func (m Method) Tuple() *signature.TupleType {
-	// signature.NewTupleType([]signature.Type{paramType})
-	panic("not implemented")
+	var tuple signature.TupleType
+	tuple.Members = make([]signature.MemberType, 0)
+	for _, p := range m.Params {
+		tuple.Members = append(tuple.Members,
+			signature.MemberType{p.Name, p.Type})
+	}
+	return &tuple
 }
 
 type Signal struct {
 	Name   string
 	Id     uint32
 	Params []Parameter
+}
+
+func (s Signal) Tuple() *signature.TupleType {
+	var tuple signature.TupleType
+	tuple.Members = make([]signature.MemberType, 0)
+	for _, p := range s.Params {
+		tuple.Members = append(tuple.Members,
+			signature.MemberType{p.Name, p.Type})
+	}
+	return &tuple
 }
 
 func (s Signal) Meta(id uint32) object.MetaSignal {

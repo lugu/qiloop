@@ -611,16 +611,12 @@ func (t *TupleType) Signature() string {
 // SignatureIDL returns "name1 signature1, name2 signature2" where
 // signatureX is the signature of the elements.
 func (t *TupleType) SignatureIDL() string {
-	var i int = -1
-	sig := ""
+	var sig string
 	for i, typ := range t.Members {
-		if i == len(t.Members)-1 {
-			break
+		sig += typ.Name + ": " + typ.Value.SignatureIDL()
+		if i != len(t.Members)-1 {
+			sig += ", "
 		}
-		sig += typ.Name + ": " + typ.Value.SignatureIDL() + ", "
-	}
-	if len(t.Members) > 0 {
-		sig += t.Members[i].Name + ": " + t.Members[i].Value.SignatureIDL()
 	}
 	return sig
 }
@@ -630,7 +626,7 @@ func (t *TupleType) SignatureIDL() string {
 func (t *TupleType) Params() *Statement {
 	arguments := make([]jen.Code, len(t.Members))
 	for i, m := range t.Members {
-		arguments[i] = jen.Id(fmt.Sprintf("P%d", i)).Add(m.Value.TypeName())
+		arguments[i] = jen.Id(m.Name).Add(m.Value.TypeName())
 	}
 	return jen.Params(arguments...)
 }

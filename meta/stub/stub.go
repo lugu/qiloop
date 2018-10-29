@@ -46,12 +46,29 @@ func generateType(f *jen.File, set *signature.TypeSet, typ signature.Type) error
 
 func generateMethodDef(itf *idl.InterfaceType, set *signature.TypeSet,
 	method idl.Method, methodName string) (jen.Code, error) {
-	panic("not yet implemented")
+
+	tuple := method.Tuple()
+	ret := method.Return
+
+	tuple.RegisterTo(set)
+	method.Return.RegisterTo(set)
+
+	if ret.Signature() == "v" {
+		return jen.Id(methodName).Add(tuple.Params()).Params(jen.Error()), nil
+	} else {
+		return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(),
+			jen.Error()), nil
+	}
 }
 
 func generateSignalDef(itf *idl.InterfaceType, set *signature.TypeSet,
 	signal idl.Signal, signalName string) (jen.Code, error) {
-	panic("not yet implemented")
+
+	tuple := signal.Tuple()
+	tuple.RegisterTo(set)
+
+	retType := jen.Params(jen.Chan().Add(tuple.TypeName()), jen.Error())
+	return jen.Id(signalName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
 }
 
 func generateObjectInterface(file *jen.File, set *signature.TypeSet,
