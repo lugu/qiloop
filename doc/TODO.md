@@ -12,6 +12,8 @@ Unsorted todo list:
 - auth:
     - NODES.md: document the capability event type
 - doc:
+    - check the generated documention of the proxy with
+      https://bradleyjkemp.github.io/godoc-playground/
     - NOTES.md: machine id discussion
     - NOTES.md: sequence diagram with multiple process
     - doc: restore the bootstrap discussion
