@@ -9,6 +9,7 @@ install:
     - go generate github.com/lugu/qiloop/type/object
     - go generate github.com/lugu/qiloop/meta/stage2
     - go generate github.com/lugu/qiloop/bus/services
+    - go generate github.com/lugu/qiloop/meta/stub
 
 script:
     - go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic

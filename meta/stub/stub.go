@@ -92,13 +92,18 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 
 	writing := make([]jen.Code, 0)
 	params := make([]jen.Code, 0)
-	writing = append(writing, jen.Id("buf := bytes.NewBuffer(payload)"))
+	code := jen.Id("buf").Op(":=").Qual(
+		"bytes", "NewBuffer",
+	).Call(jen.Id("payload"))
+	writing = append(writing, code)
 
 	for _, param := range method.Params {
 		params = append(params, jen.Id(param.Name))
-		code := jen.If(jen.List(jen.Id(param.Name), jen.Err()).Op(":=").Add(
+		code = jen.List(jen.Id(param.Name), jen.Err()).Op(":=").Add(
 			param.Type.Unmarshal("buf"),
-		).Op(";").Err().Op("!=").Nil()).Block(
+		)
+		writing = append(writing, code)
+		code = jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Return().List(
 				jen.Qual("github.com/lugu/qiloop/bus/util",
 					"ErrorPaylad").Call(jen.Err()),
@@ -107,21 +112,29 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 		)
 		writing = append(writing, code)
 	}
-	code := jen.Id("ret, err := s.impl").Dot(methodName).Call(params...)
+	// if has not return value
+	if method.Return.Signature() == "v" {
+		code = jen.Id("err = s.impl").Dot(methodName).Call(params...)
+	} else {
+		code = jen.Id("ret, err := s.impl").Dot(methodName).Call(params...)
+	}
 	writing = append(writing, code)
 	code = jen.Id(`if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
 	buf = bytes.NewBuffer(make([]byte, 0))`)
 	writing = append(writing, code)
+	if method.Return.Signature() != "v" {
+		writing = append(writing, code)
+		code = jen.Err().Op("=").Add(method.Return.Marshal("ret", "buf"))
+		writing = append(writing, code)
 
-	code = jen.Err().Op("=").Add(method.Return.Marshal("ret", "buf"))
-	writing = append(writing, code)
-
-	code = jen.Id(`if err != nil {
-		return util.ErrorPaylad(err), nil
+		code = jen.Id(`if err != nil {
+			return util.ErrorPaylad(err), nil
+	        }`)
+		writing = append(writing, code)
 	}
-	return buf.Bytes(), nil`)
+	code = jen.Id(`return buf.Bytes(), nil`)
 	writing = append(writing, code)
 
 	return jen.Block(
@@ -193,14 +206,21 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing := make([]jen.Code, 0)
 	code := jen.Var().Id("stb").Id(itf.Name + "Stub")
 	writing = append(writing, code)
-	code = jen.Id("sbt").Dot("Wrapper = bus.Wrapper(make(map[uint32]bus.ActionWrapper))")
+	code = jen.Id("stb.impl = impl")
+	writing = append(writing, code)
+	code = jen.Id("stb.Wrapper").Op("=").Make(
+		jen.Map(jen.Uint32()).Qual(
+			"github.com/lugu/qiloop/bus",
+			"ActionWrapper",
+		),
+	)
 	writing = append(writing, code)
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
-		code = jen.Id("stub.Wrapper").Index(
+		code = jen.Id("stb.Wrapper").Index(
 			jen.Lit(method.Id),
-		).Op("=").Id("stub").Dot(methodName)
+		).Op("=").Id("stb").Dot(methodName)
 		writing = append(writing, code)
 		return nil
 	}
