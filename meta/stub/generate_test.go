@@ -2,17 +2,19 @@
 package stub_test
 
 import (
-	bytes "bytes"
-	fmt "fmt"
-	bus "github.com/lugu/qiloop/bus"
+	"bytes"
+	"fmt"
+	net "github.com/lugu/qiloop/bus/net"
 	session "github.com/lugu/qiloop/bus/session"
 	util "github.com/lugu/qiloop/bus/util"
 	basic "github.com/lugu/qiloop/type/basic"
+	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
+	"io"
 )
 
-type Object interface {
+type BasicObject interface {
+	Activate(sess session.Session, serviceID, objectID uint32, signal BasicObjectSignalHelper)
 	RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error)
 	UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error
 	MetaObject(P0 uint32) (MetaObject, error)
@@ -22,26 +24,34 @@ type Object interface {
 	Properties() ([]string, error)
 	RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error)
 }
-type ObjectStub struct {
-	session.ObjectDispather
-	impl Object
+type BasicObjectSignalHelper interface{}
+type BasicObjectStub struct {
+	obj  *session.BasicObject
+	impl BasicObject
 }
 
-func NewObject(impl Object) session.Object {
-	var stb ObjectStub
+func BasicObjectObject(impl BasicObject) session.Object {
+	var stb BasicObjectStub
 	stb.impl = impl
-	stb.Wrapper = make(map[uint32]bus.ActionWrapper)
-	stb.Wrapper[uint32(0x0)] = stb.RegisterEvent
-	stb.Wrapper[uint32(0x1)] = stb.UnregisterEvent
-	stb.Wrapper[uint32(0x2)] = stb.MetaObject
-	stb.Wrapper[uint32(0x3)] = stb.Terminate
-	stb.Wrapper[uint32(0x5)] = stb.Property
-	stb.Wrapper[uint32(0x6)] = stb.SetProperty
-	stb.Wrapper[uint32(0x7)] = stb.Properties
-	stb.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
+	var meta object.MetaObject
+	stb.obj = session.NewObject(meta)
+	stb.obj.Wrapper[uint32(0x0)] = stb.RegisterEvent
+	stb.obj.Wrapper[uint32(0x1)] = stb.UnregisterEvent
+	stb.obj.Wrapper[uint32(0x2)] = stb.MetaObject
+	stb.obj.Wrapper[uint32(0x3)] = stb.Terminate
+	stb.obj.Wrapper[uint32(0x5)] = stb.Property
+	stb.obj.Wrapper[uint32(0x6)] = stb.SetProperty
+	stb.obj.Wrapper[uint32(0x7)] = stb.Properties
+	stb.obj.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
 	return &stb
 }
-func (s ObjectStub) RegisterEvent(payload []byte) ([]byte, error) {
+func (s *BasicObjectStub) Activate(sess session.Session, serviceID, objectID uint32) {
+	s.impl.Activate(sess, serviceID, objectID, s)
+}
+func (s *BasicObjectStub) Receive(msg *net.Message, from *session.Context) error {
+	return s.obj.Receive(msg, from)
+}
+func (s *BasicObjectStub) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -55,22 +65,18 @@ func (s ObjectStub) RegisterEvent(payload []byte) ([]byte, error) {
 	if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
-	ret, err := s.impl.RegisterEvent(P0, P1, P2)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	ret, callErr := s.impl.RegisterEvent(P0, P1, P2)
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	var out bytes.Buffer
+	errOut := basic.WriteUint64(ret, &out)
+	if errOut != nil {
+		return util.ErrorPaylad(errOut), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	err = basic.WriteUint64(ret, buf)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
-	}
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
-func (s ObjectStub) UnregisterEvent(payload []byte) ([]byte, error) {
+func (s *BasicObjectStub) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -84,69 +90,61 @@ func (s ObjectStub) UnregisterEvent(payload []byte) ([]byte, error) {
 	if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
-	err = s.impl.UnregisterEvent(P0, P1, P2)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	callErr := s.impl.UnregisterEvent(P0, P1, P2)
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	return buf.Bytes(), nil
+	var out bytes.Buffer
+	return out.Bytes(), nil
 }
-func (s ObjectStub) MetaObject(payload []byte) ([]byte, error) {
+func (s *BasicObjectStub) MetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
-	ret, err := s.impl.MetaObject(P0)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	ret, callErr := s.impl.MetaObject(P0)
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	var out bytes.Buffer
+	errOut := WriteMetaObject(ret, &out)
+	if errOut != nil {
+		return util.ErrorPaylad(errOut), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	err = WriteMetaObject(ret, buf)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
-	}
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
-func (s ObjectStub) Terminate(payload []byte) ([]byte, error) {
+func (s *BasicObjectStub) Terminate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
-	err = s.impl.Terminate(P0)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	callErr := s.impl.Terminate(P0)
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	return buf.Bytes(), nil
+	var out bytes.Buffer
+	return out.Bytes(), nil
 }
-func (s ObjectStub) Property(payload []byte) ([]byte, error) {
+func (s *BasicObjectStub) Property(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
-	ret, err := s.impl.Property(P0)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	ret, callErr := s.impl.Property(P0)
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	var out bytes.Buffer
+	errOut := ret.Write(&out)
+	if errOut != nil {
+		return util.ErrorPaylad(errOut), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	err = ret.Write(buf)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
-	}
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
-func (s ObjectStub) SetProperty(payload []byte) ([]byte, error) {
+func (s *BasicObjectStub) SetProperty(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
@@ -156,43 +154,38 @@ func (s ObjectStub) SetProperty(payload []byte) ([]byte, error) {
 	if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
-	err = s.impl.SetProperty(P0, P1)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	callErr := s.impl.SetProperty(P0, P1)
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	return buf.Bytes(), nil
+	var out bytes.Buffer
+	return out.Bytes(), nil
 }
-func (s ObjectStub) Properties(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
-	ret, err := s.impl.Properties()
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+func (s *BasicObjectStub) Properties(payload []byte) ([]byte, error) {
+	ret, callErr := s.impl.Properties()
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err != nil {
-		return util.ErrorPaylad(err), nil
-	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	err = func() error {
-		err := basic.WriteUint32(uint32(len(ret)), buf)
+	var out bytes.Buffer
+	errOut := func() error {
+		err := basic.WriteUint32(uint32(len(ret)), &out)
 		if err != nil {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
 		for _, v := range ret {
-			err = basic.WriteString(v, buf)
+			err = basic.WriteString(v, &out)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
 			}
 		}
 		return nil
 	}()
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	if errOut != nil {
+		return util.ErrorPaylad(errOut), nil
 	}
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
-func (s ObjectStub) RegisterEventWithSignature(payload []byte) ([]byte, error) {
+func (s *BasicObjectStub) RegisterEventWithSignature(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -210,20 +203,16 @@ func (s ObjectStub) RegisterEventWithSignature(payload []byte) ([]byte, error) {
 	if err != nil {
 		return util.ErrorPaylad(err), nil
 	}
-	ret, err := s.impl.RegisterEventWithSignature(P0, P1, P2, P3)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	ret, callErr := s.impl.RegisterEventWithSignature(P0, P1, P2, P3)
+	if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err != nil {
-		return util.ErrorPaylad(err), nil
+	var out bytes.Buffer
+	errOut := basic.WriteUint64(ret, &out)
+	if errOut != nil {
+		return util.ErrorPaylad(errOut), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))
-	err = basic.WriteUint64(ret, buf)
-	if err != nil {
-		return util.ErrorPaylad(err), nil
-	}
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
 
 type MetaMethodParameter struct {

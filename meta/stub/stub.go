@@ -44,6 +44,9 @@ func generateStub(f *jen.File, itf *idl.InterfaceType) error {
 	if err := generateStubConstructor(f, itf); err != nil {
 		return err
 	}
+	if err := generateStubObject(f, itf); err != nil {
+		return err
+	}
 	if err := generateStubMethods(f, itf); err != nil {
 		return err
 	}
@@ -83,8 +86,7 @@ func generateSignalDef(itf *idl.InterfaceType, set *signature.TypeSet,
 	tuple := signal.Tuple()
 	tuple.RegisterTo(set)
 
-	retType := jen.Params(jen.Chan().Add(tuple.TypeName()), jen.Error())
-	return jen.Id(signalName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
+	return jen.Id(signalName).Add(tuple.Params()).Error(), nil
 }
 
 func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
@@ -95,7 +97,9 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	code := jen.Id("buf").Op(":=").Qual(
 		"bytes", "NewBuffer",
 	).Call(jen.Id("payload"))
-	writing = append(writing, code)
+	if len(method.Params) > 0 {
+		writing = append(writing, code)
+	}
 
 	for _, param := range method.Params {
 		params = append(params, jen.Id(param.Name))
@@ -114,27 +118,26 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	}
 	// if has not return value
 	if method.Return.Signature() == "v" {
-		code = jen.Id("err = s.impl").Dot(methodName).Call(params...)
+		code = jen.Id("callErr := s.impl").Dot(methodName).Call(params...)
 	} else {
-		code = jen.Id("ret, err := s.impl").Dot(methodName).Call(params...)
+		code = jen.Id("ret, callErr := s.impl").Dot(methodName).Call(params...)
 	}
 	writing = append(writing, code)
-	code = jen.Id(`if err != nil {
-		return util.ErrorPaylad(err), nil
+	code = jen.Id(`if callErr != nil {
+		return util.ErrorPaylad(callErr), nil
 	}
-	buf = bytes.NewBuffer(make([]byte, 0))`)
+	var out bytes.Buffer`)
 	writing = append(writing, code)
 	if method.Return.Signature() != "v" {
-		writing = append(writing, code)
-		code = jen.Err().Op("=").Add(method.Return.Marshal("ret", "buf"))
+		code = jen.Id("errOut").Op(":=").Add(method.Return.Marshal("ret", "&out"))
 		writing = append(writing, code)
 
-		code = jen.Id(`if err != nil {
-			return util.ErrorPaylad(err), nil
+		code = jen.Id(`if errOut != nil {
+			return util.ErrorPaylad(errOut), nil
 	        }`)
 		writing = append(writing, code)
 	}
-	code = jen.Id(`return buf.Bytes(), nil`)
+	code = jen.Id(`return out.Bytes(), nil`)
 	writing = append(writing, code)
 
 	return jen.Block(
@@ -151,7 +154,7 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 		return fmt.Errorf("failed to create method body: %s", err)
 	}
 
-	file.Func().Params(jen.Id("s").Id(itf.Name + "Stub")).Id(methodName).Params(
+	file.Func().Params(jen.Id("s").Op("*").Id(itf.Name + "Stub")).Id(methodName).Params(
 		jen.Id("payload []byte"),
 	).Params(
 		jen.Id("[]byte, error"),
@@ -159,17 +162,56 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 	return nil
 }
 
-func generateSignalMarshal(file *jen.File, itf *idl.InterfaceType,
-	signal idl.Signal, signalName string) error {
+func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
+	signalName string) (*jen.Statement, error) {
 
-	file.Func().Params(jen.Id("s").Id(itf.Name + "Stub")).Id(signalName).Params(
-		jen.Id("payload []byte"),
-	).Params(
-		jen.Id("[]byte, error"),
-	).Block(
-		// TODO
-		jen.Panic(jen.Lit("Not yet implemented")),
+	writing := make([]jen.Code, 0)
+	code := jen.Var().Id("buf").Qual("bytes", "Buffer")
+	writing = append(writing, code)
+
+	for _, param := range signal.Params {
+		code = jen.If(jen.Err().Op(":=").Add(
+			param.Type.Marshal(param.Name, "&buf"),
+		).Op(";").Err().Op("!=").Nil()).Block(
+			jen.Id(`return fmt.Errorf("failed to serialize ` +
+				param.Name + `: %s", err)`),
+		)
+		writing = append(writing, code)
+	}
+	// if has not return value
+	code = jen.Id("err := s.obj.UpdateSignal").Call(
+		jen.Lit(signal.Id),
+		jen.Id("buf.Bytes()"),
 	)
+	writing = append(writing, code)
+	code = jen.Id(`if err != nil {
+		return util.ErrorPaylad(err)
+	}
+	return nil`)
+	code = jen.Id(`
+	if err != nil {
+	    return fmt.Errorf("failed to update ` +
+		signalName + `: %s", err)
+	}
+	return nil`)
+	writing = append(writing, code)
+	return jen.Block(
+		writing...,
+	), nil
+}
+
+func generateSignalHelper(file *jen.File, itf *idl.InterfaceType,
+	signal idl.Signal, signalName string) error {
+	tuple := signal.Tuple()
+
+	body, err := signalBodyBlock(itf, signal, signalName)
+	if err != nil {
+		return fmt.Errorf("failed to create signal helper body: %s", err)
+	}
+
+	file.Func().Params(
+		jen.Id("s").Op("*").Id(itf.Name + "Stub"),
+	).Id(signalName).Add(tuple.Params()).Error().Add(body)
 	return nil
 }
 
@@ -186,7 +228,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	signalCall := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
-		err := generateSignalMarshal(file, itf, signal, signalName)
+		err := generateSignalHelper(file, itf, signal, signalName)
 		if err != nil {
 			return fmt.Errorf("failed to create signal marshall %s of %s: %s",
 				signal.Name, itf.Name, err)
@@ -202,23 +244,47 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 	return nil
 }
 
+func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
+	// TODO: add signal helper
+	file.Func().Params(
+		jen.Id("s").Op("*").Id(itf.Name+"Stub"),
+	).Id("Activate").Params(
+		jen.Id("sess").Qual("github.com/lugu/qiloop/bus/session", "Session"),
+		jen.Id("serviceID"),
+		jen.Id("objectID").Uint32(),
+	).Block(
+		jen.Id(`s.impl.Activate(sess, serviceID, objectID, s)`),
+	)
+	file.Func().Params(
+		jen.Id("s").Op("*").Id(itf.Name+"Stub"),
+	).Id("Receive").Params(
+		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
+		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus/session", "Context"),
+	).Params(jen.Error()).Block(
+		jen.Id(`return s.obj.Receive(msg, from)`),
+	)
+	return nil
+}
 func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing := make([]jen.Code, 0)
 	code := jen.Var().Id("stb").Id(itf.Name + "Stub")
 	writing = append(writing, code)
 	code = jen.Id("stb.impl = impl")
 	writing = append(writing, code)
-	code = jen.Id("stb.Wrapper").Op("=").Make(
-		jen.Map(jen.Uint32()).Qual(
-			"github.com/lugu/qiloop/bus",
-			"ActionWrapper",
-		),
+
+	code = jen.Var().Id("meta").Qual(
+		"github.com/lugu/qiloop/type/object", "MetaObject",
 	)
+	writing = append(writing, code)
+	code = jen.Id("stb.obj").Op("=").Qual(
+		"github.com/lugu/qiloop/bus/session",
+		"NewObject",
+	).Call(jen.Id("meta"))
 	writing = append(writing, code)
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
-		code = jen.Id("stb.Wrapper").Index(
+		code = jen.Id("stb.obj.Wrapper").Index(
 			jen.Lit(method.Id),
 		).Op("=").Id("stb").Dot(methodName)
 		writing = append(writing, code)
@@ -226,11 +292,6 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	}
 
 	signalCall := func(m object.MetaSignal, signalName string) error {
-		signal := itf.Signals[m.Uid]
-		code = jen.Id("stub.Wrapper").Index(
-			jen.Lit(signal.Id),
-		).Op("=").Id("stub").Dot(signalName)
-		writing = append(writing, code)
 		return nil
 	}
 
@@ -242,7 +303,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	code = jen.Return().Op("&").Id("stb")
 	writing = append(writing, code)
 
-	file.Func().Id("New"+itf.Name).Params(
+	file.Func().Id(itf.Name+"Object").Params(
 		jen.Id("impl").Id(itf.Name),
 	).Qual(
 		"github.com/lugu/qiloop/bus/session", "Object",
@@ -252,7 +313,9 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Type().Id(itf.Name+"Stub").Struct(
-		jen.Qual("github.com/lugu/qiloop/bus/session", "ObjectDispather"),
+		jen.Id("obj").Op("*").Qual(
+			"github.com/lugu/qiloop/bus/session", "BasicObject",
+		),
 		jen.Id("impl").Id(itf.Name),
 	)
 	return nil
@@ -265,6 +328,14 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	// the MetaObject method ForEachMethodAndSignal to get an
 	// ordered list of the method with uniq name.
 	definitions := make([]jen.Code, 0)
+	signalDefinitions := make([]jen.Code, 0)
+	activate := jen.Id("Activate").Params(
+		jen.Id("sess").Qual("github.com/lugu/qiloop/bus/session", "Session"),
+		jen.Id("serviceID"),
+		jen.Id("objectID").Uint32(),
+		jen.Id("signal").Id(itf.Name+"SignalHelper"),
+	)
+	definitions = append(definitions, activate)
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
@@ -283,7 +354,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name,
 				itf.Name, err)
 		}
-		definitions = append(definitions, def)
+		signalDefinitions = append(signalDefinitions, def)
 		return nil
 	}
 
@@ -295,6 +366,10 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 
 	file.Type().Id(itf.Name).Interface(
 		definitions...,
+	)
+
+	file.Type().Id(itf.Name + "SignalHelper").Interface(
+		signalDefinitions...,
 	)
 	return nil
 }

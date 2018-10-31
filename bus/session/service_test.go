@@ -30,7 +30,7 @@ func TestNewServer(t *testing.T) {
 	ns := session.NewService(object)
 	router := session.NewRouter()
 	router.Add(ns)
-	server := session.NewServer(listener, router)
+	server := session.NewServer2(listener, router)
 	go server.Run()
 
 	client, err := net.DialEndPoint("unix://" + name)

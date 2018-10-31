@@ -3,9 +3,11 @@ package session
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus"
 	. "github.com/lugu/qiloop/bus/client"
+	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
+	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 	"io"
 )
@@ -75,8 +77,28 @@ func ReadCapabilityMap(in io.Reader) (m CapabilityMap, err error) {
 }
 
 type ServiceAuthenticate struct {
-	ObjectDispather
 	auth Authenticator
+}
+
+func (s *ServiceAuthenticate) Receive(m *net.Message, from *Context) error {
+	if m.Header.Action != object.AuthenticateActionID {
+		return ActionNotFound
+	}
+	response, err := s.wrapAuthenticate(m.Payload)
+
+	if err != nil {
+		hdr := net.NewHeader(net.Error, 0, 0,
+			object.AuthenticateActionID, m.Header.ID)
+		mError := net.NewMessage(hdr, util.ErrorPaylad(err))
+		return from.EndPoint.Send(mError)
+	}
+	hdr := net.NewHeader(net.Reply, 0, 0, object.AuthenticateActionID,
+		m.Header.ID)
+	reply := net.NewMessage(hdr, response)
+	return from.EndPoint.Send(reply)
+}
+
+func (s *ServiceAuthenticate) Activate(sess Session, serviceID, objectID uint32) {
 }
 
 func (s *ServiceAuthenticate) wrapAuthenticate(payload []byte) ([]byte, error) {
@@ -95,10 +117,9 @@ func (s *ServiceAuthenticate) wrapAuthenticate(payload []byte) ([]byte, error) {
 }
 
 func NewServiceAuthenticate(passwords map[string]string) Object {
-	var s ServiceAuthenticate
-	s.Wrapper = bus.Wrapper(make(map[uint32]bus.ActionWrapper))
-	s.auth.passwords = passwords
-	s.Wrapper[8] = s.wrapAuthenticate
-
-	return &s
+	return &ServiceAuthenticate{
+		auth: Authenticator{
+			passwords,
+		},
+	}
 }

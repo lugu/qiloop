@@ -1,0 +1,23 @@
+package stub
+
+interface ServiceDirectory
+	fn service(P0: str) -> ServiceInfo //uid:100
+	fn services() -> Vec<ServiceInfo> //uid:101
+	fn registerService(P0: ServiceInfo) -> uint32 //uid:102
+	fn unregisterService(P0: uint32) //uid:103
+	fn serviceReady(P0: uint32) //uid:104
+	fn updateServiceInfo(P0: ServiceInfo) //uid:105
+	fn machineId() -> str //uid:108
+	fn _socketOfService(P0: uint32) -> obj //uid:109
+	sig serviceAdded(P0: uint32, P1: str) //uid:106
+	sig serviceRemoved(P0: uint32, P1: str) //uid:107
+end
+
+struct ServiceInfo
+	name: str
+	serviceId: uint32
+	machineId: str
+	processId: uint32
+	endpoints: Vec<str>
+	sessionId: str
+end
