@@ -81,28 +81,42 @@ func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err er
 	return proxy, nil
 }
 
-// FIXME: objectID does not seems needed
-func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
+func (s *Session) findServiceName(name string) (i services.ServiceInfo, err error) {
 	s.serviceListMutex.Lock()
 	defer s.serviceListMutex.Unlock()
-
 	for _, service := range s.serviceList {
 		if service.Name == name {
-			return newService(service, objectID)
+			return service, nil
 		}
 	}
-	return p, fmt.Errorf("service not found: %s", name)
+	return i, fmt.Errorf("Service not found: %s", name)
+}
+
+func (s *Session) findServiceId(uid uint32) (i services.ServiceInfo, err error) {
+	s.serviceListMutex.Lock()
+	defer s.serviceListMutex.Unlock()
+	for _, service := range s.serviceList {
+		if service.ServiceId == uid {
+			return service, nil
+		}
+	}
+	return i, fmt.Errorf("Service ID not found: %d", uid)
+}
+
+func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
+	info, err := s.findServiceName(name)
+	if err != nil {
+		return p, err
+	}
+	return newService(info, objectID)
 }
 
 func (s *Session) Object(ref object.ObjectReference) (o object.Object, err error) {
-	s.serviceListMutex.Lock()
-	defer s.serviceListMutex.Unlock()
-	for _, service := range s.serviceList {
-		if service.ServiceId == ref.ServiceID {
-			return newObject(service, ref)
-		}
+	info, err := s.findServiceId(ref.ServiceID)
+	if err != nil {
+		return o, err
 	}
-	return o, fmt.Errorf("Not yet implemented")
+	return newObject(info, ref)
 }
 
 // metaProxy is to create proxies to the directory and server
