@@ -1,5 +1,5 @@
 // file generated. DO NOT EDIT.
-package stub
+package directory
 
 import (
 	bytes "bytes"

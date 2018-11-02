@@ -1,35 +1,30 @@
-package impl
+package directory
 
 import (
 	"fmt"
-	. "github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 )
-
-type ServiceDirectoryInterface interface {
-	Service(P0 string) (ServiceInfo, error)
-	Services() ([]ServiceInfo, error)
-	RegisterService(P0 ServiceInfo) (uint32, error)
-	UnregisterService(P0 uint32) error
-	ServiceReady(P0 uint32) error
-	UpdateServiceInfo(P0 ServiceInfo) error
-	MachineId() (string, error)
-	_socketOfService(P0 uint32) (object.ObjectReference, error)
-}
 
 type ServiceDirectoryImpl struct {
 	staging  map[uint32]ServiceInfo
 	services map[uint32]ServiceInfo
 	lastUuid uint32
+	signal   ServiceDirectorySignalHelper
 }
 
-func NewServiceDirectoryImpl() ServiceDirectoryInterface {
+func NewServiceDirectory() ServiceDirectory {
 	return &ServiceDirectoryImpl{
 		staging:  make(map[uint32]ServiceInfo),
 		services: make(map[uint32]ServiceInfo),
 		lastUuid: 1,
 	}
+}
+
+func (s *ServiceDirectoryImpl) Activate(sess session.Session,
+	serviceID, objectID uint32, signal ServiceDirectorySignalHelper) {
+	s.signal = signal
 }
 
 func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err error) {
@@ -66,9 +61,10 @@ func (s *ServiceDirectoryImpl) RegisterService(newInfo ServiceInfo) (uint32, err
 }
 
 func (s *ServiceDirectoryImpl) UnregisterService(id uint32) error {
-	_, ok := s.services[id]
+	i, ok := s.services[id]
 	if ok {
 		delete(s.services, id)
+		s.signal.SignalServiceRemoved(id, i.Name)
 		return nil
 	}
 	_, ok = s.staging[id]
@@ -84,6 +80,7 @@ func (s *ServiceDirectoryImpl) ServiceReady(id uint32) error {
 	if ok {
 		delete(s.staging, id)
 		s.services[id] = i
+		s.signal.SignalServiceAdded(id, i.Name)
 		return nil
 	}
 	return fmt.Errorf("Service id not found: %d", id)
