@@ -2,8 +2,8 @@
 package object
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	session "github.com/lugu/qiloop/bus/session"
@@ -11,7 +11,7 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
+	"io"
 )
 
 type Object interface {
@@ -28,13 +28,13 @@ type Object interface {
 type ObjectSignalHelper interface {
 	SignalTraceObject(P0 EventTrace) error
 }
-type ObjectStub struct {
+type stubObject struct {
 	obj  *server.BasicObject
 	impl Object
 }
 
 func ObjectObject(impl Object) server.Object {
-	var stb ObjectStub
+	var stb stubObject
 	stb.impl = impl
 	var meta object.MetaObject
 	stb.obj = server.NewObject(meta)
@@ -48,13 +48,13 @@ func ObjectObject(impl Object) server.Object {
 	stb.obj.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
 	return &stb
 }
-func (s *ObjectStub) Activate(sess session.Session, serviceID, objectID uint32) {
+func (s *stubObject) Activate(sess session.Session, serviceID, objectID uint32) {
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
-func (s *ObjectStub) Receive(msg *net.Message, from *server.Context) error {
+func (s *stubObject) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
 }
-func (s *ObjectStub) RegisterEvent(payload []byte) ([]byte, error) {
+func (s *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -79,7 +79,7 @@ func (s *ObjectStub) RegisterEvent(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) UnregisterEvent(payload []byte) ([]byte, error) {
+func (s *stubObject) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *ObjectStub) UnregisterEvent(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) MetaObject(payload []byte) ([]byte, error) {
+func (s *stubObject) MetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *ObjectStub) MetaObject(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) Terminate(payload []byte) ([]byte, error) {
+func (s *stubObject) Terminate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -130,7 +130,7 @@ func (s *ObjectStub) Terminate(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) Property(payload []byte) ([]byte, error) {
+func (s *stubObject) Property(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
@@ -147,7 +147,7 @@ func (s *ObjectStub) Property(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) SetProperty(payload []byte) ([]byte, error) {
+func (s *stubObject) SetProperty(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
@@ -164,7 +164,7 @@ func (s *ObjectStub) SetProperty(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) Properties(payload []byte) ([]byte, error) {
+func (s *stubObject) Properties(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Properties()
 	if callErr != nil {
 		return util.ErrorPaylad(callErr), nil
@@ -188,7 +188,7 @@ func (s *ObjectStub) Properties(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) RegisterEventWithSignature(payload []byte) ([]byte, error) {
+func (s *stubObject) RegisterEventWithSignature(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -217,7 +217,7 @@ func (s *ObjectStub) RegisterEventWithSignature(payload []byte) ([]byte, error) 
 	}
 	return out.Bytes(), nil
 }
-func (s *ObjectStub) SignalTraceObject(P0 EventTrace) error {
+func (s *stubObject) SignalTraceObject(P0 EventTrace) error {
 	var buf bytes.Buffer
 	if err := WriteEventTrace(P0, &buf); err != nil {
 		return fmt.Errorf("failed to serialize P0: %s", err)

@@ -2,15 +2,15 @@
 package directory
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	session "github.com/lugu/qiloop/bus/session"
 	util "github.com/lugu/qiloop/bus/util"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	io "io"
+	"io"
 )
 
 type ServiceDirectory interface {

@@ -2,8 +2,8 @@
 package stub_test
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	session "github.com/lugu/qiloop/bus/session"
@@ -11,7 +11,7 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
+	"io"
 )
 
 type BasicObject interface {
