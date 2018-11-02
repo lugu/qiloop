@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/proxy"

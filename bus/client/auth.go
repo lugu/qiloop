@@ -2,8 +2,8 @@ package client
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session/token"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"

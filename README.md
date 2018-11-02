@@ -31,7 +31,7 @@ Here is how to connect to a server and list the running services:
 package main
 
 import (
-	"github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/session"
 	"log"
 )
@@ -78,7 +78,7 @@ Examples
 
 
 - [signal
-  demo](https://github.com/lugu/qiloop/blob/master/bus/services/demo/cmd/signal/main.go)
+  demo](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/signal/main.go)
   illustrates how to subscribe to a signal: it prints a log each time
   a service is removed from the service directory.
 

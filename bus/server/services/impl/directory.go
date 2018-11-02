@@ -2,7 +2,7 @@ package impl
 
 import (
 	"fmt"
-	. "github.com/lugu/qiloop/bus/services"
+	. "github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 )

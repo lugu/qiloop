@@ -8,7 +8,8 @@ install:
     - go get -d -t github.com/lugu/qiloop/...
     - go generate github.com/lugu/qiloop/type/object
     - go generate github.com/lugu/qiloop/meta/stage2
-    - go generate github.com/lugu/qiloop/bus/services
+    - go generate github.com/lugu/qiloop/bus/client/services
+    - go generate github.com/lugu/qiloop/bus/server/services/stub
     - go generate github.com/lugu/qiloop/meta/stub
 
 script:
