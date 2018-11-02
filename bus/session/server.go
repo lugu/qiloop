@@ -95,14 +95,14 @@ type Object interface {
 	Activate(sess Session, serviceID, objectID uint32)
 }
 
-// ObjectDispather implements Object interface
-type ObjectDispather struct {
+// ObjectDispatcher implements Object interface
+type ObjectDispatcher struct {
 	Wrapper bus.Wrapper
 }
 
-func (o *ObjectDispather) Activate(sess Session, serviceID, objectID uint32) {
+func (o *ObjectDispatcher) Activate(sess Session, serviceID, objectID uint32) {
 }
-func (o *ObjectDispather) Receive(m *net.Message, from *Context) error {
+func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
 	a, ok := o.Wrapper[m.Header.Action]
 	if !ok {
 		return ActionNotFound

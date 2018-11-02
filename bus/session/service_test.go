@@ -23,7 +23,7 @@ func TestNewServer(t *testing.T) {
 			return []byte{0xab, 0xcd}, nil
 		},
 	}
-	object := &session.ObjectDispather{
+	object := &session.ObjectDispatcher{
 		Wrapper: wrapper,
 	}
 
