@@ -72,7 +72,7 @@ Examples
 --------
 
 - [info
-  demo](https://github.com/lugu/qiloop/blob/master/bus/cmd/info/main.go)
+  demo](https://github.com/lugu/qiloop/blob/master/cmd/info/main.go)
   illustrates how to call a service: it lists the services registered
   to the service directory.
 
