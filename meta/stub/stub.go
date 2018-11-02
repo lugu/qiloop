@@ -9,6 +9,10 @@ import (
 	"io"
 )
 
+func stubName(name string) string {
+	return "stub" + name
+}
+
 func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 	if pkg.Name == "" {
 		return fmt.Errorf("empty package name")
@@ -154,7 +158,7 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 		return fmt.Errorf("failed to create method body: %s", err)
 	}
 
-	file.Func().Params(jen.Id("s").Op("*").Id(itf.Name + "Stub")).Id(methodName).Params(
+	file.Func().Params(jen.Id("s").Op("*").Id(stubName(itf.Name))).Id(methodName).Params(
 		jen.Id("payload []byte"),
 	).Params(
 		jen.Id("[]byte, error"),
@@ -210,7 +214,7 @@ func generateSignalHelper(file *jen.File, itf *idl.InterfaceType,
 	}
 
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(itf.Name + "Stub"),
+		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id(signalName).Add(tuple.Params()).Error().Add(body)
 	return nil
 }
@@ -247,7 +251,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	// TODO: add signal helper
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(itf.Name+"Stub"),
+		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id("Activate").Params(
 		jen.Id("sess").Qual("github.com/lugu/qiloop/bus/session", "Session"),
 		jen.Id("serviceID"),
@@ -256,7 +260,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id(`s.impl.Activate(sess, serviceID, objectID, s)`),
 	)
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(itf.Name+"Stub"),
+		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
 		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus/server", "Context"),
@@ -267,7 +271,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 }
 func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing := make([]jen.Code, 0)
-	code := jen.Var().Id("stb").Id(itf.Name + "Stub")
+	code := jen.Var().Id("stb").Id(stubName(itf.Name))
 	writing = append(writing, code)
 	code = jen.Id("stb.impl = impl")
 	writing = append(writing, code)
@@ -312,7 +316,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 }
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
-	file.Type().Id(itf.Name+"Stub").Struct(
+	file.Type().Id(stubName(itf.Name)).Struct(
 		jen.Id("obj").Op("*").Qual(
 			"github.com/lugu/qiloop/bus/server", "BasicObject",
 		),

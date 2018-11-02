@@ -26,13 +26,13 @@ type BasicObject interface {
 	RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error)
 }
 type BasicObjectSignalHelper interface{}
-type BasicObjectStub struct {
+type stubBasicObject struct {
 	obj  *server.BasicObject
 	impl BasicObject
 }
 
 func BasicObjectObject(impl BasicObject) server.Object {
-	var stb BasicObjectStub
+	var stb stubBasicObject
 	stb.impl = impl
 	var meta object.MetaObject
 	stb.obj = server.NewObject(meta)
@@ -46,13 +46,13 @@ func BasicObjectObject(impl BasicObject) server.Object {
 	stb.obj.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
 	return &stb
 }
-func (s *BasicObjectStub) Activate(sess session.Session, serviceID, objectID uint32) {
+func (s *stubBasicObject) Activate(sess session.Session, serviceID, objectID uint32) {
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
-func (s *BasicObjectStub) Receive(msg *net.Message, from *server.Context) error {
+func (s *stubBasicObject) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
 }
-func (s *BasicObjectStub) RegisterEvent(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -77,7 +77,7 @@ func (s *BasicObjectStub) RegisterEvent(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *BasicObjectStub) UnregisterEvent(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *BasicObjectStub) UnregisterEvent(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *BasicObjectStub) MetaObject(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) MetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -115,7 +115,7 @@ func (s *BasicObjectStub) MetaObject(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *BasicObjectStub) Terminate(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) Terminate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -128,7 +128,7 @@ func (s *BasicObjectStub) Terminate(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *BasicObjectStub) Property(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) Property(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
@@ -145,7 +145,7 @@ func (s *BasicObjectStub) Property(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *BasicObjectStub) SetProperty(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) SetProperty(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *BasicObjectStub) SetProperty(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *BasicObjectStub) Properties(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) Properties(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Properties()
 	if callErr != nil {
 		return util.ErrorPaylad(callErr), nil
@@ -186,7 +186,7 @@ func (s *BasicObjectStub) Properties(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *BasicObjectStub) RegisterEventWithSignature(payload []byte) ([]byte, error) {
+func (s *stubBasicObject) RegisterEventWithSignature(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {

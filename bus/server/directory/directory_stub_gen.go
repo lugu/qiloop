@@ -28,13 +28,13 @@ type ServiceDirectorySignalHelper interface {
 	SignalServiceAdded(P0 uint32, P1 string) error
 	SignalServiceRemoved(P0 uint32, P1 string) error
 }
-type ServiceDirectoryStub struct {
+type stubServiceDirectory struct {
 	obj  *server.BasicObject
 	impl ServiceDirectory
 }
 
 func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
-	var stb ServiceDirectoryStub
+	var stb stubServiceDirectory
 	stb.impl = impl
 	var meta object.MetaObject
 	stb.obj = server.NewObject(meta)
@@ -48,13 +48,13 @@ func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	stb.obj.Wrapper[uint32(0x6d)] = stb._socketOfService
 	return &stb
 }
-func (s *ServiceDirectoryStub) Activate(sess session.Session, serviceID, objectID uint32) {
+func (s *stubServiceDirectory) Activate(sess session.Session, serviceID, objectID uint32) {
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
-func (s *ServiceDirectoryStub) Receive(msg *net.Message, from *server.Context) error {
+func (s *stubServiceDirectory) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
 }
-func (s *ServiceDirectoryStub) Service(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) Service(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadString(buf)
 	if err != nil {
@@ -71,7 +71,7 @@ func (s *ServiceDirectoryStub) Service(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) Services(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Services()
 	if callErr != nil {
 		return util.ErrorPaylad(callErr), nil
@@ -95,7 +95,7 @@ func (s *ServiceDirectoryStub) Services(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) RegisterService(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) RegisterService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := ReadServiceInfo(buf)
 	if err != nil {
@@ -112,7 +112,7 @@ func (s *ServiceDirectoryStub) RegisterService(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) UnregisterService(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) UnregisterService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -125,7 +125,7 @@ func (s *ServiceDirectoryStub) UnregisterService(payload []byte) ([]byte, error)
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) ServiceReady(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) ServiceReady(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -138,7 +138,7 @@ func (s *ServiceDirectoryStub) ServiceReady(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) UpdateServiceInfo(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) UpdateServiceInfo(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := ReadServiceInfo(buf)
 	if err != nil {
@@ -151,7 +151,7 @@ func (s *ServiceDirectoryStub) UpdateServiceInfo(payload []byte) ([]byte, error)
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) MachineId(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) MachineId(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.MachineId()
 	if callErr != nil {
 		return util.ErrorPaylad(callErr), nil
@@ -163,7 +163,7 @@ func (s *ServiceDirectoryStub) MachineId(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) _socketOfService(payload []byte) ([]byte, error) {
+func (s *stubServiceDirectory) _socketOfService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -180,7 +180,7 @@ func (s *ServiceDirectoryStub) _socketOfService(payload []byte) ([]byte, error) 
 	}
 	return out.Bytes(), nil
 }
-func (s *ServiceDirectoryStub) SignalServiceAdded(P0 uint32, P1 string) error {
+func (s *stubServiceDirectory) SignalServiceAdded(P0 uint32, P1 string) error {
 	var buf bytes.Buffer
 	if err := basic.WriteUint32(P0, &buf); err != nil {
 		return fmt.Errorf("failed to serialize P0: %s", err)
@@ -195,7 +195,7 @@ func (s *ServiceDirectoryStub) SignalServiceAdded(P0 uint32, P1 string) error {
 	}
 	return nil
 }
-func (s *ServiceDirectoryStub) SignalServiceRemoved(P0 uint32, P1 string) error {
+func (s *stubServiceDirectory) SignalServiceRemoved(P0 uint32, P1 string) error {
 	var buf bytes.Buffer
 	if err := basic.WriteUint32(P0, &buf); err != nil {
 		return fmt.Errorf("failed to serialize P0: %s", err)
