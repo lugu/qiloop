@@ -1,9 +1,9 @@
-package session_test
+package server_test
 
 import (
 	"bytes"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/value"
 	"testing"
@@ -17,17 +17,17 @@ func TestNewServer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var object session.ObjectDispatcher
+	var object server.ObjectDispatcher
 	handler := func(d []byte) ([]byte, error) {
 		return []byte{0xab, 0xcd}, nil
 	}
 	object.Wrap(3, handler)
 
-	ns := session.NewService(&object)
-	router := session.NewRouter()
+	ns := server.NewService(&object)
+	router := server.NewRouter()
 	router.Add(ns)
-	server := session.NewServer2(listener, router)
-	go server.Run()
+	srv := server.NewServer2(listener, router)
+	go srv.Run()
 
 	client, err := net.DialEndPoint("unix://" + name)
 	if err != nil {
@@ -55,7 +55,7 @@ func TestNewServer(t *testing.T) {
 	// server replied
 	mReceived := <-received
 
-	server.Stop()
+	srv.Stop()
 
 	if mReceived.Header.Type == net.Error {
 		buf := bytes.NewBuffer(mReceived.Payload)

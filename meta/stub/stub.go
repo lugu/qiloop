@@ -259,7 +259,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("s").Op("*").Id(itf.Name+"Stub"),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
-		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus/session", "Context"),
+		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus/server", "Context"),
 	).Params(jen.Error()).Block(
 		jen.Id(`return s.obj.Receive(msg, from)`),
 	)
@@ -277,7 +277,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	)
 	writing = append(writing, code)
 	code = jen.Id("stb.obj").Op("=").Qual(
-		"github.com/lugu/qiloop/bus/session",
+		"github.com/lugu/qiloop/bus/server",
 		"NewObject",
 	).Call(jen.Id("meta"))
 	writing = append(writing, code)
@@ -306,7 +306,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	file.Func().Id(itf.Name+"Object").Params(
 		jen.Id("impl").Id(itf.Name),
 	).Qual(
-		"github.com/lugu/qiloop/bus/session", "Object",
+		"github.com/lugu/qiloop/bus/server", "Object",
 	).Block(writing...)
 	return nil
 }
@@ -314,7 +314,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Type().Id(itf.Name+"Stub").Struct(
 		jen.Id("obj").Op("*").Qual(
-			"github.com/lugu/qiloop/bus/session", "BasicObject",
+			"github.com/lugu/qiloop/bus/server", "BasicObject",
 		),
 		jen.Id("impl").Id(itf.Name),
 	)

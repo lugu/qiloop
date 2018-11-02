@@ -1,10 +1,11 @@
-package session
+package server
 
 import (
 	"bytes"
 	"fmt"
 	. "github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
@@ -98,7 +99,7 @@ func (s *ServiceAuthenticate) Receive(m *net.Message, from *Context) error {
 	return from.EndPoint.Send(reply)
 }
 
-func (s *ServiceAuthenticate) Activate(sess Session, serviceID, objectID uint32) {
+func (s *ServiceAuthenticate) Activate(sess session.Session, serviceID, objectID uint32) {
 }
 
 func (s *ServiceAuthenticate) wrapAuthenticate(payload []byte) ([]byte, error) {

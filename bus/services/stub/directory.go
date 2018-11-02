@@ -2,14 +2,15 @@
 package stub
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	net "github.com/lugu/qiloop/bus/net"
+	server "github.com/lugu/qiloop/bus/server"
 	session "github.com/lugu/qiloop/bus/session"
 	util "github.com/lugu/qiloop/bus/util"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	"io"
+	io "io"
 )
 
 type ServiceDirectory interface {
@@ -28,15 +29,15 @@ type ServiceDirectorySignalHelper interface {
 	SignalServiceRemoved(P0 uint32, P1 string) error
 }
 type ServiceDirectoryStub struct {
-	obj  *session.BasicObject
+	obj  *server.BasicObject
 	impl ServiceDirectory
 }
 
-func ServiceDirectoryObject(impl ServiceDirectory) session.Object {
+func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	var stb ServiceDirectoryStub
 	stb.impl = impl
 	var meta object.MetaObject
-	stb.obj = session.NewObject(meta)
+	stb.obj = server.NewObject(meta)
 	stb.obj.Wrapper[uint32(0x64)] = stb.Service
 	stb.obj.Wrapper[uint32(0x65)] = stb.Services
 	stb.obj.Wrapper[uint32(0x66)] = stb.RegisterService
@@ -50,7 +51,7 @@ func ServiceDirectoryObject(impl ServiceDirectory) session.Object {
 func (s *ServiceDirectoryStub) Activate(sess session.Session, serviceID, objectID uint32) {
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
-func (s *ServiceDirectoryStub) Receive(msg *net.Message, from *session.Context) error {
+func (s *ServiceDirectoryStub) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
 }
 func (s *ServiceDirectoryStub) Service(payload []byte) ([]byte, error) {

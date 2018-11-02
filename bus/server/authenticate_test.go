@@ -1,9 +1,9 @@
-package session_test
+package server_test
 
 import (
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	gonet "net"
 	"testing"
@@ -17,13 +17,13 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 		t.Fatal(err)
 	}
 
-	object := session.NewServiceAuthenticate(creds)
+	object := server.NewServiceAuthenticate(creds)
 
-	ns := session.NewService(object)
-	router := session.NewRouter()
+	ns := server.NewService(object)
+	router := server.NewRouter()
 	router.Add(ns)
-	server := session.NewServer2(listener, router)
-	go server.Run()
+	srv := server.NewServer2(listener, router)
+	go srv.Run()
 
 	ep, err := net.DialEndPoint("unix://" + name)
 	if err != nil {

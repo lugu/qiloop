@@ -2,15 +2,16 @@
 package stub_test
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	net "github.com/lugu/qiloop/bus/net"
+	server "github.com/lugu/qiloop/bus/server"
 	session "github.com/lugu/qiloop/bus/session"
 	util "github.com/lugu/qiloop/bus/util"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
+	io "io"
 )
 
 type BasicObject interface {
@@ -26,15 +27,15 @@ type BasicObject interface {
 }
 type BasicObjectSignalHelper interface{}
 type BasicObjectStub struct {
-	obj  *session.BasicObject
+	obj  *server.BasicObject
 	impl BasicObject
 }
 
-func BasicObjectObject(impl BasicObject) session.Object {
+func BasicObjectObject(impl BasicObject) server.Object {
 	var stb BasicObjectStub
 	stb.impl = impl
 	var meta object.MetaObject
-	stb.obj = session.NewObject(meta)
+	stb.obj = server.NewObject(meta)
 	stb.obj.Wrapper[uint32(0x0)] = stb.RegisterEvent
 	stb.obj.Wrapper[uint32(0x1)] = stb.UnregisterEvent
 	stb.obj.Wrapper[uint32(0x2)] = stb.MetaObject
@@ -48,7 +49,7 @@ func BasicObjectObject(impl BasicObject) session.Object {
 func (s *BasicObjectStub) Activate(sess session.Session, serviceID, objectID uint32) {
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
-func (s *BasicObjectStub) Receive(msg *net.Message, from *session.Context) error {
+func (s *BasicObjectStub) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
 }
 func (s *BasicObjectStub) RegisterEvent(payload []byte) ([]byte, error) {

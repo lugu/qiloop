@@ -1,4 +1,4 @@
-package session
+package server
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"log"
@@ -84,7 +85,7 @@ func (o *BasicObject) NewHeader(typ uint8, action, id uint32) net.Header {
 }
 
 // TODO: leave a door to call the specialized activate method
-func (o *BasicObject) Activate(sess Session, serviceID, objectID uint32) {
+func (o *BasicObject) Activate(sess session.Session, serviceID, objectID uint32) {
 	o.serviceID = serviceID
 	o.objectID = objectID
 	panic("not yet implemented")
@@ -92,7 +93,7 @@ func (o *BasicObject) Activate(sess Session, serviceID, objectID uint32) {
 
 type Object interface {
 	Receive(m *net.Message, from *Context) error
-	Activate(sess Session, serviceID, objectID uint32)
+	Activate(sess session.Session, serviceID, objectID uint32)
 }
 
 type Dispatcher interface {
@@ -116,7 +117,7 @@ func (o *ObjectDispatcher) Wrap(id uint32, fn bus.ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
-func (o *ObjectDispatcher) Activate(sess Session, serviceID, objectID uint32) {
+func (o *ObjectDispatcher) Activate(sess session.Session, serviceID, objectID uint32) {
 }
 func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
 	if o.wrapper == nil {
@@ -267,13 +268,13 @@ func Firewall(m *net.Message, from *Context) error {
 type Server struct {
 	listen        gonet.Listener
 	addrs         []string
-	session       Session
+	session       session.Session
 	Router        *Router
 	contexts      map[*Context]bool
 	contextsMutex sync.Mutex
 }
 
-func NewServer(session Session, addr string) (*Server, error) {
+func NewServer(session session.Session, addr string) (*Server, error) {
 	l, err := net.Listen(addr)
 	if err != nil {
 		return nil, err
