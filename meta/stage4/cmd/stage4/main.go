@@ -46,7 +46,7 @@ func main() {
 		}
 	}
 
-	proxies, err := os.Create("proxies.go")
+	proxies, err := os.Create("proxy_gen.go")
 	defer proxies.Close()
 	if err != nil {
 		log.Fatalf("failed to create proxies.go: %s", err)
