@@ -4,13 +4,27 @@ Unsorted todo list:
     - allow for remote registration
 - session:
     - session: register callback for service disconnection
-    - service: signals registration
 - idl:
     - NOTES.md: IDL section: syntax, ref to libqi doc and sample
     - meta: generate proxy with object reference
-    - meta: generate interface stub
+- review:
+    - reduce the number of goroutines
+        - use sync group for closers or scatter/gather
+        - replace consumer callback with a chan
+    - no init() method on the package
+    - no globals
+    - debug:
+        - metrics: counter, gauge and histogram
+            - for a dashboard of a server
+        - tracing: implements the qi stuff
+        - logs: analysis of events
+            - decide how to do it
+            - decide what to log (connection/disconnection, error)
 - auth:
     - NODES.md: document the capability event type
+    - use flags instead of hard rules
+        - auth: --auth-file=... // default to ~/.qi-auth.conf
+        - listen:  --listen-ip=.. // default to tcp://127.0.0.1
 - doc:
     - check the generated documention of the proxy with
       https://bradleyjkemp.github.io/godoc-playground/
