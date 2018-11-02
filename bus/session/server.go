@@ -133,15 +133,15 @@ func NewService(o Object) *ServiceImpl {
 }
 
 func (n *ServiceImpl) Add(o Object) (uint32, error) {
-	n.mutex.Lock()
-	defer n.mutex.Unlock()
 	var index uint32 = 0
 	// assign the first object to the index 0. following objects will
 	// be assigned random values.
 	if len(n.objects) != 0 {
 		index = rand.Uint32()
 	}
+	n.mutex.Lock()
 	n.objects[index] = o
+	n.mutex.Unlock()
 	return index, nil
 }
 
@@ -230,7 +230,7 @@ type Context struct {
 	Authenticated bool
 }
 
-func NewClientSession(c gonet.Conn) *Context {
+func NewContext(c gonet.Conn) *Context {
 	return &Context{net.NewEndPoint(c), false}
 }
 
@@ -311,20 +311,16 @@ func NewServer2(l gonet.Listener, r *Router) *Server {
 }
 
 func (s *Server) handle(c gonet.Conn) error {
-	s.contextsMutex.Lock()
-	defer s.contextsMutex.Unlock()
-	session := NewClientSession(c)
-	s.contexts[session] = true
-
+	context := NewContext(c)
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {
-		err := Firewall(msg, session)
+		err := Firewall(msg, context)
 		if err != nil {
 			return err
 		}
-		err = s.Router.Dispatch(msg, session)
+		err = s.Router.Dispatch(msg, context)
 		if err != nil {
 			log.Printf("server warning: %s", err)
 		}
@@ -334,11 +330,15 @@ func (s *Server) handle(c gonet.Conn) error {
 	closer := func(err error) {
 		s.contextsMutex.Lock()
 		defer s.contextsMutex.Unlock()
-		if _, ok := s.contexts[session]; ok {
-			delete(s.contexts, session)
+		if _, ok := s.contexts[context]; ok {
+			delete(s.contexts, context)
 		}
 	}
-	session.EndPoint.AddHandler(filter, consumer, closer)
+
+	s.contextsMutex.Lock()
+	s.contexts[context] = true
+	s.contextsMutex.Unlock()
+	context.EndPoint.AddHandler(filter, consumer, closer)
 	return nil
 }
 
