@@ -1,4 +1,4 @@
-package object
+package basic
 
 interface Object
 	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0

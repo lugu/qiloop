@@ -1,5 +1,5 @@
 // file generated. DO NOT EDIT.
-package object
+package basic
 
 import (
 	"bytes"
