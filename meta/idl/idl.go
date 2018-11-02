@@ -38,7 +38,7 @@ func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMetho
 			if paramSignature != "" {
 				paramSignature += ","
 			}
-			paramSignature += p.Name + ": " + tupleType.Members[i].Value.SignatureIDL()
+			paramSignature += p.Name + ": " + tupleType.Members[i].Type.SignatureIDL()
 		}
 	}
 
@@ -71,7 +71,7 @@ func generateSignal(writer io.Writer, set *signature.TypeSet, s object.MetaSigna
 func generateStructure(writer io.Writer, s *signature.StructType) error {
 	fmt.Fprintf(writer, "struct %s\n", s.Name)
 	for _, mem := range s.Members {
-		fmt.Fprintf(writer, "\t%s: %s\n", mem.Name, mem.Value.SignatureIDL())
+		fmt.Fprintf(writer, "\t%s: %s\n", mem.Name, mem.Type.SignatureIDL())
 	}
 	fmt.Fprintf(writer, "end\n")
 	return nil

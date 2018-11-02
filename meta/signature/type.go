@@ -571,8 +571,8 @@ func NewMemberType(name string, value Type) MemberType {
 
 // MemberType a field in a struct.
 type MemberType struct {
-	Name  string
-	Value Type
+	Name string
+	Type Type
 }
 
 // Title is the public name of the field.
@@ -602,7 +602,7 @@ type TupleType struct {
 func (t *TupleType) Signature() string {
 	sig := "("
 	for _, m := range t.Members {
-		sig += m.Value.Signature()
+		sig += m.Type.Signature()
 	}
 	sig += ")"
 	return sig
@@ -613,7 +613,7 @@ func (t *TupleType) Signature() string {
 func (t *TupleType) SignatureIDL() string {
 	var sig string
 	for i, typ := range t.Members {
-		sig += typ.Name + ": " + typ.Value.SignatureIDL()
+		sig += typ.Name + ": " + typ.Type.SignatureIDL()
 		if i != len(t.Members)-1 {
 			sig += ", "
 		}
@@ -626,7 +626,7 @@ func (t *TupleType) SignatureIDL() string {
 func (t *TupleType) Params() *Statement {
 	arguments := make([]jen.Code, len(t.Members))
 	for i, m := range t.Members {
-		arguments[i] = jen.Id(m.Name).Add(m.Value.TypeName())
+		arguments[i] = jen.Id(m.Name).Add(m.Type.TypeName())
 	}
 	return jen.Params(arguments...)
 }
@@ -636,7 +636,7 @@ func (t *TupleType) Params() *Statement {
 func (t *TupleType) TypeName() *Statement {
 	params := make([]jen.Code, 0)
 	for _, typ := range t.Members {
-		params = append(params, jen.Id(typ.Name).Add(typ.Value.TypeName()))
+		params = append(params, jen.Id(typ.Name).Add(typ.Type.TypeName()))
 	}
 	return jen.Struct(params...)
 }
@@ -644,7 +644,7 @@ func (t *TupleType) TypeName() *Statement {
 // RegisterTo adds the type to the TypeSet.
 func (t *TupleType) RegisterTo(s *TypeSet) {
 	for _, m := range t.Members {
-		m.Value.RegisterTo(s)
+		m.Type.RegisterTo(s)
 	}
 	return
 }
@@ -659,7 +659,7 @@ func (t *TupleType) TypeDeclaration(*jen.File) {
 func (t *TupleType) Marshal(tupleID string, writer string) *Statement {
 	statements := make([]jen.Code, 0)
 	for _, typ := range t.Members {
-		s1 := jen.Err().Op("=").Add(typ.Value.Marshal(tupleID+"."+typ.Name, writer))
+		s1 := jen.Err().Op("=").Add(typ.Type.Marshal(tupleID+"."+typ.Name, writer))
 		s2 := jen.Id(`if (err != nil) {
 			return fmt.Errorf("failed to write tuple member: %s", err)
 		}`)
@@ -678,7 +678,7 @@ func (t *TupleType) Marshal(tupleID string, writer string) *Statement {
 func (t *TupleType) Unmarshal(reader string) *Statement {
 	statements := make([]jen.Code, 0)
 	for _, typ := range t.Members {
-		s1 := jen.List(jen.Id("s."+typ.Name), jen.Err()).Op("=").Add(typ.Value.Unmarshal(reader))
+		s1 := jen.List(jen.Id("s."+typ.Name), jen.Err()).Op("=").Add(typ.Type.Unmarshal(reader))
 		s2 := jen.Id(`if (err != nil) {
 			return s, fmt.Errorf("failed to read tuple member: %s", err)
 		}`)
@@ -701,8 +701,8 @@ func (t *TupleType) Unmarshal(reader string) *Statement {
 // dependancy.
 func (t *TupleType) ConvertMetaObjects() {
 	for i, m := range t.Members {
-		if m.Value.Signature() == MetaObjectSignature {
-			t.Members[i].Value = NewMetaObjectType()
+		if m.Type.Signature() == MetaObjectSignature {
+			t.Members[i].Type = NewMetaObjectType()
 		}
 	}
 }
@@ -727,7 +727,7 @@ func (s *StructType) Signature() string {
 	names := make([]string, 0, len(s.Members))
 	for _, v := range s.Members {
 		names = append(names, v.Name)
-		types += v.Value.Signature()
+		types += v.Type.Signature()
 	}
 	return fmt.Sprintf("(%s)<%s,%s>", types,
 		s.Name, strings.Join(names, ","))
@@ -747,7 +747,7 @@ func (s *StructType) TypeName() *Statement {
 // RegisterTo adds the type to the TypeSet.
 func (s *StructType) RegisterTo(set *TypeSet) {
 	for _, v := range s.Members {
-		v.Value.RegisterTo(set)
+		v.Type.RegisterTo(set)
 	}
 
 	s.Name = set.RegisterStructType(s.Name, s)
@@ -757,7 +757,7 @@ func (s *StructType) RegisterTo(set *TypeSet) {
 func (s *StructType) TypeDeclaration(file *jen.File) {
 	fields := make([]jen.Code, len(s.Members))
 	for i, v := range s.Members {
-		fields[i] = jen.Id(v.Title()).Add(v.Value.TypeName())
+		fields[i] = jen.Id(v.Title()).Add(v.Type.TypeName())
 	}
 	file.Type().Id(s.Name).Struct(fields...)
 
@@ -765,13 +765,13 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 	writeFields := make([]jen.Code, len(s.Members)+1)
 	for i, v := range s.Members {
 		readFields[i] = jen.If(
-			jen.Id("s."+v.Title()+", err =").Add(v.Value.Unmarshal("r")),
+			jen.Id("s."+v.Title()+", err =").Add(v.Type.Unmarshal("r")),
 			jen.Id("err != nil")).Block(
 			jen.Return(jen.Id("s"),
 				jen.Qual("fmt", "Errorf").Call(jen.Lit(`failed to read `+v.Title()+` field: `).Op("+").Id("err").Dot("Error").Call())),
 		)
 		writeFields[i] = jen.If(
-			jen.Id("err :=").Add(v.Value.Marshal("s."+v.Title(), "w")),
+			jen.Id("err :=").Add(v.Type.Marshal("s."+v.Title(), "w")),
 			jen.Err().Op("!=").Nil(),
 		).Block(
 			jen.Return(jen.Qual("fmt", "Errorf").Call(jen.Lit(`failed to write ` + v.Title() + ` field: `).Op("+").Id("err").Dot("Error").Call())),

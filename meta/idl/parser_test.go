@@ -374,12 +374,12 @@ func newDeclaration(t *testing.T) []*StructType {
 			Name: "basic1",
 			Members: []MemberType{
 				MemberType{
-					Name:  "a",
-					Value: NewIntType(),
+					Name: "a",
+					Type: NewIntType(),
 				},
 				MemberType{
-					Name:  "b",
-					Value: NewIntType(),
+					Name: "b",
+					Type: NewIntType(),
 				},
 			},
 		},
@@ -387,12 +387,12 @@ func newDeclaration(t *testing.T) []*StructType {
 			Name: "basic2",
 			Members: []MemberType{
 				MemberType{
-					Name:  "a",
-					Value: NewIntType(),
+					Name: "a",
+					Type: NewIntType(),
 				},
 				MemberType{
-					Name:  "b",
-					Value: NewIntType(),
+					Name: "b",
+					Type: NewIntType(),
 				},
 			},
 		},
@@ -400,12 +400,12 @@ func newDeclaration(t *testing.T) []*StructType {
 			Name: "complex1",
 			Members: []MemberType{
 				MemberType{
-					Name:  "simple1",
-					Value: basic1,
+					Name: "simple1",
+					Type: basic1,
 				},
 				MemberType{
-					Name:  "b",
-					Value: NewIntType(),
+					Name: "b",
+					Type: NewIntType(),
 				},
 			},
 		},
@@ -413,8 +413,8 @@ func newDeclaration(t *testing.T) []*StructType {
 			Name: "complex3",
 			Members: []MemberType{
 				MemberType{
-					Name:  "notSimple2",
-					Value: complex2,
+					Name: "notSimple2",
+					Type: complex2,
 				},
 			},
 		},
@@ -422,16 +422,16 @@ func newDeclaration(t *testing.T) []*StructType {
 			Name: "complex2",
 			Members: []MemberType{
 				MemberType{
-					Name:  "notSimple1",
-					Value: complex1,
+					Name: "notSimple1",
+					Type: complex1,
 				},
 				MemberType{
-					Name:  "simple2",
-					Value: basic2,
+					Name: "simple2",
+					Type: basic2,
 				},
 				MemberType{
-					Name:  "b",
-					Value: NewIntType(),
+					Name: "b",
+					Type: NewIntType(),
 				},
 			},
 		},

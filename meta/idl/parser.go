@@ -500,7 +500,7 @@ func nodifyMember(nodes []Node) Node {
 	var member MemberType
 	var ok bool
 	member.Name = nameNode.(*parsec.Terminal).GetValue()
-	member.Value, ok = typeNode.(Type)
+	member.Type, ok = typeNode.(Type)
 	if !ok {
 		return fmt.Errorf("Expecting Type, got %+v: %+v", reflect.TypeOf(typeNode), typeNode)
 	}
