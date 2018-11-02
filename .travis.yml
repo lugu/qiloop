@@ -13,7 +13,7 @@ install:
     - go generate github.com/lugu/qiloop/meta/stub
 
 script:
-    - go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic
+    - go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic -timeout 5m
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
