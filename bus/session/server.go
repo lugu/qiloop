@@ -95,15 +95,34 @@ type Object interface {
 	Activate(sess Session, serviceID, objectID uint32)
 }
 
-// ObjectDispatcher implements Object interface
+type Dispatcher interface {
+	Wrap(id uint32, wrap bus.ActionWrapper)
+	UpdateSignal(signal uint32, value []byte) error
+}
+
+// ObjectDispatcher implements both Object and Dispatcher
 type ObjectDispatcher struct {
-	Wrapper bus.Wrapper
+	wrapper bus.Wrapper
+}
+
+func (o *ObjectDispatcher) UpdateSignal(signal uint32, value []byte) error {
+	panic("not available")
+}
+
+func (o *ObjectDispatcher) Wrap(id uint32, fn bus.ActionWrapper) {
+	if o.wrapper == nil {
+		o.wrapper = make(map[uint32]bus.ActionWrapper)
+	}
+	o.wrapper[id] = fn
 }
 
 func (o *ObjectDispatcher) Activate(sess Session, serviceID, objectID uint32) {
 }
 func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
-	a, ok := o.Wrapper[m.Header.Action]
+	if o.wrapper == nil {
+		return ActionNotFound
+	}
+	a, ok := o.wrapper[m.Header.Action]
 	if !ok {
 		return ActionNotFound
 	}

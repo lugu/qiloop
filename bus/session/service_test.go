@@ -2,7 +2,6 @@ package session_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
@@ -18,16 +17,13 @@ func TestNewServer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wrapper := bus.Wrapper{
-		3: func(d []byte) ([]byte, error) {
-			return []byte{0xab, 0xcd}, nil
-		},
+	var object session.ObjectDispatcher
+	handler := func(d []byte) ([]byte, error) {
+		return []byte{0xab, 0xcd}, nil
 	}
-	object := &session.ObjectDispatcher{
-		Wrapper: wrapper,
-	}
+	object.Wrap(3, handler)
 
-	ns := session.NewService(object)
+	ns := session.NewService(&object)
 	router := session.NewRouter()
 	router.Add(ns)
 	server := session.NewServer2(listener, router)
