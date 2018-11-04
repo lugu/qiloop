@@ -36,9 +36,19 @@ type BasicObject struct {
 	objectID  uint32
 }
 
+func fullMetaObject(meta object.MetaObject) object.MetaObject {
+	for i, method := range object.ObjectMetaObject.Methods {
+		meta.Methods[i] = method
+	}
+	for i, signal := range object.ObjectMetaObject.Signals {
+		meta.Signals[i] = signal
+	}
+	return meta
+}
+
 func NewObject(meta object.MetaObject) *BasicObject {
 	var obj BasicObject
-	obj.meta = meta
+	obj.meta = fullMetaObject(meta)
 	obj.signals = make([]SignalUser, 0)
 	obj.Wrapper = make(map[uint32]bus.ActionWrapper)
 	obj.Wrapper[uint32(0x2)] = obj.wrapMetaObject

@@ -36,8 +36,7 @@ type stubObject struct {
 func ObjectObject(impl Object) server.Object {
 	var stb stubObject
 	stb.impl = impl
-	var meta object.MetaObject
-	stb.obj = server.NewObject(meta)
+	stb.obj = server.NewObject(stb.metaObject())
 	stb.obj.Wrapper[uint32(0x0)] = stb.RegisterEvent
 	stb.obj.Wrapper[uint32(0x1)] = stb.UnregisterEvent
 	stb.obj.Wrapper[uint32(0x2)] = stb.MetaObject
@@ -229,6 +228,66 @@ func (s *stubObject) SignalTraceObject(P0 EventTrace) error {
 		return fmt.Errorf("failed to update SignalTraceObject: %s", err)
 	}
 	return nil
+}
+func (s *stubObject) metaObject() object.MetaObject {
+	return object.MetaObject{
+		Description: "Object",
+		Methods: map[uint32]object.MetaMethod{
+			uint32(0x0): object.MetaMethod{
+				Name:                "registerEvent",
+				ParametersSignature: "(IIL)",
+				ReturnSignature:     "L",
+				Uid:                 uint32(0x0),
+			},
+			uint32(0x1): object.MetaMethod{
+				Name:                "unregisterEvent",
+				ParametersSignature: "(IIL)",
+				ReturnSignature:     "v",
+				Uid:                 uint32(0x1),
+			},
+			uint32(0x2): object.MetaMethod{
+				Name:                "metaObject",
+				ParametersSignature: "(I)",
+				ReturnSignature:     "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>",
+				Uid:                 uint32(0x2),
+			},
+			uint32(0x3): object.MetaMethod{
+				Name:                "terminate",
+				ParametersSignature: "(I)",
+				ReturnSignature:     "v",
+				Uid:                 uint32(0x3),
+			},
+			uint32(0x5): object.MetaMethod{
+				Name:                "property",
+				ParametersSignature: "(m)",
+				ReturnSignature:     "m",
+				Uid:                 uint32(0x5),
+			},
+			uint32(0x6): object.MetaMethod{
+				Name:                "setProperty",
+				ParametersSignature: "(mm)",
+				ReturnSignature:     "v",
+				Uid:                 uint32(0x6),
+			},
+			uint32(0x7): object.MetaMethod{
+				Name:                "properties",
+				ParametersSignature: "()",
+				ReturnSignature:     "[s]",
+				Uid:                 uint32(0x7),
+			},
+			uint32(0x8): object.MetaMethod{
+				Name:                "registerEventWithSignature",
+				ParametersSignature: "(IILs)",
+				ReturnSignature:     "L",
+				Uid:                 uint32(0x8),
+			},
+		},
+		Signals: map[uint32]object.MetaSignal{uint32(0x56): object.MetaSignal{
+			Name:      "traceObject",
+			Signature: "((IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>)",
+			Uid:       uint32(0x56),
+		}},
+	}
 }
 
 type timeval struct {

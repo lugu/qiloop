@@ -36,8 +36,7 @@ type stubServiceDirectory struct {
 func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	var meta object.MetaObject
-	stb.obj = server.NewObject(meta)
+	stb.obj = server.NewObject(stb.metaObject())
 	stb.obj.Wrapper[uint32(0x64)] = stb.Service
 	stb.obj.Wrapper[uint32(0x65)] = stb.Services
 	stb.obj.Wrapper[uint32(0x66)] = stb.RegisterService
@@ -210,6 +209,73 @@ func (s *stubServiceDirectory) SignalServiceRemoved(P0 uint32, P1 string) error 
 		return fmt.Errorf("failed to update SignalServiceRemoved: %s", err)
 	}
 	return nil
+}
+func (s *stubServiceDirectory) metaObject() object.MetaObject {
+	return object.MetaObject{
+		Description: "ServiceDirectory",
+		Methods: map[uint32]object.MetaMethod{
+			uint32(0x64): object.MetaMethod{
+				Name:                "service",
+				ParametersSignature: "(s)",
+				ReturnSignature:     "(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>",
+				Uid:                 uint32(0x64),
+			},
+			uint32(0x65): object.MetaMethod{
+				Name:                "services",
+				ParametersSignature: "()",
+				ReturnSignature:     "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]",
+				Uid:                 uint32(0x65),
+			},
+			uint32(0x66): object.MetaMethod{
+				Name:                "registerService",
+				ParametersSignature: "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)",
+				ReturnSignature:     "I",
+				Uid:                 uint32(0x66),
+			},
+			uint32(0x67): object.MetaMethod{
+				Name:                "unregisterService",
+				ParametersSignature: "(I)",
+				ReturnSignature:     "v",
+				Uid:                 uint32(0x67),
+			},
+			uint32(0x68): object.MetaMethod{
+				Name:                "serviceReady",
+				ParametersSignature: "(I)",
+				ReturnSignature:     "v",
+				Uid:                 uint32(0x68),
+			},
+			uint32(0x69): object.MetaMethod{
+				Name:                "updateServiceInfo",
+				ParametersSignature: "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)",
+				ReturnSignature:     "v",
+				Uid:                 uint32(0x69),
+			},
+			uint32(0x6c): object.MetaMethod{
+				Name:                "machineId",
+				ParametersSignature: "()",
+				ReturnSignature:     "s",
+				Uid:                 uint32(0x6c),
+			},
+			uint32(0x6d): object.MetaMethod{
+				Name:                "_socketOfService",
+				ParametersSignature: "(I)",
+				ReturnSignature:     "o",
+				Uid:                 uint32(0x6d),
+			},
+		},
+		Signals: map[uint32]object.MetaSignal{
+			uint32(0x6a): object.MetaSignal{
+				Name:      "serviceAdded",
+				Signature: "(Is)",
+				Uid:       uint32(0x6a),
+			},
+			uint32(0x6b): object.MetaSignal{
+				Name:      "serviceRemoved",
+				Signature: "(Is)",
+				Uid:       uint32(0x6b),
+			},
+		},
+	}
 }
 
 type ServiceInfo struct {

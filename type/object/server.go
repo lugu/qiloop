@@ -75,4 +75,11 @@ var ObjectMetaObject MetaObject = MetaObject{
 			ParametersSignature: "(IILs)",
 		},
 	},
+	Signals: map[uint32]MetaSignal{
+		0x56: MetaSignal{
+			Uid:       0x56,
+			Name:      "traceObject",
+			Signature: "((IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>)",
+		},
+	},
 }

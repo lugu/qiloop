@@ -27,6 +27,9 @@ type Server interface {
 type Object interface {
 	object.Object
 	bus.Proxy
+	SignalTraceObject(cancel chan int) (chan struct {
+		P0 EventTrace
+	}, error)
 }
 type ServiceDirectory interface {
 	object.Object
@@ -306,6 +309,57 @@ func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64
 		return ret, fmt.Errorf("failed to parse registerEventWithSignature response: %s", err)
 	}
 	return ret, nil
+}
+func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
+	P0 EventTrace
+}, error) {
+	signalID, err := p.SignalUid("traceObject")
+	if err != nil {
+		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
+	}
+
+	id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
+	}
+	ch := make(chan struct {
+		P0 EventTrace
+	})
+	chPay, err := p.SubscribeID(signalID, cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request signal: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				close(ch) // upstream is closed.
+				err = p.UnregisterEvent(p.ObjectID(), signalID, id)
+				if err != nil {
+					// FIXME: implement proper logging.
+					fmt.Printf("failed to unregister event %s: %s", "traceObject", err)
+				}
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (s struct {
+				P0 EventTrace
+			}, err error) {
+				s.P0, err = ReadEventTrace(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				return s, nil
+			}()
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return ch, nil
 }
 
 type ServiceDirectoryProxy struct {
@@ -901,6 +955,103 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 	return ch, nil
 }
 
+type timeval struct {
+	Tv_sec  int64
+	Tv_usec int64
+}
+
+func Readtimeval(r io.Reader) (s timeval, err error) {
+	if s.Tv_sec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read Tv_sec field: " + err.Error())
+	}
+	if s.Tv_usec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read Tv_usec field: " + err.Error())
+	}
+	return s, nil
+}
+func Writetimeval(s timeval, w io.Writer) (err error) {
+	if err := basic.WriteInt64(s.Tv_sec, w); err != nil {
+		return fmt.Errorf("failed to write Tv_sec field: " + err.Error())
+	}
+	if err := basic.WriteInt64(s.Tv_usec, w); err != nil {
+		return fmt.Errorf("failed to write Tv_usec field: " + err.Error())
+	}
+	return nil
+}
+
+type EventTrace struct {
+	Id            uint32
+	Kind          int32
+	SlotId        uint32
+	Arguments     value.Value
+	Timestamp     timeval
+	UserUsTime    int64
+	SystemUsTime  int64
+	CallerContext uint32
+	CalleeContext uint32
+}
+
+func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
+	if s.Id, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read Id field: " + err.Error())
+	}
+	if s.Kind, err = basic.ReadInt32(r); err != nil {
+		return s, fmt.Errorf("failed to read Kind field: " + err.Error())
+	}
+	if s.SlotId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read SlotId field: " + err.Error())
+	}
+	if s.Arguments, err = value.NewValue(r); err != nil {
+		return s, fmt.Errorf("failed to read Arguments field: " + err.Error())
+	}
+	if s.Timestamp, err = Readtimeval(r); err != nil {
+		return s, fmt.Errorf("failed to read Timestamp field: " + err.Error())
+	}
+	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read UserUsTime field: " + err.Error())
+	}
+	if s.SystemUsTime, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read SystemUsTime field: " + err.Error())
+	}
+	if s.CallerContext, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read CallerContext field: " + err.Error())
+	}
+	if s.CalleeContext, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read CalleeContext field: " + err.Error())
+	}
+	return s, nil
+}
+func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.Id, w); err != nil {
+		return fmt.Errorf("failed to write Id field: " + err.Error())
+	}
+	if err := basic.WriteInt32(s.Kind, w); err != nil {
+		return fmt.Errorf("failed to write Kind field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.SlotId, w); err != nil {
+		return fmt.Errorf("failed to write SlotId field: " + err.Error())
+	}
+	if err := s.Arguments.Write(w); err != nil {
+		return fmt.Errorf("failed to write Arguments field: " + err.Error())
+	}
+	if err := Writetimeval(s.Timestamp, w); err != nil {
+		return fmt.Errorf("failed to write Timestamp field: " + err.Error())
+	}
+	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {
+		return fmt.Errorf("failed to write UserUsTime field: " + err.Error())
+	}
+	if err := basic.WriteInt64(s.SystemUsTime, w); err != nil {
+		return fmt.Errorf("failed to write SystemUsTime field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.CallerContext, w); err != nil {
+		return fmt.Errorf("failed to write CallerContext field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.CalleeContext, w); err != nil {
+		return fmt.Errorf("failed to write CalleeContext field: " + err.Error())
+	}
+	return nil
+}
+
 type MinMaxSum struct {
 	MinValue       float32
 	MaxValue       float32
@@ -1043,103 +1194,6 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	}
 	if err := basic.WriteString(s.SessionId, w); err != nil {
 		return fmt.Errorf("failed to write SessionId field: " + err.Error())
-	}
-	return nil
-}
-
-type timeval struct {
-	Tv_sec  int64
-	Tv_usec int64
-}
-
-func Readtimeval(r io.Reader) (s timeval, err error) {
-	if s.Tv_sec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tv_sec field: " + err.Error())
-	}
-	if s.Tv_usec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tv_usec field: " + err.Error())
-	}
-	return s, nil
-}
-func Writetimeval(s timeval, w io.Writer) (err error) {
-	if err := basic.WriteInt64(s.Tv_sec, w); err != nil {
-		return fmt.Errorf("failed to write Tv_sec field: " + err.Error())
-	}
-	if err := basic.WriteInt64(s.Tv_usec, w); err != nil {
-		return fmt.Errorf("failed to write Tv_usec field: " + err.Error())
-	}
-	return nil
-}
-
-type EventTrace struct {
-	Id            uint32
-	Kind          int32
-	SlotId        uint32
-	Arguments     value.Value
-	Timestamp     timeval
-	UserUsTime    int64
-	SystemUsTime  int64
-	CallerContext uint32
-	CalleeContext uint32
-}
-
-func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
-	if s.Id, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Id field: " + err.Error())
-	}
-	if s.Kind, err = basic.ReadInt32(r); err != nil {
-		return s, fmt.Errorf("failed to read Kind field: " + err.Error())
-	}
-	if s.SlotId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read SlotId field: " + err.Error())
-	}
-	if s.Arguments, err = value.NewValue(r); err != nil {
-		return s, fmt.Errorf("failed to read Arguments field: " + err.Error())
-	}
-	if s.Timestamp, err = Readtimeval(r); err != nil {
-		return s, fmt.Errorf("failed to read Timestamp field: " + err.Error())
-	}
-	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read UserUsTime field: " + err.Error())
-	}
-	if s.SystemUsTime, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read SystemUsTime field: " + err.Error())
-	}
-	if s.CallerContext, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read CallerContext field: " + err.Error())
-	}
-	if s.CalleeContext, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read CalleeContext field: " + err.Error())
-	}
-	return s, nil
-}
-func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
-	if err := basic.WriteUint32(s.Id, w); err != nil {
-		return fmt.Errorf("failed to write Id field: " + err.Error())
-	}
-	if err := basic.WriteInt32(s.Kind, w); err != nil {
-		return fmt.Errorf("failed to write Kind field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.SlotId, w); err != nil {
-		return fmt.Errorf("failed to write SlotId field: " + err.Error())
-	}
-	if err := s.Arguments.Write(w); err != nil {
-		return fmt.Errorf("failed to write Arguments field: " + err.Error())
-	}
-	if err := Writetimeval(s.Timestamp, w); err != nil {
-		return fmt.Errorf("failed to write Timestamp field: " + err.Error())
-	}
-	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {
-		return fmt.Errorf("failed to write UserUsTime field: " + err.Error())
-	}
-	if err := basic.WriteInt64(s.SystemUsTime, w); err != nil {
-		return fmt.Errorf("failed to write SystemUsTime field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.CallerContext, w); err != nil {
-		return fmt.Errorf("failed to write CallerContext field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.CalleeContext, w); err != nil {
-		return fmt.Errorf("failed to write CalleeContext field: " + err.Error())
 	}
 	return nil
 }

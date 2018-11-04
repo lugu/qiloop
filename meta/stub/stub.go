@@ -251,12 +251,57 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 	return nil
 }
 func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
+	metaMethods := func(d jen.Dict) {
+		for _, method := range itf.Methods {
+			d[jen.Lit(method.Id)] = jen.Qual(
+				"github.com/lugu/qiloop/type/object", "MetaMethod",
+			).Values(jen.Dict{
+				jen.Id("Uid"): jen.Lit(method.Id),
+				jen.Id("ReturnSignature"): jen.Lit(
+					method.Return.Signature(),
+				),
+				jen.Id("Name"): jen.Lit(method.Name),
+				jen.Id("ParametersSignature"): jen.Lit(
+					method.Tuple().Signature(),
+				),
+			})
+		}
+	}
+	metaSignals := func(d jen.Dict) {
+		for _, signal := range itf.Signals {
+			d[jen.Lit(signal.Id)] = jen.Qual(
+				"github.com/lugu/qiloop/type/object", "MetaSignal",
+			).Values(jen.Dict{
+				jen.Id("Uid"):  jen.Lit(signal.Id),
+				jen.Id("Name"): jen.Lit(signal.Name),
+				jen.Id("Signature"): jen.Lit(
+					signal.Tuple().Signature(),
+				),
+			})
+		}
+	}
 	file.Func().Params(
 		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id("metaObject").Params().Params(
 		jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject"),
 	).Block(
-		jen.Panic(jen.Lit("not yet implemented")),
+		jen.Return().Qual(
+			"github.com/lugu/qiloop/type/object", "MetaObject",
+		).Values(
+			jen.Dict{
+				jen.Id("Description"): jen.Lit(itf.Name),
+				jen.Id("Methods"): jen.Map(jen.Uint32()).Qual(
+					"github.com/lugu/qiloop/type/object", "MetaMethod",
+				).Values(
+					jen.DictFunc(metaMethods),
+				),
+				jen.Id("Signals"): jen.Map(jen.Uint32()).Qual(
+					"github.com/lugu/qiloop/type/object", "MetaSignal",
+				).Values(
+					jen.DictFunc(metaSignals),
+				),
+			},
+		),
 	)
 	return nil
 }
