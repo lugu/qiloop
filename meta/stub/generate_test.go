@@ -14,8 +14,8 @@ import (
 	"io"
 )
 
-type BasicObject interface {
-	Activate(sess session.Session, serviceID, objectID uint32, signal BasicObjectSignalHelper)
+type Object interface {
+	Activate(sess session.Session, serviceID, objectID uint32, signal ObjectSignalHelper)
 	RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error)
 	UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error
 	MetaObject(P0 uint32) (MetaObject, error)
@@ -25,14 +25,16 @@ type BasicObject interface {
 	Properties() ([]string, error)
 	RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error)
 }
-type BasicObjectSignalHelper interface{}
-type stubBasicObject struct {
+type ObjectSignalHelper interface {
+	SignalTraceObject(P0 EventTrace) error
+}
+type stubObject struct {
 	obj  *server.BasicObject
-	impl BasicObject
+	impl Object
 }
 
-func BasicObjectObject(impl BasicObject) server.Object {
-	var stb stubBasicObject
+func ObjectObject(impl Object) server.Object {
+	var stb stubObject
 	stb.impl = impl
 	var meta object.MetaObject
 	stb.obj = server.NewObject(meta)
@@ -46,14 +48,14 @@ func BasicObjectObject(impl BasicObject) server.Object {
 	stb.obj.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
 	return &stb
 }
-func (s *stubBasicObject) Activate(sess session.Session, serviceID, objectID uint32) {
+func (s *stubObject) Activate(sess session.Session, serviceID, objectID uint32) {
 	s.obj.Activate(sess, serviceID, objectID)
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
-func (s *stubBasicObject) Receive(msg *net.Message, from *server.Context) error {
+func (s *stubObject) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
 }
-func (s *stubBasicObject) RegisterEvent(payload []byte) ([]byte, error) {
+func (s *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -78,7 +80,7 @@ func (s *stubBasicObject) RegisterEvent(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubBasicObject) UnregisterEvent(payload []byte) ([]byte, error) {
+func (s *stubObject) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -99,7 +101,7 @@ func (s *stubBasicObject) UnregisterEvent(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubBasicObject) MetaObject(payload []byte) ([]byte, error) {
+func (s *stubObject) MetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -116,7 +118,7 @@ func (s *stubBasicObject) MetaObject(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubBasicObject) Terminate(payload []byte) ([]byte, error) {
+func (s *stubObject) Terminate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -129,7 +131,7 @@ func (s *stubBasicObject) Terminate(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubBasicObject) Property(payload []byte) ([]byte, error) {
+func (s *stubObject) Property(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
@@ -146,7 +148,7 @@ func (s *stubBasicObject) Property(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubBasicObject) SetProperty(payload []byte) ([]byte, error) {
+func (s *stubObject) SetProperty(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
@@ -163,7 +165,7 @@ func (s *stubBasicObject) SetProperty(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubBasicObject) Properties(payload []byte) ([]byte, error) {
+func (s *stubObject) Properties(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Properties()
 	if callErr != nil {
 		return util.ErrorPaylad(callErr), nil
@@ -187,7 +189,7 @@ func (s *stubBasicObject) Properties(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubBasicObject) RegisterEventWithSignature(payload []byte) ([]byte, error) {
+func (s *stubObject) RegisterEventWithSignature(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -215,6 +217,115 @@ func (s *stubBasicObject) RegisterEventWithSignature(payload []byte) ([]byte, er
 		return util.ErrorPaylad(errOut), nil
 	}
 	return out.Bytes(), nil
+}
+func (s *stubObject) SignalTraceObject(P0 EventTrace) error {
+	var buf bytes.Buffer
+	if err := WriteEventTrace(P0, &buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
+	}
+	err := s.obj.UpdateSignal(uint32(0x56), buf.Bytes())
+
+	if err != nil {
+		return fmt.Errorf("failed to update SignalTraceObject: %s", err)
+	}
+	return nil
+}
+
+type timeval struct {
+	Tv_sec  int64
+	Tv_usec int64
+}
+
+func Readtimeval(r io.Reader) (s timeval, err error) {
+	if s.Tv_sec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read Tv_sec field: " + err.Error())
+	}
+	if s.Tv_usec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read Tv_usec field: " + err.Error())
+	}
+	return s, nil
+}
+func Writetimeval(s timeval, w io.Writer) (err error) {
+	if err := basic.WriteInt64(s.Tv_sec, w); err != nil {
+		return fmt.Errorf("failed to write Tv_sec field: " + err.Error())
+	}
+	if err := basic.WriteInt64(s.Tv_usec, w); err != nil {
+		return fmt.Errorf("failed to write Tv_usec field: " + err.Error())
+	}
+	return nil
+}
+
+type EventTrace struct {
+	Id            uint32
+	Kind          int32
+	SlotId        uint32
+	Arguments     value.Value
+	Timestamp     timeval
+	UserUsTime    int64
+	SystemUsTime  int64
+	CallerContext uint32
+	CalleeContext uint32
+}
+
+func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
+	if s.Id, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read Id field: " + err.Error())
+	}
+	if s.Kind, err = basic.ReadInt32(r); err != nil {
+		return s, fmt.Errorf("failed to read Kind field: " + err.Error())
+	}
+	if s.SlotId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read SlotId field: " + err.Error())
+	}
+	if s.Arguments, err = value.NewValue(r); err != nil {
+		return s, fmt.Errorf("failed to read Arguments field: " + err.Error())
+	}
+	if s.Timestamp, err = Readtimeval(r); err != nil {
+		return s, fmt.Errorf("failed to read Timestamp field: " + err.Error())
+	}
+	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read UserUsTime field: " + err.Error())
+	}
+	if s.SystemUsTime, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read SystemUsTime field: " + err.Error())
+	}
+	if s.CallerContext, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read CallerContext field: " + err.Error())
+	}
+	if s.CalleeContext, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read CalleeContext field: " + err.Error())
+	}
+	return s, nil
+}
+func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.Id, w); err != nil {
+		return fmt.Errorf("failed to write Id field: " + err.Error())
+	}
+	if err := basic.WriteInt32(s.Kind, w); err != nil {
+		return fmt.Errorf("failed to write Kind field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.SlotId, w); err != nil {
+		return fmt.Errorf("failed to write SlotId field: " + err.Error())
+	}
+	if err := s.Arguments.Write(w); err != nil {
+		return fmt.Errorf("failed to write Arguments field: " + err.Error())
+	}
+	if err := Writetimeval(s.Timestamp, w); err != nil {
+		return fmt.Errorf("failed to write Timestamp field: " + err.Error())
+	}
+	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {
+		return fmt.Errorf("failed to write UserUsTime field: " + err.Error())
+	}
+	if err := basic.WriteInt64(s.SystemUsTime, w); err != nil {
+		return fmt.Errorf("failed to write SystemUsTime field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.CallerContext, w); err != nil {
+		return fmt.Errorf("failed to write CallerContext field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.CalleeContext, w); err != nil {
+		return fmt.Errorf("failed to write CalleeContext field: " + err.Error())
+	}
+	return nil
 }
 
 type MetaMethodParameter struct {
