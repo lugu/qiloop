@@ -54,6 +54,9 @@ func generateStub(f *jen.File, itf *idl.InterfaceType) error {
 	if err := generateStubMethods(f, itf); err != nil {
 		return err
 	}
+	if err := generateStubMetaObject(f, itf); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -247,9 +250,18 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	return nil
 }
+func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
+	file.Func().Params(
+		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+	).Id("metaObject").Params().Params(
+		jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject"),
+	).Block(
+		jen.Panic(jen.Lit("not yet implemented")),
+	)
+	return nil
+}
 
 func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
-	// TODO: add signal helper
 	file.Func().Params(
 		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id("Activate").Params(
@@ -276,15 +288,10 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing = append(writing, code)
 	code = jen.Id("stb.impl = impl")
 	writing = append(writing, code)
-
-	code = jen.Var().Id("meta").Qual(
-		"github.com/lugu/qiloop/type/object", "MetaObject",
-	)
-	writing = append(writing, code)
 	code = jen.Id("stb.obj").Op("=").Qual(
 		"github.com/lugu/qiloop/bus/server",
 		"NewObject",
-	).Call(jen.Id("meta"))
+	).Call(jen.Id("stb.metaObject()"))
 	writing = append(writing, code)
 
 	methodCall := func(m object.MetaMethod, methodName string) error {

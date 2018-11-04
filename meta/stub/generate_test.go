@@ -36,8 +36,7 @@ type stubObject struct {
 func ObjectObject(impl Object) server.Object {
 	var stb stubObject
 	stb.impl = impl
-	var meta object.MetaObject
-	stb.obj = server.NewObject(meta)
+	stb.obj = server.NewObject(stb.metaObject())
 	stb.obj.Wrapper[uint32(0x0)] = stb.RegisterEvent
 	stb.obj.Wrapper[uint32(0x1)] = stb.UnregisterEvent
 	stb.obj.Wrapper[uint32(0x2)] = stb.MetaObject
@@ -229,6 +228,9 @@ func (s *stubObject) SignalTraceObject(P0 EventTrace) error {
 		return fmt.Errorf("failed to update SignalTraceObject: %s", err)
 	}
 	return nil
+}
+func (s *stubObject) metaObject() object.MetaObject {
+	panic("not yet implemented")
 }
 
 type timeval struct {
