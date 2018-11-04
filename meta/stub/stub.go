@@ -257,6 +257,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("serviceID"),
 		jen.Id("objectID").Uint32(),
 	).Block(
+		jen.Id(`s.obj.Activate(sess, serviceID, objectID)`),
 		jen.Id(`s.impl.Activate(sess, serviceID, objectID, s)`),
 	)
 	file.Func().Params(

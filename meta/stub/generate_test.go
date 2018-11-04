@@ -47,6 +47,7 @@ func BasicObjectObject(impl BasicObject) server.Object {
 	return &stb
 }
 func (s *stubBasicObject) Activate(sess session.Session, serviceID, objectID uint32) {
+	s.obj.Activate(sess, serviceID, objectID)
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
 func (s *stubBasicObject) Receive(msg *net.Message, from *server.Context) error {

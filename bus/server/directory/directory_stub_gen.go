@@ -49,6 +49,7 @@ func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	return &stb
 }
 func (s *stubServiceDirectory) Activate(sess session.Session, serviceID, objectID uint32) {
+	s.obj.Activate(sess, serviceID, objectID)
 	s.impl.Activate(sess, serviceID, objectID, s)
 }
 func (s *stubServiceDirectory) Receive(msg *net.Message, from *server.Context) error {
