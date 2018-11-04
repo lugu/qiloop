@@ -22,7 +22,7 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 	ns := server.NewService(object)
 	router := server.NewRouter()
 	router.Add(ns)
-	srv := server.NewServer2(listener, router)
+	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
 	ep, err := net.DialEndPoint("unix://" + name)

@@ -26,7 +26,7 @@ func TestNewServer(t *testing.T) {
 	ns := server.NewService(&object)
 	router := server.NewRouter()
 	router.Add(ns)
-	srv := server.NewServer2(listener, router)
+	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
 	client, err := net.DialEndPoint("unix://" + name)

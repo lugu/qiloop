@@ -447,12 +447,11 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO
-	// object.Activate(s.session, uid, 1)
+	object.Activate(s.session, uid, 1)
 	return service, nil
 }
 
-func NewServer2(l gonet.Listener, r *Router) *Server {
+func StandAloneServer(l gonet.Listener, r *Router) *Server {
 	s := make(map[*Context]bool)
 	return &Server{
 		listen:        l,
