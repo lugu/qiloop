@@ -2,9 +2,11 @@ package server_test
 
 import (
 	"bytes"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 	"testing"
 )
@@ -88,4 +90,108 @@ func TestNewServer(t *testing.T) {
 	if mReceived.Payload[0] != 0xab || mReceived.Payload[1] != 0xcd {
 		t.Errorf("invalid message payload: %d", mReceived.Header.Type)
 	}
+}
+
+func TestServerReturnError(t *testing.T) {
+	name := util.MakeTempFileName()
+	listener, err := net.Listen("unix://" + name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Empty meta object:
+	obj := server.NewObject(object.MetaObject{
+		Description: "test",
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+	})
+
+	service0 := server.NewServiceAuthenticate(make(map[string]string))
+	router := server.NewRouter()
+	router.Add(server.NewService(service0))
+	router.Add(server.NewService(obj))
+
+	srv := server.StandAloneServer(listener, router)
+	go srv.Run()
+
+	cltNet, err := net.DialEndPoint("unix://" + name)
+	if err != nil {
+		panic(err)
+	}
+
+	err = client.Authenticate(cltNet)
+	if err != nil {
+		panic(err)
+	}
+
+	clt := client.NewClient(cltNet)
+
+	serviceID := uint32(0x1)
+	objectID := uint32(0x0)
+	actionID := uint32(0x0)
+	invalidServiceID := uint32(0x2)
+	invalidObjectID := uint32(0x2)
+	invalidActionID := uint32(0x100)
+
+	testInvalid := func(t *testing.T, expected error, serviceID, objectID,
+		actionID uint32) {
+		_, err := clt.Call(serviceID, objectID, actionID, make([]byte, 0))
+		if err == nil && expected == nil {
+			// ok
+		} else if err != nil && expected == nil {
+			t.Errorf("unexpected error:\n%s\nexpecting:\nnil", err)
+		} else if err == nil && expected != nil {
+			t.Errorf("unexpected error:\nnil\nexpecting:\n%s", expected)
+		} else if err.Error() != expected.Error() {
+			t.Errorf("unexpected error:\n%s\nexpecting:\n%s", err, expected)
+		}
+	}
+	testInvalid(t, server.ServiceNotFound, invalidServiceID, objectID, actionID)
+	testInvalid(t, server.ObjectNotFound, serviceID, invalidObjectID, actionID)
+	testInvalid(t, server.ActionNotFound, serviceID, objectID, invalidActionID)
+
+	testInvalid(t, server.ObjectNotFound, serviceID, invalidObjectID, invalidActionID)
+	testInvalid(t, server.ServiceNotFound, invalidServiceID, objectID, invalidActionID)
+	testInvalid(t, server.ServiceNotFound, invalidServiceID, invalidObjectID, actionID)
+	srv.Stop()
+}
+
+func TestStandAloneInit(t *testing.T) {
+
+	name := util.MakeTempFileName()
+	listener, err := net.Listen("unix://" + name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Empty meta object:
+	obj := server.NewObject(object.MetaObject{
+		Description: "test",
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+	})
+	router := server.NewRouter()
+	router.Add(server.NewService(obj))
+
+	srv := server.StandAloneServer(listener, router)
+	go srv.Run()
+
+	clt, err := net.DialEndPoint("unix://" + name)
+	if err != nil {
+		panic(err)
+	}
+
+	// construct a proxy object
+	serviceID := uint32(0x1)
+	objectID := uint32(0x1)
+	proxy := client.NewProxy(client.NewClient(clt),
+		object.ObjectMetaObject, serviceID, objectID)
+
+	// register to signal
+	id, err := proxy.MethodUid("registerEvent")
+	if err != nil {
+		t.Errorf("proxy get register event action id: %s", err)
+	}
+	if id != 0 {
+		t.Errorf("invalid action id")
+	}
+	srv.Stop()
 }

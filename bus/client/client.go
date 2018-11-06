@@ -1,9 +1,11 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/type/value"
 	"sync"
 )
 
@@ -30,7 +32,7 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 	msg := c.newMessage(serviceID, objectID, actionID, payload)
 	messageID := msg.Header.ID
 
-	reply := make(chan []byte)
+	reply := make(chan *net.Message)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Service == serviceID && hdr.Object == objectID &&
@@ -41,7 +43,7 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 	}
 
 	consumer := func(msg *net.Message) error {
-		reply <- msg.Payload
+		reply <- msg
 		return nil
 	}
 
@@ -62,11 +64,23 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 	}
 
 	// 3. wait for a response
-	buf, ok := <-reply
-	if ok {
-		return buf, nil
+	response, ok := <-reply
+	if !ok {
+		return nil, fmt.Errorf("Remote connection closed")
 	}
-	return nil, fmt.Errorf("Remote connection closed")
+	if response.Header.Type == net.Error {
+		buf := bytes.NewBuffer(response.Payload)
+		v, err := value.NewValue(buf)
+		if err != nil {
+			return nil, fmt.Errorf("error response read error: %s", err)
+		}
+		strVal, ok := v.(value.StringValue)
+		if !ok {
+			return nil, fmt.Errorf("invalid error response")
+		}
+		return nil, fmt.Errorf(strVal.Value())
+	}
+	return response.Payload, nil
 }
 
 // Subscribe returns a channel which returns the future value of a

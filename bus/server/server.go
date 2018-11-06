@@ -20,6 +20,7 @@ import (
 var ServiceNotFound error = errors.New("Service not found")
 var ObjectNotFound error = errors.New("Object not found")
 var ActionNotFound error = errors.New("Action not found")
+var NotAuthenticated error = errors.New("Not authenticated")
 
 type SignalUser struct {
 	signalID  uint32
@@ -80,27 +81,31 @@ func (o *BasicObject) handleRegisterEvent(from *Context, msg *net.Message) error
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		err = fmt.Errorf("cannot read object uid: %s", err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	if objectID != o.objectID {
 		err := fmt.Errorf("wrong object id, expecting %d, got %d",
 			msg.Header.Object, objectID)
-		return o.replyError(from, msg, err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	signalID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		err = fmt.Errorf("cannot read signal uid: %s", err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	clientID, err := basic.ReadUint64(buf)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		err = fmt.Errorf("cannot read client uid: %s", err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	messageID := msg.Header.ID
 	clientID = o.AddSignalUser(signalID, messageID, from)
 	var out bytes.Buffer
 	err = basic.WriteUint64(clientID, &out)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		err = fmt.Errorf("cannot write client uid: %s", err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	return o.reply(from, msg, out.Bytes())
 }
@@ -109,24 +114,27 @@ func (o *BasicObject) handleUnregisterEvent(from *Context, msg *net.Message) err
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		err = fmt.Errorf("cannot read object uid: %s", err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	if objectID != o.objectID {
 		err := fmt.Errorf("wrong object id, expecting %d, got %d",
 			msg.Header.Object, objectID)
-		return o.replyError(from, msg, err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	_, err = basic.ReadUint32(buf)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		err = fmt.Errorf("cannot read action uid: %s", err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	clientID, err := basic.ReadUint64(buf)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		err = fmt.Errorf("cannot read client uid: %s", err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	err = o.RemoveSignalUser(clientID)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	var out bytes.Buffer
 	return o.reply(from, msg, out.Bytes())
@@ -139,20 +147,19 @@ func (o *BasicObject) wrapMetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, err
 	}
 	if objectID != o.objectID {
-		err := fmt.Errorf("invalid object id")
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("invalid object id")
 	}
 	meta, err := o.MetaObject()
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, err
 	}
 	var out bytes.Buffer
 	err = object.WriteMetaObject(meta, &out)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, err
 	}
 	return out.Bytes(), nil
 }
@@ -172,11 +179,6 @@ func (o *BasicObject) UpdateSignal(signal uint32, value []byte) error {
 	}
 	return ret
 }
-func (o *BasicObject) replyError(from *Context, m *net.Message, err error) error {
-	hdr := o.NewHeader(net.Error, m.Header.Action, m.Header.ID)
-	mError := net.NewMessage(hdr, util.ErrorPaylad(err))
-	return from.EndPoint.Send(mError)
-}
 
 func (o *BasicObject) reply(from *Context, m *net.Message, response []byte) error {
 	hdr := o.NewHeader(net.Reply, m.Header.Action, m.Header.ID)
@@ -187,11 +189,11 @@ func (o *BasicObject) reply(from *Context, m *net.Message, response []byte) erro
 func (o *BasicObject) handleDefault(from *Context, msg *net.Message) error {
 	a, ok := o.Wrapper[msg.Header.Action]
 	if !ok {
-		return ActionNotFound
+		return util.ReplyError(from.EndPoint, msg, ActionNotFound)
 	}
 	response, err := a(msg.Payload)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	return o.reply(from, msg, response)
 }
@@ -262,9 +264,7 @@ func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
 	response, err := a(m.Payload)
 
 	if err != nil {
-		mError := net.NewMessage(m.Header, util.ErrorPaylad(err))
-		mError.Header.Type = net.Error
-		return from.EndPoint.Send(mError)
+		return util.ReplyError(from.EndPoint, m, err)
 	}
 	reply := net.NewMessage(m.Header, response)
 	reply.Header.Type = net.Reply
@@ -331,12 +331,6 @@ type Router struct {
 	mutex     sync.Mutex
 }
 
-func NewDirectoryService() *ServiceImpl {
-	// FIXME: implement the service
-	var o Object
-	return NewService(o)
-}
-
 func NewRouter() *Router {
 	return &Router{
 		services:  make(map[uint32]*ServiceImpl),
@@ -390,7 +384,7 @@ func NewContext(c gonet.Conn) *Context {
 // Especially, it ensure authentication is passed.
 func Firewall(m *net.Message, from *Context) error {
 	if from.Authenticated == false && m.Header.Service != 0 {
-		return errors.New("Client not yet authenticated")
+		return NotAuthenticated
 	}
 	return nil
 }
@@ -469,11 +463,14 @@ func (s *Server) handle(c gonet.Conn) error {
 	consumer := func(msg *net.Message) error {
 		err := Firewall(msg, context)
 		if err != nil {
-			return err
+			log.Printf("missing authentication from %s:%s: %v",
+				c.RemoteAddr().Network(), c.RemoteAddr().String(),
+				msg.Header)
+			return util.ReplyError(context.EndPoint, msg, err)
 		}
 		err = s.Router.Dispatch(msg, context)
 		if err != nil {
-			log.Printf("server warning: %s", err)
+			return util.ReplyError(context.EndPoint, msg, err)
 		}
 		return nil
 

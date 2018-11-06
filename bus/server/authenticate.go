@@ -17,13 +17,20 @@ type Authenticator struct {
 	passwords map[string]string
 }
 
-func (a *Authenticator) Authenticate(cap CapabilityMap) CapabilityMap {
+func (a *Authenticator) Authenticate(from *Context, cap CapabilityMap) CapabilityMap {
+	if len(a.passwords) == 0 {
+		from.Authenticated = true
+		return CapabilityMap{
+			KeyState: value.Uint(StateDone),
+		}
+	}
 	if userValue, ok := cap[KeyUser]; ok {
 		if userStr, ok := userValue.(value.StringValue); ok {
 			if tokenValue, ok := cap[KeyToken]; ok {
 				if tokenStr, ok := tokenValue.(value.StringValue); ok {
 					if pwd, ok := a.passwords[string(userStr)]; ok {
 						if pwd == string(tokenStr) {
+							from.Authenticated = true
 							return CapabilityMap{
 								KeyState: value.Uint(StateDone),
 							}
@@ -83,15 +90,12 @@ type ServiceAuthenticate struct {
 
 func (s *ServiceAuthenticate) Receive(m *net.Message, from *Context) error {
 	if m.Header.Action != object.AuthenticateActionID {
-		return ActionNotFound
+		return util.ReplyError(from.EndPoint, m, ActionNotFound)
 	}
-	response, err := s.wrapAuthenticate(m.Payload)
+	response, err := s.wrapAuthenticate(from, m.Payload)
 
 	if err != nil {
-		hdr := net.NewHeader(net.Error, 0, 0,
-			object.AuthenticateActionID, m.Header.ID)
-		mError := net.NewMessage(hdr, util.ErrorPaylad(err))
-		return from.EndPoint.Send(mError)
+		return util.ReplyError(from.EndPoint, m, err)
 	}
 	hdr := net.NewHeader(net.Reply, 0, 0, object.AuthenticateActionID,
 		m.Header.ID)
@@ -102,19 +106,19 @@ func (s *ServiceAuthenticate) Receive(m *net.Message, from *Context) error {
 func (s *ServiceAuthenticate) Activate(sess session.Session, serviceID, objectID uint32) {
 }
 
-func (s *ServiceAuthenticate) wrapAuthenticate(payload []byte) ([]byte, error) {
+func (s *ServiceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	m, err := ReadCapabilityMap(buf)
 	if err != nil {
 		return nil, err
 	}
-	ret := s.auth.Authenticate(m)
-	buf = bytes.NewBuffer(make([]byte, 0))
-	err = WriteCapabilityMap(ret, buf)
+	ret := s.auth.Authenticate(from, m)
+	var out bytes.Buffer
+	err = WriteCapabilityMap(ret, &out)
 	if err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
 
 func NewServiceAuthenticate(passwords map[string]string) Object {
