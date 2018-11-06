@@ -3,18 +3,25 @@ package signature_test
 import (
 	"github.com/dave/jennifer/jen"
 	. "github.com/lugu/qiloop/meta/signature"
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func helpTestBasics(t *testing.T, typ Type, signature, idl string,
 	typName *Statement) {
 
-	assert.Equal(t, typ.Signature(), signature)
-	assert.Equal(t, typ.SignatureIDL(), idl)
-	assert.Equal(t, typ.TypeName(), typName)
-	assert.NotNil(t, typ.Marshal("a", "b"))
-	assert.NotNil(t, typ.Unmarshal("a"))
+	if typ.Signature() != signature {
+		panic("invalid signature: " + typ.Signature())
+	}
+	if typ.SignatureIDL() != idl {
+		panic("invalid idl: " + typ.SignatureIDL())
+	}
+	// TODO: compare typName and typ.TypeName()
+	if typ.Marshal("a", "b") == nil {
+		panic("marshall is nil")
+	}
+	if typ.Unmarshal("a") == nil {
+		panic("unmarshall is nil")
+	}
 	typ.RegisterTo(NewTypeSet())
 }
 
