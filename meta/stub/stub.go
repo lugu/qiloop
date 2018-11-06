@@ -116,9 +116,9 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 		writing = append(writing, code)
 		code = jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Return().List(
-				jen.Qual("github.com/lugu/qiloop/bus/util",
-					"ErrorPaylad").Call(jen.Err()),
 				jen.Nil(),
+				jen.Id(`fmt.Errorf("cannot read `+param.Name+
+					`: %s", err)`),
 			),
 		)
 		writing = append(writing, code)
@@ -131,7 +131,7 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	}
 	writing = append(writing, code)
 	code = jen.Id(`if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer`)
 	writing = append(writing, code)
@@ -140,7 +140,7 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 		writing = append(writing, code)
 
 		code = jen.Id(`if errOut != nil {
-			return util.ErrorPaylad(errOut), nil
+		    return nil, fmt.Errorf("cannot write response: %s", errOut)
 	        }`)
 		writing = append(writing, code)
 	}
@@ -191,10 +191,6 @@ func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 		jen.Id("buf.Bytes()"),
 	)
 	writing = append(writing, code)
-	code = jen.Id(`if err != nil {
-		return util.ErrorPaylad(err)
-	}
-	return nil`)
 	code = jen.Id(`
 	if err != nil {
 	    return fmt.Errorf("failed to update ` +

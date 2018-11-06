@@ -7,7 +7,6 @@ import (
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	session "github.com/lugu/qiloop/bus/session"
-	util "github.com/lugu/qiloop/bus/util"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"io"
@@ -58,23 +57,23 @@ func (s *stubServiceDirectory) Service(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadString(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	ret, callErr := s.impl.Service(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := WriteServiceInfo(ret, &out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
 func (s *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Services()
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -91,7 +90,7 @@ func (s *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
 		return nil
 	}()
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
@@ -99,16 +98,16 @@ func (s *stubServiceDirectory) RegisterService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := ReadServiceInfo(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	ret, callErr := s.impl.RegisterService(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteUint32(ret, &out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
@@ -116,11 +115,11 @@ func (s *stubServiceDirectory) UnregisterService(payload []byte) ([]byte, error)
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	callErr := s.impl.UnregisterService(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
@@ -129,11 +128,11 @@ func (s *stubServiceDirectory) ServiceReady(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	callErr := s.impl.ServiceReady(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
@@ -142,11 +141,11 @@ func (s *stubServiceDirectory) UpdateServiceInfo(payload []byte) ([]byte, error)
 	buf := bytes.NewBuffer(payload)
 	P0, err := ReadServiceInfo(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	callErr := s.impl.UpdateServiceInfo(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
@@ -154,12 +153,12 @@ func (s *stubServiceDirectory) UpdateServiceInfo(payload []byte) ([]byte, error)
 func (s *stubServiceDirectory) MachineId(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.MachineId()
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteString(ret, &out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
@@ -167,16 +166,16 @@ func (s *stubServiceDirectory) _socketOfService(payload []byte) ([]byte, error) 
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	ret, callErr := s.impl._socketOfService(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := object.WriteObjectReference(ret, &out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }

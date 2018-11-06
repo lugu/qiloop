@@ -6,7 +6,7 @@ import (
 	"github.com/lugu/qiloop/type/value"
 )
 
-func ErrorPaylad(err error) []byte {
+func errorPaylad(err error) []byte {
 	buf := bytes.NewBuffer(make([]byte, 0))
 	val := value.String(err.Error())
 	val.Write(buf)
@@ -16,6 +16,6 @@ func ErrorPaylad(err error) []byte {
 func ReplyError(e net.EndPoint, m *net.Message, err error) error {
 	hdr := net.NewHeader(net.Error, m.Header.Service, m.Header.Object,
 		m.Header.Action, m.Header.ID)
-	mError := net.NewMessage(hdr, ErrorPaylad(err))
+	mError := net.NewMessage(hdr, errorPaylad(err))
 	return e.Send(mError)
 }

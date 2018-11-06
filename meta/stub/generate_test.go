@@ -7,7 +7,6 @@ import (
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	session "github.com/lugu/qiloop/bus/session"
-	util "github.com/lugu/qiloop/bus/util"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
@@ -58,24 +57,24 @@ func (s *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	P1, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P1: %s", err)
 	}
 	P2, err := basic.ReadUint64(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P2: %s", err)
 	}
 	ret, callErr := s.impl.RegisterEvent(P0, P1, P2)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteUint64(ret, &out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
@@ -83,19 +82,19 @@ func (s *stubObject) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	P1, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P1: %s", err)
 	}
 	P2, err := basic.ReadUint64(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P2: %s", err)
 	}
 	callErr := s.impl.UnregisterEvent(P0, P1, P2)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
@@ -104,16 +103,16 @@ func (s *stubObject) MetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	ret, callErr := s.impl.MetaObject(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := WriteMetaObject(ret, &out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
@@ -121,11 +120,11 @@ func (s *stubObject) Terminate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	callErr := s.impl.Terminate(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
@@ -134,16 +133,16 @@ func (s *stubObject) Property(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	ret, callErr := s.impl.Property(P0)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := ret.Write(&out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
@@ -151,15 +150,15 @@ func (s *stubObject) SetProperty(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	P0, err := value.NewValue(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	P1, err := value.NewValue(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P1: %s", err)
 	}
 	callErr := s.impl.SetProperty(P0, P1)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
@@ -167,7 +166,7 @@ func (s *stubObject) SetProperty(payload []byte) ([]byte, error) {
 func (s *stubObject) Properties(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Properties()
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -184,7 +183,7 @@ func (s *stubObject) Properties(payload []byte) ([]byte, error) {
 		return nil
 	}()
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
@@ -192,28 +191,28 @@ func (s *stubObject) RegisterEventWithSignature(payload []byte) ([]byte, error) 
 	buf := bytes.NewBuffer(payload)
 	P0, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P0: %s", err)
 	}
 	P1, err := basic.ReadUint32(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P1: %s", err)
 	}
 	P2, err := basic.ReadUint64(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P2: %s", err)
 	}
 	P3, err := basic.ReadString(buf)
 	if err != nil {
-		return util.ErrorPaylad(err), nil
+		return nil, fmt.Errorf("cannot read P3: %s", err)
 	}
 	ret, callErr := s.impl.RegisterEventWithSignature(P0, P1, P2, P3)
 	if callErr != nil {
-		return util.ErrorPaylad(callErr), nil
+		return nil, callErr
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteUint64(ret, &out)
 	if errOut != nil {
-		return util.ErrorPaylad(errOut), nil
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
