@@ -18,9 +18,14 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	object := dir.ServiceDirectoryObject(dir.NewServiceDirectory())
 	router := srv.NewRouter()
+
+	service0 := srv.NewServiceAuthenticate(make(map[string]string))
+	router.Add(srv.NewService(service0))
+
+	object := dir.ServiceDirectoryObject(dir.NewServiceDirectory())
 	router.Add(srv.NewService(object))
+
 	server := srv.StandAloneServer(listener, router)
 
 	go server.Run()
