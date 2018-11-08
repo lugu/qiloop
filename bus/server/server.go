@@ -150,7 +150,8 @@ func (o *BasicObject) wrapMetaObject(payload []byte) ([]byte, error) {
 		return nil, err
 	}
 	if objectID != o.objectID {
-		return nil, fmt.Errorf("invalid object id")
+		return nil, fmt.Errorf("invalid object id: %d instead of %d",
+			objectID, o.objectID)
 	}
 	meta, err := o.MetaObject()
 	if err != nil {
@@ -189,7 +190,6 @@ func (o *BasicObject) reply(from *Context, m *net.Message, response []byte) erro
 func (o *BasicObject) handleDefault(from *Context, msg *net.Message) error {
 	a, ok := o.Wrapper[msg.Header.Action]
 	if !ok {
-		fmt.Printf("action not found: %#v\n", msg.Header)
 		return util.ReplyError(from.EndPoint, msg, ActionNotFound)
 	}
 	response, err := a(msg.Payload)
@@ -478,7 +478,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	object.Activate(&s.session, uid, 1)
+	service.Activate(&s.session, uid)
 	return service, nil
 }
 
