@@ -18,7 +18,7 @@ func NewServiceDirectory() ServiceDirectory {
 	return &ServiceDirectoryImpl{
 		staging:  make(map[uint32]ServiceInfo),
 		services: make(map[uint32]ServiceInfo),
-		lastUuid: 1,
+		lastUuid: 0,
 	}
 }
 
@@ -64,7 +64,9 @@ func (s *ServiceDirectoryImpl) UnregisterService(id uint32) error {
 	i, ok := s.services[id]
 	if ok {
 		delete(s.services, id)
-		s.signal.SignalServiceRemoved(id, i.Name)
+		if s.signal != nil {
+			s.signal.SignalServiceRemoved(id, i.Name)
+		}
 		return nil
 	}
 	_, ok = s.staging[id]
@@ -80,7 +82,9 @@ func (s *ServiceDirectoryImpl) ServiceReady(id uint32) error {
 	if ok {
 		delete(s.staging, id)
 		s.services[id] = i
-		s.signal.SignalServiceAdded(id, i.Name)
+		if s.signal != nil {
+			s.signal.SignalServiceAdded(id, i.Name)
+		}
 		return nil
 	}
 	return fmt.Errorf("Service id not found: %d", id)

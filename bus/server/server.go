@@ -458,8 +458,7 @@ type Service interface {
 	WaitTerminate() chan int
 }
 
-func (s *Server) NewService(name string, object Object) (Service, error) {
-
+func (s *Server) register(name string, object Object) (uint32, error) {
 	info := services.ServiceInfo{
 		Name:      name,
 		ServiceId: 0,
@@ -469,10 +468,16 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 		SessionId: "", // TODO
 	}
 
-	uid, err := s.session.Directory.RegisterService(info)
+	return s.session.Directory.RegisterService(info)
+}
+
+func (s *Server) NewService(name string, object Object) (Service, error) {
+
+	uid, err := s.register(name, object)
 	if err != nil {
 		return nil, err
 	}
+
 	service := NewService(object)
 	err = s.Router.Register(uid, service)
 	if err != nil {
@@ -483,6 +488,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 }
 
 func StandAloneServer(l gonet.Listener, r *Router) *Server {
+
 	s := make(map[*Context]bool)
 	r.Activate(nil)
 	return &Server{

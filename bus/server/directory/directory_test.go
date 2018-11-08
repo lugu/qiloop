@@ -20,12 +20,32 @@ func TestNewServer(t *testing.T) {
 	}
 	router := srv.NewRouter(srv.NewServiceAuthenticate(make(map[string]string)))
 
-	object := dir.ServiceDirectoryObject(dir.NewServiceDirectory())
-	_, err = router.Add(srv.NewService(object))
+	impl := dir.NewServiceDirectory()
+	info := dir.ServiceInfo{
+		Name:      "ServiceDirectory",
+		ServiceId: 1,
+		MachineId: util.MachineID(),
+		ProcessId: util.ProcessID(),
+		Endpoints: []string{"unix://" + name},
+		SessionId: "", // TODO
+	}
+	serviceID, err := impl.RegisterService(info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if serviceID != 1 {
+		t.Fatalf("service directory id: %d", serviceID)
+	}
+	err = impl.ServiceReady(1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	object := dir.ServiceDirectoryObject(impl)
+	_, err = router.Add(srv.NewService(object))
+	if err != nil {
+		t.Fatal(err)
+	}
 	server := srv.StandAloneServer(listener, router)
 
 	go server.Run()
