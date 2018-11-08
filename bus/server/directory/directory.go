@@ -22,7 +22,7 @@ func NewServiceDirectory() ServiceDirectory {
 	}
 }
 
-func (s *ServiceDirectoryImpl) Activate(sess session.Session,
+func (s *ServiceDirectoryImpl) Activate(sess *session.Session,
 	serviceID, objectID uint32, signal ServiceDirectorySignalHelper) {
 	s.signal = signal
 }

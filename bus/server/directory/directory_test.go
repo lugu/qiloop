@@ -18,13 +18,13 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	router := srv.NewRouter()
-
-	service0 := srv.NewServiceAuthenticate(make(map[string]string))
-	router.Add(srv.NewService(service0))
+	router := srv.NewRouter(srv.NewServiceAuthenticate(make(map[string]string)))
 
 	object := dir.ServiceDirectoryObject(dir.NewServiceDirectory())
-	router.Add(srv.NewService(object))
+	_, err = router.Add(srv.NewService(object))
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	server := srv.StandAloneServer(listener, router)
 
@@ -46,4 +46,5 @@ func TestNewServer(t *testing.T) {
 	if machineID == "" {
 		panic("empty machine id")
 	}
+	server.Stop()
 }

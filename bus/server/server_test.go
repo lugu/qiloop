@@ -25,9 +25,9 @@ func TestNewServer(t *testing.T) {
 	}
 	object.Wrap(3, handler)
 
-	ns := server.NewService(&object)
-	router := server.NewRouter()
-	router.Add(ns)
+	service := server.NewService(&object)
+	router := server.NewRouter(server.NewServiceAuthenticate(make(map[string]string)))
+	router.Add(service)
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
@@ -105,9 +105,8 @@ func TestServerReturnError(t *testing.T) {
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
 
-	service0 := server.NewServiceAuthenticate(make(map[string]string))
-	router := server.NewRouter()
-	router.Add(server.NewService(service0))
+	router := server.NewRouter(server.NewServiceAuthenticate(make(map[string]string)))
+
 	router.Add(server.NewService(obj))
 
 	srv := server.StandAloneServer(listener, router)
@@ -126,7 +125,7 @@ func TestServerReturnError(t *testing.T) {
 	clt := client.NewClient(cltNet)
 
 	serviceID := uint32(0x1)
-	objectID := uint32(0x0)
+	objectID := uint32(0x1)
 	actionID := uint32(0x0)
 	invalidServiceID := uint32(0x2)
 	invalidObjectID := uint32(0x2)
@@ -168,7 +167,7 @@ func TestStandAloneInit(t *testing.T) {
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
-	router := server.NewRouter()
+	router := server.NewRouter(server.NewServiceAuthenticate(make(map[string]string)))
 	router.Add(server.NewService(obj))
 
 	srv := server.StandAloneServer(listener, router)

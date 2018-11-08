@@ -220,14 +220,14 @@ func (o *BasicObject) NewHeader(typ uint8, action, id uint32) net.Header {
 	return net.NewHeader(typ, o.serviceID, o.objectID, action, id)
 }
 
-func (o *BasicObject) Activate(sess session.Session, serviceID, objectID uint32) {
+func (o *BasicObject) Activate(sess *session.Session, serviceID, objectID uint32) {
 	o.serviceID = serviceID
 	o.objectID = objectID
 }
 
 type Object interface {
 	Receive(m *net.Message, from *Context) error
-	Activate(sess session.Session, serviceID, objectID uint32)
+	Activate(sess *session.Session, serviceID, objectID uint32)
 }
 
 type Dispatcher interface {
@@ -251,15 +251,15 @@ func (o *ObjectDispatcher) Wrap(id uint32, fn bus.ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
-func (o *ObjectDispatcher) Activate(sess session.Session, serviceID, objectID uint32) {
+func (o *ObjectDispatcher) Activate(sess *session.Session, serviceID, objectID uint32) {
 }
 func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
 	if o.wrapper == nil {
-		return ActionNotFound
+		return util.ReplyError(from.EndPoint, m, ActionNotFound)
 	}
 	a, ok := o.wrapper[m.Header.Action]
 	if !ok {
-		return ActionNotFound
+		return util.ReplyError(from.EndPoint, m, ActionNotFound)
 	}
 	response, err := a(m.Payload)
 
@@ -279,7 +279,7 @@ type ServiceImpl struct {
 func NewService(o Object) *ServiceImpl {
 	return &ServiceImpl{
 		objects: map[uint32]Object{
-			0: o,
+			1: o,
 		},
 	}
 }
@@ -295,6 +295,12 @@ func (n *ServiceImpl) Add(o Object) (uint32, error) {
 	n.objects[index] = o
 	n.mutex.Unlock()
 	return index, nil
+}
+
+func (s *ServiceImpl) Activate(sess *session.Session, serviceID uint32) {
+	for objectID, obj := range s.objects {
+		obj.Activate(sess, serviceID, objectID)
+	}
 }
 
 func (n *ServiceImpl) Remove(objectID uint32) error {
@@ -314,7 +320,7 @@ func (n *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 	if ok {
 		return o.Receive(m, from)
 	}
-	return ObjectNotFound
+	return util.ReplyError(from.EndPoint, m, ObjectNotFound)
 }
 
 func (n *ServiceImpl) Terminate() error {
@@ -331,23 +337,51 @@ type Router struct {
 	mutex     sync.Mutex
 }
 
-func NewRouter() *Router {
+func NewRouter(authenticator Object) *Router {
 	return &Router{
-		services:  make(map[uint32]*ServiceImpl),
-		nextIndex: 0,
+		services: map[uint32]*ServiceImpl{
+			0: &ServiceImpl{
+				objects: map[uint32]Object{
+					0: authenticator,
+				},
+			},
+		},
+		nextIndex: 1,
 	}
 }
 
-func (r *Router) Register(uid uint32, n *ServiceImpl) error {
-	panic("not yet implemented")
+func (r *Router) Activate(sess *session.Session) {
+	for serviceID, service := range r.services {
+		service.Activate(sess, serviceID)
+	}
 }
 
-func (r *Router) Add(n *ServiceImpl) (uint32, error) {
+func (r *Router) Register(uid uint32, s *ServiceImpl) error {
+	r.mutex.Lock()
+	_, ok := r.services[uid]
+	if ok {
+		r.mutex.Unlock()
+		return fmt.Errorf("service id already used: %d", uid)
+	}
+	r.services[uid] = s
+	r.mutex.Unlock()
+	return nil
+}
+
+func (r *Router) Add(s *ServiceImpl) (uint32, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	r.services[r.nextIndex] = n
+	for {
+		_, ok := r.services[r.nextIndex]
+		if !ok {
+			break
+		}
+		r.nextIndex++
+	}
+	uid := r.nextIndex
 	r.nextIndex++
-	return r.nextIndex, nil
+	r.services[uid] = s
+	return uid, nil
 }
 
 func (r *Router) Remove(serviceID uint32) error {
@@ -367,7 +401,7 @@ func (r *Router) Dispatch(m *net.Message, from *Context) error {
 	if ok {
 		return s.Dispatch(m, from)
 	}
-	return ServiceNotFound
+	return util.ReplyError(from.EndPoint, m, ServiceNotFound)
 }
 
 // Context represents the context of the request
@@ -407,10 +441,12 @@ func NewServer(session session.Session, addr string) (*Server, error) {
 	}
 
 	return &Server{
-		listen:        l,
-		addrs:         []string{addr},
-		session:       session,
-		Router:        NewRouter(),
+		listen:  l,
+		addrs:   []string{addr},
+		session: session,
+		// FIXME: update NewServer signature to add an
+		// authenticator
+		Router:        NewRouter(NewServiceAuthenticate(make(map[string]string))),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 	}, nil
@@ -429,7 +465,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 		MachineId: util.MachineID(),
 		ProcessId: util.ProcessID(),
 		Endpoints: s.addrs,
-		SessionId: "", // FIXME
+		SessionId: "", // TODO
 	}
 
 	uid, err := s.session.Directory.RegisterService(info)
@@ -441,12 +477,13 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	object.Activate(s.session, uid, 1)
+	object.Activate(&s.session, uid, 1)
 	return service, nil
 }
 
 func StandAloneServer(l gonet.Listener, r *Router) *Server {
 	s := make(map[*Context]bool)
+	r.Activate(nil)
 	return &Server{
 		listen:        l,
 		Router:        r,
@@ -468,12 +505,7 @@ func (s *Server) handle(c gonet.Conn) error {
 				msg.Header)
 			return util.ReplyError(context.EndPoint, msg, err)
 		}
-		err = s.Router.Dispatch(msg, context)
-		if err != nil {
-			return util.ReplyError(context.EndPoint, msg, err)
-		}
-		return nil
-
+		return s.Router.Dispatch(msg, context)
 	}
 	closer := func(err error) {
 		s.contextsMutex.Lock()

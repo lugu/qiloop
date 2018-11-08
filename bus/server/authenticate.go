@@ -103,7 +103,7 @@ func (s *ServiceAuthenticate) Receive(m *net.Message, from *Context) error {
 	return from.EndPoint.Send(reply)
 }
 
-func (s *ServiceAuthenticate) Activate(sess session.Session, serviceID, objectID uint32) {
+func (s *ServiceAuthenticate) Activate(sess *session.Session, serviceID, objectID uint32) {
 }
 
 func (s *ServiceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([]byte, error) {
