@@ -447,7 +447,7 @@ func NewServer(session session.Session, addr string) (*Server, error) {
 		session: session,
 		// FIXME: update NewServer signature to add an
 		// authenticator
-		Router:        NewRouter(NewServiceAuthenticate(make(map[string]string))),
+		Router:        NewRouter(ServiceAuthenticate(Yes{})),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 	}, nil

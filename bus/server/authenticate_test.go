@@ -17,7 +17,7 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 		t.Fatal(err)
 	}
 
-	router := server.NewRouter(server.NewServiceAuthenticate(creds))
+	router := server.NewRouter(server.ServiceAuthenticate(server.Dictionary(creds)))
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 

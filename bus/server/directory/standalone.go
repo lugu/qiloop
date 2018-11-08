@@ -9,7 +9,7 @@ import (
 
 func NewServer(addr string) (*server.Server, error) {
 
-	router := server.NewRouter(server.NewServiceAuthenticate(make(map[string]string)))
+	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
 
 	impl := NewServiceDirectory()
 	info := ServiceInfo{

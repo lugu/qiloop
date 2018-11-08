@@ -13,36 +13,31 @@ import (
 	"io"
 )
 
-type Authenticator struct {
-	passwords map[string]string
+type Authenticator interface {
+	Authenticate(user, token string) bool
 }
 
-func (a *Authenticator) Authenticate(from *Context, cap CapabilityMap) CapabilityMap {
-	if len(a.passwords) == 0 {
-		from.Authenticated = true
-		return CapabilityMap{
-			KeyState: value.Uint(StateDone),
-		}
-	}
-	if userValue, ok := cap[KeyUser]; ok {
-		if userStr, ok := userValue.(value.StringValue); ok {
-			if tokenValue, ok := cap[KeyToken]; ok {
-				if tokenStr, ok := tokenValue.(value.StringValue); ok {
-					if pwd, ok := a.passwords[string(userStr)]; ok {
-						if pwd == string(tokenStr) {
-							from.Authenticated = true
-							return CapabilityMap{
-								KeyState: value.Uint(StateDone),
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return CapabilityMap{
-		KeyState: value.Uint(StateError),
-	}
+func Dictionary(passwords map[string]string) Authenticator {
+	return dictionary(passwords)
+}
+
+type Yes struct{}
+
+func (y Yes) Authenticate(user, token string) bool {
+	return true
+}
+
+type No struct{}
+
+func (n No) Authenticate(user, token string) bool {
+	return false
+}
+
+type dictionary map[string]string
+
+func (d dictionary) Authenticate(user, token string) bool {
+	pwd, ok := d[user]
+	return ok && pwd == token
 }
 
 func WriteCapabilityMap(m CapabilityMap, out io.Writer) error {
@@ -84,11 +79,11 @@ func ReadCapabilityMap(in io.Reader) (m CapabilityMap, err error) {
 	return m, nil
 }
 
-type ServiceAuthenticate struct {
+type serviceAuthenticate struct {
 	auth Authenticator
 }
 
-func (s *ServiceAuthenticate) Receive(m *net.Message, from *Context) error {
+func (s *serviceAuthenticate) Receive(m *net.Message, from *Context) error {
 	if m.Header.Action != object.AuthenticateActionID {
 		return util.ReplyError(from.EndPoint, m, ActionNotFound)
 	}
@@ -103,16 +98,16 @@ func (s *ServiceAuthenticate) Receive(m *net.Message, from *Context) error {
 	return from.EndPoint.Send(reply)
 }
 
-func (s *ServiceAuthenticate) Activate(sess *session.Session, serviceID, objectID uint32) {
+func (s *serviceAuthenticate) Activate(sess *session.Session, serviceID, objectID uint32) {
 }
 
-func (s *ServiceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([]byte, error) {
+func (s *serviceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	m, err := ReadCapabilityMap(buf)
 	if err != nil {
 		return nil, err
 	}
-	ret := s.auth.Authenticate(from, m)
+	ret := s.Authenticate(from, m)
 	var out bytes.Buffer
 	err = WriteCapabilityMap(ret, &out)
 	if err != nil {
@@ -121,10 +116,37 @@ func (s *ServiceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([
 	return out.Bytes(), nil
 }
 
-func NewServiceAuthenticate(passwords map[string]string) Object {
-	return &ServiceAuthenticate{
-		auth: Authenticator{
-			passwords,
-		},
+func (s *serviceAuthenticate) capError() CapabilityMap {
+	return CapabilityMap{
+		KeyState: value.Uint(StateError),
 	}
+}
+
+func (s *serviceAuthenticate) Authenticate(from *Context, cap CapabilityMap) CapabilityMap {
+	var user, token string
+	if userValue, ok := cap[KeyUser]; ok {
+		if userStr, ok := userValue.(value.StringValue); ok {
+			user = userStr.Value()
+		} else {
+			return s.capError()
+		}
+	}
+	if tokenValue, ok := cap[KeyToken]; ok {
+		if tokenStr, ok := tokenValue.(value.StringValue); ok {
+			token = tokenStr.Value()
+		} else {
+			return s.capError()
+		}
+	}
+	if s.auth.Authenticate(user, token) {
+		from.Authenticated = true
+		return CapabilityMap{
+			KeyState: value.Uint(StateDone),
+		}
+	}
+	return s.capError()
+}
+
+func ServiceAuthenticate(auth Authenticator) Object {
+	return &serviceAuthenticate{auth: auth}
 }
