@@ -31,18 +31,23 @@ func TestNewServer(t *testing.T) {
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
-	client, err := net.DialEndPoint("unix://" + name)
+	clt, err := net.DialEndPoint("unix://" + name)
 	if err != nil {
 		panic(err)
 	}
 
-	h := net.NewHeader(net.Call, 0, 0, 3, 4)
+	err = client.Authenticate(clt)
+	if err != nil {
+		panic(err)
+	}
+
+	h := net.NewHeader(net.Call, 1, 1, 3, 4)
 	mSent := net.NewMessage(h, make([]byte, 0))
 
 	// client is prepared to receive a message
 	received := make(chan *net.Message)
 	go func() {
-		msg, err := client.ReceiveAny()
+		msg, err := clt.ReceiveAny()
 		if err != nil {
 			t.Errorf("failed to receive net. %s", err)
 		}
@@ -50,7 +55,7 @@ func TestNewServer(t *testing.T) {
 	}()
 
 	// client send a message
-	if err := client.Send(mSent); err != nil {
+	if err := clt.Send(mSent); err != nil {
 		t.Errorf("failed to send paquet: %s", err)
 	}
 

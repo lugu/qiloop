@@ -189,6 +189,7 @@ func (o *BasicObject) reply(from *Context, m *net.Message, response []byte) erro
 func (o *BasicObject) handleDefault(from *Context, msg *net.Message) error {
 	a, ok := o.Wrapper[msg.Header.Action]
 	if !ok {
+		fmt.Printf("action not found: %#v\n", msg.Header)
 		return util.ReplyError(from.EndPoint, msg, ActionNotFound)
 	}
 	response, err := a(msg.Payload)
