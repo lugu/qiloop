@@ -1,7 +1,4 @@
 Unsorted todo list:
-- server:
-    - add service zero by default
-    - allow for remote registration
 - session:
     - session: register callback for service disconnection
 - idl:
