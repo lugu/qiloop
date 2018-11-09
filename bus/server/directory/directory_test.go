@@ -12,7 +12,7 @@ import (
 func TestNewServer(t *testing.T) {
 	name := util.MakeTempFileName()
 
-	server, err := dir.NewServer("unix://" + name)
+	server, err := dir.NewServer("unix://"+name, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

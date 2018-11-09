@@ -7,9 +7,12 @@ import (
 	"github.com/lugu/qiloop/bus/util"
 )
 
-func NewServer(addr string) (*server.Server, error) {
+func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 
-	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
+	if auth == nil {
+		auth = server.Yes{}
+	}
+	router := server.NewRouter(server.ServiceAuthenticate(auth))
 
 	impl := NewServiceDirectory()
 	info := ServiceInfo{
