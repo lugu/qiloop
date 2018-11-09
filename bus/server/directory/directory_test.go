@@ -10,15 +10,15 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	name := util.MakeTempFileName()
+	addr := util.NewUnixAddr()
 
-	server, err := dir.NewServer("unix://"+name, nil)
+	server, err := dir.NewServer(addr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	go server.Run()
 
-	session, err := sess.NewSession("unix://" + name)
+	session, err := sess.NewSession(addr)
 	if err != nil {
 		panic(err)
 	}

@@ -5,14 +5,13 @@ import (
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
-	gonet "net"
 	"testing"
 )
 
 func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool) {
-	name := util.MakeTempFileName()
+	addr := util.NewUnixAddr()
 
-	listener, err := gonet.Listen("unix", name)
+	listener, err := net.Listen(addr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +20,7 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
-	ep, err := net.DialEndPoint("unix://" + name)
+	ep, err := net.DialEndPoint(addr)
 	if err != nil {
 		panic(err)
 	}

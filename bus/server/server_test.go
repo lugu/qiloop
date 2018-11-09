@@ -13,8 +13,8 @@ import (
 
 func TestNewServer(t *testing.T) {
 
-	name := util.MakeTempFileName()
-	listener, err := net.Listen("unix://" + name)
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestNewServer(t *testing.T) {
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
-	clt, err := net.DialEndPoint("unix://" + name)
+	clt, err := net.DialEndPoint(addr)
 	if err != nil {
 		panic(err)
 	}
@@ -98,8 +98,8 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServerReturnError(t *testing.T) {
-	name := util.MakeTempFileName()
-	listener, err := net.Listen("unix://" + name)
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestServerReturnError(t *testing.T) {
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
-	cltNet, err := net.DialEndPoint("unix://" + name)
+	cltNet, err := net.DialEndPoint(addr)
 	if err != nil {
 		panic(err)
 	}
@@ -161,8 +161,8 @@ func TestServerReturnError(t *testing.T) {
 
 func TestStandAloneInit(t *testing.T) {
 
-	name := util.MakeTempFileName()
-	listener, err := net.Listen("unix://" + name)
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +178,7 @@ func TestStandAloneInit(t *testing.T) {
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
-	clt, err := net.DialEndPoint("unix://" + name)
+	clt, err := net.DialEndPoint(addr)
 	if err != nil {
 		panic(err)
 	}
