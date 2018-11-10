@@ -5,6 +5,7 @@ import (
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
+	"sort"
 )
 
 type ServiceDirectoryImpl struct {
@@ -57,11 +58,19 @@ func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err er
 	return info, fmt.Errorf("Service not found: %s", service)
 }
 
+type services []ServiceInfo
+
+func (a services) Len() int           { return len(a) }
+func (a services) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a services) Less(i, j int) bool { return a[i].ServiceId < a[j].ServiceId }
+
 func (s *ServiceDirectoryImpl) Services() ([]ServiceInfo, error) {
+
 	list := make([]ServiceInfo, 0, len(s.services))
 	for _, info := range s.services {
 		list = append(list, info)
 	}
+	sort.Sort(services(list))
 	return list, nil
 }
 
