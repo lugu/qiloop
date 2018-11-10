@@ -7,7 +7,7 @@ import (
 )
 
 func MachineID() string {
-	id, err := machineid.ID()
+	id, err := machineid.ProtectedID("qi-messaging")
 	if err != nil {
 		log.Fatalf("OS not supported: failed to read machine-id: %s", err)
 	}

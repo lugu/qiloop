@@ -27,6 +27,27 @@ func (s *ServiceDirectoryImpl) Activate(sess *session.Session,
 	s.signal = signal
 }
 
+func checkServiceInfo(i ServiceInfo) error {
+	if i.Name == "" {
+		return fmt.Errorf("empty name not allowed")
+	}
+	if i.MachineId == "" {
+		return fmt.Errorf("empty machine id not allowed")
+	}
+	if i.ProcessId == 0 {
+		return fmt.Errorf("process id zero not allowed")
+	}
+	if len(i.Endpoints) == 0 {
+		return fmt.Errorf("missing end point")
+	}
+	for _, e := range i.Endpoints {
+		if e == "" {
+			return fmt.Errorf("empty endpoint not allowed")
+		}
+	}
+	return nil
+}
+
 func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err error) {
 	for _, info = range s.services {
 		if info.Name == service {
@@ -45,6 +66,9 @@ func (s *ServiceDirectoryImpl) Services() ([]ServiceInfo, error) {
 }
 
 func (s *ServiceDirectoryImpl) RegisterService(newInfo ServiceInfo) (uint32, error) {
+	if err := checkServiceInfo(newInfo); err != nil {
+		return 0, err
+	}
 	for _, info := range s.staging {
 		if info.Name == newInfo.Name {
 			return 0, fmt.Errorf("Service name already staging: %s", info.Name)
@@ -56,6 +80,7 @@ func (s *ServiceDirectoryImpl) RegisterService(newInfo ServiceInfo) (uint32, err
 		}
 	}
 	s.lastUuid++
+	newInfo.ServiceId = s.lastUuid
 	s.staging[s.lastUuid] = newInfo
 	return s.lastUuid, nil
 }
@@ -91,13 +116,20 @@ func (s *ServiceDirectoryImpl) ServiceReady(id uint32) error {
 }
 
 func (s *ServiceDirectoryImpl) UpdateServiceInfo(i ServiceInfo) error {
-	for id, info := range s.services {
-		if info.Name == i.Name {
-			s.services[id] = i
-			return nil
-		}
+	if err := checkServiceInfo(i); err != nil {
+		return err
 	}
-	return fmt.Errorf("Service not found: %s", i.Name)
+
+	info, ok := s.services[i.ServiceId]
+	if !ok {
+		return fmt.Errorf("Service not found: %d (%s)", i.ServiceId, i.Name)
+	}
+	if info.Name != i.Name { // can not change name
+		return fmt.Errorf("Invalid name: %s (expected: %s)", i.Name, info.Name)
+	}
+
+	s.services[i.ServiceId] = i
+	return nil
 }
 
 func (s *ServiceDirectoryImpl) MachineId() (string, error) {
