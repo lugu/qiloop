@@ -127,7 +127,8 @@ func (e *endPoint) closeWith(err error) error {
 	e.handlerMutex.Lock()
 	defer e.handlerMutex.Unlock()
 
-	ret := e.conn.Close()
+	e.conn.Close()
+
 	var wait sync.WaitGroup
 	wait.Add(len(e.closers))
 	for id, c := range e.closers {
@@ -144,12 +145,12 @@ func (e *endPoint) closeWith(err error) error {
 		}(c)
 	}
 	wait.Wait()
-	return ret
+	return nil
 }
 
 // Close wait for a message to be received.
 func (e *endPoint) Close() error {
-	return e.closeWith(io.EOF)
+	return e.closeWith(nil)
 }
 
 // RemoveHandler unregister the associated Filter and Consumer.
@@ -223,30 +224,28 @@ func (e *endPoint) dispatch(msg *Message) error {
 // by one.
 func (e *endPoint) process() {
 	queue := make(chan *Message, 10)
-	defer close(queue)
+	var err error
 
 	go func() {
 		for msg := range queue {
 			e.dispatch(msg)
 		}
+		e.closeWith(err)
 	}()
-	var err error
 
 	for {
 		msg := new(Message)
-		err := msg.Read(e.conn)
+		err = msg.Read(e.conn)
 		if err == io.EOF {
 			log.Printf("remote connection closed")
 			break
 		} else if err != nil {
-			// FIXME: proper error management: recover from a
-			// corrupted message by discarding the crap.
 			log.Printf("error: closing connection: %s", err)
 			break
 		}
 		queue <- msg
 	}
-	e.closeWith(err)
+	close(queue)
 }
 
 // Receive wait for a message to be received.
