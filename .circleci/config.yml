@@ -1,0 +1,16 @@
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:latest
+    working_directory: /go/src/github.com/lugu/qiloop
+    steps:
+      - checkout
+      - run: go get github.com/lugu/qiloop/...
+      - run: go generate github.com/lugu/qiloop/bus/...
+      - run: go generate github.com/lugu/qiloop/cmd/...
+      - run: go generate github.com/lugu/qiloop/meta/...
+      - run: go generate github.com/lugu/qiloop/type/...
+      - run: go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic -timeout 8m
+      - run: bash <(curl -s https://codecov.io/bash)
