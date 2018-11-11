@@ -133,7 +133,7 @@ func NewInt8Type() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt8").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadInt8").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt8").Call(jen.Id(reader))
 		},
 	}
 }
@@ -148,7 +148,7 @@ func NewUint8Type() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint8").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadUint8").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint8").Call(jen.Id(reader))
 		},
 	}
 }
@@ -163,7 +163,7 @@ func NewInt16Type() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt16").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadInt16").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt16").Call(jen.Id(reader))
 		},
 	}
 }
@@ -178,7 +178,7 @@ func NewUint16Type() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint16").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadUint16").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint16").Call(jen.Id(reader))
 		},
 	}
 }
@@ -193,7 +193,7 @@ func NewLongType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadInt64").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt64").Call(jen.Id(reader))
 		},
 	}
 }
@@ -208,7 +208,7 @@ func NewULongType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadUint64").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint64").Call(jen.Id(reader))
 		},
 	}
 }
@@ -223,7 +223,7 @@ func NewFloatType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadFloat32").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadFloat32").Call(jen.Id(reader))
 		},
 	}
 }
@@ -253,7 +253,7 @@ func NewIntType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadInt32").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt32").Call(jen.Id(reader))
 		},
 	}
 }
@@ -268,7 +268,7 @@ func NewUIntType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadUint32").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint32").Call(jen.Id(reader))
 		},
 	}
 }
@@ -283,7 +283,7 @@ func NewStringType() Type {
 			return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadString").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadString").Call(jen.Id(reader))
 		},
 	}
 }
@@ -330,7 +330,7 @@ func NewBoolType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteBool").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Id("basic.ReadBool").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadBool").Call(jen.Id(reader))
 		},
 	}
 }

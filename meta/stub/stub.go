@@ -117,8 +117,10 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 		code = jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Return().List(
 				jen.Nil(),
-				jen.Id(`fmt.Errorf("cannot read `+param.Name+
-					`: %s", err)`),
+				jen.Qual("fmt", "Errorf").Call(
+					jen.Lit("cannot read "+param.Name+": %s"),
+					jen.Err(),
+				),
 			),
 		)
 		writing = append(writing, code)

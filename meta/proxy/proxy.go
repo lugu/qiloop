@@ -32,9 +32,15 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 			jen.Lit(serviceName),
 			jen.Id("obj"),
 		),
-		jen.Id(`if err != nil {
-			return nil, fmt.Errorf("failed to contact service: %s", err)
-		}`),
+		jen.If(jen.Err().Op("!=").Nil()).Block(
+			jen.Return().List(
+				jen.Nil(),
+				jen.Qual("fmt", "Errorf").Call(
+					jen.Lit("failed to contact service: %s"),
+					jen.Err(),
+				),
+			),
+		),
 		jen.Id(`return &`+proxyName+`{ proxy }, nil`),
 	)
 	file.Func().Params(
