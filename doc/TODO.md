@@ -1,4 +1,6 @@
 Unsorted todo list:
+- proxy:
+    - generate basic methods without declaring them in the IDL
 - session:
     - session: register callback for service disconnection
 - idl:
