@@ -8,6 +8,7 @@ Unsorted todo list:
     - reduce the number of goroutines
         - use sync group for closers or scatter/gather
         - replace consumer callback with a chan
+    - prefer RWLocks
     - no init() method on the package
     - no globals
     - debug:
