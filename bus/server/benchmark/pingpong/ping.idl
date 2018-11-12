@@ -1,0 +1,6 @@
+package pingpong
+
+interface PingPong
+        fn ping(a: str)
+	sig pong(a: str)
+end
