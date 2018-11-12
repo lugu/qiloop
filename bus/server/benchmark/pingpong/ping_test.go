@@ -3,7 +3,10 @@ package pingpong_test
 import (
 	"github.com/lugu/qiloop/bus/server/benchmark/pingpong"
 	"github.com/lugu/qiloop/bus/server/benchmark/pingpong/proxy"
-	"github.com/lugu/qiloop/bus/server/directory"
+	dir "github.com/lugu/qiloop/bus/server/directory"
+	sess "github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus/util"
+	"testing"
 )
 
 func TestPingPong(t *testing.T) {
@@ -16,8 +19,8 @@ func TestPingPong(t *testing.T) {
 	go server.Run()
 	defer server.Stop()
 
-	service := pingpong.PingPongObject(NewPingPong())
-	_, err := server.NewService("PingPong", service)
+	service := pingpong.PingPongObject(pingpong.NewPingPong())
+	_, err = server.NewService("PingPong", service)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +33,10 @@ func TestPingPong(t *testing.T) {
 	client, err := services.PingPong()
 
 	cancel := make(chan int)
-	pong := client.SignalPong(cancel)
+	pong, err := client.SignalPong(cancel)
+	if err != nil {
+		panic(err)
+	}
 
 	client.Ping("hello")
 	answer := <-pong

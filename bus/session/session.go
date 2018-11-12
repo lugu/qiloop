@@ -74,7 +74,8 @@ func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err er
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
 	}
-	proxy, err := metaProxy(endpoint, info.ServiceId, objectID)
+	c := client.NewClient(endpoint)
+	proxy, err := metaProxy(c, info.ServiceId, objectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service meta object (%s): %s", info.Name, err)
 	}
@@ -121,13 +122,38 @@ func (s *Session) Object(ref object.ObjectReference) (o object.Object, err error
 
 // metaProxy is to create proxies to the directory and server
 // services needed for a session.
-func metaProxy(e net.EndPoint, serviceID, objectID uint32) (p bus.Proxy, err error) {
-	c := client.NewClient(e)
+func metaProxy(c bus.Client, serviceID, objectID uint32) (p bus.Proxy, err error) {
 	meta, err := bus.MetaObject(c, serviceID, objectID)
 	if err != nil {
 		return p, fmt.Errorf("Can not reach metaObject: %s", err)
 	}
 	return client.NewProxy(c, meta, serviceID, objectID), nil
+}
+
+// BindSession returns a session based on a previously established
+// conection.
+func BindSession(c bus.Client) (*Session, error) {
+	proxy, err := metaProxy(c, 1, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get directory meta object: %s", err)
+	}
+	s := new(Session)
+	s.Directory = &services.ServiceDirectoryProxy{proxy}
+
+	s.serviceList, err = s.Directory.Services()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list services: %s", err)
+	}
+	s.cancel = make(chan int)
+	s.removed, err = s.Directory.SignalServiceRemoved(s.cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe remove signal: %s", err)
+	}
+	s.added, err = s.Directory.SignalServiceAdded(s.cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe added signal: %s", err)
+	}
+	return s, nil
 }
 
 func NewSession(addr string) (bus.Session, error) {
@@ -140,32 +166,14 @@ func NewSession(addr string) (bus.Session, error) {
 		endpoint.Close()
 		return nil, fmt.Errorf("authenitcation failed: %s", err)
 	}
+	c := client.NewClient(endpoint)
 
-	proxy, err := metaProxy(endpoint, 1, 1)
+	sess, err := BindSession(c)
 	if err != nil {
 		endpoint.Close()
-		return nil, fmt.Errorf("failed to get directory meta object: %s", err)
+		return nil, err
 	}
-	s := new(Session)
-	s.Directory = &services.ServiceDirectoryProxy{proxy}
-
-	s.serviceList, err = s.Directory.Services()
-	if err != nil {
-		endpoint.Close()
-		return nil, fmt.Errorf("failed to list services: %s", err)
-	}
-	s.cancel = make(chan int)
-	s.removed, err = s.Directory.SignalServiceRemoved(s.cancel)
-	if err != nil {
-		endpoint.Close()
-		return nil, fmt.Errorf("failed to subscribe remove signal: %s", err)
-	}
-	s.added, err = s.Directory.SignalServiceAdded(s.cancel)
-	if err != nil {
-		endpoint.Close()
-		return nil, fmt.Errorf("failed to subscribe added signal: %s", err)
-	}
-	return s, nil
+	return sess, nil
 }
 
 func (s *Session) updateServiceList() {

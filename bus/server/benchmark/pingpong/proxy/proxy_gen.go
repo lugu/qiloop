@@ -92,9 +92,9 @@ func (p *PingPongProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	}
 	return nil
 }
-func (p *PingPongProxy) MetaObject(P0 uint32) (not_found_in_scope_MetaObject, error) {
+func (p *PingPongProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
-	var ret not_found_in_scope_MetaObject
+	var ret object.MetaObject
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	if err = basic.WriteUint32(P0, buf); err != nil {
@@ -105,7 +105,7 @@ func (p *PingPongProxy) MetaObject(P0 uint32) (not_found_in_scope_MetaObject, er
 		return ret, fmt.Errorf("call metaObject failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = Readnot_found_in_scope_MetaObject(buf)
+	ret, err = object.ReadMetaObject(buf)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse metaObject response: %s", err)
 	}
@@ -389,14 +389,5 @@ func Readnot_found_in_scope_MethodStatistics(r io.Reader) (s not_found_in_scope_
 	return s, nil
 }
 func Writenot_found_in_scope_MethodStatistics(s not_found_in_scope_MethodStatistics, w io.Writer) (err error) {
-	return nil
-}
-
-type not_found_in_scope_MetaObject struct{}
-
-func Readnot_found_in_scope_MetaObject(r io.Reader) (s not_found_in_scope_MetaObject, err error) {
-	return s, nil
-}
-func Writenot_found_in_scope_MetaObject(s not_found_in_scope_MetaObject, w io.Writer) (err error) {
 	return nil
 }

@@ -47,6 +47,8 @@ type EndPoint interface {
 
 	// Close close the underlying connection
 	Close() error
+
+	String() string
 }
 
 type endPoint struct {
@@ -267,6 +269,11 @@ func (e *endPoint) ReceiveAny() (*Message, error) {
 		return nil, io.EOF
 	}
 	return msg, nil
+}
+
+func (e *endPoint) String() string {
+	return e.conn.RemoteAddr().Network() + "://" +
+		e.conn.RemoteAddr().String()
 }
 
 func NewPipe() (EndPoint, EndPoint) {

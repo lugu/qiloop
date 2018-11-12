@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
@@ -411,8 +412,8 @@ type Context struct {
 	Authenticated bool
 }
 
-func NewContext(c gonet.Conn) *Context {
-	return &Context{net.NewEndPoint(c), false}
+func NewContext(e net.EndPoint) *Context {
+	return &Context{e, false}
 }
 
 // Firewall ensures an endpoint talks only to autorized services.
@@ -427,15 +428,19 @@ func Firewall(m *net.Message, from *Context) error {
 // Server listen from incomming connections, set-up the end points and
 // forward the EndPoint to the dispatcher.
 type Server struct {
-	listen        gonet.Listener
-	addrs         []string
-	session       session.Session
+	listen gonet.Listener
+	addrs  []string
+	// FIXME: use bus.Session here and create a localSession just
+	// like there is a localClient. Otherwise, we will have
+	// network connections with encryption and authentication each
+	// time two objects of the same process communicate.
+	session       *session.Session
 	Router        *Router
 	contexts      map[*Context]bool
 	contextsMutex sync.Mutex
 }
 
-func NewServer(session session.Session, addr string) (*Server, error) {
+func NewServer(session *session.Session, addr string) (*Server, error) {
 	l, err := net.Listen(addr)
 	if err != nil {
 		return nil, err
@@ -483,33 +488,35 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	service.Activate(&s.session, uid)
+	service.Activate(s.session, uid)
 	return service, nil
 }
 
 func StandAloneServer(l gonet.Listener, r *Router) *Server {
-
-	s := make(map[*Context]bool)
-	r.Activate(nil)
-	return &Server{
+	s := &Server{
 		listen:        l,
 		Router:        r,
-		contexts:      s,
+		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 	}
+
+	// FIXME activate on run.
+	r.Activate(nil)
+	// FIXME: ignore error until Activate is moved to Run()
+	s.session, _ = session.BindSession(s.NewClient())
+	return s
 }
 
-func (s *Server) handle(c gonet.Conn) error {
-	context := NewContext(c)
+func (s *Server) handle(e net.EndPoint) error {
+	context := NewContext(e)
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {
 		err := Firewall(msg, context)
 		if err != nil {
-			log.Printf("missing authentication from %s:%s: %v",
-				c.RemoteAddr().Network(), c.RemoteAddr().String(),
-				msg.Header)
+			log.Printf("missing authentication from %s: %#v",
+				e.String(), msg.Header)
 			return util.ReplyError(context.EndPoint, msg, err)
 		}
 		return s.Router.Dispatch(msg, context)
@@ -535,7 +542,7 @@ func (s *Server) Run() error {
 		if err != nil {
 			return err
 		}
-		err = s.handle(c)
+		err = s.handle(net.NewEndPoint(c))
 		if err != nil {
 			log.Printf("Server connection error: %s", err)
 			c.Close()
@@ -563,4 +570,10 @@ func (s *Server) Stop() error {
 	err := s.listen.Close()
 	s.closeAll()
 	return err
+}
+
+func (s *Server) NewClient() bus.Client {
+	ctl, srv := net.NewPipe()
+	s.handle(srv)
+	return client.NewClient(ctl)
 }
