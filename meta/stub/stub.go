@@ -308,7 +308,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	file.Func().Params(
 		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id("Activate").Params(
-		jen.Id("sess").Op("*").Qual("github.com/lugu/qiloop/bus/session", "Session"),
+		jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("serviceID"),
 		jen.Id("objectID").Uint32(),
 	).Block(
@@ -385,7 +385,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	definitions := make([]jen.Code, 0)
 	signalDefinitions := make([]jen.Code, 0)
 	activate := jen.Id("Activate").Params(
-		jen.Id("sess").Op("*").Qual("github.com/lugu/qiloop/bus/session", "Session"),
+		jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("serviceID"),
 		jen.Id("objectID").Uint32(),
 		jen.Id("signal").Id(itf.Name+"SignalHelper"),

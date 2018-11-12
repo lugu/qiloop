@@ -12,7 +12,7 @@ func NewPingPong() PingPong {
 	return &impl{}
 }
 
-func (p *impl) Activate(sess *session.Session, serviceID, objectID uint32,
+func (p *impl) Activate(sess bus.Session, serviceID, objectID uint32,
 	signal PingPongSignalHelper) {
 	p.signal = signal
 }

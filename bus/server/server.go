@@ -222,14 +222,14 @@ func (o *BasicObject) NewHeader(typ uint8, action, id uint32) net.Header {
 	return net.NewHeader(typ, o.serviceID, o.objectID, action, id)
 }
 
-func (o *BasicObject) Activate(sess *session.Session, serviceID, objectID uint32) {
+func (o *BasicObject) Activate(sess bus.Session, serviceID, objectID uint32) {
 	o.serviceID = serviceID
 	o.objectID = objectID
 }
 
 type Object interface {
 	Receive(m *net.Message, from *Context) error
-	Activate(sess *session.Session, serviceID, objectID uint32)
+	Activate(sess bus.Session, serviceID, objectID uint32)
 }
 
 type Dispatcher interface {
@@ -253,7 +253,7 @@ func (o *ObjectDispatcher) Wrap(id uint32, fn bus.ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
-func (o *ObjectDispatcher) Activate(sess *session.Session, serviceID, objectID uint32) {
+func (o *ObjectDispatcher) Activate(sess bus.Session, serviceID, objectID uint32) {
 }
 func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
 	if o.wrapper == nil {
@@ -299,7 +299,7 @@ func (n *ServiceImpl) Add(o Object) (uint32, error) {
 	return index, nil
 }
 
-func (s *ServiceImpl) Activate(sess *session.Session, serviceID uint32) {
+func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) {
 	for objectID, obj := range s.objects {
 		obj.Activate(sess, serviceID, objectID)
 	}
@@ -334,9 +334,8 @@ func (n *ServiceImpl) WaitTerminate() chan int {
 
 // Router dispatch the incomming messages.
 type Router struct {
-	services  map[uint32]*ServiceImpl
-	nextIndex uint32
-	mutex     sync.Mutex
+	services map[uint32]*ServiceImpl
+	mutex    sync.Mutex
 }
 
 func NewRouter(authenticator Object) *Router {
@@ -348,17 +347,16 @@ func NewRouter(authenticator Object) *Router {
 				},
 			},
 		},
-		nextIndex: 1,
 	}
 }
 
-func (r *Router) Activate(sess *session.Session) {
+func (r *Router) Activate(sess bus.Session) {
 	for serviceID, service := range r.services {
 		service.Activate(sess, serviceID)
 	}
 }
 
-func (r *Router) Register(uid uint32, s *ServiceImpl) error {
+func (r *Router) Add(uid uint32, s *ServiceImpl) error {
 	r.mutex.Lock()
 	_, ok := r.services[uid]
 	if ok {
@@ -368,22 +366,6 @@ func (r *Router) Register(uid uint32, s *ServiceImpl) error {
 	r.services[uid] = s
 	r.mutex.Unlock()
 	return nil
-}
-
-func (r *Router) Add(s *ServiceImpl) (uint32, error) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	for {
-		_, ok := r.services[r.nextIndex]
-		if !ok {
-			break
-		}
-		r.nextIndex++
-	}
-	uid := r.nextIndex
-	r.nextIndex++
-	r.services[uid] = s
-	return uid, nil
 }
 
 func (r *Router) Remove(serviceID uint32) error {
@@ -484,7 +466,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	}
 
 	service := NewService(object)
-	err = s.Router.Register(uid, service)
+	err = s.Router.Add(uid, service)
 	if err != nil {
 		return nil, err
 	}
@@ -499,16 +481,10 @@ func StandAloneServer(l gonet.Listener, r *Router) *Server {
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 	}
-
-	// FIXME activate on run.
-	r.Activate(nil)
-	// FIXME: ignore error until Activate is moved to Run()
-	s.session, _ = session.BindSession(s.NewClient())
 	return s
 }
 
-func (s *Server) handle(e net.EndPoint) error {
-	context := NewContext(e)
+func (s *Server) handle(context *Context) error {
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true
 	}
@@ -516,7 +492,7 @@ func (s *Server) handle(e net.EndPoint) error {
 		err := Firewall(msg, context)
 		if err != nil {
 			log.Printf("missing authentication from %s: %#v",
-				e.String(), msg.Header)
+				context.EndPoint.String(), msg.Header)
 			return util.ReplyError(context.EndPoint, msg, err)
 		}
 		return s.Router.Dispatch(msg, context)
@@ -537,17 +513,30 @@ func (s *Server) handle(e net.EndPoint) error {
 }
 
 func (s *Server) Run() error {
+
+	go func() {
+		if s.session == nil {
+			var err error
+			s.session, err = session.BindSession(s.NewClient())
+			if err != nil {
+				panic(err)
+			}
+		}
+		s.Router.Activate(s.session)
+	}()
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
 			return err
 		}
-		err = s.handle(net.NewEndPoint(c))
+		context := NewContext(net.NewEndPoint(c))
+		err = s.handle(context)
 		if err != nil {
 			log.Printf("Server connection error: %s", err)
 			c.Close()
 		}
 	}
+	return nil
 }
 
 // CloseAll close the connecction. Return the first error if any.
@@ -574,6 +563,10 @@ func (s *Server) Stop() error {
 
 func (s *Server) NewClient() bus.Client {
 	ctl, srv := net.NewPipe()
-	s.handle(srv)
+	context := &Context{
+		EndPoint:      srv,
+		Authenticated: true,
+	}
+	s.handle(context)
 	return client.NewClient(ctl)
 }

@@ -4,15 +4,15 @@ package pingpong
 import (
 	"bytes"
 	"fmt"
+	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
-	session "github.com/lugu/qiloop/bus/session"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 )
 
 type PingPong interface {
-	Activate(sess *session.Session, serviceID, objectID uint32, signal PingPongSignalHelper)
+	Activate(sess bus.Session, serviceID, objectID uint32, signal PingPongSignalHelper)
 	Ping(a string) error
 }
 type PingPongSignalHelper interface {
@@ -30,7 +30,7 @@ func PingPongObject(impl PingPong) server.Object {
 	stb.obj.Wrapper[uint32(0x64)] = stb.Ping
 	return &stb
 }
-func (s *stubPingPong) Activate(sess *session.Session, serviceID, objectID uint32) {
+func (s *stubPingPong) Activate(sess bus.Session, serviceID, objectID uint32) {
 	s.obj.Activate(sess, serviceID, objectID)
 	s.impl.Activate(sess, serviceID, objectID, s)
 }

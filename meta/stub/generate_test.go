@@ -4,9 +4,9 @@ package stub_test
 import (
 	"bytes"
 	"fmt"
+	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
-	session "github.com/lugu/qiloop/bus/session"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
@@ -14,7 +14,7 @@ import (
 )
 
 type Object interface {
-	Activate(sess *session.Session, serviceID, objectID uint32, signal ObjectSignalHelper)
+	Activate(sess bus.Session, serviceID, objectID uint32, signal ObjectSignalHelper)
 	RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error)
 	UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error
 	MetaObject(P0 uint32) (MetaObject, error)
@@ -46,7 +46,7 @@ func ObjectObject(impl Object) server.Object {
 	stb.obj.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
 	return &stb
 }
-func (s *stubObject) Activate(sess *session.Session, serviceID, objectID uint32) {
+func (s *stubObject) Activate(sess bus.Session, serviceID, objectID uint32) {
 	s.obj.Activate(sess, serviceID, objectID)
 	s.impl.Activate(sess, serviceID, objectID, s)
 }

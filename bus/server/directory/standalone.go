@@ -36,7 +36,7 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 	}
 
 	object := ServiceDirectoryObject(impl)
-	_, err = router.Add(server.NewService(object))
+	_, err = router.Register(server.NewService(object))
 	if err != nil {
 		return nil, err
 	}

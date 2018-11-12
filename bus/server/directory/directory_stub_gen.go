@@ -4,16 +4,16 @@ package directory
 import (
 	"bytes"
 	"fmt"
+	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
-	session "github.com/lugu/qiloop/bus/session"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"io"
 )
 
 type ServiceDirectory interface {
-	Activate(sess *session.Session, serviceID, objectID uint32, signal ServiceDirectorySignalHelper)
+	Activate(sess bus.Session, serviceID, objectID uint32, signal ServiceDirectorySignalHelper)
 	Service(P0 string) (ServiceInfo, error)
 	Services() ([]ServiceInfo, error)
 	RegisterService(P0 ServiceInfo) (uint32, error)
@@ -46,7 +46,7 @@ func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	stb.obj.Wrapper[uint32(0x6d)] = stb._socketOfService
 	return &stb
 }
-func (s *stubServiceDirectory) Activate(sess *session.Session, serviceID, objectID uint32) {
+func (s *stubServiceDirectory) Activate(sess bus.Session, serviceID, objectID uint32) {
 	s.obj.Activate(sess, serviceID, objectID)
 	s.impl.Activate(sess, serviceID, objectID, s)
 }

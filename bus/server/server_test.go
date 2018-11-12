@@ -27,7 +27,7 @@ func TestNewServer(t *testing.T) {
 
 	service := server.NewService(&object)
 	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
-	router.Add(service)
+	router.Add(1, service)
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
 
@@ -112,7 +112,7 @@ func TestServerReturnError(t *testing.T) {
 
 	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
 
-	router.Add(server.NewService(obj))
+	router.Add(1, server.NewService(obj))
 
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
@@ -173,7 +173,7 @@ func TestStandAloneInit(t *testing.T) {
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
 	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
-	router.Add(server.NewService(obj))
+	router.Add(1, server.NewService(obj))
 
 	srv := server.StandAloneServer(listener, router)
 	go srv.Run()
