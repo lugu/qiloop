@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
@@ -410,52 +409,71 @@ func Firewall(m *net.Message, from *Context) error {
 // Server listen from incomming connections, set-up the end points and
 // forward the EndPoint to the dispatcher.
 type Server struct {
-	listen gonet.Listener
-	addrs  []string
-	// FIXME: use bus.Session here and create a localSession just
-	// like there is a localClient. Otherwise, we will have
-	// network connections with encryption and authentication each
-	// time two objects of the same process communicate.
-	session       *session.Session
+	listen        gonet.Listener
+	addrs         []string
+	session       bus.Session
 	Router        *Router
 	contexts      map[*Context]bool
 	contextsMutex sync.Mutex
 }
 
+// NewServer starts a new server which listen to addr and serve
+// incomming requests. It uses the given session to register and
+// activate the new services.
+// FIXME: update NewServer signature to add an authenticator
 func NewServer(session *session.Session, addr string) (*Server, error) {
 	l, err := net.Listen(addr)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Server{
-		listen:  l,
-		addrs:   []string{addr},
-		session: session,
-		// FIXME: update NewServer signature to add an
-		// authenticator
+	s := &Server{
+		listen:        l,
+		addrs:         []string{addr},
+		session:       session,
 		Router:        NewRouter(ServiceAuthenticate(Yes{})),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
-	}, nil
+	}
+	go s.run()
+	return s, nil
+}
+
+// StandAloneServer starts a new server
+func StandAloneServer(listener gonet.Listener, authenticator Object,
+	directory Object) (*Server, error) {
+
+	router := NewRouter(authenticator)
+
+	if directory != nil {
+		err := router.Add(1, NewService(directory))
+		if err != nil {
+			return nil, err
+		}
+		// TODO: create the session here based on a local proxy to the
+		// directory object.
+	}
+
+	s := &Server{
+		listen:        listener,
+		Router:        router,
+		contexts:      make(map[*Context]bool),
+		contextsMutex: sync.Mutex{},
+	}
+	s.session = s.localSession()
+	go s.run()
+	return s, nil
+}
+
+func (s *Server) localSession() bus.Session {
+	return &localSession{
+		server: s,
+	}
 }
 
 type Service interface {
 	Terminate() error
 	WaitTerminate() chan int
-}
-
-func (s *Server) register(name string, object Object) (uint32, error) {
-	info := services.ServiceInfo{
-		Name:      name,
-		ServiceId: 0,
-		MachineId: util.MachineID(),
-		ProcessId: util.ProcessID(),
-		Endpoints: s.addrs,
-		SessionId: "", // TODO
-	}
-
-	return s.session.Directory.RegisterService(info)
 }
 
 func (s *Server) NewService(name string, object Object) (Service, error) {
@@ -474,14 +492,19 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	return service, nil
 }
 
-func StandAloneServer(l gonet.Listener, r *Router) *Server {
-	s := &Server{
-		listen:        l,
-		Router:        r,
-		contexts:      make(map[*Context]bool),
-		contextsMutex: sync.Mutex{},
-	}
-	return s
+func (s *Server) register(name string, object Object) (uint32, error) {
+	// info := services.ServiceInfo{
+	// 	Name:      name,
+	// 	ServiceId: 0,
+	// 	MachineId: util.MachineID(),
+	// 	ProcessId: util.ProcessID(),
+	// 	Endpoints: s.addrs,
+	// 	SessionId: "", // TODO
+	// }
+
+	// return s.session.Directory.RegisterService(info)
+	panic("missing")
+	return 0, nil
 }
 
 func (s *Server) handle(context *Context) error {
@@ -512,18 +535,9 @@ func (s *Server) handle(context *Context) error {
 	return nil
 }
 
-func (s *Server) Run() error {
+func (s *Server) run() error {
 
-	go func() {
-		if s.session == nil {
-			var err error
-			s.session, err = session.BindSession(s.NewClient())
-			if err != nil {
-				panic(err)
-			}
-		}
-		s.Router.Activate(s.session)
-	}()
+	go s.Router.Activate(s.session)
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
@@ -569,4 +583,19 @@ func (s *Server) NewClient() bus.Client {
 	}
 	s.handle(context)
 	return client.NewClient(ctl)
+}
+
+type localSession struct {
+	server *Server
+}
+
+func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
+	panic("not implemented")
+}
+func (s *localSession) Object(ref object.ObjectReference) (object.Object,
+	error) {
+	panic("not implemented")
+}
+func (s *localSession) Destroy() error {
+	panic("not implemented")
 }

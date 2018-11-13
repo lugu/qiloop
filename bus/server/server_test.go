@@ -5,6 +5,7 @@ import (
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
+	"github.com/lugu/qiloop/bus/server/directory"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
@@ -14,22 +15,19 @@ import (
 func TestNewServer(t *testing.T) {
 
 	addr := util.NewUnixAddr()
-	listener, err := net.Listen(addr)
+
+	srv, err := directory.NewServer(addr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer srv.Stop()
 
 	var object server.ObjectDispatcher
 	handler := func(d []byte) ([]byte, error) {
 		return []byte{0xab, 0xcd}, nil
 	}
 	object.Wrap(3, handler)
-
-	service := server.NewService(&object)
-	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
-	router.Add(1, service)
-	srv := server.StandAloneServer(listener, router)
-	go srv.Run()
+	srv.NewService("test", &object)
 
 	clt, err := net.DialEndPoint(addr)
 	if err != nil {
@@ -41,7 +39,7 @@ func TestNewServer(t *testing.T) {
 		panic(err)
 	}
 
-	h := net.NewHeader(net.Call, 1, 1, 3, 4)
+	h := net.NewHeader(net.Call, 2, 1, 3, 4)
 	mSent := net.NewMessage(h, make([]byte, 0))
 
 	// client is prepared to receive a message
@@ -61,8 +59,6 @@ func TestNewServer(t *testing.T) {
 
 	// server replied
 	mReceived := <-received
-
-	srv.Stop()
 
 	if mReceived.Header.Type == net.Error {
 		buf := bytes.NewBuffer(mReceived.Payload)
@@ -110,12 +106,12 @@ func TestServerReturnError(t *testing.T) {
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
 
-	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
-
-	router.Add(1, server.NewService(obj))
-
-	srv := server.StandAloneServer(listener, router)
-	go srv.Run()
+	auth := server.ServiceAuthenticate(server.Yes{})
+	srv, err := server.StandAloneServer(listener, auth, nil)
+	if err != nil {
+		panic(err)
+	}
+	srv.NewService("test", obj)
 
 	cltNet, err := net.DialEndPoint(addr)
 	if err != nil {
@@ -172,11 +168,13 @@ func TestStandAloneInit(t *testing.T) {
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
-	router := server.NewRouter(server.ServiceAuthenticate(server.Yes{}))
-	router.Add(1, server.NewService(obj))
 
-	srv := server.StandAloneServer(listener, router)
-	go srv.Run()
+	auth := server.ServiceAuthenticate(server.Yes{})
+	srv, err := server.StandAloneServer(listener, auth, nil)
+	if err != nil {
+		panic(err)
+	}
+	srv.NewService("test", obj)
 
 	clt, err := net.DialEndPoint(addr)
 	if err != nil {

@@ -16,7 +16,7 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	go server.Run()
+	defer server.Stop()
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
@@ -34,7 +34,6 @@ func TestNewServer(t *testing.T) {
 	if machineID == "" {
 		panic("empty machine id")
 	}
-	server.Stop()
 }
 
 type mockServiceDirectorySignalHelper struct {

@@ -1,7 +1,7 @@
 package pingpong
 
 import (
-	"github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus"
 )
 
 type impl struct {

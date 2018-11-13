@@ -16,7 +16,6 @@ func TestPingPong(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	go server.Run()
 	defer server.Stop()
 
 	service := pingpong.PingPongObject(pingpong.NewPingPong())

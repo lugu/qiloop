@@ -12,7 +12,7 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 	if auth == nil {
 		auth = server.Yes{}
 	}
-	router := server.NewRouter(server.ServiceAuthenticate(auth))
+	service0 := server.ServiceAuthenticate(auth)
 
 	impl := NewServiceDirectory()
 	info := ServiceInfo{
@@ -35,15 +35,11 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 		return nil, err
 	}
 
-	object := ServiceDirectoryObject(impl)
-	_, err = router.Register(server.NewService(object))
-	if err != nil {
-		return nil, err
-	}
+	service1 := ServiceDirectoryObject(impl)
 
 	listener, err := net.Listen(addr)
 	if err != nil {
 		return nil, err
 	}
-	return server.StandAloneServer(listener, router), nil
+	return server.StandAloneServer(listener, service0, service1)
 }

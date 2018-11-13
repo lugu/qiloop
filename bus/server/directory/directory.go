@@ -2,7 +2,7 @@ package directory
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sort"
@@ -23,7 +23,7 @@ func NewServiceDirectory() ServiceDirectory {
 	}
 }
 
-func (s *ServiceDirectoryImpl) Activate(sess *session.Session,
+func (s *ServiceDirectoryImpl) Activate(sess bus.Session,
 	serviceID, objectID uint32, signal ServiceDirectorySignalHelper) {
 	s.signal = signal
 }

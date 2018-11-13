@@ -16,9 +16,11 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 		t.Fatal(err)
 	}
 
-	router := server.NewRouter(server.ServiceAuthenticate(server.Dictionary(creds)))
-	srv := server.StandAloneServer(listener, router)
-	go srv.Run()
+	auth := server.ServiceAuthenticate(server.Dictionary(creds))
+	srv, err := server.StandAloneServer(listener, auth, nil)
+	if err != nil {
+		panic(err)
+	}
 
 	ep, err := net.DialEndPoint(addr)
 	if err != nil {
@@ -31,6 +33,7 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 	if !ok && err == nil {
 		t.Errorf("shall not pass: %s, %s", user, token)
 	}
+	srv.Stop()
 }
 
 func TestNewServiceAuthenticate(t *testing.T) {
