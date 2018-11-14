@@ -12,7 +12,6 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 	if auth == nil {
 		auth = server.Yes{}
 	}
-	service0 := server.ServiceAuthenticate(auth)
 
 	impl := NewServiceDirectory()
 	info := ServiceInfo{
@@ -41,5 +40,14 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return server.StandAloneServer(listener, service0, service1)
+	s, err := server.StandAloneServer(listener, auth, impl.Namespace())
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.NewService("DirectoryService", service1)
+	if err != nil {
+		s.Stop()
+		return nil, err
+	}
+	return s, nil
 }

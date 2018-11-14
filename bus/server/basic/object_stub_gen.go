@@ -14,7 +14,7 @@ import (
 )
 
 type Object interface {
-	Activate(sess bus.Session, serviceID, objectID uint32, signal ObjectSignalHelper)
+	Activate(sess bus.Session, serviceID, objectID uint32, signal ObjectSignalHelper) error
 	RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error)
 	UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error
 	MetaObject(P0 uint32) (MetaObject, error)
@@ -46,9 +46,9 @@ func ObjectObject(impl Object) server.Object {
 	stb.obj.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
 	return &stb
 }
-func (s *stubObject) Activate(sess bus.Session, serviceID, objectID uint32) {
+func (s *stubObject) Activate(sess bus.Session, serviceID, objectID uint32) error {
 	s.obj.Activate(sess, serviceID, objectID)
-	s.impl.Activate(sess, serviceID, objectID, s)
+	return s.impl.Activate(sess, serviceID, objectID, s)
 }
 func (s *stubObject) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)

@@ -12,7 +12,7 @@ import (
 )
 
 type PingPong interface {
-	Activate(sess bus.Session, serviceID, objectID uint32, signal PingPongSignalHelper)
+	Activate(sess bus.Session, serviceID, objectID uint32, signal PingPongSignalHelper) error
 	Ping(a string) error
 }
 type PingPongSignalHelper interface {
@@ -30,9 +30,9 @@ func PingPongObject(impl PingPong) server.Object {
 	stb.obj.Wrapper[uint32(0x64)] = stb.Ping
 	return &stb
 }
-func (s *stubPingPong) Activate(sess bus.Session, serviceID, objectID uint32) {
+func (s *stubPingPong) Activate(sess bus.Session, serviceID, objectID uint32) error {
 	s.obj.Activate(sess, serviceID, objectID)
-	s.impl.Activate(sess, serviceID, objectID, s)
+	return s.impl.Activate(sess, serviceID, objectID, s)
 }
 func (s *stubPingPong) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)

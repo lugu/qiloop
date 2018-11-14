@@ -98,7 +98,9 @@ func (s *serviceAuthenticate) Receive(m *net.Message, from *Context) error {
 	return from.EndPoint.Send(reply)
 }
 
-func (s *serviceAuthenticate) Activate(sess bus.Session, serviceID, objectID uint32) {
+func (s *serviceAuthenticate) Activate(sess bus.Session, serviceID,
+	objectID uint32) error {
+	return nil
 }
 
 func (s *serviceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([]byte, error) {

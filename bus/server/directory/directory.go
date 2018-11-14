@@ -3,6 +3,7 @@ package directory
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sort"
@@ -15,7 +16,7 @@ type ServiceDirectoryImpl struct {
 	signal   ServiceDirectorySignalHelper
 }
 
-func NewServiceDirectory() ServiceDirectory {
+func NewServiceDirectory() *ServiceDirectoryImpl {
 	return &ServiceDirectoryImpl{
 		staging:  make(map[uint32]ServiceInfo),
 		services: make(map[uint32]ServiceInfo),
@@ -23,9 +24,10 @@ func NewServiceDirectory() ServiceDirectory {
 	}
 }
 
-func (s *ServiceDirectoryImpl) Activate(sess bus.Session,
-	serviceID, objectID uint32, signal ServiceDirectorySignalHelper) {
+func (s *ServiceDirectoryImpl) Activate(sess bus.Session, serviceID,
+	objectID uint32, signal ServiceDirectorySignalHelper) error {
 	s.signal = signal
+	return nil
 }
 
 func checkServiceInfo(i ServiceInfo) error {
@@ -147,4 +149,8 @@ func (s *ServiceDirectoryImpl) MachineId() (string, error) {
 
 func (s *ServiceDirectoryImpl) _socketOfService(P0 uint32) (o object.ObjectReference, err error) {
 	return o, fmt.Errorf("_socketOfService not yet implemented")
+}
+
+func (s *ServiceDirectoryImpl) Namespace() server.Namespace {
+	panic("Not yet implemented")
 }

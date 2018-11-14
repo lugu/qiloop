@@ -13,7 +13,7 @@ import (
 )
 
 type ServiceDirectory interface {
-	Activate(sess bus.Session, serviceID, objectID uint32, signal ServiceDirectorySignalHelper)
+	Activate(sess bus.Session, serviceID, objectID uint32, signal ServiceDirectorySignalHelper) error
 	Service(P0 string) (ServiceInfo, error)
 	Services() ([]ServiceInfo, error)
 	RegisterService(P0 ServiceInfo) (uint32, error)
@@ -46,9 +46,9 @@ func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	stb.obj.Wrapper[uint32(0x6d)] = stb._socketOfService
 	return &stb
 }
-func (s *stubServiceDirectory) Activate(sess bus.Session, serviceID, objectID uint32) {
+func (s *stubServiceDirectory) Activate(sess bus.Session, serviceID, objectID uint32) error {
 	s.obj.Activate(sess, serviceID, objectID)
-	s.impl.Activate(sess, serviceID, objectID, s)
+	return s.impl.Activate(sess, serviceID, objectID, s)
 }
 func (s *stubServiceDirectory) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)

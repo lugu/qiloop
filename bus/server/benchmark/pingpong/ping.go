@@ -13,8 +13,9 @@ func NewPingPong() PingPong {
 }
 
 func (p *impl) Activate(sess bus.Session, serviceID, objectID uint32,
-	signal PingPongSignalHelper) {
+	signal PingPongSignalHelper) error {
 	p.signal = signal
+	return nil
 }
 
 func (p *impl) Ping(a string) error {

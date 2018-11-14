@@ -221,14 +221,16 @@ func (o *BasicObject) NewHeader(typ uint8, action, id uint32) net.Header {
 	return net.NewHeader(typ, o.serviceID, o.objectID, action, id)
 }
 
-func (o *BasicObject) Activate(sess bus.Session, serviceID, objectID uint32) {
+func (o *BasicObject) Activate(sess bus.Session, serviceID,
+	objectID uint32) error {
 	o.serviceID = serviceID
 	o.objectID = objectID
+	return nil
 }
 
 type Object interface {
 	Receive(m *net.Message, from *Context) error
-	Activate(sess bus.Session, serviceID, objectID uint32)
+	Activate(sess bus.Session, serviceID, objectID uint32) error
 }
 
 type Dispatcher interface {
@@ -298,10 +300,14 @@ func (n *ServiceImpl) Add(o Object) (uint32, error) {
 	return index, nil
 }
 
-func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) {
+func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) error {
 	for objectID, obj := range s.objects {
-		obj.Activate(sess, serviceID, objectID)
+		err := obj.Activate(sess, serviceID, objectID)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (n *ServiceImpl) Remove(objectID uint32) error {
@@ -349,20 +355,24 @@ func NewRouter(authenticator Object) *Router {
 	}
 }
 
-func (r *Router) Activate(sess bus.Session) {
+func (r *Router) Activate(sess bus.Session) error {
 	for serviceID, service := range r.services {
-		service.Activate(sess, serviceID)
+		err := service.Activate(sess, serviceID)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (r *Router) Add(uid uint32, s *ServiceImpl) error {
+func (r *Router) Add(serviceID uint32, s *ServiceImpl) error {
 	r.mutex.Lock()
-	_, ok := r.services[uid]
+	_, ok := r.services[serviceID]
 	if ok {
 		r.mutex.Unlock()
-		return fmt.Errorf("service id already used: %d", uid)
+		return fmt.Errorf("service id already used: %d", serviceID)
 	}
-	r.services[uid] = s
+	r.services[serviceID] = s
 	r.mutex.Unlock()
 	return nil
 }
@@ -411,6 +421,7 @@ func Firewall(m *net.Message, from *Context) error {
 type Server struct {
 	listen        gonet.Listener
 	addrs         []string
+	namespace     Namespace
 	session       bus.Session
 	Router        *Router
 	contexts      map[*Context]bool
@@ -439,28 +450,36 @@ func NewServer(session *session.Session, addr string) (*Server, error) {
 	return s, nil
 }
 
+// ServiceDirectory to implement Namespace interface plus an
+// implementation base on bus/session.Sesssion plus a local one for
+// testing and a method to create bus.Session from Server and its
+// Namespace.
+type Namespace interface {
+	Reserve(name string) (uint32, error)
+	Remove(serviceID uint32) error
+	Activate(serviceID uint32) error
+	Resolve(name string) (uint32, error)
+	Session() bus.Session
+}
+
+// func basicNamespace(*Server) Namespace
+// func localNamespace(*Server, directory.ServiceDirectory) Namespace
+// func remoteNamespace(*session.Session) Namespace
+
 // StandAloneServer starts a new server
-func StandAloneServer(listener gonet.Listener, authenticator Object,
-	directory Object) (*Server, error) {
+func StandAloneServer(listener gonet.Listener, auth Authenticator,
+	namespace Namespace) (*Server, error) {
 
-	router := NewRouter(authenticator)
-
-	if directory != nil {
-		err := router.Add(1, NewService(directory))
-		if err != nil {
-			return nil, err
-		}
-		// TODO: create the session here based on a local proxy to the
-		// directory object.
-	}
+	service0 := ServiceAuthenticate(auth)
 
 	s := &Server{
 		listen:        listener,
-		Router:        router,
+		namespace:     namespace,
+		session:       namespace.Session(),
+		Router:        NewRouter(service0),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 	}
-	s.session = s.localSession()
 	go s.run()
 	return s, nil
 }
@@ -478,33 +497,30 @@ type Service interface {
 
 func (s *Server) NewService(name string, object Object) (Service, error) {
 
-	uid, err := s.register(name, object)
-	if err != nil {
-		return nil, err
-	}
-
 	service := NewService(object)
-	err = s.Router.Add(uid, service)
+
+	// 1. reserve the name
+	serviceID, err := s.namespace.Reserve(name)
 	if err != nil {
 		return nil, err
 	}
-	service.Activate(s.session, uid)
+	// 2. initialize the service
+	err = service.Activate(s.session, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	// 3. bring it online
+	err = s.Router.Add(serviceID, service)
+	if err != nil {
+		return nil, err
+	}
+	// 4. advertize it
+	err = s.namespace.Activate(serviceID)
+	if err != nil {
+		s.Router.Remove(serviceID)
+		return nil, err
+	}
 	return service, nil
-}
-
-func (s *Server) register(name string, object Object) (uint32, error) {
-	// info := services.ServiceInfo{
-	// 	Name:      name,
-	// 	ServiceId: 0,
-	// 	MachineId: util.MachineID(),
-	// 	ProcessId: util.ProcessID(),
-	// 	Endpoints: s.addrs,
-	// 	SessionId: "", // TODO
-	// }
-
-	// return s.session.Directory.RegisterService(info)
-	panic("missing")
-	return 0, nil
 }
 
 func (s *Server) handle(context *Context) error {
@@ -537,7 +553,17 @@ func (s *Server) handle(context *Context) error {
 
 func (s *Server) run() error {
 
-	go s.Router.Activate(s.session)
+	var ret error
+	go func() {
+		err := s.Router.Activate(s.session)
+		if err != nil {
+			ret = err
+			if err = s.Stop(); err != nil {
+				log.Printf("failed to stop server: %s", err)
+			}
+		}
+
+	}()
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
