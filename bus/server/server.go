@@ -331,6 +331,11 @@ func (n *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 }
 
 func (n *ServiceImpl) Terminate() error {
+	// TODO:
+	// - call Server.directory.Remove()
+	// - call Server.Router.Remove()
+	// - call Terminate on all objects
+	// - signal WaitTerminate condition
 	panic("not yet implemented")
 }
 func (n *ServiceImpl) WaitTerminate() chan int {
@@ -450,22 +455,6 @@ func NewServer(session *session.Session, addr string) (*Server, error) {
 	return s, nil
 }
 
-// ServiceDirectory to implement Namespace interface plus an
-// implementation base on bus/session.Sesssion plus a local one for
-// testing and a method to create bus.Session from Server and its
-// Namespace.
-type Namespace interface {
-	Reserve(name string) (uint32, error)
-	Remove(serviceID uint32) error
-	Activate(serviceID uint32) error
-	Resolve(name string) (uint32, error)
-	Session() bus.Session
-}
-
-// func basicNamespace(*Server) Namespace
-// func localNamespace(*Server, directory.ServiceDirectory) Namespace
-// func remoteNamespace(*session.Session) Namespace
-
 // StandAloneServer starts a new server
 func StandAloneServer(listener gonet.Listener, auth Authenticator,
 	namespace Namespace) (*Server, error) {
@@ -482,12 +471,6 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 	}
 	go s.run()
 	return s, nil
-}
-
-func (s *Server) localSession() bus.Session {
-	return &localSession{
-		server: s,
-	}
 }
 
 type Service interface {
@@ -609,19 +592,4 @@ func (s *Server) NewClient() bus.Client {
 	}
 	s.handle(context)
 	return client.NewClient(ctl)
-}
-
-type localSession struct {
-	server *Server
-}
-
-func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
-	panic("not implemented")
-}
-func (s *localSession) Object(ref object.ObjectReference) (object.Object,
-	error) {
-	panic("not implemented")
-}
-func (s *localSession) Destroy() error {
-	panic("not implemented")
 }

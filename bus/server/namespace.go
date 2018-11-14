@@ -1,0 +1,131 @@
+package server
+
+import (
+	"fmt"
+	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/client"
+	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/type/object"
+	"sync"
+)
+
+// ServiceDirectory to implement Namespace interface plus an
+// implementation base on bus/session.Sesssion plus a local one for
+// testing and a method to create bus.Session from Server and its
+// Namespace.
+type Namespace interface {
+	Reserve(name string) (uint32, error)
+	Remove(serviceID uint32) error
+	Activate(serviceID uint32) error
+	Resolve(name string) (uint32, error)
+	Client(serviceID uint32) (bus.Client, error)
+	// TODO: can factor out the Sesssion from the Namespace
+	// or remove Resolve and Client.
+	Session() bus.Session
+}
+
+type privateNamespace struct {
+	sync.Mutex
+	server    *Server
+	reserved  map[string]uint32
+	activated map[string]uint32
+	next      uint32
+}
+
+func PrivateNamespace(s *Server) Namespace {
+	return &privateNamespace{
+		server:    s,
+		reserved:  make(map[string]uint32),
+		activated: make(map[string]uint32),
+		next:      1,
+	}
+}
+
+func (ns *privateNamespace) Reserve(name string) (uint32, error) {
+	ns.Lock()
+	defer ns.Unlock()
+	_, ok := ns.reserved[name]
+	if ok {
+		return 0, fmt.Errorf("service %s already used", name)
+	}
+	ns.reserved[name] = ns.next
+	ns.next++
+	return ns.reserved[name], nil
+}
+
+func (ns *privateNamespace) Remove(serviceID uint32) error {
+	ns.Lock()
+	defer ns.Unlock()
+	for name, id := range ns.activated {
+		if id == serviceID {
+			delete(ns.activated, name)
+			break
+		}
+	}
+	for name, id := range ns.reserved {
+		if id == serviceID {
+			delete(ns.reserved, name)
+			return nil
+		}
+	}
+	return fmt.Errorf("service %d not in use", serviceID)
+}
+
+func (ns *privateNamespace) Activate(serviceID uint32) error {
+	ns.Lock()
+	defer ns.Unlock()
+	for name, id := range ns.reserved {
+		if id == serviceID {
+			ns.activated[name] = serviceID
+			return nil
+		}
+	}
+	return fmt.Errorf("service %d not reserved", serviceID)
+}
+
+func (ns *privateNamespace) Session() bus.Session {
+	return ns
+}
+
+func (ns *privateNamespace) Resolve(name string) (uint32, error) {
+	ns.Lock()
+	defer ns.Unlock()
+	serviceID, ok := ns.activated[name]
+	if !ok {
+		return 0, fmt.Errorf("service %s not activated", name)
+	}
+	return serviceID, nil
+}
+
+func (ns *privateNamespace) Client(serviceID uint32) (bus.Client, error) {
+	return ns.server.NewClient(), nil
+}
+
+func (ns *privateNamespace) Proxy(name string, objectID uint32) (bus.Proxy, error) {
+	serviceID, err := ns.Resolve(name)
+	if err != nil {
+		return nil, err
+	}
+	clt, err := ns.Client(serviceID)
+	if err != nil {
+		return nil, err
+	}
+	meta, err := bus.MetaObject(clt, serviceID, objectID)
+	if err != nil {
+		return nil, fmt.Errorf("cannot reach metaObject: %s", err)
+	}
+	return client.NewProxy(clt, meta, serviceID, objectID), nil
+}
+func (ns *privateNamespace) Object(ref object.ObjectReference) (object.Object,
+	error) {
+	clt, err := ns.Client(ref.ServiceID)
+	if err != nil {
+		return nil, err
+	}
+	proxy := client.NewProxy(clt, ref.MetaObject, ref.ServiceID,
+		ref.ObjectID)
+	return &services.ObjectProxy{proxy}, nil
+}
+func (ns *privateNamespace) Destroy() error {
+	return nil
+}
