@@ -11,6 +11,7 @@ import (
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
+	"io"
 	"log"
 	"math/rand"
 	gonet "net"
@@ -277,8 +278,8 @@ func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
 }
 
 type ServiceImpl struct {
+	sync.RWMutex
 	objects map[uint32]Object
-	mutex   sync.Mutex
 }
 
 func NewService(o Object) *ServiceImpl {
@@ -293,12 +294,12 @@ func (n *ServiceImpl) Add(o Object) (uint32, error) {
 	var index uint32 = 0
 	// assign the first object to the index 0. following objects will
 	// be assigned random values.
+	n.Lock()
+	defer n.Unlock()
 	if len(n.objects) != 0 {
 		index = rand.Uint32()
 	}
-	n.mutex.Lock()
 	n.objects[index] = o
-	n.mutex.Unlock()
 	return index, nil
 }
 
@@ -313,8 +314,8 @@ func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) error {
 }
 
 func (n *ServiceImpl) Remove(objectID uint32) error {
-	n.mutex.Lock()
-	defer n.mutex.Unlock()
+	n.Lock()
+	defer n.Unlock()
 	if _, ok := n.objects[objectID]; ok {
 		delete(n.objects, objectID)
 		return nil
@@ -323,9 +324,9 @@ func (n *ServiceImpl) Remove(objectID uint32) error {
 }
 
 func (n *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
-	n.mutex.Lock()
+	n.RLock()
 	o, ok := n.objects[m.Header.Object]
-	n.mutex.Unlock()
+	n.RUnlock()
 	if ok {
 		return o.Receive(m, from)
 	}
@@ -346,8 +347,8 @@ func (n *ServiceImpl) WaitTerminate() chan int {
 
 // Router dispatch the incomming messages.
 type Router struct {
+	sync.RWMutex
 	services map[uint32]*ServiceImpl
-	mutex    sync.Mutex
 }
 
 func NewRouter(authenticator Object) *Router {
@@ -363,6 +364,8 @@ func NewRouter(authenticator Object) *Router {
 }
 
 func (r *Router) Activate(sess bus.Session) error {
+	r.RLock()
+	defer r.RUnlock()
 	for serviceID, service := range r.services {
 		err := service.Activate(sess, serviceID)
 		if err != nil {
@@ -373,20 +376,20 @@ func (r *Router) Activate(sess bus.Session) error {
 }
 
 func (r *Router) Add(serviceID uint32, s *ServiceImpl) error {
-	r.mutex.Lock()
+	r.Lock()
 	_, ok := r.services[serviceID]
 	if ok {
-		r.mutex.Unlock()
+		r.Unlock()
 		return fmt.Errorf("service id already used: %d", serviceID)
 	}
 	r.services[serviceID] = s
-	r.mutex.Unlock()
+	r.Unlock()
 	return nil
 }
 
 func (r *Router) Remove(serviceID uint32) error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	if _, ok := r.services[serviceID]; ok {
 		delete(r.services, serviceID)
 		return nil
@@ -395,9 +398,9 @@ func (r *Router) Remove(serviceID uint32) error {
 }
 
 func (r *Router) Dispatch(m *net.Message, from *Context) error {
-	r.mutex.Lock()
+	r.RLock()
 	s, ok := r.services[m.Header.Service]
-	r.mutex.Unlock()
+	r.RUnlock()
 	if ok {
 		return s.Dispatch(m, from)
 	}
