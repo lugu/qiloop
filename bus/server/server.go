@@ -557,11 +557,14 @@ func (s *Server) run() error {
 		context := NewContext(net.NewEndPoint(c))
 		err = s.handle(context)
 		if err != nil {
+			if err != io.EOF {
+				ret = err
+			}
 			log.Printf("Server connection error: %s", err)
 			c.Close()
 		}
 	}
-	return nil
+	return ret
 }
 
 // CloseAll close the connecction. Return the first error if any.
