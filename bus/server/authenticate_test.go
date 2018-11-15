@@ -16,8 +16,8 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 		t.Fatal(err)
 	}
 
-	auth := server.ServiceAuthenticate(server.Dictionary(creds))
-	srv, err := server.StandAloneServer(listener, auth, nil)
+	auth := server.Dictionary(creds)
+	srv, err := server.StandAloneServer(listener, auth, server.PrivateNamespace())
 	if err != nil {
 		panic(err)
 	}

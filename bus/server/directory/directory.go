@@ -3,6 +3,8 @@ package directory
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/client"
+	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -10,6 +12,7 @@ import (
 )
 
 type ServiceDirectoryImpl struct {
+	// FIXME: lock me
 	staging  map[uint32]ServiceInfo
 	services map[uint32]ServiceInfo
 	lastUuid uint32
@@ -41,7 +44,7 @@ func checkServiceInfo(i ServiceInfo) error {
 		return fmt.Errorf("process id zero not allowed")
 	}
 	if len(i.Endpoints) == 0 {
-		return fmt.Errorf("missing end point")
+		return fmt.Errorf("missing end point (%s)", i.Name)
 	}
 	for _, e := range i.Endpoints {
 		if e == "" {
@@ -49,6 +52,14 @@ func checkServiceInfo(i ServiceInfo) error {
 		}
 	}
 	return nil
+}
+
+func (s *ServiceDirectoryImpl) info(serviceID uint32) (ServiceInfo, error) {
+	info, ok := s.services[serviceID]
+	if !ok {
+		return info, fmt.Errorf("service %d not found", serviceID)
+	}
+	return info, nil
 }
 
 func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err error) {
@@ -60,11 +71,11 @@ func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err er
 	return info, fmt.Errorf("Service not found: %s", service)
 }
 
-type services []ServiceInfo
+type serviceList []ServiceInfo
 
-func (a services) Len() int           { return len(a) }
-func (a services) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a services) Less(i, j int) bool { return a[i].ServiceId < a[j].ServiceId }
+func (a serviceList) Len() int           { return len(a) }
+func (a serviceList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a serviceList) Less(i, j int) bool { return a[i].ServiceId < a[j].ServiceId }
 
 func (s *ServiceDirectoryImpl) Services() ([]ServiceInfo, error) {
 
@@ -72,7 +83,7 @@ func (s *ServiceDirectoryImpl) Services() ([]ServiceInfo, error) {
 	for _, info := range s.services {
 		list = append(list, info)
 	}
-	sort.Sort(services(list))
+	sort.Sort(serviceList(list))
 	return list, nil
 }
 
@@ -110,7 +121,7 @@ func (s *ServiceDirectoryImpl) UnregisterService(id uint32) error {
 		delete(s.staging, id)
 		return nil
 	}
-	return fmt.Errorf("Service not found %d", id)
+	return fmt.Errorf("Service not found: %d", id)
 }
 
 func (s *ServiceDirectoryImpl) ServiceReady(id uint32) error {
@@ -136,7 +147,8 @@ func (s *ServiceDirectoryImpl) UpdateServiceInfo(i ServiceInfo) error {
 		return fmt.Errorf("Service not found: %d (%s)", i.ServiceId, i.Name)
 	}
 	if info.Name != i.Name { // can not change name
-		return fmt.Errorf("Invalid name: %s (expected: %s)", i.Name, info.Name)
+		return fmt.Errorf("Invalid name: %s (expected: %s)", i.Name,
+			info.Name)
 	}
 
 	s.services[i.ServiceId] = i
@@ -147,10 +159,112 @@ func (s *ServiceDirectoryImpl) MachineId() (string, error) {
 	return util.MachineID(), nil
 }
 
-func (s *ServiceDirectoryImpl) _socketOfService(P0 uint32) (o object.ObjectReference, err error) {
+func (s *ServiceDirectoryImpl) _socketOfService(P0 uint32) (
+	o object.ObjectReference, err error) {
 	return o, fmt.Errorf("_socketOfService not yet implemented")
 }
 
-func (s *ServiceDirectoryImpl) Namespace() server.Namespace {
-	panic("Not yet implemented")
+func (s *ServiceDirectoryImpl) Namespace(addr string) server.Namespace {
+	return &directoryNamespace{
+		directory: s,
+		addrs: []string{
+			addr,
+		},
+	}
+}
+
+type directoryNamespace struct {
+	directory *ServiceDirectoryImpl
+	addrs     []string
+}
+
+func (ns *directoryNamespace) Reserve(name string) (uint32, error) {
+	info := ServiceInfo{
+		Name:      name,
+		ServiceId: 0,
+		MachineId: util.MachineID(),
+		ProcessId: util.ProcessID(),
+		Endpoints: ns.addrs,
+		SessionId: "",
+	}
+	return ns.directory.RegisterService(info)
+}
+
+func (ns *directoryNamespace) Remove(serviceID uint32) error {
+	return ns.directory.UnregisterService(serviceID)
+}
+
+func (ns *directoryNamespace) Enable(serviceID uint32) error {
+	return ns.directory.ServiceReady(serviceID)
+}
+func (ns *directoryNamespace) Resolve(name string) (uint32, error) {
+	info, err := ns.directory.Service(name)
+	if err != nil {
+		return 0, nil
+	}
+	return info.ServiceId, nil
+}
+func (ns *directoryNamespace) Session(server *server.Server) bus.Session {
+	return &directorySession{
+		server:    server,
+		namespace: ns,
+	}
+}
+
+type directorySession struct {
+	server    *server.Server
+	namespace *directoryNamespace
+}
+
+func (s *directorySession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
+
+	info, err := s.namespace.directory.Service(name)
+	if err != nil {
+		return nil, fmt.Errorf("service not found: %s", name)
+	}
+
+	clt, err := s.client(info)
+	if err != nil {
+		return nil, err
+	}
+	meta, err := bus.MetaObject(clt, info.ServiceId, objectID)
+	if err != nil {
+		return nil, fmt.Errorf("cannot reach metaObject: %s", err)
+	}
+	return client.NewProxy(clt, meta, info.ServiceId, objectID), nil
+
+}
+func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
+
+	if info.MachineId == util.MachineID() &&
+		info.ProcessId == util.ProcessID() {
+		return s.server.NewClient(), nil
+	}
+	endpoint, err := client.SelectEndPoint(info.Endpoints)
+	if err != nil {
+		return nil, fmt.Errorf("object connection error (%s): %s",
+			info.Name, err)
+	}
+	return client.NewClient(endpoint), nil
+}
+
+func (s *directorySession) Object(ref object.ObjectReference) (object.Object,
+	error) {
+
+	info, err := s.namespace.directory.info(ref.ServiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	clt, err := s.client(info)
+	if err != nil {
+		return nil, err
+	}
+	proxy := client.NewProxy(clt, ref.MetaObject,
+		ref.ServiceID, ref.ObjectID)
+	return &services.ObjectProxy{proxy}, nil
+}
+
+func (s *directorySession) Destroy() error {
+	return nil
 }

@@ -106,8 +106,8 @@ func TestServerReturnError(t *testing.T) {
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
 
-	auth := server.ServiceAuthenticate(server.Yes{})
-	srv, err := server.StandAloneServer(listener, auth, nil)
+	srv, err := server.StandAloneServer(listener, server.Yes{},
+		server.PrivateNamespace())
 	if err != nil {
 		panic(err)
 	}
@@ -169,8 +169,8 @@ func TestStandAloneInit(t *testing.T) {
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
 
-	auth := server.ServiceAuthenticate(server.Yes{})
-	srv, err := server.StandAloneServer(listener, auth, nil)
+	srv, err := server.StandAloneServer(listener, server.Yes{},
+		server.PrivateNamespace())
 	if err != nil {
 		panic(err)
 	}

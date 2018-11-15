@@ -16,25 +16,20 @@ import (
 type Namespace interface {
 	Reserve(name string) (uint32, error)
 	Remove(serviceID uint32) error
-	Activate(serviceID uint32) error
+	Enable(serviceID uint32) error
 	Resolve(name string) (uint32, error)
-	Client(serviceID uint32) (bus.Client, error)
-	// TODO: can factor out the Sesssion from the Namespace
-	// or remove Resolve and Client.
-	Session() bus.Session
+	Session(s *Server) bus.Session
 }
 
 type privateNamespace struct {
 	sync.Mutex
-	server    *Server
 	reserved  map[string]uint32
 	activated map[string]uint32
 	next      uint32
 }
 
-func PrivateNamespace(s *Server) Namespace {
+func PrivateNamespace() Namespace {
 	return &privateNamespace{
-		server:    s,
 		reserved:  make(map[string]uint32),
 		activated: make(map[string]uint32),
 		next:      1,
@@ -71,7 +66,7 @@ func (ns *privateNamespace) Remove(serviceID uint32) error {
 	return fmt.Errorf("service %d not in use", serviceID)
 }
 
-func (ns *privateNamespace) Activate(serviceID uint32) error {
+func (ns *privateNamespace) Enable(serviceID uint32) error {
 	ns.Lock()
 	defer ns.Unlock()
 	for name, id := range ns.reserved {
@@ -81,10 +76,6 @@ func (ns *privateNamespace) Activate(serviceID uint32) error {
 		}
 	}
 	return fmt.Errorf("service %d not reserved", serviceID)
-}
-
-func (ns *privateNamespace) Session() bus.Session {
-	return ns
 }
 
 func (ns *privateNamespace) Resolve(name string) (uint32, error) {
@@ -97,16 +88,28 @@ func (ns *privateNamespace) Resolve(name string) (uint32, error) {
 	return serviceID, nil
 }
 
-func (ns *privateNamespace) Client(serviceID uint32) (bus.Client, error) {
-	return ns.server.NewClient(), nil
+func (ns *privateNamespace) Session(s *Server) bus.Session {
+	return &localSession{
+		namespace: ns,
+		server:    s,
+	}
 }
 
-func (ns *privateNamespace) Proxy(name string, objectID uint32) (bus.Proxy, error) {
-	serviceID, err := ns.Resolve(name)
+type localSession struct {
+	server    *Server
+	namespace Namespace
+}
+
+func (s *localSession) Client(serviceID uint32) (bus.Client, error) {
+	return s.server.NewClient(), nil
+}
+
+func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
+	serviceID, err := s.namespace.Resolve(name)
 	if err != nil {
 		return nil, err
 	}
-	clt, err := ns.Client(serviceID)
+	clt, err := s.Client(serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,9 +119,9 @@ func (ns *privateNamespace) Proxy(name string, objectID uint32) (bus.Proxy, erro
 	}
 	return client.NewProxy(clt, meta, serviceID, objectID), nil
 }
-func (ns *privateNamespace) Object(ref object.ObjectReference) (object.Object,
+func (s *localSession) Object(ref object.ObjectReference) (object.Object,
 	error) {
-	clt, err := ns.Client(ref.ServiceID)
+	clt, err := s.Client(ref.ServiceID)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +129,6 @@ func (ns *privateNamespace) Object(ref object.ObjectReference) (object.Object,
 		ref.ObjectID)
 	return &services.ObjectProxy{proxy}, nil
 }
-func (ns *privateNamespace) Destroy() error {
+func (s *localSession) Destroy() error {
 	return nil
 }

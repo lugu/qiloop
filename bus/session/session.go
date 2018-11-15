@@ -8,7 +8,6 @@ import (
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/object"
 	"log"
-	"strings"
 	"sync"
 )
 
@@ -31,35 +30,8 @@ type Session struct {
 	}
 }
 
-func newEndPoint(info services.ServiceInfo) (endpoint net.EndPoint, err error) {
-	if len(info.Endpoints) == 0 {
-		return endpoint, fmt.Errorf("missing address for service %s",
-			info.Name)
-	}
-	// sort the addresses based on their value
-	for _, ep := range info.Endpoints {
-		// do not connect the test range.
-		// FIXME: unless a local interface has such IP
-		// address.
-		if strings.Contains(ep, "198.18.0") {
-			continue
-		}
-		endpoint, err = net.DialEndPoint(ep)
-		if err != nil {
-			continue
-		}
-		err = client.Authenticate(endpoint)
-		if err != nil {
-			return endpoint, fmt.Errorf("authentication error (%s): %s",
-				info.Name, err)
-		}
-		return endpoint, nil
-	}
-	return endpoint, err
-}
-
 func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Object, error) {
-	endpoint, err := newEndPoint(info)
+	endpoint, err := client.SelectEndPoint(info.Endpoints)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)
@@ -70,7 +42,7 @@ func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Ob
 }
 
 func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
-	endpoint, err := newEndPoint(info)
+	endpoint, err := client.SelectEndPoint(info.Endpoints)
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
 	}

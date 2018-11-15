@@ -254,7 +254,9 @@ func (o *ObjectDispatcher) Wrap(id uint32, fn bus.ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
-func (o *ObjectDispatcher) Activate(sess bus.Session, serviceID, objectID uint32) {
+func (o *ObjectDispatcher) Activate(sess bus.Session, serviceID,
+	objectID uint32) error {
+	return nil
 }
 func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
 	if o.wrapper == nil {
@@ -464,7 +466,6 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 	s := &Server{
 		listen:        listener,
 		namespace:     namespace,
-		session:       namespace.Session(),
 		Router:        NewRouter(service0),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
@@ -488,7 +489,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 		return nil, err
 	}
 	// 2. initialize the service
-	err = service.Activate(s.session, serviceID)
+	err = service.Activate(s.namespace.Session(s), serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +499,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 		return nil, err
 	}
 	// 4. advertize it
-	err = s.namespace.Activate(serviceID)
+	err = s.namespace.Enable(serviceID)
 	if err != nil {
 		s.Router.Remove(serviceID)
 		return nil, err
@@ -538,7 +539,8 @@ func (s *Server) run() error {
 
 	var ret error
 	go func() {
-		err := s.Router.Activate(s.session)
+		session := s.namespace.Session(s)
+		err := s.Router.Activate(session)
 		if err != nil {
 			ret = err
 			if err = s.Stop(); err != nil {

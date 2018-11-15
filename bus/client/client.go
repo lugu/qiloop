@@ -6,6 +6,7 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/value"
+	"strings"
 	"sync"
 )
 
@@ -121,4 +122,30 @@ func NewClient(endpoint net.EndPoint) bus.Client {
 		endpoint:  endpoint,
 		messageID: 1,
 	}
+}
+
+func SelectEndPoint(addrs []string) (endpoint net.EndPoint, err error) {
+	if len(addrs) == 0 {
+		return endpoint, fmt.Errorf("empty address list")
+	}
+	// sort the addresses based on their value
+	for _, addr := range addrs {
+		// do not connect the test range.
+		// FIXME: unless a local interface has such IP
+		// address.
+		if strings.Contains(addr, "198.18.0") {
+			continue
+		}
+		endpoint, err = net.DialEndPoint(addr)
+		if err != nil {
+			continue
+		}
+		err = Authenticate(endpoint)
+		if err != nil {
+			return endpoint, fmt.Errorf("authentication error: %s",
+				err)
+		}
+		return endpoint, nil
+	}
+	return endpoint, err
 }
