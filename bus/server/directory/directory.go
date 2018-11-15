@@ -9,10 +9,11 @@ import (
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sort"
+	"sync"
 )
 
 type ServiceDirectoryImpl struct {
-	// FIXME: lock me
+	sync.RWMutex
 	staging  map[uint32]ServiceInfo
 	services map[uint32]ServiceInfo
 	lastUuid uint32
@@ -29,6 +30,8 @@ func NewServiceDirectory() *ServiceDirectoryImpl {
 
 func (s *ServiceDirectoryImpl) Activate(sess bus.Session, serviceID,
 	objectID uint32, signal ServiceDirectorySignalHelper) error {
+	s.Lock()
+	defer s.Unlock()
 	s.signal = signal
 	return nil
 }
@@ -55,6 +58,8 @@ func checkServiceInfo(i ServiceInfo) error {
 }
 
 func (s *ServiceDirectoryImpl) info(serviceID uint32) (ServiceInfo, error) {
+	s.RLock()
+	defer s.RUnlock()
 	info, ok := s.services[serviceID]
 	if !ok {
 		return info, fmt.Errorf("service %d not found", serviceID)
@@ -63,6 +68,8 @@ func (s *ServiceDirectoryImpl) info(serviceID uint32) (ServiceInfo, error) {
 }
 
 func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err error) {
+	s.RLock()
+	defer s.RUnlock()
 	for _, info = range s.services {
 		if info.Name == service {
 			return info, nil
@@ -78,11 +85,12 @@ func (a serviceList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a serviceList) Less(i, j int) bool { return a[i].ServiceId < a[j].ServiceId }
 
 func (s *ServiceDirectoryImpl) Services() ([]ServiceInfo, error) {
-
+	s.RLock()
 	list := make([]ServiceInfo, 0, len(s.services))
 	for _, info := range s.services {
 		list = append(list, info)
 	}
+	s.RUnlock()
 	sort.Sort(serviceList(list))
 	return list, nil
 }
@@ -91,6 +99,8 @@ func (s *ServiceDirectoryImpl) RegisterService(newInfo ServiceInfo) (uint32, err
 	if err := checkServiceInfo(newInfo); err != nil {
 		return 0, err
 	}
+	s.Lock()
+	defer s.Unlock()
 	for _, info := range s.staging {
 		if info.Name == newInfo.Name {
 			return 0, fmt.Errorf("Service name already staging: %s", info.Name)
@@ -108,32 +118,41 @@ func (s *ServiceDirectoryImpl) RegisterService(newInfo ServiceInfo) (uint32, err
 }
 
 func (s *ServiceDirectoryImpl) UnregisterService(id uint32) error {
+	s.Lock()
 	i, ok := s.services[id]
 	if ok {
 		delete(s.services, id)
-		if s.signal != nil {
-			s.signal.SignalServiceRemoved(id, i.Name)
+		signal := s.signal
+		s.Unlock()
+		if signal != nil {
+			signal.SignalServiceRemoved(id, i.Name)
 		}
 		return nil
 	}
 	_, ok = s.staging[id]
 	if ok {
 		delete(s.staging, id)
+		s.Unlock()
 		return nil
 	}
+	s.Unlock()
 	return fmt.Errorf("Service not found: %d", id)
 }
 
 func (s *ServiceDirectoryImpl) ServiceReady(id uint32) error {
+	s.Lock()
 	i, ok := s.staging[id]
 	if ok {
 		delete(s.staging, id)
 		s.services[id] = i
-		if s.signal != nil {
-			s.signal.SignalServiceAdded(id, i.Name)
+		signal := s.signal
+		s.Unlock()
+		if signal != nil {
+			signal.SignalServiceAdded(id, i.Name)
 		}
 		return nil
 	}
+	s.Unlock()
 	return fmt.Errorf("Service id not found: %d", id)
 }
 
@@ -142,11 +161,13 @@ func (s *ServiceDirectoryImpl) UpdateServiceInfo(i ServiceInfo) error {
 		return err
 	}
 
+	s.Lock()
+	defer s.Unlock()
 	info, ok := s.services[i.ServiceId]
 	if !ok {
 		return fmt.Errorf("Service not found: %d (%s)", i.ServiceId, i.Name)
 	}
-	if info.Name != i.Name { // can not change name
+	if info.Name != i.Name {
 		return fmt.Errorf("Invalid name: %s (expected: %s)", i.Name,
 			info.Name)
 	}
