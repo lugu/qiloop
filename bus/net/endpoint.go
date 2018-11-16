@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	gonet "net"
 	"net/url"
 	"strings"
@@ -51,21 +50,50 @@ type EndPoint interface {
 	String() string
 }
 
+type Handler struct {
+	filter   Filter
+	consumer Consumer
+	closer   Closer
+	queue    chan *Message
+	err      error
+}
+
+func NewHandler(f Filter, c Consumer, cl Closer) *Handler {
+	h := &Handler{
+		filter:   f,
+		consumer: c,
+		closer:   cl,
+		queue:    make(chan *Message, 10),
+	}
+	go h.run()
+	return h
+}
+
+func (h *Handler) run() {
+	for {
+		msg, ok := <-h.queue
+		if !ok {
+			h.closer(h.err)
+			return
+		}
+		err := h.consumer(msg)
+		if err != nil {
+			fmt.Printf("failed to consume message: %s", err)
+		}
+	}
+}
+
 type endPoint struct {
-	conn      gonet.Conn
-	filters   []Filter
-	consumers []Consumer
-	closers   []Closer
-	// handlerMutex: protect filters and consumers which must stay synchronized.
-	handlerMutex sync.Mutex
+	conn          gonet.Conn
+	handlers      []*Handler
+	handlersMutex sync.Mutex
 }
 
 // NewEndPoint creates an EndPoint which accpets messsages
 func NewEndPoint(conn gonet.Conn) EndPoint {
 	e := &endPoint{
-		conn:      conn,
-		filters:   make([]Filter, 0, 10),
-		consumers: make([]Consumer, 0, 10),
+		conn:     conn,
+		handlers: make([]*Handler, 0, 10),
 	}
 	go e.process()
 	return e
@@ -124,29 +152,21 @@ func (e *endPoint) Send(m Message) error {
 	return m.Write(e.conn)
 }
 
-// Close wait for a message to be received.
+// closeWith close all handler
 func (e *endPoint) closeWith(err error) error {
-	e.handlerMutex.Lock()
-	defer e.handlerMutex.Unlock()
 
 	e.conn.Close()
 
-	var wait sync.WaitGroup
-	wait.Add(len(e.closers))
-	for id, c := range e.closers {
-		if c == nil {
-			wait.Done()
-			continue
+	e.handlersMutex.Lock()
+	defer e.handlersMutex.Unlock()
+
+	for id, handler := range e.handlers {
+		if handler != nil {
+			handler.err = err
+			close(handler.queue)
+			e.handlers[id] = nil
 		}
-		e.filters[id] = nil
-		e.consumers[id] = nil
-		e.closers[id] = nil
-		go func(closer Closer) {
-			closer(err)
-			wait.Done()
-		}(c)
 	}
-	wait.Wait()
 	return nil
 }
 
@@ -159,12 +179,11 @@ func (e *endPoint) Close() error {
 // WARNING: RemoveHandler must not be called from within the Filter or
 // the Consumer.
 func (e *endPoint) RemoveHandler(id int) error {
-	e.handlerMutex.Lock()
-	defer e.handlerMutex.Unlock()
-	if id >= 0 && id < len(e.filters) {
-		e.filters[id] = nil
-		e.consumers[id] = nil
-		e.closers[id] = nil
+	e.handlersMutex.Lock()
+	defer e.handlersMutex.Unlock()
+	if id >= 0 && id < len(e.handlers) {
+		close(e.handlers[id].queue)
+		e.handlers[id] = nil
 		return nil
 	}
 	return fmt.Errorf("invalid handler id: %d", id)
@@ -173,20 +192,17 @@ func (e *endPoint) RemoveHandler(id int) error {
 // AddHandler register the associated Filter and Consumer to the
 // EndPoint.
 func (e *endPoint) AddHandler(f Filter, c Consumer, cl Closer) int {
-	e.handlerMutex.Lock()
-	defer e.handlerMutex.Unlock()
-	for i, filter := range e.filters {
-		if filter == nil {
-			e.filters[i] = f
-			e.consumers[i] = c
-			e.closers[i] = cl
+	newHandler := NewHandler(f, c, cl)
+	e.handlersMutex.Lock()
+	defer e.handlersMutex.Unlock()
+	for i, handler := range e.handlers {
+		if handler == nil {
+			e.handlers[i] = newHandler
 			return i
 		}
 	}
-	e.filters = append(e.filters, f)
-	e.consumers = append(e.consumers, c)
-	e.closers = append(e.closers, cl)
-	return len(e.filters) - 1
+	e.handlers = append(e.handlers, newHandler)
+	return len(e.handlers) - 1
 }
 
 var MessageDropped error = errors.New("message dropped")
@@ -194,29 +210,24 @@ var MessageDropped error = errors.New("message dropped")
 // dispatch test all destinations for someone interrested in the
 // message.
 func (e *endPoint) dispatch(msg *Message) error {
-	ret := MessageDropped
-	e.handlerMutex.Lock()
-	defer e.handlerMutex.Unlock()
-	for i, f := range e.filters {
-		if f == nil {
+	dispatched := false
+	e.handlersMutex.Lock()
+	defer e.handlersMutex.Unlock()
+	for i, h := range e.handlers {
+		if h == nil {
 			continue
 		}
-		matched, keep := f(&msg.Header)
-		consumer := e.consumers[i]
-		if !keep {
-			e.filters[i] = nil
-			e.consumers[i] = nil
-		}
+		matched, keep := h.filter(&msg.Header)
 		if matched {
-			ret = nil
-			go func() {
-				if err := consumer(msg); err != nil {
-					log.Printf("message consumer: %s", err)
-				}
-			}()
+			h.queue <- msg
+			dispatched = true
+		}
+		if !keep {
+			close(h.queue)
+			e.handlers[i] = nil
 		}
 	}
-	if ret == nil {
+	if dispatched {
 		return nil
 	}
 	return fmt.Errorf("dropping message: %#v", msg.Header)
@@ -225,29 +236,17 @@ func (e *endPoint) dispatch(msg *Message) error {
 // process read all messages from the end point and dispatch them one
 // by one.
 func (e *endPoint) process() {
-	queue := make(chan *Message, 10)
 	var err error
-
-	go func() {
-		for msg := range queue {
-			e.dispatch(msg)
-		}
-		e.closeWith(err)
-	}()
 
 	for {
 		msg := new(Message)
 		err = msg.Read(e.conn)
-		if err == io.EOF {
-			log.Printf("remote connection closed")
-			break
-		} else if err != nil {
-			log.Printf("error: closing connection: %s", err)
-			break
+		if err != nil {
+			e.closeWith(err)
+			return
 		}
-		queue <- msg
+		e.dispatch(msg)
 	}
-	close(queue)
 }
 
 // Receive wait for a message to be received.
