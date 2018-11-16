@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	gonet "net"
 	"net/url"
 	"strings"
@@ -78,7 +79,7 @@ func (h *Handler) run() {
 		}
 		err := h.consumer(msg)
 		if err != nil {
-			fmt.Printf("failed to consume message: %s", err)
+			log.Printf("failed to consume message: %s", err)
 		}
 	}
 }
@@ -155,7 +156,7 @@ func (e *endPoint) Send(m Message) error {
 // closeWith close all handler
 func (e *endPoint) closeWith(err error) error {
 
-	e.conn.Close()
+	ret := e.conn.Close()
 
 	e.handlersMutex.Lock()
 	defer e.handlersMutex.Unlock()
@@ -245,14 +246,17 @@ func (e *endPoint) process() {
 			e.closeWith(err)
 			return
 		}
-		e.dispatch(msg)
+		err = e.dispatch(msg)
+		if err != nil {
+			log.Printf("dispatch err: %s\n", err)
+		}
 	}
 }
 
 // Receive wait for a message to be received.
 func (e *endPoint) ReceiveAny() (*Message, error) {
 	found := make(chan *Message)
-	filter := func(msg *Header) (matched bool, keep bool) {
+	filter := func(hdr *Header) (matched bool, keep bool) {
 		return true, false
 	}
 	consumer := func(msg *Message) error {

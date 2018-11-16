@@ -3,6 +3,7 @@ package net_test
 import (
 	"github.com/lugu/qiloop/bus/net"
 	"io/ioutil"
+	"log"
 	gonet "net"
 	"os"
 	"reflect"
@@ -114,6 +115,19 @@ func TestPingPong(t *testing.T) {
 		wait.Done()
 	}()
 
+	var msg *net.Message
+	var err error
+
+	wait.Add(1)
+	go func() {
+		// server replied
+		msg, err = client.ReceiveAny()
+		if err != nil {
+			t.Errorf("failed to receive net. %s", err)
+		}
+		wait.Done()
+	}()
+
 	// client send a message
 	h := net.NewHeader(net.Call, 1, 2, 3, 4)
 	mSent := net.NewMessage(h, []byte{0xab, 0xcd})
@@ -121,11 +135,6 @@ func TestPingPong(t *testing.T) {
 		t.Errorf("failed to send paquet: %s", err)
 	}
 
-	// server replied
-	msg, err := client.ReceiveAny()
-	if err != nil {
-		t.Errorf("failed to receive net. %s", err)
-	}
 	wait.Wait()
 
 	// check packet integrity
