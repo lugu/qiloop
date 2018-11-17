@@ -42,15 +42,10 @@ func TestNewServer(t *testing.T) {
 	h := net.NewHeader(net.Call, 2, 1, 3, 4)
 	mSent := net.NewMessage(h, make([]byte, 0))
 
-	// client is prepared to receive a message
-	received := make(chan *net.Message)
-	go func() {
-		msg, err := clt.ReceiveAny()
-		if err != nil {
-			t.Errorf("failed to receive net. %s", err)
-		}
-		received <- msg
-	}()
+	received, err := clt.ReceiveOne()
+	if err != nil {
+		t.Errorf("failed to receive net. %s", err)
+	}
 
 	// client send a message
 	if err := clt.Send(mSent); err != nil {
@@ -58,7 +53,10 @@ func TestNewServer(t *testing.T) {
 	}
 
 	// server replied
-	mReceived := <-received
+	mReceived, ok := <-received
+	if !ok {
+		panic("connection closed")
+	}
 
 	if mReceived.Header.Type == net.Error {
 		buf := bytes.NewBuffer(mReceived.Payload)

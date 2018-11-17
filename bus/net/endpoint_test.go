@@ -3,7 +3,6 @@ package net_test
 import (
 	"github.com/lugu/qiloop/bus/net"
 	"io/ioutil"
-	"log"
 	gonet "net"
 	"os"
 	"reflect"
@@ -63,7 +62,7 @@ func TestSend(t *testing.T) {
 	wait.Wait()
 }
 
-func TestReceiveAny(t *testing.T) {
+func TestReceiveOne(t *testing.T) {
 	a, b := gonet.Pipe()
 	defer a.Close()
 	defer b.Close()
@@ -73,20 +72,21 @@ func TestReceiveAny(t *testing.T) {
 
 	var wait sync.WaitGroup
 
-	wait.Add(1)
-	go func() {
-		err := m.Write(a)
-		if err != nil {
-			panic(err)
-		}
-		wait.Done()
-	}()
-
 	e := net.NewEndPoint(b)
-	msg, err := e.ReceiveAny()
+	msgChan, err := e.ReceiveOne()
 	if err != nil {
 		panic(err)
 	}
+	err = m.Write(a)
+	if err != nil {
+		panic(err)
+	}
+
+	msg, ok := <-msgChan
+	if !ok {
+		panic("failed to receive")
+	}
+
 	if len(msg.Payload) != 2 {
 		t.Errorf("read less than expected: %d", len(msg.Payload))
 	}
@@ -101,12 +101,13 @@ func TestPingPong(t *testing.T) {
 
 	var wait sync.WaitGroup
 
+	srvChan, err := server.ReceiveOne()
 	// reply to a single message
 	wait.Add(1)
 	go func() {
-		m, err := server.ReceiveAny()
-		if err != nil {
-			t.Errorf("failed to receive meesage: %s", err)
+		m, ok := <-srvChan
+		if !ok {
+			t.Fatalf("failed to receive meesage")
 		}
 		err = server.Send(*m)
 		if err != nil {
@@ -115,30 +116,30 @@ func TestPingPong(t *testing.T) {
 		wait.Done()
 	}()
 
-	var msg *net.Message
-	var err error
+	var mRcv *net.Message
+	var mSent net.Message
 
-	wait.Add(1)
-	go func() {
-		// server replied
-		msg, err = client.ReceiveAny()
-		if err != nil {
-			t.Errorf("failed to receive net. %s", err)
-		}
-		wait.Done()
-	}()
+	// server replied
+	cltChan, err := client.ReceiveOne()
+	if err != nil {
+		t.Fatalf("failed to receive net.")
+	}
 
 	// client send a message
 	h := net.NewHeader(net.Call, 1, 2, 3, 4)
-	mSent := net.NewMessage(h, []byte{0xab, 0xcd})
+	mSent = net.NewMessage(h, []byte{0xab, 0xcd})
 	if err := client.Send(mSent); err != nil {
 		t.Errorf("failed to send paquet: %s", err)
 	}
 
+	mRcv, ok := <-cltChan
+	if !ok {
+		panic("chanel closed")
+	}
 	wait.Wait()
 
 	// check packet integrity
-	if !reflect.DeepEqual(mSent, *msg) {
-		t.Errorf("expected %#v, go %#v", mSent, *msg)
+	if !reflect.DeepEqual(mSent, *mRcv) {
+		t.Errorf("expected %#v, go %#v", mSent, *mRcv)
 	}
 }

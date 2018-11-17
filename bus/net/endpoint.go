@@ -32,8 +32,11 @@ type EndPoint interface {
 	Send(m Message) error
 
 	// ReceiveAny returns a message. Should only be used during
-	// bootstap and testing.
+	// bootstap and testing. Deprecated.
 	ReceiveAny() (*Message, error)
+
+	// ReceiveOne returns a chanel to receive a message.
+	ReceiveOne() (chan *Message, error)
 
 	// AddHandler registers the associated Filter and Consumer to the
 	// EndPoint. Do not attempt to add another handler from within a
@@ -168,7 +171,7 @@ func (e *endPoint) closeWith(err error) error {
 			e.handlers[id] = nil
 		}
 	}
-	return nil
+	return ret
 }
 
 // Close wait for a message to be received.
@@ -251,6 +254,24 @@ func (e *endPoint) process() {
 			log.Printf("dispatch err: %s\n", err)
 		}
 	}
+}
+
+// ReceiveOne returns a chanel to receive one message. If the
+// connection close, the chanel is closed.
+func (e *endPoint) ReceiveOne() (chan *Message, error) {
+	found := make(chan *Message, 1)
+	filter := func(hdr *Header) (matched bool, keep bool) {
+		return true, false
+	}
+	consumer := func(msg *Message) error {
+		found <- msg
+		return nil
+	}
+	closer := func(err error) {
+		close(found)
+	}
+	_ = e.AddHandler(filter, consumer, closer)
+	return found, nil
 }
 
 // Receive wait for a message to be received.
