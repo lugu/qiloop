@@ -25,7 +25,7 @@ func TestProxyCall(t *testing.T) {
 			panic("connection closed")
 		}
 		m.Header.Type = net.Reply
-		err = serviceEndpoint.Send(*m)
+		err := serviceEndpoint.Send(*m)
 		if err != nil {
 			t.Errorf("failed to send meesage: %s", err)
 		}

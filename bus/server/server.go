@@ -304,8 +304,21 @@ func (n *ServiceImpl) Add(o Object) (uint32, error) {
 }
 
 func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) error {
+	var wait sync.WaitGroup
+	wait.Add(len(s.objects))
+	ret := make(chan error, len(s.objects))
 	for objectID, obj := range s.objects {
-		err := obj.Activate(sess, serviceID, objectID)
+		go func(obj Object, objectID uint32) {
+			err := obj.Activate(sess, serviceID, objectID)
+			if err != nil {
+				ret <- err
+			}
+			wait.Done()
+		}(obj, objectID)
+	}
+	wait.Wait()
+	close(ret)
+	for err := range ret {
 		if err != nil {
 			return err
 		}
