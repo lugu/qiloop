@@ -102,16 +102,16 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int
 		return nil
 	}
 	closer := func(err error) {
-		// FIXME: set the client as unusable: remote
-		// connection closed
 		close(stream)
+		close(cancel)
 	}
 
 	go func(id int) {
-		<-cancel
+		_, ok := <-cancel
 		c.endpoint.RemoveHandler(id)
-		// FIXME: could be already closed
-		close(stream)
+		if ok {
+			close(stream)
+		}
 	}(c.endpoint.AddHandler(filter, consumer, closer))
 
 	return stream, nil
