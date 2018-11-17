@@ -554,17 +554,13 @@ func (s *Server) handle(context *Context) error {
 func (s *Server) run() error {
 
 	var ret error
-	go func() {
-		session := s.namespace.Session(s)
-		err := s.Router.Activate(session)
-		if err != nil {
-			ret = err
-			if err = s.Stop(); err != nil {
-				log.Printf("failed to stop server: %s", err)
-			}
-		}
+	session := s.namespace.Session(s)
+	err := s.Router.Activate(session)
+	if err != nil {
+		log.Printf("failed to activate server: %s", err)
+		return ret
+	}
 
-	}()
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
