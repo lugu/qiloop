@@ -93,11 +93,23 @@ type endPoint struct {
 	handlersMutex sync.Mutex
 }
 
-// NewEndPoint creates an EndPoint which accpets messsages
+// EndPointFinalizer creates a new EndPoint and let you process it
+// before it start handling messages. This allows you to add handler
+// or/and avoid data races.
+func EndPointFinalizer(conn gonet.Conn, finalizer func(EndPoint)) EndPoint {
+	e := &endPoint{
+		conn:     conn,
+		handlers: make([]*Handler, 10),
+	}
+	finalizer(e)
+	go e.process()
+	return e
+}
+
 func NewEndPoint(conn gonet.Conn) EndPoint {
 	e := &endPoint{
 		conn:     conn,
-		handlers: make([]*Handler, 0, 10),
+		handlers: make([]*Handler, 10),
 	}
 	go e.process()
 	return e
@@ -185,7 +197,7 @@ func (e *endPoint) Close() error {
 func (e *endPoint) RemoveHandler(id int) error {
 	e.handlersMutex.Lock()
 	defer e.handlersMutex.Unlock()
-	if id >= 0 && id < len(e.handlers) {
+	if id >= 0 && id < len(e.handlers) && e.handlers[id] != nil {
 		close(e.handlers[id].queue)
 		e.handlers[id] = nil
 		return nil
@@ -234,7 +246,8 @@ func (e *endPoint) dispatch(msg *Message) error {
 	if dispatched {
 		return nil
 	}
-	return fmt.Errorf("dropping message: %#v", msg.Header)
+	return fmt.Errorf("dropping message: %#v (len handlers: %d)",
+		msg.Header, len(e.handlers))
 }
 
 // process read all messages from the end point and dispatch them one

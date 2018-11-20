@@ -469,6 +469,10 @@ func NewServer(session *session.Session, addr string) (*Server, error) {
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 	}
+	err = s.activate()
+	if err != nil {
+		return nil, err
+	}
 	go s.run()
 	return s, nil
 }
@@ -485,6 +489,10 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 		Router:        NewRouter(service0),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
+	}
+	err := s.activate()
+	if err != nil {
+		return nil, err
 	}
 	go s.run()
 	return s, nil
@@ -523,7 +531,11 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	return service, nil
 }
 
-func (s *Server) handle(context *Context) error {
+func (s *Server) handle(c gonet.Conn, authenticated bool) error {
+
+	context := &Context{
+		Authenticated: authenticated,
+	}
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true
 	}
@@ -543,36 +555,40 @@ func (s *Server) handle(context *Context) error {
 			delete(s.contexts, context)
 		}
 	}
+	finalize := func(e net.EndPoint) {
+		context.EndPoint = e
+		e.AddHandler(filter, consumer, closer)
+		s.contextsMutex.Lock()
+		s.contexts[context] = true
+		s.contextsMutex.Unlock()
+	}
+	net.EndPointFinalizer(c, finalize)
+	return nil
+}
 
-	s.contextsMutex.Lock()
-	s.contexts[context] = true
-	s.contextsMutex.Unlock()
-	context.EndPoint.AddHandler(filter, consumer, closer)
+func (s *Server) activate() error {
+	session := s.namespace.Session(s)
+	err := s.Router.Activate(session)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *Server) run() error {
-
 	var ret error
-	session := s.namespace.Session(s)
-	err := s.Router.Activate(session)
-	if err != nil {
-		log.Printf("failed to activate server: %s", err)
-		return ret
-	}
 
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
 			return err
 		}
-		context := NewContext(net.NewEndPoint(c))
-		err = s.handle(context)
+		err = s.handle(c, false)
 		if err != nil {
 			if err != io.EOF {
 				ret = err
+				log.Printf("Server connection error: %s", err)
 			}
-			log.Printf("Server connection error: %s", err)
 			c.Close()
 		}
 	}
@@ -602,11 +618,7 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) NewClient() bus.Client {
-	ctl, srv := net.NewPipe()
-	context := &Context{
-		EndPoint:      srv,
-		Authenticated: true,
-	}
-	s.handle(context)
-	return client.NewClient(ctl)
+	ctl, srv := gonet.Pipe()
+	s.handle(srv, true)
+	return client.NewClient(net.NewEndPoint(ctl))
 }
