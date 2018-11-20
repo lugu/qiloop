@@ -593,13 +593,11 @@ func (s *Server) closeAll() error {
 	var ret error = nil
 	s.contextsMutex.Lock()
 	defer s.contextsMutex.Unlock()
-	for s, _ := range s.contexts {
-		go func(c *Context) {
-			err := c.EndPoint.Close()
-			if err != nil && ret == nil {
-				ret = err
-			}
-		}(s)
+	for context, _ := range s.contexts {
+		err := context.EndPoint.Close()
+		if err != nil && ret == nil {
+			ret = err
+		}
 	}
 	return ret
 }
