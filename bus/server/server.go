@@ -11,7 +11,6 @@ import (
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
-	"io"
 	"log"
 	"math/rand"
 	gonet "net"
@@ -531,7 +530,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 	return service, nil
 }
 
-func (s *Server) handle(c gonet.Conn, authenticated bool) error {
+func (s *Server) handle(c gonet.Conn, authenticated bool) {
 
 	context := &Context{
 		Authenticated: authenticated,
@@ -563,7 +562,6 @@ func (s *Server) handle(c gonet.Conn, authenticated bool) error {
 		s.contextsMutex.Unlock()
 	}
 	net.EndPointFinalizer(c, finalize)
-	return nil
 }
 
 func (s *Server) activate() error {
@@ -575,24 +573,19 @@ func (s *Server) activate() error {
 	return nil
 }
 
-func (s *Server) run() error {
-	var ret error
-
+func (s *Server) run() {
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
-			return err
-		}
-		err = s.handle(c, false)
-		if err != nil {
-			if err != io.EOF {
-				ret = err
-				log.Printf("Server connection error: %s", err)
+			log.Printf("socket error: %s", err)
+			err := s.Stop()
+			if err != nil {
+				log.Printf("server stop error: %s", err)
 			}
-			c.Close()
+			break
 		}
+		s.handle(c, false)
 	}
-	return ret
 }
 
 // CloseAll close the connecction. Return the first error if any.

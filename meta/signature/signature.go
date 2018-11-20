@@ -101,7 +101,6 @@ func nodifyBasicType(nodes []Node) Node {
 	default:
 		return fmt.Errorf("wrong signature %s", signature)
 	}
-	return nil
 }
 
 func extractValue(object interface{}) (Type, error) {

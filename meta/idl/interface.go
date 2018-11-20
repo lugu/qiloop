@@ -167,13 +167,11 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	// return jen.Qual("github.com/lugu/qiloop/type/object",
 	// 	"WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
 	panic("not yet implemented")
-	return nil
 }
 
 func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	// TODO: see Marshall
 	panic("not yet implemented")
-	return nil
 }
 func (s *InterfaceType) MetaObject() object.MetaObject {
 	var meta object.MetaObject
