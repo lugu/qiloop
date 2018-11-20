@@ -102,6 +102,9 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int
 		return nil
 	}
 	closer := func(err error) {
+		defer func() {
+			recover()
+		}()
 		close(stream)
 		close(cancel)
 	}
