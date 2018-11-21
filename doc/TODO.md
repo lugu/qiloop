@@ -1,6 +1,8 @@
 Unsorted todo list:
 - proxy:
     - generate basic methods without declaring them in the IDL
+    - subscribe: better cancelation sementic (context.Context?)
+    - merge net.ReceiveAny/net.ReceiveOne
 - session:
     - session: register callback for service disconnection
 - idl:

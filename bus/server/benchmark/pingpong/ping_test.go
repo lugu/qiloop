@@ -44,3 +44,33 @@ func TestPingPong(t *testing.T) {
 		panic(err)
 	}
 }
+
+func BenchmarkPingPongUnix(b *testing.B) {
+	addr := util.NewUnixAddr()
+
+	server, err := dir.NewServer(addr, nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer server.Stop()
+
+	service := pingpong.PingPongObject(pingpong.NewPingPong())
+	_, err = server.NewService("PingPong", service)
+	if err != nil {
+		panic(err)
+	}
+
+	session, err := sess.NewSession(addr)
+	if err != nil {
+		panic(err)
+	}
+	services := proxy.Services(session)
+	client, err := services.PingPong()
+
+	for i := 0; i < b.N; i++ {
+		err := client.Ping("hello")
+		if err != nil {
+			panic(err)
+		}
+	}
+}

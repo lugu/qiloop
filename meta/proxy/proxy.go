@@ -312,7 +312,7 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 			return nil, fmt.Errorf("signal %s not available: %s", "`+s.Name+`", err)
 		}
 
-		id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+		_, err = p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
 		if err != nil {
 			return nil, fmt.Errorf("failed to register event for %s: %s", "`+s.Name+`", err)
 		}`),
@@ -325,12 +325,8 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 			jen.For().Block(
 				jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
 				jen.Id(`if !ok {
-					close(ch) // upstream is closed.
-					err = p.UnregisterEvent(p.ObjectID(), signalID, id)
-					if err != nil {
-						// FIXME: implement proper logging.
-						fmt.Printf("failed to unregister event %s: %s", "`+s.Name+`", err)
-					}
+					// connection lost.
+					close(ch)
 					return
 				}`),
 				jen.Id("buf := bytes.NewBuffer(payload)"),

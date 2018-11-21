@@ -339,7 +339,7 @@ func (p *PingPongProxy) SignalPong(cancel chan int) (chan struct {
 		return nil, fmt.Errorf("signal %s not available: %s", "pong", err)
 	}
 
-	id, err := p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	_, err = p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
 	}
@@ -354,12 +354,8 @@ func (p *PingPongProxy) SignalPong(cancel chan int) (chan struct {
 		for {
 			payload, ok := <-chPay
 			if !ok {
-				close(ch) // upstream is closed.
-				err = p.UnregisterEvent(p.ObjectID(), signalID, id)
-				if err != nil {
-					// FIXME: implement proper logging.
-					fmt.Printf("failed to unregister event %s: %s", "pong", err)
-				}
+				// connection lost.
+				close(ch)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
