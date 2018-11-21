@@ -1,4 +1,6 @@
 Unsorted todo list:
+- transport:
+    - try quic: https://github.com/lucas-clemente/quic-go
 - proxy:
     - generate basic methods without declaring them in the IDL
     - subscribe: better cancelation sementic (context.Context?)
