@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/lugu/qiloop/bus/net/cert"
+	"log"
 	gonet "net"
 	"net/url"
 	"strings"
@@ -14,10 +15,16 @@ func listenTCP(addr string) (gonet.Listener, error) {
 }
 
 func listenTLS(addr string) (gonet.Listener, error) {
-	certFile, keyFile := cert.GetCertKey()
-	cer, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, err
+	var err1, err2 error
+	cer, err1 := cert.Certificate()
+	if err1 != nil {
+		log.Printf("Failed to read x509 certificate: %s", err1)
+		cer, err2 = cert.GenerateCertificate()
+		if err2 != nil {
+			log.Printf("Failed to create x509 certificate: %s", err2)
+			return nil, fmt.Errorf("no certificate available (%s, %s)",
+				err1, err2)
+		}
 	}
 
 	conf := &tls.Config{
