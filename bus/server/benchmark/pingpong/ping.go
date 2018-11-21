@@ -18,6 +18,10 @@ func (p *impl) Activate(sess bus.Session, serviceID, objectID uint32,
 	return nil
 }
 
+func (p *impl) Hello(a string) (string, error) {
+	return "Hello, World!", nil
+}
+
 func (p *impl) Ping(a string) error {
 	return p.signal.SignalPong(a)
 }

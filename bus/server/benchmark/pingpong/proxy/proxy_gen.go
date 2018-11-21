@@ -29,6 +29,7 @@ type PingPong interface {
 	ClearStats() error
 	IsTraceEnabled() (bool, error)
 	EnableTrace(P0 bool) error
+	Hello(P0 string) (string, error)
 	Ping(P0 string) error
 	SignalPong(cancel chan int) (chan struct {
 		P0 string
@@ -317,6 +318,25 @@ func (p *PingPongProxy) EnableTrace(P0 bool) error {
 		return fmt.Errorf("call enableTrace failed: %s", err)
 	}
 	return nil
+}
+func (p *PingPongProxy) Hello(P0 string) (string, error) {
+	var err error
+	var ret string
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteString(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	}
+	response, err := p.Call("hello", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call hello failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadString(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse hello response: %s", err)
+	}
+	return ret, nil
 }
 func (p *PingPongProxy) Ping(P0 string) error {
 	var err error

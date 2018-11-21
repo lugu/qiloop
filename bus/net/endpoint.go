@@ -132,8 +132,8 @@ func dialTCP(addr string) (EndPoint, error) {
 	return NewEndPoint(conn), nil
 }
 
-// dialTCPS connects regardless of the certificate.
-func dialTCPS(addr string) (EndPoint, error) {
+// dialTLS connects regardless of the certificate.
+func dialTLS(addr string) (EndPoint, error) {
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}
@@ -154,7 +154,7 @@ func DialEndPoint(addr string) (EndPoint, error) {
 		case "tcp":
 			return dialTCP(u.Host)
 		case "tcps":
-			return dialTCPS(u.Host)
+			return dialTLS(u.Host)
 		case "unix":
 			return dialUNIX(strings.TrimPrefix(addr, "unix://"))
 		default:

@@ -16,6 +16,7 @@ interface PingPong
 	fn isTraceEnabled() -> bool //uid:84
 	fn enableTrace(P0: bool) //uid:85
 
+        fn hello(a: str) -> str
         fn ping(a: str)
 	sig pong(a: str)
 end

@@ -13,6 +13,7 @@ import (
 
 type PingPong interface {
 	Activate(sess bus.Session, serviceID, objectID uint32, signal PingPongSignalHelper) error
+	Hello(a string) (string, error)
 	Ping(a string) error
 }
 type PingPongSignalHelper interface {
@@ -27,7 +28,8 @@ func PingPongObject(impl PingPong) server.Object {
 	var stb stubPingPong
 	stb.impl = impl
 	stb.obj = server.NewObject(stb.metaObject())
-	stb.obj.Wrapper[uint32(0x64)] = stb.Ping
+	stb.obj.Wrapper[uint32(0x64)] = stb.Hello
+	stb.obj.Wrapper[uint32(0x65)] = stb.Ping
 	return &stb
 }
 func (s *stubPingPong) Activate(sess bus.Session, serviceID, objectID uint32) error {
@@ -36,6 +38,23 @@ func (s *stubPingPong) Activate(sess bus.Session, serviceID, objectID uint32) er
 }
 func (s *stubPingPong) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
+}
+func (s *stubPingPong) Hello(payload []byte) ([]byte, error) {
+	buf := bytes.NewBuffer(payload)
+	a, err := basic.ReadString(buf)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read a: %s", err)
+	}
+	ret, callErr := s.impl.Hello(a)
+	if callErr != nil {
+		return nil, callErr
+	}
+	var out bytes.Buffer
+	errOut := basic.WriteString(ret, &out)
+	if errOut != nil {
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
+	}
+	return out.Bytes(), nil
 }
 func (s *stubPingPong) Ping(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -55,7 +74,7 @@ func (s *stubPingPong) SignalPong(a string) error {
 	if err := basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("failed to serialize a: %s", err)
 	}
-	err := s.obj.UpdateSignal(uint32(0x65), buf.Bytes())
+	err := s.obj.UpdateSignal(uint32(0x66), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalPong: %s", err)
@@ -65,16 +84,24 @@ func (s *stubPingPong) SignalPong(a string) error {
 func (s *stubPingPong) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "PingPong",
-		Methods: map[uint32]object.MetaMethod{uint32(0x64): object.MetaMethod{
-			Name:                "ping",
-			ParametersSignature: "(s)",
-			ReturnSignature:     "v",
-			Uid:                 uint32(0x64),
-		}},
-		Signals: map[uint32]object.MetaSignal{uint32(0x65): object.MetaSignal{
+		Methods: map[uint32]object.MetaMethod{
+			uint32(0x64): object.MetaMethod{
+				Name:                "hello",
+				ParametersSignature: "(s)",
+				ReturnSignature:     "s",
+				Uid:                 uint32(0x64),
+			},
+			uint32(0x65): object.MetaMethod{
+				Name:                "ping",
+				ParametersSignature: "(s)",
+				ReturnSignature:     "v",
+				Uid:                 uint32(0x65),
+			},
+		},
+		Signals: map[uint32]object.MetaSignal{uint32(0x66): object.MetaSignal{
 			Name:      "pong",
 			Signature: "(s)",
-			Uid:       uint32(0x65),
+			Uid:       uint32(0x66),
 		}},
 	}
 }

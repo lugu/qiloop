@@ -1,6 +1,7 @@
 package directory
 
 import (
+	"fmt"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 )
@@ -15,7 +16,7 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 
 	listener, err := net.Listen(addr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open socket %s: %s", addr, err)
 	}
 
 	impl := NewServiceDirectory()

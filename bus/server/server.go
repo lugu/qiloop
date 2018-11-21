@@ -613,3 +613,7 @@ func (s *Server) NewClient() bus.Client {
 	s.handle(srv, true)
 	return client.NewClient(net.NewEndPoint(ctl))
 }
+
+func (s *Server) Session() bus.Session {
+	return s.namespace.Session(s)
+}

@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// GetCertKey returns the public and an X509 certificate and the
+// associated private RSA key
 func GetCertKey() (string, string) {
 	usr, err := user.Current()
 	if err != nil {
