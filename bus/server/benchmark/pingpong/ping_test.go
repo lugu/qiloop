@@ -97,7 +97,7 @@ func BenchmarkPingPongTCP(b *testing.B) {
 // openssl genrsa -out server.key 2048
 // openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
 // cat <<EOF> ~/.qi-cert.conf
-// /home/user/.qiloop/server.cert
+// /home/user/.qiloop/server.crt
 // /home/user/.qiloop/server.key
 // EOF
 func BenchmarkPingPongTLS(b *testing.B) {
