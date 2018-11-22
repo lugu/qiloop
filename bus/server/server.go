@@ -214,6 +214,11 @@ func (o *BasicObject) Receive(m *net.Message, from *Context) error {
 }
 
 func (o *BasicObject) Terminate() {
+	// TODO:
+	// - call Server.directory.Remove()
+	// - call Server.Router.Remove()
+	// - call Terminate on all objects
+	// - signal WaitTerminate condition
 	panic("not yet implemented")
 }
 
@@ -346,15 +351,7 @@ func (n *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 }
 
 func (n *ServiceImpl) Terminate() error {
-	// TODO:
-	// - call Server.directory.Remove()
-	// - call Server.Router.Remove()
-	// - call Terminate on all objects
-	// - signal WaitTerminate condition
-	panic("not yet implemented")
-}
-func (n *ServiceImpl) WaitTerminate() chan int {
-	panic("not yet implemented")
+	return fmt.Errorf("terminate not yet implemented")
 }
 
 // Router dispatch the incomming messages.
@@ -385,6 +382,20 @@ func (r *Router) Activate(sess bus.Session) error {
 		}
 	}
 	return nil
+}
+
+func (r *Router) Terminate() error {
+	r.RLock()
+	defer r.RUnlock()
+	var ret error = nil
+	for serviceID, service := range r.services {
+		err := service.Terminate()
+		if err != nil && ret == nil {
+			ret = fmt.Errorf("service %d terminate: %s",
+				serviceID, err)
+		}
+	}
+	return ret
 }
 
 func (r *Router) Add(serviceID uint32, s *ServiceImpl) error {
@@ -448,6 +459,8 @@ type Server struct {
 	Router        *Router
 	contexts      map[*Context]bool
 	contextsMutex sync.Mutex
+	closeChan     chan int
+	waitChan      chan error
 }
 
 // NewServer starts a new server which listen to addr and serve
@@ -467,6 +480,8 @@ func NewServer(session *session.Session, addr string) (*Server, error) {
 		Router:        NewRouter(ServiceAuthenticate(Yes{})),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
+		closeChan:     make(chan int, 1),
+		waitChan:      make(chan error, 1),
 	}
 	err = s.activate()
 	if err != nil {
@@ -488,6 +503,8 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 		Router:        NewRouter(service0),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
+		closeChan:     make(chan int, 1),
+		waitChan:      make(chan error, 1),
 	}
 	err := s.activate()
 	if err != nil {
@@ -499,7 +516,6 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 
 type Service interface {
 	Terminate() error
-	WaitTerminate() chan int
 }
 
 func (s *Server) NewService(name string, object Object) (Service, error) {
@@ -577,15 +593,26 @@ func (s *Server) run() {
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
-			log.Printf("socket error: %s", err)
-			err := s.Stop()
-			if err != nil {
-				log.Printf("server stop error: %s", err)
+			select {
+			case <-s.closeChan:
+			default:
+				s.listen.Close()
+				s.stoppedWith(err)
 			}
 			break
 		}
 		s.handle(c, false)
 	}
+}
+
+func (s *Server) stoppedWith(err error) {
+	// 1. informs all services
+	s.Router.Terminate()
+	// 2. close all connections
+	s.closeAll()
+	// 3. inform server's user
+	s.waitChan <- err
+	close(s.waitChan)
 }
 
 // CloseAll close the connecction. Return the first error if any.
@@ -602,9 +629,14 @@ func (s *Server) closeAll() error {
 	return ret
 }
 
+func (s *Server) WaitTerminate() chan error {
+	return s.waitChan
+}
+
 func (s *Server) Stop() error {
+	close(s.closeChan)
 	err := s.listen.Close()
-	s.closeAll()
+	s.stoppedWith(err)
 	return err
 }
 
