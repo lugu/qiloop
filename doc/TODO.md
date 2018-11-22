@@ -15,6 +15,7 @@ Unsorted todo list:
         - use sync group for closers or scatter/gather
         - replace consumer callback with a chan
     - prefer RWLocks
+    - uniform names (Id or ID): use golint
     - no init() method on the package
     - no globals
     - debug:
