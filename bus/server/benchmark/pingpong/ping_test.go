@@ -1,11 +1,14 @@
 package pingpong_test
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/lugu/qiloop/bus/server/benchmark/pingpong"
 	"github.com/lugu/qiloop/bus/server/benchmark/pingpong/proxy"
 	dir "github.com/lugu/qiloop/bus/server/directory"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/type/basic"
 	"os"
 	"strings"
 	"testing"
@@ -74,6 +77,7 @@ func testRemoteAddr(b *testing.B, addr string) {
 	services := proxy.Services(session)
 	client, err := services.PingPong()
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		reply, err := client.Hello("hello")
 		if err != nil {
@@ -130,8 +134,77 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	services := proxy.Services(session)
 	client, err := services.PingPong()
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		reply, err := client.Hello("hello")
+		if err != nil {
+			panic(err)
+		}
+		if reply != "Hello, World!" {
+			panic(reply)
+		}
+	}
+}
+
+func implHello(a string) (string, error) {
+	return "Hello, World!", nil
+}
+
+func stubHello(payload []byte) ([]byte, error) {
+	buf := bytes.NewBuffer(payload)
+	a, err := basic.ReadString(buf)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read a: %s", err)
+	}
+	ret, callErr := implHello(a)
+	if callErr != nil {
+		return nil, callErr
+	}
+	var out bytes.Buffer
+	errOut := basic.WriteString(ret, &out)
+	if errOut != nil {
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
+	}
+	return out.Bytes(), nil
+}
+
+func proxyHello(P0 string) (string, error) {
+	var err error
+	var ret string
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteString(P0, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	}
+	response, err := stubHello(buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call hello failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadString(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse hello response: %s", err)
+	}
+	return ret, nil
+}
+
+func BenchmarkSerialization(b *testing.B) {
+
+	for i := 0; i < b.N; i++ {
+		reply, err := proxyHello("hello")
+		if err != nil {
+			panic(err)
+		}
+		if reply != "Hello, World!" {
+			panic(reply)
+		}
+	}
+}
+
+func BenchmarkImplementation(b *testing.B) {
+
+	for i := 0; i < b.N; i++ {
+		reply, err := implHello("hello")
 		if err != nil {
 			panic(err)
 		}
