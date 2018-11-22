@@ -9,6 +9,8 @@ import (
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
+	"io"
+	gonet "net"
 	"os"
 	"strings"
 	"testing"
@@ -210,6 +212,57 @@ func BenchmarkImplementation(b *testing.B) {
 		}
 		if reply != "Hello, World!" {
 			panic(reply)
+		}
+	}
+}
+
+func BenchmarkPingPongUnixRaw(b *testing.B) {
+	addr := util.NewUnixAddr()
+	filename := strings.TrimPrefix(addr, "unix://")
+	listener, err := gonet.Listen("unix", filename)
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+		go func(conn gonet.Conn) {
+			defer conn.Close()
+			buf := make([]byte, 100)
+			for {
+				_, err := conn.Read(buf)
+				if err == io.EOF {
+					return
+				} else if err != nil {
+					panic(err)
+				}
+				_, err = conn.Write([]byte("Hello, World!"))
+				if err != nil {
+					panic(err)
+				}
+			}
+		}(conn)
+	}()
+	conn, err := gonet.Dial("unix", filename)
+	if err != nil {
+		panic(err)
+	}
+	b.ResetTimer()
+	buf := make([]byte, 100)
+	for i := 0; i < b.N; i++ {
+		count, err := conn.Write([]byte("hello"))
+		if err != nil {
+			panic(err)
+		}
+		if count == 0 {
+			panic("too short")
+		}
+		_, err = conn.Read(buf)
+		if err != nil {
+			panic(err)
 		}
 	}
 }
