@@ -85,7 +85,7 @@ func TestNewServer(t *testing.T) {
 	h := net.NewHeader(net.Call, 2, 1, 3, 4)
 	mSent := net.NewMessage(h, make([]byte, 0))
 
-	received, err := clt.ReceiveOne()
+	received, err := clt.ReceiveAny()
 	if err != nil {
 		t.Errorf("failed to receive net. %s", err)
 	}

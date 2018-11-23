@@ -13,7 +13,7 @@ func TestProxyCall(t *testing.T) {
 	defer serviceEndpoint.Close()
 	defer clientEndpoint.Close()
 
-	msgChan, err := serviceEndpoint.ReceiveOne()
+	msgChan, err := serviceEndpoint.ReceiveAny()
 	if err != nil {
 		panic(err)
 	}

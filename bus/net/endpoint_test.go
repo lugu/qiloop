@@ -73,7 +73,7 @@ func TestReceiveOne(t *testing.T) {
 	var wait sync.WaitGroup
 
 	e := net.NewEndPoint(b)
-	msgChan, err := e.ReceiveOne()
+	msgChan, err := e.ReceiveAny()
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +101,7 @@ func TestPingPong(t *testing.T) {
 
 	var wait sync.WaitGroup
 
-	srvChan, err := server.ReceiveOne()
+	srvChan, err := server.ReceiveAny()
 	// reply to a single message
 	wait.Add(1)
 	go func() {
@@ -120,7 +120,7 @@ func TestPingPong(t *testing.T) {
 	var mSent net.Message
 
 	// server replied
-	cltChan, err := client.ReceiveOne()
+	cltChan, err := client.ReceiveAny()
 	if err != nil {
 		t.Fatalf("failed to receive net.")
 	}
