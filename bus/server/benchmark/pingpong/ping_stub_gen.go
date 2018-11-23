@@ -28,8 +28,8 @@ func PingPongObject(impl PingPong) server.Object {
 	var stb stubPingPong
 	stb.impl = impl
 	stb.obj = server.NewObject(stb.metaObject())
-	stb.obj.Wrapper[uint32(0x64)] = stb.Hello
-	stb.obj.Wrapper[uint32(0x65)] = stb.Ping
+	stb.obj.Wrap(uint32(0x64), stb.Hello)
+	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb
 }
 func (s *stubPingPong) Activate(sess bus.Session, serviceID, objectID uint32) error {

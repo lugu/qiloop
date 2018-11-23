@@ -36,14 +36,14 @@ func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	var stb stubServiceDirectory
 	stb.impl = impl
 	stb.obj = server.NewObject(stb.metaObject())
-	stb.obj.Wrapper[uint32(0x64)] = stb.Service
-	stb.obj.Wrapper[uint32(0x65)] = stb.Services
-	stb.obj.Wrapper[uint32(0x66)] = stb.RegisterService
-	stb.obj.Wrapper[uint32(0x67)] = stb.UnregisterService
-	stb.obj.Wrapper[uint32(0x68)] = stb.ServiceReady
-	stb.obj.Wrapper[uint32(0x69)] = stb.UpdateServiceInfo
-	stb.obj.Wrapper[uint32(0x6c)] = stb.MachineId
-	stb.obj.Wrapper[uint32(0x6d)] = stb._socketOfService
+	stb.obj.Wrap(uint32(0x64), stb.Service)
+	stb.obj.Wrap(uint32(0x65), stb.Services)
+	stb.obj.Wrap(uint32(0x66), stb.RegisterService)
+	stb.obj.Wrap(uint32(0x67), stb.UnregisterService)
+	stb.obj.Wrap(uint32(0x68), stb.ServiceReady)
+	stb.obj.Wrap(uint32(0x69), stb.UpdateServiceInfo)
+	stb.obj.Wrap(uint32(0x6c), stb.MachineId)
+	stb.obj.Wrap(uint32(0x6d), stb._socketOfService)
 	return &stb
 }
 func (s *stubServiceDirectory) Activate(sess bus.Session, serviceID, objectID uint32) error {

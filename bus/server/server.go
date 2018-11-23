@@ -52,13 +52,17 @@ func NewObject(meta object.MetaObject) *BasicObject {
 	obj.meta = fullMetaObject(meta)
 	obj.signals = make([]SignalUser, 0)
 	obj.Wrapper = make(map[uint32]bus.ActionWrapper)
-	obj.Wrapper[uint32(0x2)] = obj.wrapMetaObject
+	obj.Wrap(uint32(0x2), obj.wrapMetaObject)
 	// obj.Wrapper[uint32(0x3)] = obj.Terminate
 	// obj.Wrapper[uint32(0x5)] = obj.Property
 	// obj.Wrapper[uint32(0x6)] = obj.SetProperty
 	// obj.Wrapper[uint32(0x7)] = obj.Properties
 	// obj.Wrapper[uint32(0x8)] = obj.RegisterEventWithSignature
 	return &obj
+}
+
+func (o *BasicObject) Wrap(id uint32, fn bus.ActionWrapper) {
+	o.Wrapper[id] = fn
 }
 
 func (o *BasicObject) AddSignalUser(signalID, messageID uint32, from *Context) uint64 {

@@ -341,9 +341,10 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
-		code = jen.Id("stb.obj.Wrapper").Index(
+		code = jen.Id("stb.obj.Wrap").Call(
 			jen.Lit(method.Id),
-		).Op("=").Id("stb").Dot(methodName)
+			jen.Id("stb").Dot(methodName),
+		)
 		writing = append(writing, code)
 		return nil
 	}

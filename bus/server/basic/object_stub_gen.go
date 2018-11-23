@@ -36,14 +36,14 @@ func ObjectObject(impl Object) server.Object {
 	var stb stubObject
 	stb.impl = impl
 	stb.obj = server.NewObject(stb.metaObject())
-	stb.obj.Wrapper[uint32(0x0)] = stb.RegisterEvent
-	stb.obj.Wrapper[uint32(0x1)] = stb.UnregisterEvent
-	stb.obj.Wrapper[uint32(0x2)] = stb.MetaObject
-	stb.obj.Wrapper[uint32(0x3)] = stb.Terminate
-	stb.obj.Wrapper[uint32(0x5)] = stb.Property
-	stb.obj.Wrapper[uint32(0x6)] = stb.SetProperty
-	stb.obj.Wrapper[uint32(0x7)] = stb.Properties
-	stb.obj.Wrapper[uint32(0x8)] = stb.RegisterEventWithSignature
+	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
+	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
+	stb.obj.Wrap(uint32(0x2), stb.MetaObject)
+	stb.obj.Wrap(uint32(0x3), stb.Terminate)
+	stb.obj.Wrap(uint32(0x5), stb.Property)
+	stb.obj.Wrap(uint32(0x6), stb.SetProperty)
+	stb.obj.Wrap(uint32(0x7), stb.Properties)
+	stb.obj.Wrap(uint32(0x8), stb.RegisterEventWithSignature)
 	return &stb
 }
 func (s *stubObject) Activate(sess bus.Session, serviceID, objectID uint32) error {

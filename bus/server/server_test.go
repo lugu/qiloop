@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
@@ -32,13 +33,13 @@ func (o *ObjectDispatcher) Activate(sess bus.Session, serviceID,
 	objectID uint32) error {
 	return nil
 }
-func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
+func (o *ObjectDispatcher) Receive(m *net.Message, from *server.Context) error {
 	if o.wrapper == nil {
-		return util.ReplyError(from.EndPoint, m, ActionNotFound)
+		return util.ReplyError(from.EndPoint, m, server.ActionNotFound)
 	}
 	a, ok := o.wrapper[m.Header.Action]
 	if !ok {
-		return util.ReplyError(from.EndPoint, m, ActionNotFound)
+		return util.ReplyError(from.EndPoint, m, server.ActionNotFound)
 	}
 	response, err := a(m.Payload)
 
