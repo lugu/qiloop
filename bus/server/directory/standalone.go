@@ -29,7 +29,7 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 	service1 := ServiceDirectoryObject(impl)
 	_, err = s.NewService("ServiceDirectory", service1)
 	if err != nil {
-		s.Stop()
+		s.Terminate()
 		listener.Close()
 		return nil, err
 	}

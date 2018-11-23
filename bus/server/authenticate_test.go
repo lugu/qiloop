@@ -33,7 +33,7 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 	if !ok && err == nil {
 		t.Errorf("shall not pass: %s, %s", user, token)
 	}
-	srv.Stop()
+	srv.Terminate()
 }
 
 func TestNewServiceAuthenticate(t *testing.T) {

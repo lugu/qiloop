@@ -23,7 +23,7 @@ func TestPingPong(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer server.Stop()
+	defer server.Terminate()
 
 	service := pingpong.PingPongObject(pingpong.NewPingPong())
 	_, err = server.NewService("PingPong", service)
@@ -64,7 +64,7 @@ func testRemoteAddr(b *testing.B, addr string) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer server.Stop()
+	defer server.Terminate()
 
 	service := pingpong.PingPongObject(pingpong.NewPingPong())
 	_, err = server.NewService("PingPong", service)
@@ -117,7 +117,7 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer server.Stop()
+	defer server.Terminate()
 
 	// remove socket file: so it can't be used
 	filename := strings.TrimPrefix(addr, "unix://")

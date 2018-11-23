@@ -59,7 +59,7 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer srv.Stop()
+	defer srv.Terminate()
 
 	var object ObjectDispatcher
 	handler := func(d []byte) ([]byte, error) {
@@ -189,7 +189,7 @@ func TestServerReturnError(t *testing.T) {
 	testInvalid(t, server.ObjectNotFound, serviceID, invalidObjectID, invalidActionID)
 	testInvalid(t, server.ServiceNotFound, invalidServiceID, objectID, invalidActionID)
 	testInvalid(t, server.ServiceNotFound, invalidServiceID, invalidObjectID, actionID)
-	srv.Stop()
+	srv.Terminate()
 }
 
 func TestStandAloneInit(t *testing.T) {
@@ -232,5 +232,5 @@ func TestStandAloneInit(t *testing.T) {
 	if id != 0 {
 		t.Errorf("invalid action id")
 	}
-	srv.Stop()
+	srv.Terminate()
 }

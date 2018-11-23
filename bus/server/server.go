@@ -594,7 +594,7 @@ func (s *Server) WaitTerminate() chan error {
 	return s.waitChan
 }
 
-func (s *Server) Stop() error {
+func (s *Server) Terminate() error {
 	close(s.closeChan)
 	err := s.listen.Close()
 	s.stoppedWith(err)

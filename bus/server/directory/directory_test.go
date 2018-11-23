@@ -16,7 +16,7 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer server.Stop()
+	defer server.Terminate()
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
