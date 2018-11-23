@@ -238,49 +238,6 @@ type Object interface {
 	Activate(sess bus.Session, serviceID, objectID uint32) error
 }
 
-type Dispatcher interface {
-	Wrap(id uint32, wrap bus.ActionWrapper)
-	UpdateSignal(signal uint32, value []byte) error
-}
-
-// ObjectDispatcher implements both Object and Dispatcher
-type ObjectDispatcher struct {
-	wrapper bus.Wrapper
-}
-
-func (o *ObjectDispatcher) UpdateSignal(signal uint32, value []byte) error {
-	panic("not available")
-}
-
-func (o *ObjectDispatcher) Wrap(id uint32, fn bus.ActionWrapper) {
-	if o.wrapper == nil {
-		o.wrapper = make(map[uint32]bus.ActionWrapper)
-	}
-	o.wrapper[id] = fn
-}
-
-func (o *ObjectDispatcher) Activate(sess bus.Session, serviceID,
-	objectID uint32) error {
-	return nil
-}
-func (o *ObjectDispatcher) Receive(m *net.Message, from *Context) error {
-	if o.wrapper == nil {
-		return util.ReplyError(from.EndPoint, m, ActionNotFound)
-	}
-	a, ok := o.wrapper[m.Header.Action]
-	if !ok {
-		return util.ReplyError(from.EndPoint, m, ActionNotFound)
-	}
-	response, err := a(m.Payload)
-
-	if err != nil {
-		return util.ReplyError(from.EndPoint, m, err)
-	}
-	reply := net.NewMessage(m.Header, response)
-	reply.Header.Type = net.Reply
-	return from.EndPoint.Send(reply)
-}
-
 type ServiceImpl struct {
 	sync.RWMutex
 	objects map[uint32]Object
