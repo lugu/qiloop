@@ -33,6 +33,10 @@ func (o *ObjectDispatcher) Activate(sess bus.Session, serviceID,
 	objectID uint32) error {
 	return nil
 }
+
+func (o *ObjectDispatcher) OnTerminate() {
+}
+
 func (o *ObjectDispatcher) Receive(m *net.Message, from *server.Context) error {
 	if o.wrapper == nil {
 		return util.ReplyError(from.EndPoint, m, server.ActionNotFound)

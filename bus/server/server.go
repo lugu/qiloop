@@ -217,13 +217,7 @@ func (o *BasicObject) Receive(m *net.Message, from *Context) error {
 	}
 }
 
-func (o *BasicObject) Terminate() {
-	// TODO:
-	// - call Server.directory.Remove()
-	// - call Server.Router.Remove()
-	// - call Terminate on all objects
-	// - signal WaitTerminate condition
-	panic("not yet implemented")
+func (o *BasicObject) OnTerminate() {
 }
 
 func (o *BasicObject) NewHeader(typ uint8, action, id uint32) net.Header {
@@ -240,6 +234,11 @@ func (o *BasicObject) Activate(sess bus.Session, serviceID,
 type Object interface {
 	Receive(m *net.Message, from *Context) error
 	Activate(sess bus.Session, serviceID, objectID uint32) error
+	// - call Server.directory.Remove()
+	// - call Server.Router.Remove()
+	// - call Terminate on all objects
+	// - signal WaitTerminate condition
+	OnTerminate()
 }
 
 type ServiceImpl struct {
@@ -312,7 +311,12 @@ func (n *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 }
 
 func (n *ServiceImpl) Terminate() error {
-	return fmt.Errorf("terminate not yet implemented")
+	n.RLock()
+	defer n.RUnlock()
+	for _, obj := range n.objects {
+		obj.OnTerminate()
+	}
+	return nil
 }
 
 // Router dispatch the incomming messages.
@@ -479,6 +483,15 @@ type Service interface {
 	Terminate() error
 }
 
+// FIXME: Server registers the service to the namespace, it shall as
+// well unregister it on Server.Terminate() *and* when requested by
+// the service itself. TODO: need to add a Terminate() callback into
+// the signal helper.
+//
+// - call Server.namespace.Remove(serviceID)
+// - call Server.Router.Remove()
+// - call Terminate on all objects
+// - signal WaitTerminate condition
 func (s *Server) NewService(name string, object Object) (Service, error) {
 
 	service := NewService(object)

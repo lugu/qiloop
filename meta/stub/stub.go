@@ -319,6 +319,12 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	)
 	file.Func().Params(
 		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+	).Id("OnTerminate").Params().Block(
+		jen.Id(`s.impl.OnTerminate()`),
+		jen.Id(`s.obj.OnTerminate()`),
+	)
+	file.Func().Params(
+		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
 		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus/server", "Context"),
@@ -396,6 +402,8 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		jen.Error(),
 	)
 	definitions = append(definitions, activate)
+	terminate := jen.Id("OnTerminate()")
+	definitions = append(definitions, terminate)
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]

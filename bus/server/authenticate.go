@@ -103,6 +103,9 @@ func (s *serviceAuthenticate) Activate(sess bus.Session, serviceID,
 	return nil
 }
 
+func (s *serviceAuthenticate) OnTerminate() {
+}
+
 func (s *serviceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	m, err := ReadCapabilityMap(buf)

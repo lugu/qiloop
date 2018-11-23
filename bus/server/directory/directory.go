@@ -36,6 +36,9 @@ func (s *ServiceDirectoryImpl) Activate(sess bus.Session, serviceID,
 	return nil
 }
 
+func (s *ServiceDirectoryImpl) OnTerminate() {
+}
+
 func checkServiceInfo(i ServiceInfo) error {
 	if i.Name == "" {
 		return fmt.Errorf("empty name not allowed")
