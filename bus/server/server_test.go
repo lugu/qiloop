@@ -215,6 +215,7 @@ func TestStandAloneInit(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	defer srv.Terminate()
 	srv.NewService("test", obj)
 
 	clt, err := net.DialEndPoint(addr)
@@ -236,5 +237,81 @@ func TestStandAloneInit(t *testing.T) {
 	if id != 0 {
 		t.Errorf("invalid action id")
 	}
-	srv.Terminate()
+}
+
+func TestSession(t *testing.T) {
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	obj := server.NewObject(object.MetaObject{
+		Description: "test",
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+	})
+
+	srv, err := server.StandAloneServer(listener, server.Yes{},
+		server.PrivateNamespace())
+	if err != nil {
+		panic(err)
+	}
+	defer srv.Terminate()
+	srv.NewService("test", obj)
+
+	sess := srv.Session()
+	proxy, err := sess.Proxy("test", uint32(0x1))
+	if err != nil {
+		panic(err)
+	}
+
+	metaBytes, err := proxy.Call("metaObject", []byte{1, 0, 0, 0})
+	if err != nil {
+		panic(err)
+	}
+	buf := bytes.NewBuffer(metaBytes)
+	_, err = object.ReadMetaObject(buf)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestRemoteServer(t *testing.T) {
+
+	t.Skip("wait until NewServer gets a namespace")
+
+	addr := util.NewUnixAddr()
+	srv, err := directory.NewServer(addr, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Terminate()
+
+	sess := srv.Session()
+
+	addr2 := util.NewUnixAddr()
+	srv2, err := server.NewServer(sess, addr2)
+	defer srv2.Terminate()
+
+	obj := server.NewObject(object.MetaObject{
+		Description: "test",
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+	})
+	srv2.NewService("test", obj)
+
+	proxy, err := sess.Proxy("test", uint32(0x1))
+	if err != nil {
+		panic(err)
+	}
+
+	metaBytes, err := proxy.Call("metaObject", []byte{1, 0, 0, 0})
+	if err != nil {
+		panic(err)
+	}
+	buf := bytes.NewBuffer(metaBytes)
+	_, err = object.ReadMetaObject(buf)
+	if err != nil {
+		panic(err)
+	}
 }

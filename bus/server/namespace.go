@@ -101,7 +101,7 @@ type localSession struct {
 }
 
 func (s *localSession) Client(serviceID uint32) (bus.Client, error) {
-	return s.server.NewClient(), nil
+	return s.server.Client(), nil
 }
 
 func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {

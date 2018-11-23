@@ -7,7 +7,6 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
@@ -432,7 +431,7 @@ type Server struct {
 // incomming requests. It uses the given session to register and
 // activate the new services.
 // FIXME: update NewServer signature to add an authenticator
-func NewServer(session *session.Session, addr string) (*Server, error) {
+func NewServer(session bus.Session, addr string) (*Server, error) {
 	l, err := net.Listen(addr)
 	if err != nil {
 		return nil, err
@@ -442,6 +441,7 @@ func NewServer(session *session.Session, addr string) (*Server, error) {
 		listen:        l,
 		addrs:         []string{addr},
 		session:       session,
+		namespace:     nil,
 		Router:        NewRouter(ServiceAuthenticate(Yes{})),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
@@ -486,14 +486,24 @@ type Service interface {
 // FIXME: Server registers the service to the namespace, it shall as
 // well unregister it on Server.Terminate() *and* when requested by
 // the service itself. TODO: need to add a Terminate() callback into
-// the signal helper.
+// the signal helper which is part of the stub interface... Shall the
+// stub do the registration as well ? It has knowledge of the life
+// cycle of the service.
 //
 // - call Server.namespace.Remove(serviceID)
 // - call Server.Router.Remove()
 // - call Terminate on all objects
 // - signal WaitTerminate condition
+//
+// TODO:
+// 1. fix the proxy generation issue
+// 2. write a test auto with a service connecting a remote server
+// 3. refactor this name registration into the stub
 func (s *Server) NewService(name string, object Object) (Service, error) {
 
+	if s.namespace == nil {
+		return nil, fmt.Errorf("server has no namespace")
+	}
 	service := NewService(object)
 
 	// 1. reserve the name
@@ -555,8 +565,7 @@ func (s *Server) handle(c gonet.Conn, authenticated bool) {
 }
 
 func (s *Server) activate() error {
-	session := s.namespace.Session(s)
-	err := s.Router.Activate(session)
+	err := s.Router.Activate(s.session)
 	if err != nil {
 		return err
 	}
@@ -614,7 +623,7 @@ func (s *Server) Terminate() error {
 	return err
 }
 
-func (s *Server) NewClient() bus.Client {
+func (s *Server) Client() bus.Client {
 	ctl, srv := gonet.Pipe()
 	s.handle(srv, true)
 	return client.NewClient(net.NewEndPoint(ctl))

@@ -1,10 +1,16 @@
 Unsorted todo list:
+- session:
+    - bus/session/namespace: put the directory sync part here (i.e.
+      build a namespace from a session
+- sever:
+    - terminate test auto (add, terminate, add, ...)
+    - server.terminate: ensure all terminate are called.
 - transport:
     - try quic: https://github.com/lucas-clemente/quic-go
+    - web socket: https://godoc.org/github.com/gorilla/websocket
 - proxy:
     - generate basic methods without declaring them in the IDL
     - subscribe: better cancelation sementic (context.Context?)
-    - merge net.ReceiveAny/net.ReceiveOne
 - session:
     - session: register callback for service disconnection
 - idl:

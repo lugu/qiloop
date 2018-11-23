@@ -262,7 +262,7 @@ func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
 
 	if info.MachineId == util.MachineID() &&
 		info.ProcessId == util.ProcessID() {
-		return s.server.NewClient(), nil
+		return s.server.Client(), nil
 	}
 	endpoint, err := client.SelectEndPoint(info.Endpoints)
 	if err != nil {
