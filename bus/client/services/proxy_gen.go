@@ -23,6 +23,9 @@ func Services(s bus.Session) NewServices {
 type Object interface {
 	object.Object
 	bus.Proxy
+	SignalTraceObject(cancel chan int) (chan struct {
+		P0 EventTrace
+	}, error)
 }
 type Server interface {
 	bus.Proxy
@@ -244,6 +247,155 @@ func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64
 		return ret, fmt.Errorf("failed to parse registerEventWithSignature response: %s", err)
 	}
 	return ret, nil
+}
+func (p *ObjectProxy) IsStatsEnabled() (bool, error) {
+	var err error
+	var ret bool
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("isStatsEnabled", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isStatsEnabled failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse isStatsEnabled response: %s", err)
+	}
+	return ret, nil
+}
+func (p *ObjectProxy) EnableStats(P0 bool) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteBool(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
+	}
+	_, err = p.Call("enableStats", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call enableStats failed: %s", err)
+	}
+	return nil
+}
+func (p *ObjectProxy) Stats() (map[uint32]MethodStatistics, error) {
+	var err error
+	var ret map[uint32]MethodStatistics
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("stats", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call stats failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = func() (m map[uint32]MethodStatistics, err error) {
+		size, err := basic.ReadUint32(buf)
+		if err != nil {
+			return m, fmt.Errorf("failed to read map size: %s", err)
+		}
+		m = make(map[uint32]MethodStatistics, size)
+		for i := 0; i < int(size); i++ {
+			k, err := basic.ReadUint32(buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map key: %s", err)
+			}
+			v, err := ReadMethodStatistics(buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map value: %s", err)
+			}
+			m[k] = v
+		}
+		return m, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse stats response: %s", err)
+	}
+	return ret, nil
+}
+func (p *ObjectProxy) ClearStats() error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	_, err = p.Call("clearStats", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call clearStats failed: %s", err)
+	}
+	return nil
+}
+func (p *ObjectProxy) IsTraceEnabled() (bool, error) {
+	var err error
+	var ret bool
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("isTraceEnabled", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isTraceEnabled failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse isTraceEnabled response: %s", err)
+	}
+	return ret, nil
+}
+func (p *ObjectProxy) EnableTrace(P0 bool) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteBool(P0, buf); err != nil {
+		return fmt.Errorf("failed to serialize P0: %s", err)
+	}
+	_, err = p.Call("enableTrace", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call enableTrace failed: %s", err)
+	}
+	return nil
+}
+func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
+	P0 EventTrace
+}, error) {
+	signalID, err := p.SignalUid("traceObject")
+	if err != nil {
+		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
+	}
+
+	_, err = p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
+	}
+	ch := make(chan struct {
+		P0 EventTrace
+	})
+	chPay, err := p.SubscribeID(signalID, cancel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request signal: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (s struct {
+				P0 EventTrace
+			}, err error) {
+				s.P0, err = ReadEventTrace(buf)
+				if err != nil {
+					return s, fmt.Errorf("failed to read tuple member: %s", err)
+				}
+				return s, nil
+			}()
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return ch, nil
 }
 
 type ServerProxy struct {
@@ -1316,83 +1468,6 @@ func (p *LogManagerProxy) SignalTraceObject(cancel chan int) (chan struct {
 	return ch, nil
 }
 
-type ServiceInfo struct {
-	Name      string
-	ServiceId uint32
-	MachineId string
-	ProcessId uint32
-	Endpoints []string
-	SessionId string
-}
-
-func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
-	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
-	}
-	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
-	}
-	if s.MachineId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
-	}
-	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
-	}
-	if s.Endpoints, err = func() (b []string, err error) {
-		size, err := basic.ReadUint32(r)
-		if err != nil {
-			return b, fmt.Errorf("failed to read slice size: %s", err)
-		}
-		b = make([]string, size)
-		for i := 0; i < int(size); i++ {
-			b[i], err = basic.ReadString(r)
-			if err != nil {
-				return b, fmt.Errorf("failed to read slice value: %s", err)
-			}
-		}
-		return b, nil
-	}(); err != nil {
-		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
-	}
-	if s.SessionId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
-	}
-	return s, nil
-}
-func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
-	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
-		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
-	}
-	if err := basic.WriteString(s.MachineId, w); err != nil {
-		return fmt.Errorf("failed to write MachineId field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
-		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
-	}
-	if err := func() error {
-		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
-		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
-		}
-		for _, v := range s.Endpoints {
-			err = basic.WriteString(v, w)
-			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
-	}
-	if err := basic.WriteString(s.SessionId, w); err != nil {
-		return fmt.Errorf("failed to write SessionId field: " + err.Error())
-	}
-	return nil
-}
-
 type timeval struct {
 	Tv_sec  int64
 	Tv_usec int64
@@ -1486,6 +1561,83 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	}
 	if err := basic.WriteUint32(s.CalleeContext, w); err != nil {
 		return fmt.Errorf("failed to write CalleeContext field: " + err.Error())
+	}
+	return nil
+}
+
+type ServiceInfo struct {
+	Name      string
+	ServiceId uint32
+	MachineId string
+	ProcessId uint32
+	Endpoints []string
+	SessionId string
+}
+
+func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+	}
+	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
+	}
+	if s.MachineId, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
+	}
+	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
+	}
+	if s.Endpoints, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(r)
+		if err != nil {
+			return b, fmt.Errorf("failed to read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(r)
+			if err != nil {
+				return b, fmt.Errorf("failed to read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}(); err != nil {
+		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
+	}
+	if s.SessionId, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
+	}
+	return s, nil
+}
+func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
+		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
+	}
+	if err := basic.WriteString(s.MachineId, w); err != nil {
+		return fmt.Errorf("failed to write MachineId field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
+		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
+	}
+	if err := func() error {
+		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
+		if err != nil {
+			return fmt.Errorf("failed to write slice size: %s", err)
+		}
+		for _, v := range s.Endpoints {
+			err = basic.WriteString(v, w)
+			if err != nil {
+				return fmt.Errorf("failed to write slice value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
+	}
+	if err := basic.WriteString(s.SessionId, w); err != nil {
+		return fmt.Errorf("failed to write SessionId field: " + err.Error())
 	}
 	return nil
 }
