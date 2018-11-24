@@ -111,7 +111,7 @@ func BindSession(c bus.Client) (*Session, error) {
 		return nil, fmt.Errorf("failed to get directory meta object: %s", err)
 	}
 	s := new(Session)
-	s.Directory = &services.ServiceDirectoryProxy{proxy}
+	s.Directory = &services.ServiceDirectoryProxy{objproxy.ObjectProxy{proxy}}
 
 	s.serviceList, err = s.Directory.Services()
 	if err != nil {

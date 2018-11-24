@@ -20,7 +20,25 @@ func newFileAndSet(packageName string) (*jen.File, *signature.TypeSet) {
 
 func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj object.MetaObject) {
 
-	file.Type().Id(proxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
+		file.Type().Id(proxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+	} else {
+		file.Type().Id(proxyName).Struct(jen.Qual(
+			"github.com/lugu/qiloop/bus/client/object",
+			"ObjectProxy",
+		))
+	}
+	blockContructor := jen.Return(
+
+		jen.Op("&").Id(proxyName).Values(jen.Qual(
+			"github.com/lugu/qiloop/bus/client/object",
+			"ObjectProxy",
+		).Values(jen.Id("proxy"))),
+		jen.Nil(),
+	)
+	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
+		blockContructor = jen.Id(`return &` + proxyName + `{ proxy }, nil`)
+	}
 	file.Func().Id("New"+serviceName).Params(
 		jen.Id("ses").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("obj").Uint32(),
@@ -41,7 +59,7 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 				),
 			),
 		),
-		jen.Id(`return &`+proxyName+`{ proxy }, nil`),
+		blockContructor,
 	)
 	file.Func().Params(
 		jen.Id("s").Id("NewServices"),
@@ -133,9 +151,17 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 	generateProxyType(file, serviceName, proxyName, metaObj)
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
+		if serviceName != "Object" && serviceName != "Server" &&
+			m.Uid < object.MinUserActionID {
+			return nil
+		}
 		return generateMethod(file, set, proxyName, m, methodName)
 	}
 	signalCall := func(s object.MetaSignal, methodName string) error {
+		if serviceName != "Object" && serviceName != "Server" &&
+			s.Uid < object.MinUserActionID {
+			return nil
+		}
 		return generateSignal(file, set, proxyName, s, methodName)
 	}
 
