@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session/token"
 	"github.com/lugu/qiloop/type/object"
@@ -44,7 +43,7 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 
 	client0 := NewClient(endpoint)
 	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
-	server0 := services.ServerProxy{
+	server0 := ServerProxy{
 		proxy0,
 	}
 	return server0.Authenticate(permissions)

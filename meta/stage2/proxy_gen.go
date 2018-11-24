@@ -27,9 +27,6 @@ type Server interface {
 type Object interface {
 	object.Object
 	bus.Proxy
-	SignalTraceObject(cancel chan int) (chan struct {
-		P0 EventTrace
-	}, error)
 }
 type ServiceDirectory interface {
 	object.Object
@@ -42,9 +39,6 @@ type ServiceDirectory interface {
 	UpdateServiceInfo(P0 ServiceInfo) error
 	MachineId() (string, error)
 	_socketOfService(P0 uint32) (object.ObjectReference, error)
-	SignalTraceObject(cancel chan int) (chan struct {
-		P0 EventTrace
-	}, error)
 	SignalServiceAdded(cancel chan int) (chan struct {
 		P0 uint32
 		P1 string
@@ -933,6 +927,83 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 	return ch, nil
 }
 
+type ServiceInfo struct {
+	Name      string
+	ServiceId uint32
+	MachineId string
+	ProcessId uint32
+	Endpoints []string
+	SessionId string
+}
+
+func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+	}
+	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
+	}
+	if s.MachineId, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
+	}
+	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
+	}
+	if s.Endpoints, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(r)
+		if err != nil {
+			return b, fmt.Errorf("failed to read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(r)
+			if err != nil {
+				return b, fmt.Errorf("failed to read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}(); err != nil {
+		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
+	}
+	if s.SessionId, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
+	}
+	return s, nil
+}
+func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
+		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
+	}
+	if err := basic.WriteString(s.MachineId, w); err != nil {
+		return fmt.Errorf("failed to write MachineId field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
+		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
+	}
+	if err := func() error {
+		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
+		if err != nil {
+			return fmt.Errorf("failed to write slice size: %s", err)
+		}
+		for _, v := range s.Endpoints {
+			err = basic.WriteString(v, w)
+			if err != nil {
+				return fmt.Errorf("failed to write slice value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
+	}
+	if err := basic.WriteString(s.SessionId, w); err != nil {
+		return fmt.Errorf("failed to write SessionId field: " + err.Error())
+	}
+	return nil
+}
+
 type timeval struct {
 	Tv_sec  int64
 	Tv_usec int64
@@ -1026,83 +1097,6 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	}
 	if err := basic.WriteUint32(s.CalleeContext, w); err != nil {
 		return fmt.Errorf("failed to write CalleeContext field: " + err.Error())
-	}
-	return nil
-}
-
-type ServiceInfo struct {
-	Name      string
-	ServiceId uint32
-	MachineId string
-	ProcessId uint32
-	Endpoints []string
-	SessionId string
-}
-
-func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
-	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
-	}
-	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
-	}
-	if s.MachineId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
-	}
-	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
-	}
-	if s.Endpoints, err = func() (b []string, err error) {
-		size, err := basic.ReadUint32(r)
-		if err != nil {
-			return b, fmt.Errorf("failed to read slice size: %s", err)
-		}
-		b = make([]string, size)
-		for i := 0; i < int(size); i++ {
-			b[i], err = basic.ReadString(r)
-			if err != nil {
-				return b, fmt.Errorf("failed to read slice value: %s", err)
-			}
-		}
-		return b, nil
-	}(); err != nil {
-		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
-	}
-	if s.SessionId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
-	}
-	return s, nil
-}
-func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
-	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
-		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
-	}
-	if err := basic.WriteString(s.MachineId, w); err != nil {
-		return fmt.Errorf("failed to write MachineId field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
-		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
-	}
-	if err := func() error {
-		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
-		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
-		}
-		for _, v := range s.Endpoints {
-			err = basic.WriteString(v, w)
-			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
-	}
-	if err := basic.WriteString(s.SessionId, w); err != nil {
-		return fmt.Errorf("failed to write SessionId field: " + err.Error())
 	}
 	return nil
 }

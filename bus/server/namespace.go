@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
+	objproxy "github.com/lugu/qiloop/bus/client/object"
 	"github.com/lugu/qiloop/type/object"
 	"sync"
 )
@@ -127,7 +127,7 @@ func (s *localSession) Object(ref object.ObjectReference) (object.Object,
 	}
 	proxy := client.NewProxy(clt, ref.MetaObject, ref.ServiceID,
 		ref.ObjectID)
-	return &services.ObjectProxy{proxy}, nil
+	return &objproxy.ObjectProxy{proxy}, nil
 }
 func (s *localSession) Destroy() error {
 	return nil

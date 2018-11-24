@@ -106,6 +106,9 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		return nil
 	}
 	signalCall := func(s object.MetaSignal, methodName string) error {
+		if serviceName != "Server" && s.Uid < object.MinUserActionID {
+			return nil
+		}
 		def, err := generateSignalDef(file, set, serviceName, s, methodName)
 		if err != nil {
 			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)

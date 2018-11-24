@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
+	objproxy "github.com/lugu/qiloop/bus/client/object"
 	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/object"
@@ -38,7 +39,7 @@ func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Ob
 	}
 	proxy := client.NewProxy(client.NewClient(endpoint), ref.MetaObject,
 		ref.ServiceID, ref.ObjectID)
-	return &services.ObjectProxy{proxy}, nil
+	return &objproxy.ObjectProxy{proxy}, nil
 }
 
 func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
