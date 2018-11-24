@@ -6,6 +6,8 @@ import (
 
 const AuthenticateActionID = 8
 
+const MinUserMethodID = 100
+
 var MetaService0 MetaObject = MetaObject{
 	Description: "Server",
 	Methods: map[uint32]MetaMethod{

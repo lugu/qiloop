@@ -34,12 +34,6 @@ type Object interface {
 type ServiceDirectory interface {
 	object.Object
 	bus.Proxy
-	IsStatsEnabled() (bool, error)
-	EnableStats(P0 bool) error
-	Stats() (map[uint32]MethodStatistics, error)
-	ClearStats() error
-	IsTraceEnabled() (bool, error)
-	EnableTrace(P0 bool) error
 	Service(P0 string) (ServiceInfo, error)
 	Services() ([]ServiceInfo, error)
 	RegisterService(P0 ServiceInfo) (uint32, error)
@@ -1036,75 +1030,6 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	return nil
 }
 
-type MinMaxSum struct {
-	MinValue       float32
-	MaxValue       float32
-	CumulatedValue float32
-}
-
-func ReadMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
-	if s.MinValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read MinValue field: " + err.Error())
-	}
-	if s.MaxValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read MaxValue field: " + err.Error())
-	}
-	if s.CumulatedValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read CumulatedValue field: " + err.Error())
-	}
-	return s, nil
-}
-func WriteMinMaxSum(s MinMaxSum, w io.Writer) (err error) {
-	if err := basic.WriteFloat32(s.MinValue, w); err != nil {
-		return fmt.Errorf("failed to write MinValue field: " + err.Error())
-	}
-	if err := basic.WriteFloat32(s.MaxValue, w); err != nil {
-		return fmt.Errorf("failed to write MaxValue field: " + err.Error())
-	}
-	if err := basic.WriteFloat32(s.CumulatedValue, w); err != nil {
-		return fmt.Errorf("failed to write CumulatedValue field: " + err.Error())
-	}
-	return nil
-}
-
-type MethodStatistics struct {
-	Count  uint32
-	Wall   MinMaxSum
-	User   MinMaxSum
-	System MinMaxSum
-}
-
-func ReadMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
-	if s.Count, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Count field: " + err.Error())
-	}
-	if s.Wall, err = ReadMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read Wall field: " + err.Error())
-	}
-	if s.User, err = ReadMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read User field: " + err.Error())
-	}
-	if s.System, err = ReadMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read System field: " + err.Error())
-	}
-	return s, nil
-}
-func WriteMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
-	if err := basic.WriteUint32(s.Count, w); err != nil {
-		return fmt.Errorf("failed to write Count field: " + err.Error())
-	}
-	if err := WriteMinMaxSum(s.Wall, w); err != nil {
-		return fmt.Errorf("failed to write Wall field: " + err.Error())
-	}
-	if err := WriteMinMaxSum(s.User, w); err != nil {
-		return fmt.Errorf("failed to write User field: " + err.Error())
-	}
-	if err := WriteMinMaxSum(s.System, w); err != nil {
-		return fmt.Errorf("failed to write System field: " + err.Error())
-	}
-	return nil
-}
-
 type ServiceInfo struct {
 	Name      string
 	ServiceId uint32
@@ -1178,6 +1103,75 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	}
 	if err := basic.WriteString(s.SessionId, w); err != nil {
 		return fmt.Errorf("failed to write SessionId field: " + err.Error())
+	}
+	return nil
+}
+
+type MinMaxSum struct {
+	MinValue       float32
+	MaxValue       float32
+	CumulatedValue float32
+}
+
+func ReadMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
+	if s.MinValue, err = basic.ReadFloat32(r); err != nil {
+		return s, fmt.Errorf("failed to read MinValue field: " + err.Error())
+	}
+	if s.MaxValue, err = basic.ReadFloat32(r); err != nil {
+		return s, fmt.Errorf("failed to read MaxValue field: " + err.Error())
+	}
+	if s.CumulatedValue, err = basic.ReadFloat32(r); err != nil {
+		return s, fmt.Errorf("failed to read CumulatedValue field: " + err.Error())
+	}
+	return s, nil
+}
+func WriteMinMaxSum(s MinMaxSum, w io.Writer) (err error) {
+	if err := basic.WriteFloat32(s.MinValue, w); err != nil {
+		return fmt.Errorf("failed to write MinValue field: " + err.Error())
+	}
+	if err := basic.WriteFloat32(s.MaxValue, w); err != nil {
+		return fmt.Errorf("failed to write MaxValue field: " + err.Error())
+	}
+	if err := basic.WriteFloat32(s.CumulatedValue, w); err != nil {
+		return fmt.Errorf("failed to write CumulatedValue field: " + err.Error())
+	}
+	return nil
+}
+
+type MethodStatistics struct {
+	Count  uint32
+	Wall   MinMaxSum
+	User   MinMaxSum
+	System MinMaxSum
+}
+
+func ReadMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
+	if s.Count, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read Count field: " + err.Error())
+	}
+	if s.Wall, err = ReadMinMaxSum(r); err != nil {
+		return s, fmt.Errorf("failed to read Wall field: " + err.Error())
+	}
+	if s.User, err = ReadMinMaxSum(r); err != nil {
+		return s, fmt.Errorf("failed to read User field: " + err.Error())
+	}
+	if s.System, err = ReadMinMaxSum(r); err != nil {
+		return s, fmt.Errorf("failed to read System field: " + err.Error())
+	}
+	return s, nil
+}
+func WriteMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.Count, w); err != nil {
+		return fmt.Errorf("failed to write Count field: " + err.Error())
+	}
+	if err := WriteMinMaxSum(s.Wall, w); err != nil {
+		return fmt.Errorf("failed to write Wall field: " + err.Error())
+	}
+	if err := WriteMinMaxSum(s.User, w); err != nil {
+		return fmt.Errorf("failed to write User field: " + err.Error())
+	}
+	if err := WriteMinMaxSum(s.System, w); err != nil {
+		return fmt.Errorf("failed to write System field: " + err.Error())
 	}
 	return nil
 }

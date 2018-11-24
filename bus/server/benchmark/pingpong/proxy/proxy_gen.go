@@ -23,12 +23,6 @@ func Services(s bus.Session) NewServices {
 type PingPong interface {
 	object.Object
 	bus.Proxy
-	IsStatsEnabled() (bool, error)
-	EnableStats(P0 bool) error
-	Stats() (map[uint32]not_found_in_scope_MethodStatistics, error)
-	ClearStats() error
-	IsTraceEnabled() (bool, error)
-	EnableTrace(P0 bool) error
 	Hello(P0 string) (string, error)
 	Ping(P0 string) error
 	SignalPong(cancel chan int) (chan struct {
@@ -246,9 +240,9 @@ func (p *PingPongProxy) EnableStats(P0 bool) error {
 	}
 	return nil
 }
-func (p *PingPongProxy) Stats() (map[uint32]not_found_in_scope_MethodStatistics, error) {
+func (p *PingPongProxy) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
-	var ret map[uint32]not_found_in_scope_MethodStatistics
+	var ret map[uint32]MethodStatistics
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	response, err := p.Call("stats", buf.Bytes())
@@ -256,18 +250,18 @@ func (p *PingPongProxy) Stats() (map[uint32]not_found_in_scope_MethodStatistics,
 		return ret, fmt.Errorf("call stats failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = func() (m map[uint32]not_found_in_scope_MethodStatistics, err error) {
+	ret, err = func() (m map[uint32]MethodStatistics, err error) {
 		size, err := basic.ReadUint32(buf)
 		if err != nil {
 			return m, fmt.Errorf("failed to read map size: %s", err)
 		}
-		m = make(map[uint32]not_found_in_scope_MethodStatistics, size)
+		m = make(map[uint32]MethodStatistics, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := Readnot_found_in_scope_MethodStatistics(buf)
+			v, err := ReadMethodStatistics(buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -399,11 +393,71 @@ func (p *PingPongProxy) SignalPong(cancel chan int) (chan struct {
 	return ch, nil
 }
 
-type not_found_in_scope_MethodStatistics struct{}
+type MinMaxSum struct {
+	MinValue       float32
+	MaxValue       float32
+	CumulatedValue float32
+}
 
-func Readnot_found_in_scope_MethodStatistics(r io.Reader) (s not_found_in_scope_MethodStatistics, err error) {
+func ReadMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
+	if s.MinValue, err = basic.ReadFloat32(r); err != nil {
+		return s, fmt.Errorf("failed to read MinValue field: " + err.Error())
+	}
+	if s.MaxValue, err = basic.ReadFloat32(r); err != nil {
+		return s, fmt.Errorf("failed to read MaxValue field: " + err.Error())
+	}
+	if s.CumulatedValue, err = basic.ReadFloat32(r); err != nil {
+		return s, fmt.Errorf("failed to read CumulatedValue field: " + err.Error())
+	}
 	return s, nil
 }
-func Writenot_found_in_scope_MethodStatistics(s not_found_in_scope_MethodStatistics, w io.Writer) (err error) {
+func WriteMinMaxSum(s MinMaxSum, w io.Writer) (err error) {
+	if err := basic.WriteFloat32(s.MinValue, w); err != nil {
+		return fmt.Errorf("failed to write MinValue field: " + err.Error())
+	}
+	if err := basic.WriteFloat32(s.MaxValue, w); err != nil {
+		return fmt.Errorf("failed to write MaxValue field: " + err.Error())
+	}
+	if err := basic.WriteFloat32(s.CumulatedValue, w); err != nil {
+		return fmt.Errorf("failed to write CumulatedValue field: " + err.Error())
+	}
+	return nil
+}
+
+type MethodStatistics struct {
+	Count  uint32
+	Wall   MinMaxSum
+	User   MinMaxSum
+	System MinMaxSum
+}
+
+func ReadMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
+	if s.Count, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read Count field: " + err.Error())
+	}
+	if s.Wall, err = ReadMinMaxSum(r); err != nil {
+		return s, fmt.Errorf("failed to read Wall field: " + err.Error())
+	}
+	if s.User, err = ReadMinMaxSum(r); err != nil {
+		return s, fmt.Errorf("failed to read User field: " + err.Error())
+	}
+	if s.System, err = ReadMinMaxSum(r); err != nil {
+		return s, fmt.Errorf("failed to read System field: " + err.Error())
+	}
+	return s, nil
+}
+func WriteMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.Count, w); err != nil {
+		return fmt.Errorf("failed to write Count field: " + err.Error())
+	}
+	if err := WriteMinMaxSum(s.Wall, w); err != nil {
+		return fmt.Errorf("failed to write Wall field: " + err.Error())
+	}
+	if err := WriteMinMaxSum(s.User, w); err != nil {
+		return fmt.Errorf("failed to write User field: " + err.Error())
+	}
+	if err := WriteMinMaxSum(s.System, w); err != nil {
+		return fmt.Errorf("failed to write System field: " + err.Error())
+	}
 	return nil
 }

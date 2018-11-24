@@ -6,6 +6,8 @@ import (
 
 const MetaObjectMethodID = 2
 
+const MinUserActionID = 100
+
 // Object represents an object on QiMessaging. Every services
 // implement the Object interface except the Server service which only
 // has one method (authenticate).

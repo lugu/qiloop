@@ -95,7 +95,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
-		if serviceName != "Server" && m.Uid < 10 {
+		if serviceName != "Server" && m.Uid < object.MinUserActionID {
 			return nil
 		}
 		def, err := generateMethodDef(file, set, serviceName, m, methodName)

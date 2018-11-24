@@ -20,6 +20,17 @@ interface PingPong
         fn ping(a: str)
 	sig pong(a: str)
 end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
 struct MetaMethodParameter
 	name: str
 	description: str
