@@ -83,3 +83,13 @@ func (metaObj *MetaObject) ForEachMethodAndSignal(
 	}
 	return nil
 }
+
+func FullMetaObject(meta MetaObject) MetaObject {
+	for i, method := range ObjectMetaObject.Methods {
+		meta.Methods[i] = method
+	}
+	for i, signal := range ObjectMetaObject.Signals {
+		meta.Signals[i] = signal
+	}
+	return meta
+}

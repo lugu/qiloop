@@ -21,6 +21,7 @@ var MetaService0 MetaObject = MetaObject{
 			},
 		},
 	},
+	Signals: map[uint32]MetaSignal{},
 }
 
 var ObjectMetaObject MetaObject = MetaObject{
