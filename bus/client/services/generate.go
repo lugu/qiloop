@@ -1,4 +1,4 @@
-//go:generate go get github.com/lugu/qiloop/meta/stage4/cmd/stage4
-//go:generate $GOPATH/bin/stage4 -directory idl -package services
+//go:generate go get github.com/lugu/qiloop/cmd/proxygen
+//go:generate $GOPATH/bin/proxygen -idl services.idl -package services
 
 package services
