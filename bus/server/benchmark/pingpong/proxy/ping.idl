@@ -1,62 +1,7 @@
 package pingpong
 
 interface PingPong
-	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
-	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
-	fn metaObject(P0: uint32) -> MetaObject //uid:2
-	fn terminate(P0: uint32) //uid:3
-	fn property(P0: any) -> any //uid:5
-	fn setProperty(P0: any, P1: any) //uid:6
-	fn properties() -> Vec<str> //uid:7
-	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
-	fn isStatsEnabled() -> bool //uid:80
-	fn enableStats(P0: bool) //uid:81
-	fn stats() -> Map<uint32,MethodStatistics> //uid:82
-	fn clearStats() //uid:83
-	fn isTraceEnabled() -> bool //uid:84
-	fn enableTrace(P0: bool) //uid:85
-
         fn hello(a: str) -> str
         fn ping(a: str)
 	sig pong(a: str)
-end
-struct MinMaxSum
-	minValue: float32
-	maxValue: float32
-	cumulatedValue: float32
-end
-struct MethodStatistics
-	count: uint32
-	wall: MinMaxSum
-	user: MinMaxSum
-	system: MinMaxSum
-end
-struct MetaMethodParameter
-	name: str
-	description: str
-end
-struct MetaMethod
-	uid: uint32
-	returnSignature: str
-	name: str
-	parametersSignature: str
-	description: str
-	parameters: Vec<MetaMethodParameter>
-	returnDescription: str
-end
-struct MetaSignal
-	uid: uint32
-	name: str
-	signature: str
-end
-struct MetaProperty
-	uid: uint32
-	name: str
-	signature: str
-end
-struct MetaObject
-	methods: Map<uint32,MetaMethod>
-	signals: Map<uint32,MetaSignal>
-	properties: Map<uint32,MetaProperty>
-	description: str
 end
