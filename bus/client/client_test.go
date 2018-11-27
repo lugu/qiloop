@@ -4,6 +4,7 @@ import (
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -114,4 +115,62 @@ func TestProxy(t *testing.T) {
 		panic(err)
 	}
 	directory.Disconnect()
+}
+
+func TestSelectEndPoint(t *testing.T) {
+	addr := util.NewUnixAddr()
+
+	server, err := directory.NewServer(addr, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer server.Terminate()
+
+	// shall connect to unix socket
+	endpoint, err := client.SelectEndPoint([]string{
+		"tcp://198.18.0.1:12",
+		addr,
+		"tcps://192.168.0.1:12",
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer endpoint.Close()
+	// shall refuse to connect
+	_, err = client.SelectEndPoint([]string{
+		"tcp://198.18.1.0",
+		"tcps://192.168.0.0",
+	})
+	if err == nil {
+		panic("shall not be able to connect")
+	}
+}
+
+func TestSelectError(t *testing.T) {
+
+	addr := util.NewUnixAddr()
+
+	listener, err := net.Listen(addr)
+	if err != nil {
+		panic(err)
+	}
+	server, err := server.StandAloneServer(listener, server.No{},
+		server.PrivateNamespace())
+	defer server.Terminate()
+
+	// shall fail to authenticate
+	endpoint, err := client.SelectEndPoint([]string{
+		"tcp://198.18.0.1:12",
+		addr,
+		"tcps://192.168.0.1:12",
+	})
+	defer endpoint.Close()
+	if err == nil {
+		panic("shall fail to authenticate")
+	}
+	// shall refuse to connect to empty list
+	_, err = client.SelectEndPoint([]string{})
+	if err == nil {
+		panic("empty list")
+	}
 }
