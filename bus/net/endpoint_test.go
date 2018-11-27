@@ -143,3 +143,34 @@ func TestPingPong(t *testing.T) {
 		t.Errorf("expected %#v, go %#v", mSent, *mRcv)
 	}
 }
+
+func TestEndPointFinalizer(t *testing.T) {
+	a, b := gonet.Pipe()
+	defer a.Close()
+	defer b.Close()
+	go func() {
+		msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})
+		msg.Write(a)
+	}()
+	filter := func(hrd *net.Header) (bool, bool) {
+		return true, false
+	}
+	wait := make(chan *net.Message)
+	consumer := func(msg *net.Message) error {
+		wait <- msg
+		return nil
+	}
+	closer := func(err error) {
+	}
+	finalizer := func(e net.EndPoint) {
+		e.AddHandler(filter, consumer, closer)
+	}
+	net.EndPointFinalizer(b, finalizer)
+	msg, ok := <-wait
+	if !ok {
+		panic("expecting a message")
+	}
+	if msg == nil {
+		panic("not expected nil")
+	}
+}
