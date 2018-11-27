@@ -34,7 +34,7 @@ func NewServiceDirectory(addr string, serviceID uint32) (d stage2.ServiceDirecto
 		log.Fatalf("failed to query meta object of ServiceDirectory: %s", err)
 	}
 
-	return stage2.NewServiceDirectory(cache.Session(), serviceID)
+	return stage2.NewServiceDirectory(cache, serviceID)
 }
 
 func main() {

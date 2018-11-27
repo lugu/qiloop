@@ -7,7 +7,8 @@ import (
 	"github.com/lugu/qiloop/type/object"
 )
 
-// Cache implments bus.Session interface
+// Cache implements bus.Session interface without connecting to a
+// service directory.
 type Cache struct {
 	Names    map[string]uint32
 	Services map[uint32]object.MetaObject
@@ -72,8 +73,4 @@ func NewCache(e net.EndPoint) *Cache {
 		Services: make(map[uint32]object.MetaObject),
 		Endpoint: e,
 	}
-}
-
-func (s *Cache) Session() bus.Session {
-	return s
 }
