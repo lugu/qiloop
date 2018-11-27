@@ -9,10 +9,11 @@ Unsorted todo list:
     - try quic: https://github.com/lucas-clemente/quic-go
     - web socket: https://godoc.org/github.com/gorilla/websocket
 - proxy:
-    - generate basic methods without declaring them in the IDL
     - subscribe: better cancelation sementic (context.Context?)
-- session:
-    - session: register callback for service disconnection
+    - Subscribe(string name) (msg chan []byte, cancel func (), err error)
+        cancelChan := make(chan struc{})
+        cancel := func() { cancelChan <- 1 }
+        ...
 - idl:
     - NOTES.md: IDL section: syntax, ref to libqi doc and sample
     - meta: generate proxy with object reference
