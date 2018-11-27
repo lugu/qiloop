@@ -1,7 +1,9 @@
 package net_test
 
 import (
+	"fmt"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/util"
 	"io/ioutil"
 	gonet "net"
 	"os"
@@ -147,30 +149,185 @@ func TestPingPong(t *testing.T) {
 func TestEndPointFinalizer(t *testing.T) {
 	a, b := gonet.Pipe()
 	defer a.Close()
-	defer b.Close()
 	go func() {
 		msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})
 		msg.Write(a)
 	}()
 	filter := func(hrd *net.Header) (bool, bool) {
-		return true, false
+		return true, true
 	}
 	wait := make(chan *net.Message)
 	consumer := func(msg *net.Message) error {
 		wait <- msg
-		return nil
+		return fmt.Errorf("something go log")
 	}
 	closer := func(err error) {
 	}
 	finalizer := func(e net.EndPoint) {
 		e.AddHandler(filter, consumer, closer)
 	}
-	net.EndPointFinalizer(b, finalizer)
+	endpoint := net.EndPointFinalizer(b, finalizer)
+	defer endpoint.Close()
 	msg, ok := <-wait
 	if !ok {
 		panic("expecting a message")
 	}
 	if msg == nil {
 		panic("not expected nil")
+	}
+}
+
+func TestEndpointShallAcceptMultipleHandlers(t *testing.T) {
+	a, b := gonet.Pipe()
+	defer a.Close()
+
+	filter := func(hrd *net.Header) (bool, bool) {
+		return true, true
+	}
+	wait := make(chan *net.Message, 10)
+	consumer := func(msg *net.Message) error {
+		wait <- msg
+		return nil
+	}
+	closer := func(err error) {
+	}
+
+	endpoint := net.NewEndPoint(b)
+	defer endpoint.Close()
+
+	ids := make([]int, 20)
+	for i, _ := range ids {
+		ids[i] = endpoint.AddHandler(filter, consumer, closer)
+	}
+	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})
+	msg.Write(a)
+
+	for _, id := range ids {
+		msg, ok := <-wait
+		if !ok {
+			panic("expecting a message")
+		}
+		if msg == nil {
+			panic("not expected nil")
+		}
+		endpoint.RemoveHandler(id)
+	}
+	err := endpoint.RemoveHandler(ids[0])
+	if err == nil {
+		panic("shall fail")
+	}
+}
+
+func TestEndPoint_ShallDropMessages(t *testing.T) {
+	a, b := gonet.Pipe()
+	defer a.Close()
+	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})
+	endpoint := net.NewEndPoint(b)
+	if endpoint.String() == "" {
+		panic("empty name")
+	}
+	defer endpoint.Close()
+	msg.Write(a)
+}
+
+func TestEndPoint_DialTCP(t *testing.T) {
+	addr := "tcp://localhost:23456"
+	listener, err := net.Listen(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer endpoint.Close()
+
+	addr = "tcp://localhost"
+	_, err = net.Listen(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+
+	_, err = net.DialEndPoint(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+}
+
+func TestEndPointInvalidAddress(t *testing.T) {
+	test := func(addr, msg string) {
+		_, err := net.Listen(addr)
+		if err == nil {
+			panic("listen: " + msg)
+		}
+		_, err = net.DialEndPoint(addr)
+		if err == nil {
+			panic("dial: " + msg)
+		}
+	}
+	test("localhost:32432", "missing scheme")
+	test("udp://localhost:32432", "invalid scheme")
+	test("tcp://localhost", "missing port")
+	test("tcp://_localhost", "invalid host")
+	test("$#(*W@LKASDL(1", "random")
+}
+
+func TestEndPoint_DialTLS(t *testing.T) {
+	addr := "tcps://localhost:54321"
+	listener, err := net.Listen(addr)
+	if err != nil {
+		panic(err)
+	}
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+		buf := make([]byte, 10)
+		conn.Read(buf)
+		conn.Close()
+	}()
+	defer listener.Close()
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer endpoint.Close()
+
+	addr = "tcps://localhost"
+	_, err = net.Listen(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+
+	_, err = net.DialEndPoint(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+}
+
+func TestEndPoint_DialUnix(t *testing.T) {
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer endpoint.Close()
+
+	addr = "unix:///test"
+	_, err = net.Listen(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+
+	_, err = net.DialEndPoint(addr)
+	if err == nil {
+		panic("shall fail")
 	}
 }

@@ -143,7 +143,7 @@ func dialTLS(addr string) (EndPoint, error) {
 func DialEndPoint(addr string) (EndPoint, error) {
 	u, err := url.Parse(addr)
 	if err != nil {
-		return dialTCP(addr)
+		return nil, fmt.Errorf("dial: invalid address: %s", err)
 	} else {
 		switch u.Scheme {
 		case "tcp":

@@ -42,7 +42,7 @@ func listenUNIX(name string) (gonet.Listener, error) {
 func Listen(addr string) (gonet.Listener, error) {
 	u, err := url.Parse(addr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("listen: invalid address: %s", err)
 	}
 	switch u.Scheme {
 	case "tcp":
