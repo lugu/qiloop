@@ -38,3 +38,15 @@ func TestReadWriteMetaObject(t *testing.T) {
 		t.Errorf("expected %#v, got %#v", metaObj, metaObj2)
 	}
 }
+
+func TestWriteRead(t *testing.T) {
+	var buf bytes.Buffer
+	err := object.WriteMetaObject(object.ObjectMetaObject, &buf)
+	if err != nil {
+		panic(err)
+	}
+	_, err = object.ReadMetaObject(&buf)
+	if err != nil {
+		panic(err)
+	}
+}
