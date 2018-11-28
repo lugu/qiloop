@@ -2,7 +2,9 @@ package net_test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/lugu/qiloop/bus/net"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -124,5 +126,70 @@ func TestWriteReadMessage(t *testing.T) {
 	}
 	if input.Header != output.Header {
 		t.Errorf("expected %#v, got %#v", input.Header, output.Header)
+	}
+}
+
+func NewBrokenReader(msg net.Message, size int) io.Reader {
+	var buf bytes.Buffer
+	msg.Write(&buf)
+	data := buf.Bytes()
+	if size > len(data) {
+		panic(fmt.Errorf("size is too large: %d", size))
+	}
+	return bytes.NewBuffer(data[:size])
+}
+
+type BrokenWriter struct {
+	size int
+}
+
+func (b *BrokenWriter) Write(buf []byte) (int, error) {
+	if len(buf) <= b.size {
+		b.size -= len(buf)
+		return len(buf), nil
+	}
+	old_size := b.size
+	b.size = 0
+	return old_size, io.EOF
+}
+
+func NewBrokenWriter(size int) io.Writer {
+	return &BrokenWriter{
+		size: size,
+	}
+}
+
+func TestWriterHeaderError(t *testing.T) {
+	hdr := net.NewHeader(net.Call, 1, 1, 1, 1)
+	for i := 1; i < int(net.HeaderSize); i++ {
+		w := NewBrokenWriter(int(net.HeaderSize) - i)
+		err := hdr.Write(w)
+		if err == nil {
+			panic(fmt.Errorf("not expecting a success at %d", i))
+		}
+	}
+	w := NewBrokenWriter(int(net.HeaderSize))
+	err := hdr.Write(w)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestReadHeaderError(t *testing.T) {
+	hdr := net.NewHeader(net.Call, 1, 1, 1, 1)
+	data := make([]byte, 0)
+	max := int(net.HeaderSize)
+	msg := net.NewMessage(hdr, data)
+	for i := 0; i < max; i++ {
+		r := NewBrokenReader(msg, i)
+		err := hdr.Read(r)
+		if err == nil {
+			panic(fmt.Errorf("not expecting a success at %d", i))
+		}
+	}
+	r := NewBrokenReader(msg, max)
+	err := hdr.Read(r)
+	if err != nil {
+		panic(err)
 	}
 }

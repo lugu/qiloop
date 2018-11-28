@@ -331,3 +331,13 @@ func TestEndPoint_DialUnix(t *testing.T) {
 		panic("shall fail")
 	}
 }
+
+func TestLoadCertificateError(t *testing.T) {
+	os.Setenv("QILOOP_CERT_CONF", "incorrect")
+	addr := "tcps://localhost:23432"
+	listener, err := net.Listen(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+}

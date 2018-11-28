@@ -47,16 +47,28 @@ func Certificate() (cert tls.Certificate, err error) {
 	return tls.LoadX509KeyPair(certFile, keyFile)
 }
 
+func getCertConf() (string, error) {
+	filename := os.Getenv("QILOOP_CERT_CONF")
+	if filename != "" {
+		return filename, nil
+	}
+	usr, err := user.Current()
+	if err != nil {
+		return "", fmt.Errorf("cannot get home directory")
+	}
+	return usr.HomeDir + "/.qi-cert.conf", nil
+}
+
 // getCertFiles returns the public and an X509 certificate and the
 // associated private RSA key
 func getCertFiles() (string, string, error) {
-	usr, err := user.Current()
+	filename, err := getCertConf()
 	if err != nil {
-		return "", "", fmt.Errorf("cannot get home directory")
+		return "", "", err
 	}
-	file, err := os.Open(usr.HomeDir + "/.qi-cert.conf")
+	file, err := os.Open(filename)
 	if err != nil {
-		return "", "", fmt.Errorf("cannot open $HOME/.qi-cert.conf")
+		return "", "", err
 	}
 	defer file.Close()
 	r := bufio.NewReader(file)
