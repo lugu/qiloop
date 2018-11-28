@@ -129,21 +129,20 @@ func TestWriteReadMessage(t *testing.T) {
 	}
 }
 
-func NewBrokenReader(msg net.Message, size int) io.Reader {
+func LimitedReader(msg net.Message, size int) io.Reader {
 	var buf bytes.Buffer
 	msg.Write(&buf)
-	data := buf.Bytes()
-	if size > len(data) {
-		panic(fmt.Errorf("size is too large: %d", size))
+	return &io.LimitedReader{
+		R: &buf,
+		N: int64(size),
 	}
-	return bytes.NewBuffer(data[:size])
 }
 
-type BrokenWriter struct {
+type LimitedWriter struct {
 	size int
 }
 
-func (b *BrokenWriter) Write(buf []byte) (int, error) {
+func (b *LimitedWriter) Write(buf []byte) (int, error) {
 	if len(buf) <= b.size {
 		b.size -= len(buf)
 		return len(buf), nil
@@ -153,8 +152,8 @@ func (b *BrokenWriter) Write(buf []byte) (int, error) {
 	return old_size, io.EOF
 }
 
-func NewBrokenWriter(size int) io.Writer {
-	return &BrokenWriter{
+func NewLimitedWriter(size int) io.Writer {
+	return &LimitedWriter{
 		size: size,
 	}
 }
@@ -162,13 +161,13 @@ func NewBrokenWriter(size int) io.Writer {
 func TestWriterHeaderError(t *testing.T) {
 	hdr := net.NewHeader(net.Call, 1, 1, 1, 1)
 	for i := 1; i < int(net.HeaderSize); i++ {
-		w := NewBrokenWriter(int(net.HeaderSize) - i)
+		w := NewLimitedWriter(int(net.HeaderSize) - i)
 		err := hdr.Write(w)
 		if err == nil {
 			panic(fmt.Errorf("not expecting a success at %d", i))
 		}
 	}
-	w := NewBrokenWriter(int(net.HeaderSize))
+	w := NewLimitedWriter(int(net.HeaderSize))
 	err := hdr.Write(w)
 	if err != nil {
 		panic(err)
@@ -181,13 +180,13 @@ func TestReadHeaderError(t *testing.T) {
 	max := int(net.HeaderSize)
 	msg := net.NewMessage(hdr, data)
 	for i := 0; i < max; i++ {
-		r := NewBrokenReader(msg, i)
+		r := LimitedReader(msg, i)
 		err := hdr.Read(r)
 		if err == nil {
 			panic(fmt.Errorf("not expecting a success at %d", i))
 		}
 	}
-	r := NewBrokenReader(msg, max)
+	r := LimitedReader(msg, max)
 	err := hdr.Read(r)
 	if err != nil {
 		panic(err)
