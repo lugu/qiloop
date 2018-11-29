@@ -7,9 +7,10 @@
 **`qiloop`** is an implementation of QiMessaging written in [Go](https://golang.org).
 
 QiMessaging is a network protocol used to build rich distributed
-applications. It was created by Aldebaran Robotics (currently SoftBank
-Robotics) and is the foundation of the NAOqi SDK. For more details
-about QiMessaging, visit this [analysis of the
+applications. It was created by Aldebaran Robotics (currently
+[SoftBank Robotics](https://www.softbankrobotics.com/emea/en/index))
+and is the foundation of the NAOqi SDK. For more details about
+QiMessaging, visit this [analysis of the
 protocol](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
 
 Installation
