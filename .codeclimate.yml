@@ -1,3 +1,6 @@
 plugins:
   golint:
     enabled: true
+exclude_patterns:
+  - "**/*_test.go"
+  - "**/*_gen.go"
