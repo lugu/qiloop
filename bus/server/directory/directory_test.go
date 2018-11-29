@@ -5,6 +5,7 @@ import (
 	dir "github.com/lugu/qiloop/bus/server/directory"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/type/object"
 	"log"
 	"testing"
 )
@@ -55,6 +56,16 @@ func (h *mockServiceDirectorySignalHelper) SignalServiceAdded(P0 uint32, P1 stri
 
 func (h *mockServiceDirectorySignalHelper) SignalServiceRemoved(P0 uint32, P1 string) error {
 	return nil
+}
+
+func newObjectRef(serviceID uint32) object.ObjectReference {
+	return object.ObjectReference{
+		Boolean:    true,
+		MetaObject: object.ObjectMetaObject,
+		ParentID:   0,
+		ServiceID:  serviceID,
+		ObjectID:   1,
+	}
 }
 
 func newInfo(name string) dir.ServiceInfo {
@@ -161,5 +172,93 @@ func TestServerDirectory(t *testing.T) {
 		t.Errorf("wrong service number: %d", len(services))
 	}
 	compareInfo(t, services[0], info2)
-	info2.Name = "test3"
+
+}
+
+func TestServiceDirectoryInfo(t *testing.T) {
+	helper := newServiceDirectorySignalHelper(t, "test", 2)
+	impl := dir.NewServiceDirectory()
+	impl.Activate(nil, 1, 1, helper)
+	info := newInfo("test")
+	uid, err := impl.RegisterService(info)
+	if err != nil {
+		panic(err)
+	}
+	info.ServiceId = uid
+	_, err = impl.RegisterService(info)
+	if err == nil {
+		panic("already registered")
+	}
+	err = impl.ServiceReady(uid)
+	if err != nil {
+		panic(err)
+	}
+	info2, err := impl.Service("test")
+	if err != nil {
+		panic(err)
+	}
+	compareInfo(t, info, info2)
+	info.MachineId = "test"
+	err = impl.UpdateServiceInfo(info)
+	if err != nil {
+		panic(err)
+	}
+
+	info2 = newInfo("test2")
+	info2.ServiceId = uid
+	err = impl.UpdateServiceInfo(info2)
+	if err == nil {
+		panic("shall not accecpt update")
+	}
+	info2 = newInfo("test2")
+	info2.ServiceId = uid + 1
+	err = impl.UpdateServiceInfo(info2)
+	if err == nil {
+		panic("shall not accecpt name update")
+	}
+	_, err = impl.Service("test2")
+	if err == nil {
+		panic("invalid name")
+	}
+	err = impl.ServiceReady(uid + 1)
+	if err == nil {
+		panic("invalid uid")
+	}
+	info.Name = ""
+	_, err = impl.RegisterService(info)
+	if err == nil {
+		panic("shall reject empty name")
+	}
+	info = newInfo("test")
+	info.MachineId = ""
+	_, err = impl.RegisterService(info)
+	if err == nil {
+		panic("shall reject empty machine info")
+	}
+	info = newInfo("test")
+	info.ProcessId = 0
+	_, err = impl.RegisterService(info)
+	if err == nil {
+		panic("shall reject empty process info")
+	}
+	info = newInfo("test")
+	info.Endpoints = []string{}
+	_, err = impl.RegisterService(info)
+	if err == nil {
+		panic("shall reject empty endpoint info")
+	}
+	info.Endpoints = []string{""}
+	_, err = impl.RegisterService(info)
+	if err == nil {
+		panic("shall reject empty endpoint info")
+	}
+	info = newInfo("test2")
+	uid, err = impl.RegisterService(info)
+	if err != nil {
+		panic(err)
+	}
+	err = impl.UnregisterService(uid)
+	if err != nil {
+		panic(err)
+	}
 }
