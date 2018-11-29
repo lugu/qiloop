@@ -362,22 +362,43 @@ func TestStub(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	_, err = directory.RegisterService(info)
+	if err == nil {
+		panic("shall fail")
+	}
 	err = directory.ServiceReady(info.ServiceId)
 	if err != nil {
 		panic(err)
 	}
+	err = directory.ServiceReady(info.ServiceId)
+	if err == nil {
+		panic("shall fail")
+	}
 	_, err = directory.Service("test")
 	if err != nil {
 		panic(err)
+	}
+	_, err = directory.Service("test2")
+	if err == nil {
+		panic("shall fail")
 	}
 	info.ProcessId = 2
 	err = directory.UpdateServiceInfo(info)
 	if err != nil {
 		panic(err)
 	}
+	info.ProcessId = 0
+	err = directory.UpdateServiceInfo(info)
+	if err == nil {
+		panic("shall fail")
+	}
 	err = directory.UnregisterService(info.ServiceId)
 	if err != nil {
 		panic(err)
+	}
+	err = directory.UnregisterService(info.ServiceId)
+	if err == nil {
+		panic("shall fail")
 	}
 	info2, ok := <-added
 	if !ok {
