@@ -224,7 +224,7 @@ func (ns *directoryNamespace) Enable(serviceID uint32) error {
 func (ns *directoryNamespace) Resolve(name string) (uint32, error) {
 	info, err := ns.directory.Service(name)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	return info.ServiceId, nil
 }

@@ -228,6 +228,9 @@ func ReadString(r io.Reader) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read string size: %s", err)
 	}
+	if size == 0 {
+		return "", nil
+	}
 	buf := make([]byte, size, size)
 	bytes, err := r.Read(buf)
 	if err != nil {
