@@ -1,7 +1,11 @@
 language: go
 
+env:
+    global:
+        - CC_TEST_REPORTER_ID=0785bba858e3306249391d2bfed7d0893eee93420195ad1398d5e9231c0ff680
+
 go:
-    - "1.11.2"
+    - master
     - tip
 
 install:
@@ -11,9 +15,16 @@ install:
     - go generate github.com/lugu/qiloop/meta/...
     - go generate github.com/lugu/qiloop/type/...
 
+before_script:
+      - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+      - chmod +x ./cc-test-reporter
+      - ./cc-test-reporter before-build
+
 script:
     - go vet -composites=false ./...
     - go test github.com/lugu/qiloop/... -race -coverprofile=coverage.txt -covermode=atomic -timeout 2m
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
+    - mv coverage.txt c.out
+    - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
