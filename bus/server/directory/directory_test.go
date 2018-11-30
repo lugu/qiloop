@@ -540,3 +540,10 @@ func TestReadHeaderError(t *testing.T) {
 		panic(err)
 	}
 }
+
+func TestStandalone(t *testing.T) {
+	_, err := dir.NewServer("", nil)
+	if err == nil {
+		panic("shall fail")
+	}
+}

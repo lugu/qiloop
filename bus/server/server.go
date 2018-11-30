@@ -492,6 +492,7 @@ type Service interface {
 func (s *Server) NewService(name string, object Object) (Service, error) {
 
 	if s.namespace == nil {
+		// TODO: create a namespace from a session.
 		return nil, fmt.Errorf("server has no namespace")
 	}
 	service := NewService(object)

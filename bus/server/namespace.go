@@ -37,6 +37,9 @@ func PrivateNamespace() Namespace {
 }
 
 func (ns *privateNamespace) Reserve(name string) (uint32, error) {
+	if name == "" {
+		return 0, fmt.Errorf("empty string")
+	}
 	ns.Lock()
 	defer ns.Unlock()
 	_, ok := ns.reserved[name]

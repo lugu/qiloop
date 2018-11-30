@@ -260,7 +260,7 @@ func TestSession(t *testing.T) {
 	srv.NewService("test", obj)
 
 	sess := srv.Session()
-	proxy, err := sess.Proxy("test", uint32(0x1))
+	proxy, err := sess.Proxy("test", 1)
 	if err != nil {
 		panic(err)
 	}
@@ -278,7 +278,7 @@ func TestSession(t *testing.T) {
 
 func TestRemoteServer(t *testing.T) {
 
-	t.Skip("wait until NewServer gets a namespace")
+	t.Skip("wait until NewServer gets a namespace from its session")
 
 	addr := util.NewUnixAddr()
 	srv, err := directory.NewServer(addr, nil)
@@ -298,9 +298,12 @@ func TestRemoteServer(t *testing.T) {
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
-	srv2.NewService("test", obj)
+	_, err = srv2.NewService("test", obj)
+	if err != nil {
+		panic(err)
+	}
 
-	proxy, err := sess.Proxy("test", uint32(0x1))
+	proxy, err := sess.Proxy("test", 1)
 	if err != nil {
 		panic(err)
 	}
@@ -314,4 +317,57 @@ func TestRemoteServer(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func TestNamespace(t *testing.T) {
+	ns := server.PrivateNamespace()
+	_, err := ns.Reserve("")
+	if err == nil {
+		panic("shall fail")
+	}
+	_, err = ns.Resolve("test2")
+	if err == nil {
+		panic("shall fail")
+	}
+	err = ns.Enable(1)
+	if err == nil {
+		panic("shall fail")
+	}
+	err = ns.Remove(1)
+	if err == nil {
+		panic("shall fail")
+	}
+	uid, err := ns.Reserve("test2")
+	if err != nil {
+		panic(err)
+	}
+	_, err = ns.Reserve("test2")
+	if err == nil {
+		panic(err)
+	}
+	err = ns.Enable(uid)
+	if err != nil {
+		panic(err)
+	}
+	uid2, err := ns.Resolve("test2")
+	if err != nil {
+		panic(err)
+	}
+	if uid != uid2 {
+		panic(err)
+	}
+	err = ns.Remove(uid)
+	if err != nil {
+		panic(err)
+	}
+
+	addr := util.NewUnixAddr()
+	srv, err := directory.NewServer(addr, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Terminate()
+
+	sess := ns.Session(srv)
+	sess.Destroy()
 }
