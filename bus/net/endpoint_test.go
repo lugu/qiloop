@@ -196,7 +196,7 @@ func TestEndpointShallAcceptMultipleHandlers(t *testing.T) {
 	defer endpoint.Close()
 
 	ids := make([]int, 20)
-	for i, _ := range ids {
+	for i := range ids {
 		ids[i] = endpoint.AddHandler(filter, consumer, closer)
 	}
 	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})

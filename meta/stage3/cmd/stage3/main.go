@@ -15,7 +15,7 @@ var ServicesActionID = uint32(101)
 var metaServiceDirectory object.MetaObject = object.MetaObject{
 	Description: "ServiceDirectory",
 	Methods: map[uint32]object.MetaMethod{
-		ServicesActionID: object.MetaMethod{
+		ServicesActionID: {
 			Uid:  ServicesActionID,
 			Name: "services",
 		},

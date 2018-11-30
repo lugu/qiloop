@@ -142,11 +142,11 @@ func TestParseMethod2(t *testing.T) {
 		Id:     0,
 		Return: NewVoidType(),
 		Params: []Parameter{
-			Parameter{
+			{
 				"param1",
 				NewIntType(),
 			},
-			Parameter{
+			{
 				"param2",
 				NewDoubleType(),
 			},
@@ -161,11 +161,11 @@ func TestParseMethod3(t *testing.T) {
 		Id:     0,
 		Return: NewBoolType(),
 		Params: []Parameter{
-			Parameter{
+			{
 				"param1",
 				NewIntType(),
 			},
-			Parameter{
+			{
 				"param2",
 				NewDoubleType(),
 			},
@@ -180,11 +180,11 @@ func TestParseMethod3bis(t *testing.T) {
 		Id:     10,
 		Return: NewBoolType(),
 		Params: []Parameter{
-			Parameter{
+			{
 				"param1",
 				NewIntType(),
 			},
-			Parameter{
+			{
 				"param2",
 				NewDoubleType(),
 			},
@@ -236,7 +236,7 @@ func helpParserTest(t *testing.T, label, idlFileName string, expected *object.Me
 		t.Fatalf("%s: too many interfaces: %d", label, len(metaList))
 	}
 	result := metaList[0]
-	for i, _ := range result.Methods {
+	for i := range result.Methods {
 		if result.Methods[i].ParametersSignature != expected.Methods[i].ParametersSignature {
 			t.Errorf("%s: wrong parameter signature %d", label, i)
 		}
@@ -246,7 +246,7 @@ func helpParserTest(t *testing.T, label, idlFileName string, expected *object.Me
 			t.Errorf("%s: expected: %s", label, expected.Methods[i].ReturnSignature)
 		}
 	}
-	for i, _ := range result.Signals {
+	for i := range result.Signals {
 		if result.Signals[i].Signature != expected.Signals[i].Signature {
 			t.Errorf("%s: wrong signal signature %d", label, i)
 		}
@@ -370,66 +370,66 @@ func newDeclaration(t *testing.T) []*StructType {
 	complex2 := NewRefType("complex2", scope)
 
 	structs := []*StructType{
-		&StructType{
+		{
 			Name: "basic1",
 			Members: []MemberType{
-				MemberType{
+				{
 					Name: "a",
 					Type: NewIntType(),
 				},
-				MemberType{
+				{
 					Name: "b",
 					Type: NewIntType(),
 				},
 			},
 		},
-		&StructType{
+		{
 			Name: "basic2",
 			Members: []MemberType{
-				MemberType{
+				{
 					Name: "a",
 					Type: NewIntType(),
 				},
-				MemberType{
+				{
 					Name: "b",
 					Type: NewIntType(),
 				},
 			},
 		},
-		&StructType{
+		{
 			Name: "complex1",
 			Members: []MemberType{
-				MemberType{
+				{
 					Name: "simple1",
 					Type: basic1,
 				},
-				MemberType{
+				{
 					Name: "b",
 					Type: NewIntType(),
 				},
 			},
 		},
-		&StructType{
+		{
 			Name: "complex3",
 			Members: []MemberType{
-				MemberType{
+				{
 					Name: "notSimple2",
 					Type: complex2,
 				},
 			},
 		},
-		&StructType{
+		{
 			Name: "complex2",
 			Members: []MemberType{
-				MemberType{
+				{
 					Name: "notSimple1",
 					Type: complex1,
 				},
-				MemberType{
+				{
 					Name: "simple2",
 					Type: basic2,
 				},
-				MemberType{
+				{
 					Name: "b",
 					Type: NewIntType(),
 				},
@@ -464,13 +464,13 @@ func TestParseSimpleIDL(t *testing.T) {
 	expected := object.MetaObject{
 		Description: "I",
 		Methods: map[uint32]object.MetaMethod{
-			100: object.MetaMethod{
+			100: {
 				Uid:                 100,
 				ReturnSignature:     "v",
 				Name:                "c",
 				ParametersSignature: "(((if)<A,a,b>f)<B,a,b>)",
 				Parameters: []object.MetaMethodParameter{
-					object.MetaMethodParameter{
+					{
 						Name:        "d",
 						Description: "B",
 					},

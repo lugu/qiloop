@@ -317,7 +317,7 @@ type Router struct {
 func NewRouter(authenticator Object) *Router {
 	return &Router{
 		services: map[uint32]*ServiceImpl{
-			0: &ServiceImpl{
+			0: {
 				objects: map[uint32]Object{
 					0: authenticator,
 				},
@@ -594,7 +594,7 @@ func (s *Server) closeAll() error {
 	var ret error = nil
 	s.contextsMutex.Lock()
 	defer s.contextsMutex.Unlock()
-	for context, _ := range s.contexts {
+	for context := range s.contexts {
 		err := context.EndPoint.Close()
 		if err != nil && ret == nil {
 			ret = err
