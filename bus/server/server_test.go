@@ -76,12 +76,12 @@ func TestNewServer(t *testing.T) {
 
 	clt, err := net.DialEndPoint(addr)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	err = client.Authenticate(clt)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	h := net.NewHeader(net.Call, 2, 1, 3, 4)
@@ -100,7 +100,7 @@ func TestNewServer(t *testing.T) {
 	// server replied
 	mReceived, ok := <-received
 	if !ok {
-		panic("connection closed")
+		t.Fatalf("connection closed")
 	}
 
 	if mReceived.Header.Type == net.Error {
@@ -152,18 +152,18 @@ func TestServerReturnError(t *testing.T) {
 	srv, err := server.StandAloneServer(listener, server.Yes{},
 		server.PrivateNamespace())
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	srv.NewService("test", obj)
 
 	cltNet, err := net.DialEndPoint(addr)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	err = client.Authenticate(cltNet)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	clt := client.NewClient(cltNet)
@@ -215,14 +215,14 @@ func TestStandAloneInit(t *testing.T) {
 	srv, err := server.StandAloneServer(listener, server.Yes{},
 		server.PrivateNamespace())
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	defer srv.Terminate()
 	srv.NewService("test", obj)
 
 	clt, err := net.DialEndPoint(addr)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	// construct a proxy object
@@ -256,7 +256,7 @@ func TestSession(t *testing.T) {
 	srv, err := server.StandAloneServer(listener, server.Yes{},
 		server.PrivateNamespace())
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	defer srv.Terminate()
 	srv.NewService("test", obj)
@@ -264,17 +264,17 @@ func TestSession(t *testing.T) {
 	sess := srv.Session()
 	proxy, err := sess.Proxy("test", 1)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	metaBytes, err := proxy.Call("metaObject", []byte{1, 0, 0, 0})
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	buf := bytes.NewBuffer(metaBytes)
 	_, err = object.ReadMetaObject(buf)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 }
 
@@ -294,7 +294,7 @@ func TestRemoteServer(t *testing.T) {
 	addr2 := util.NewUnixAddr()
 	srv2, err := server.NewServer(sess, addr2)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	defer srv2.Terminate()
 
@@ -305,22 +305,22 @@ func TestRemoteServer(t *testing.T) {
 	})
 	_, err = srv2.NewService("test", obj)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	proxy, err := sess.Proxy("test", 1)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	metaBytes, err := proxy.Call("metaObject", []byte{1, 0, 0, 0})
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	buf := bytes.NewBuffer(metaBytes)
 	_, err = object.ReadMetaObject(buf)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 }
 
@@ -328,42 +328,42 @@ func TestNamespace(t *testing.T) {
 	ns := server.PrivateNamespace()
 	_, err := ns.Reserve("")
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	_, err = ns.Resolve("test2")
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = ns.Enable(1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = ns.Remove(1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	uid, err := ns.Reserve("test2")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	_, err = ns.Reserve("test2")
 	if err == nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = ns.Enable(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	uid2, err := ns.Resolve("test2")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if uid != uid2 {
-		panic(err)
+		t.Error(err)
 	}
 	err = ns.Remove(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	addr := util.NewUnixAddr()
@@ -388,7 +388,7 @@ func TestServer(t *testing.T) {
 
 	session, err := session.NewSession(addr)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info := services.ServiceInfo{
 		Name:      "test",
@@ -405,7 +405,7 @@ func TestServer(t *testing.T) {
 	}
 	list, err := directory.Services()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if len(list) != 1 {
 		t.Errorf("not expecting %d", len(list))
@@ -414,77 +414,77 @@ func TestServer(t *testing.T) {
 	cancel := make(chan int)
 	added, err := directory.SignalServiceAdded(cancel)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	removed, err := directory.SignalServiceRemoved(cancel)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info.ServiceId, err = directory.RegisterService(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	_, err = directory.RegisterService(info)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = directory.ServiceReady(info.ServiceId)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = directory.ServiceReady(info.ServiceId)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	_, err = directory.Service("test")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	_, err = directory.Service("test2")
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	info.ProcessId = 2
 	err = directory.UpdateServiceInfo(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info.ProcessId = 0
 	err = directory.UpdateServiceInfo(info)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = directory.UnregisterService(info.ServiceId)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = directory.UnregisterService(info.ServiceId)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	info2, ok := <-added
 	if !ok {
-		panic("unexpected")
+		t.Fatalf("unexpected")
 	}
 	if info2.P1 != "test" {
-		panic(info.Name)
+		t.Fatalf(info.Name)
 	}
 	info2, ok = <-removed
 	if !ok {
-		panic("unexpected")
+		t.Fatalf("unexpected")
 	}
 	if info2.P1 != "test" {
-		panic(info.Name)
+		t.Fatalf(info.Name)
 	}
 	cancel <- 1
 	cancel <- 1
 	_, ok = <-added
 	if ok {
-		panic("unexpected added ok")
+		t.Fatalf("unexpected added ok")
 	}
 	_, ok = <-removed
 	if ok {
-		panic("unexpected removed ok")
+		t.Fatalf("unexpected removed ok")
 	}
 }
 
@@ -497,14 +497,14 @@ func TestServiceImpl(t *testing.T) {
 	service := server.NewService(&object)
 	uid, err := service.Add(&object)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = service.Remove(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = service.Remove(uid + 1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 }

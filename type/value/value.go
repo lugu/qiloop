@@ -23,36 +23,38 @@ func NewValue(r io.Reader) (Value, error) {
 	if err != nil {
 		return nil, fmt.Errorf("value signature: %s", err)
 	}
+	var ret Value = nil
 	switch s {
 	case "c":
-		return newInt8(r)
+		ret, err = newInt8(r)
 	case "C":
-		return newUint8(r)
+		ret, err = newUint8(r)
 	case "w":
-		return newInt16(r)
+		ret, err = newInt16(r)
 	case "W":
-		return newUint16(r)
+		ret, err = newUint16(r)
 	case "i":
-		return newInt(r)
+		ret, err = newInt(r)
 	case "I":
-		return newUint(r)
+		ret, err = newUint(r)
 	case "l":
-		return newLong(r)
+		ret, err = newLong(r)
 	case "L":
-		return newUlong(r)
+		ret, err = newUlong(r)
 	case "s":
-		return newString(r)
+		ret, err = newString(r)
 	case "b":
-		return newBool(r)
+		ret, err = newBool(r)
 	case "f":
-		return newFloat(r)
+		ret, err = newFloat(r)
 	case "[m]":
-		return newList(r)
+		ret, err = newList(r)
 	case "r":
-		return newRaw(r)
+		ret, err = newRaw(r)
 	default:
-		return nil, fmt.Errorf("unsuported signature: %s", s)
+		err = fmt.Errorf("unsuported signature: %s", s)
 	}
+	return ret, err
 }
 
 // BoolValue represents a Value of a boolean.

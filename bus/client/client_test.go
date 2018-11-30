@@ -19,14 +19,14 @@ func TestProxyCall(t *testing.T) {
 
 	msgChan, err := serviceEndpoint.ReceiveAny()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	// accept a single connection
 	go func() {
 		m, ok := <-msgChan
 		if !ok {
-			panic("connection closed")
+			t.Fatalf("connection closed")
 		}
 		m.Header.Type = net.Reply
 		err := serviceEndpoint.Send(*m)
@@ -59,42 +59,42 @@ func TestProxy(t *testing.T) {
 	services := services.Services(session)
 	directory, err := services.ServiceDirectory()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	signalID, err := directory.SignalUid("serviceAdded")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if signalID != 106 {
-		panic("wrong signal id")
+		t.Fatalf("wrong signal id")
 	}
 	methodID, err := directory.MethodUid("services")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if methodID != 101 {
-		panic("wrong method id")
+		t.Fatalf("wrong method id")
 	}
 	if directory.ObjectID() != 1 {
-		panic("wrong object id")
+		t.Fatalf("wrong object id")
 	}
 	if directory.ServiceID() != 1 {
-		panic("wrong service id")
+		t.Fatalf("wrong service id")
 	}
 	cancel := make(chan int)
 	_, err = directory.SubscribeID(signalID, cancel)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	cancel <- 1
 	_, err = directory.SubscribeSignal("serviceAdded", cancel)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	cancel <- 1
 	_, err = directory.SubscribeSignal("unknownSignal", cancel)
 	if err == nil {
-		panic("must fail")
+		t.Fatalf("must fail")
 	}
 	_, err = directory.SubscribeID(12345, cancel)
 	if err == nil {
@@ -102,17 +102,17 @@ func TestProxy(t *testing.T) {
 	}
 	_, err = directory.Call("unknown service", []byte{})
 	if err == nil {
-		panic("must fail")
+		t.Fatalf("must fail")
 	}
 	resp, err := directory.Call("services", []byte{})
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if resp == nil {
-		panic(err)
+		t.Error(err)
 	}
 	if len(resp) == 0 {
-		panic(err)
+		t.Error(err)
 	}
 	directory.Disconnect()
 }
@@ -133,7 +133,7 @@ func TestSelectEndPoint(t *testing.T) {
 		"tcps://192.168.0.1:12",
 	})
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	defer endpoint.Close()
 	// shall refuse to connect
@@ -142,7 +142,7 @@ func TestSelectEndPoint(t *testing.T) {
 		"tcps://192.168.0.0",
 	})
 	if err == nil {
-		panic("shall not be able to connect")
+		t.Fatalf("shall not be able to connect")
 	}
 }
 
@@ -152,12 +152,12 @@ func TestSelectError(t *testing.T) {
 
 	listener, err := net.Listen(addr)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	server, err := server.StandAloneServer(listener, server.No{},
 		server.PrivateNamespace())
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	defer server.Terminate()
 
@@ -169,11 +169,11 @@ func TestSelectError(t *testing.T) {
 	})
 	defer endpoint.Close()
 	if err == nil {
-		panic("shall fail to authenticate")
+		t.Fatalf("shall fail to authenticate")
 	}
 	// shall refuse to connect to empty list
 	_, err = client.SelectEndPoint([]string{})
 	if err == nil {
-		panic("empty list")
+		t.Fatalf("empty list")
 	}
 }

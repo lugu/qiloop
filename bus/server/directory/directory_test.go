@@ -2,7 +2,6 @@ package directory_test
 
 import (
 	"bytes"
-	"fmt"
 	proxy "github.com/lugu/qiloop/bus/client/services"
 	dir "github.com/lugu/qiloop/bus/server/directory"
 	sess "github.com/lugu/qiloop/bus/session"
@@ -23,7 +22,7 @@ func TestNewServer(t *testing.T) {
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	services := proxy.Services(session)
 	directory, err := services.ServiceDirectory()
@@ -32,10 +31,10 @@ func TestNewServer(t *testing.T) {
 	}
 	machineID, err := directory.MachineId()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if machineID == "" {
-		panic("empty machine id")
+		t.Fatalf("empty machine id")
 	}
 }
 
@@ -120,21 +119,21 @@ func TestServerDirectory(t *testing.T) {
 	info := newInfo("test")
 	uid, err := impl.RegisterService(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info.ServiceId = uid
 	err = impl.ServiceReady(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	// shall not be able to register twice with the same name
 	_, err = impl.RegisterService(info)
 	if err == nil {
-		panic(err)
+		t.Error(err)
 	}
 	services, err := impl.Services()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if len(services) != 1 {
 		t.Errorf("wrong service number: %d", len(services))
@@ -143,21 +142,21 @@ func TestServerDirectory(t *testing.T) {
 	info2 := newInfo("test2")
 	uid, err = impl.RegisterService(info2)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info2.ServiceId = uid
 	err = impl.ServiceReady(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	// shall not be able to register twice with the same name
 	_, err = impl.RegisterService(info2)
 	if err == nil {
-		panic(err)
+		t.Error(err)
 	}
 	services, err = impl.Services()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if len(services) != 2 {
 		t.Errorf("wrong service number: %d", len(services))
@@ -167,19 +166,19 @@ func TestServerDirectory(t *testing.T) {
 
 	err = impl.UnregisterService(info2.ServiceId + 1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = impl.UnregisterService(info.ServiceId)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = impl.UnregisterService(info.ServiceId)
 	if err == nil {
-		panic(err)
+		t.Error(err)
 	}
 	services, err = impl.Services()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if len(services) != 1 {
 		t.Errorf("wrong service number: %d", len(services))
@@ -195,84 +194,84 @@ func TestServiceDirectoryInfo(t *testing.T) {
 	info := newInfo("test")
 	uid, err := impl.RegisterService(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info.ServiceId = uid
 	_, err = impl.RegisterService(info)
 	if err == nil {
-		panic("already registered")
+		t.Fatalf("already registered")
 	}
 	err = impl.ServiceReady(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info2, err := impl.Service("test")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	compareInfo(t, info, info2)
 	info.MachineId = "test"
 	err = impl.UpdateServiceInfo(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	info2 = newInfo("test2")
 	info2.ServiceId = uid
 	err = impl.UpdateServiceInfo(info2)
 	if err == nil {
-		panic("shall not accecpt update")
+		t.Fatalf("shall not accecpt update")
 	}
 	info2 = newInfo("test2")
 	info2.ServiceId = uid + 1
 	err = impl.UpdateServiceInfo(info2)
 	if err == nil {
-		panic("shall not accecpt name update")
+		t.Fatalf("shall not accecpt name update")
 	}
 	_, err = impl.Service("test2")
 	if err == nil {
-		panic("invalid name")
+		t.Fatalf("invalid name")
 	}
 	err = impl.ServiceReady(uid + 1)
 	if err == nil {
-		panic("invalid uid")
+		t.Fatalf("invalid uid")
 	}
 	info.Name = ""
 	_, err = impl.RegisterService(info)
 	if err == nil {
-		panic("shall reject empty name")
+		t.Fatalf("shall reject empty name")
 	}
 	info = newInfo("test")
 	info.MachineId = ""
 	_, err = impl.RegisterService(info)
 	if err == nil {
-		panic("shall reject empty machine info")
+		t.Fatalf("shall reject empty machine info")
 	}
 	info = newInfo("test")
 	info.ProcessId = 0
 	_, err = impl.RegisterService(info)
 	if err == nil {
-		panic("shall reject empty process info")
+		t.Fatalf("shall reject empty process info")
 	}
 	info = newInfo("test")
 	info.Endpoints = []string{}
 	_, err = impl.RegisterService(info)
 	if err == nil {
-		panic("shall reject empty endpoint info")
+		t.Fatalf("shall reject empty endpoint info")
 	}
 	info.Endpoints = []string{""}
 	_, err = impl.RegisterService(info)
 	if err == nil {
-		panic("shall reject empty endpoint info")
+		t.Fatalf("shall reject empty endpoint info")
 	}
 	info = newInfo("test2")
 	uid, err = impl.RegisterService(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = impl.UnregisterService(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 }
 func TestNamespace(t *testing.T) {
@@ -282,43 +281,43 @@ func TestNamespace(t *testing.T) {
 	info := newInfo("test")
 	uid, err := impl.RegisterService(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	ns := impl.Namespace("dummy")
 	_, err = ns.Reserve("test")
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	_, err = ns.Resolve("test2")
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = ns.Enable(uid + 1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = ns.Remove(uid + 1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	uid, err = ns.Reserve("test2")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = ns.Enable(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	uid2, err := ns.Resolve("test2")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if uid != uid2 {
-		panic(err)
+		t.Error(err)
 	}
 	err = ns.Remove(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 }
 
@@ -333,7 +332,7 @@ func TestStub(t *testing.T) {
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	services := proxy.Services(session)
 	directory, err := services.ServiceDirectory()
@@ -342,7 +341,7 @@ func TestStub(t *testing.T) {
 	}
 	list, err := directory.Services()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if len(list) != 1 {
 		t.Errorf("not expecting %d", len(list))
@@ -351,68 +350,68 @@ func TestStub(t *testing.T) {
 	cancel := make(chan int)
 	added, err := directory.SignalServiceAdded(cancel)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	removed, err := directory.SignalServiceRemoved(cancel)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info := newClientInfo("test")
 	info.ServiceId, err = directory.RegisterService(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	_, err = directory.RegisterService(info)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = directory.ServiceReady(info.ServiceId)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = directory.ServiceReady(info.ServiceId)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	_, err = directory.Service("test")
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	_, err = directory.Service("test2")
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	info.ProcessId = 2
 	err = directory.UpdateServiceInfo(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	info.ProcessId = 0
 	err = directory.UpdateServiceInfo(info)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	err = directory.UnregisterService(info.ServiceId)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = directory.UnregisterService(info.ServiceId)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 	info2, ok := <-added
 	if !ok {
-		panic("unexpected")
+		t.Fatalf("unexpected")
 	}
 	if info2.P1 != "test" {
-		panic(info.Name)
+		t.Fatalf(info.Name)
 	}
 	info2, ok = <-removed
 	if !ok {
-		panic("unexpected")
+		t.Fatalf("unexpected")
 	}
 	if info2.P1 != "test" {
-		panic(info.Name)
+		t.Fatalf(info.Name)
 	}
 }
 
@@ -427,7 +426,7 @@ func TestSession(t *testing.T) {
 
 	session := server.Session()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	defer session.Destroy()
 	services := proxy.Services(session)
@@ -437,29 +436,29 @@ func TestSession(t *testing.T) {
 	}
 	machineID, err := directory.MachineId()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	if machineID == "" {
-		panic("empty machine id")
+		t.Fatalf("empty machine id")
 	}
 	_, err = session.Proxy("test", 1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 
 	info := newClientInfo("test")
 	info.Endpoints = []string{addr}
 	uid, err := directory.RegisterService(info)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	err = directory.ServiceReady(uid)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	_, err = session.Proxy("test", 1)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 }
 
@@ -500,7 +499,7 @@ func TestWriterServiceInfo(t *testing.T) {
 	var buf bytes.Buffer
 	err := dir.WriteServiceInfo(info, &buf)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	max := len(buf.Bytes())
 
@@ -508,13 +507,13 @@ func TestWriterServiceInfo(t *testing.T) {
 		w := NewLimitedWriter(i)
 		err := dir.WriteServiceInfo(info, w)
 		if err == nil {
-			panic(fmt.Errorf("not expecting a success at %d", i))
+			t.Fatalf("not expecting a success at %d", i)
 		}
 	}
 	w := NewLimitedWriter(max)
 	err = dir.WriteServiceInfo(info, w)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 }
 
@@ -523,7 +522,7 @@ func TestReadHeaderError(t *testing.T) {
 	var buf bytes.Buffer
 	err := dir.WriteServiceInfo(info, &buf)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	max := len(buf.Bytes())
 
@@ -531,19 +530,19 @@ func TestReadHeaderError(t *testing.T) {
 		r := LimitedReader(info, i)
 		_, err := dir.ReadServiceInfo(r)
 		if err == nil {
-			panic(fmt.Errorf("not expecting a success at %d", i))
+			t.Fatalf("not expecting a success at %d", i)
 		}
 	}
 	r := LimitedReader(info, max)
 	_, err = dir.ReadServiceInfo(r)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 }
 
 func TestStandalone(t *testing.T) {
 	_, err := dir.NewServer("", nil)
 	if err == nil {
-		panic("shall fail")
+		t.Fatalf("shall fail")
 	}
 }
