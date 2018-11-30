@@ -23,38 +23,26 @@ func NewValue(r io.Reader) (Value, error) {
 	if err != nil {
 		return nil, fmt.Errorf("value signature: %s", err)
 	}
-	var ret Value = nil
-	switch s {
-	case "c":
-		ret, err = newInt8(r)
-	case "C":
-		ret, err = newUint8(r)
-	case "w":
-		ret, err = newInt16(r)
-	case "W":
-		ret, err = newUint16(r)
-	case "i":
-		ret, err = newInt(r)
-	case "I":
-		ret, err = newUint(r)
-	case "l":
-		ret, err = newLong(r)
-	case "L":
-		ret, err = newUlong(r)
-	case "s":
-		ret, err = newString(r)
-	case "b":
-		ret, err = newBool(r)
-	case "f":
-		ret, err = newFloat(r)
-	case "[m]":
-		ret, err = newList(r)
-	case "r":
-		ret, err = newRaw(r)
-	default:
-		err = fmt.Errorf("unsuported signature: %s", s)
+	solve := map[string]func(io.Reader) (Value, error){
+		"c":   newInt8,
+		"C":   newUint8,
+		"w":   newInt16,
+		"W":   newUint16,
+		"i":   newInt,
+		"I":   newUint,
+		"l":   newLong,
+		"L":   newUlong,
+		"s":   newString,
+		"b":   newBool,
+		"f":   newFloat,
+		"[m]": newList,
+		"r":   newRaw,
 	}
-	return ret, err
+	f, ok := solve[s]
+	if !ok {
+		return nil, fmt.Errorf("unsuported signature: %s", s)
+	}
+	return f(r)
 }
 
 // BoolValue represents a Value of a boolean.
