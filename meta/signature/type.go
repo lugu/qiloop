@@ -24,7 +24,7 @@ func (s *TypeSet) Declare(f *jen.File) {
 	}
 }
 
-// returns the registerred name after collision resolution.
+// returns the registered name after collision resolution.
 // Register search if a type is in the TypeSet under a given name. If
 // the same name and signature is already present it does nothing.
 // otherwise it adds the type and search for a new which does not
@@ -366,7 +366,7 @@ func NewObjectType() Type {
 	}
 }
 
-// NewUnknownType is a contructor for an unkown type.
+// NewUnknownType is a contructor for an unknown type.
 func NewUnknownType() Type {
 	return &TypeConstructor{
 		signature:    "X",
@@ -698,7 +698,7 @@ func (t *TupleType) Unmarshal(reader string) *Statement {
 // signature as MetaObject with an element of the type
 // object.MetaObject. This is required to generate proxy services
 // which implements the object.Object interface and avoid a circular
-// dependancy.
+// dependency.
 func (t *TupleType) ConvertMetaObjects() {
 	for i, m := range t.Members {
 		if m.Type.Signature() == MetaObjectSignature {

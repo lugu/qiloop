@@ -220,7 +220,7 @@ func helpTest(t *testing.T, user, token string, status uint32) {
 func TestAuthContinue(t *testing.T) {
 	helpTest(t, "userA", "correct passwd", client.StateDone)
 	helpTest(t, "userA", "incorrect passwd", client.StateError)
-	helpTest(t, "userA", "negociation", client.StateContinue)
+	helpTest(t, "userA", "negotiation", client.StateContinue)
 	helpTest(t, "userA", "invalid state", uint32(0xdead))
 }
 

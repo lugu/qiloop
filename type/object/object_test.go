@@ -15,7 +15,7 @@ func TestMetaObjectDecorator(t *testing.T) {
 	if id != object.AuthenticateActionID {
 		t.Errorf("not expecting: %d", id)
 	}
-	_, err = service0.MethodUid("unknwon")
+	_, err = service0.MethodUid("unknown")
 	if err == nil {
 		panic("shall fail")
 	}
@@ -28,7 +28,7 @@ func TestMetaObjectDecorator(t *testing.T) {
 	if id != 0x56 {
 		panic("unexpected id")
 	}
-	_, err = obj.SignalUid("unknwon")
+	_, err = obj.SignalUid("unknown")
 	if err == nil {
 		panic("shall fail")
 	}

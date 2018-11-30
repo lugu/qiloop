@@ -104,7 +104,7 @@ func metaProxy(c bus.Client, serviceID, objectID uint32) (p bus.Proxy, err error
 }
 
 // BindSession returns a session based on a previously established
-// conection.
+// connection.
 func BindSession(c bus.Client) (*Session, error) {
 	proxy, err := metaProxy(c, 1, 1)
 	if err != nil {
@@ -137,7 +137,7 @@ func NewSession(addr string) (bus.Session, error) {
 	}
 	if err = client.Authenticate(endpoint); err != nil {
 		endpoint.Close()
-		return nil, fmt.Errorf("authenitcation failed: %s", err)
+		return nil, fmt.Errorf("authentication failed: %s", err)
 	}
 	c := client.NewClient(endpoint)
 
