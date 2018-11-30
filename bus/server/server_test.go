@@ -473,4 +473,35 @@ func TestServer(t *testing.T) {
 	if info2.P1 != "test" {
 		panic(info.Name)
 	}
+	cancel <- 1
+	cancel <- 1
+	_, ok = <-added
+	if ok {
+		panic("unexpected added ok")
+	}
+	_, ok = <-removed
+	if ok {
+		panic("unexpected removed ok")
+	}
+}
+
+func TestServiceImpl(t *testing.T) {
+	var object ObjectDispatcher
+	handler := func(d []byte) ([]byte, error) {
+		return []byte{0xab, 0xcd}, nil
+	}
+	object.Wrap(3, handler)
+	service := server.NewService(&object)
+	uid, err := service.Add(&object)
+	if err != nil {
+		panic(err)
+	}
+	err = service.Remove(uid)
+	if err != nil {
+		panic(err)
+	}
+	err = service.Remove(uid + 1)
+	if err == nil {
+		panic("shall fail")
+	}
 }

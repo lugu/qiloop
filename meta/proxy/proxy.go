@@ -341,7 +341,8 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 			return nil, fmt.Errorf("signal %s not available: %s", "`+s.Name+`", err)
 		}
 
-		_, err = p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+		handlerID := uint64(signalID)<<32 + 1 // FIXME: read it from proxy
+		_, err = p.RegisterEvent(p.ObjectID(), signalID, handlerID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to register event for %s: %s", "`+s.Name+`", err)
 		}`),
@@ -354,8 +355,9 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 			jen.For().Block(
 				jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
 				jen.Id(`if !ok {
-					// connection lost.
+					// connection lost or cancellation.
 					close(ch)
+					p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
 					return
 				}`),
 				jen.Id("buf := bytes.NewBuffer(payload)"),

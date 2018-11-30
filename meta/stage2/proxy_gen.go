@@ -307,7 +307,8 @@ func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
 	}
 
-	_, err = p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	handlerID := uint64(signalID)<<32 + 1 // FIXME: read it from proxy
+	_, err = p.RegisterEvent(p.ObjectID(), signalID, handlerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
 	}
@@ -322,8 +323,9 @@ func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 		for {
 			payload, ok := <-chPay
 			if !ok {
-				// connection lost.
+				// connection lost or cancellation.
 				close(ch)
+				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
@@ -511,7 +513,8 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 		return nil, fmt.Errorf("signal %s not available: %s", "serviceAdded", err)
 	}
 
-	_, err = p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	handlerID := uint64(signalID)<<32 + 1 // FIXME: read it from proxy
+	_, err = p.RegisterEvent(p.ObjectID(), signalID, handlerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register event for %s: %s", "serviceAdded", err)
 	}
@@ -527,8 +530,9 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 		for {
 			payload, ok := <-chPay
 			if !ok {
-				// connection lost.
+				// connection lost or cancellation.
 				close(ch)
+				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
@@ -565,7 +569,8 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 		return nil, fmt.Errorf("signal %s not available: %s", "serviceRemoved", err)
 	}
 
-	_, err = p.RegisterEvent(p.ObjectID(), signalID, uint64(signalID)<<32+1)
+	handlerID := uint64(signalID)<<32 + 1 // FIXME: read it from proxy
+	_, err = p.RegisterEvent(p.ObjectID(), signalID, handlerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register event for %s: %s", "serviceRemoved", err)
 	}
@@ -581,8 +586,9 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 		for {
 			payload, ok := <-chPay
 			if !ok {
-				// connection lost.
+				// connection lost or cancellation.
 				close(ch)
+				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
