@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
+	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
@@ -370,4 +372,105 @@ func TestNamespace(t *testing.T) {
 
 	sess := ns.Session(srv)
 	sess.Destroy()
+}
+
+func TestServer(t *testing.T) {
+	addr := util.NewUnixAddr()
+
+	server, err := directory.NewServer(addr, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer server.Terminate()
+
+	session, err := session.NewSession(addr)
+	if err != nil {
+		panic(err)
+	}
+	info := services.ServiceInfo{
+		Name:      "test",
+		MachineId: util.MachineID(),
+		ProcessId: util.ProcessID(),
+		Endpoints: []string{
+			util.NewUnixAddr(),
+		},
+	}
+	services := services.Services(session)
+	directory, err := services.ServiceDirectory()
+	if err != nil {
+		t.Fatalf("failed to create directory: %s", err)
+	}
+	list, err := directory.Services()
+	if err != nil {
+		panic(err)
+	}
+	if len(list) != 1 {
+		t.Errorf("not expecting %d", len(list))
+	}
+
+	cancel := make(chan int)
+	added, err := directory.SignalServiceAdded(cancel)
+	if err != nil {
+		panic(err)
+	}
+	removed, err := directory.SignalServiceRemoved(cancel)
+	if err != nil {
+		panic(err)
+	}
+	info.ServiceId, err = directory.RegisterService(info)
+	if err != nil {
+		panic(err)
+	}
+	_, err = directory.RegisterService(info)
+	if err == nil {
+		panic("shall fail")
+	}
+	err = directory.ServiceReady(info.ServiceId)
+	if err != nil {
+		panic(err)
+	}
+	err = directory.ServiceReady(info.ServiceId)
+	if err == nil {
+		panic("shall fail")
+	}
+	_, err = directory.Service("test")
+	if err != nil {
+		panic(err)
+	}
+	_, err = directory.Service("test2")
+	if err == nil {
+		panic("shall fail")
+	}
+	info.ProcessId = 2
+	err = directory.UpdateServiceInfo(info)
+	if err != nil {
+		panic(err)
+	}
+	info.ProcessId = 0
+	err = directory.UpdateServiceInfo(info)
+	if err == nil {
+		panic("shall fail")
+	}
+	err = directory.UnregisterService(info.ServiceId)
+	if err != nil {
+		panic(err)
+	}
+	err = directory.UnregisterService(info.ServiceId)
+	if err == nil {
+		panic("shall fail")
+	}
+	info2, ok := <-added
+	if !ok {
+		panic("unexpected")
+	}
+	if info2.P1 != "test" {
+		panic(info.Name)
+	}
+	info2, ok = <-removed
+	if !ok {
+		panic("unexpected")
+	}
+	if info2.P1 != "test" {
+		panic(info.Name)
+	}
 }
