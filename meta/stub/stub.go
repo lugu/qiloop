@@ -251,9 +251,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 	metaMethods := func(d jen.Dict) {
 		for _, method := range itf.Methods {
-			d[jen.Lit(method.Id)] = jen.Qual(
-				"github.com/lugu/qiloop/type/object", "MetaMethod",
-			).Values(jen.Dict{
+			d[jen.Lit(method.Id)] = jen.Values(jen.Dict{
 				jen.Id("Uid"): jen.Lit(method.Id),
 				jen.Id("ReturnSignature"): jen.Lit(
 					method.Return.Signature(),
@@ -267,9 +265,7 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	metaSignals := func(d jen.Dict) {
 		for _, signal := range itf.Signals {
-			d[jen.Lit(signal.Id)] = jen.Qual(
-				"github.com/lugu/qiloop/type/object", "MetaSignal",
-			).Values(jen.Dict{
+			d[jen.Lit(signal.Id)] = jen.Values(jen.Dict{
 				jen.Id("Uid"):  jen.Lit(signal.Id),
 				jen.Id("Name"): jen.Lit(signal.Name),
 				jen.Id("Signature"): jen.Lit(

@@ -237,56 +237,56 @@ func (s *stubObject) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Object",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x0): object.MetaMethod{
+			uint32(0x0): {
 				Name:                "registerEvent",
 				ParametersSignature: "(IIL)",
 				ReturnSignature:     "L",
 				Uid:                 uint32(0x0),
 			},
-			uint32(0x1): object.MetaMethod{
+			uint32(0x1): {
 				Name:                "unregisterEvent",
 				ParametersSignature: "(IIL)",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x1),
 			},
-			uint32(0x2): object.MetaMethod{
+			uint32(0x2): {
 				Name:                "metaObject",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>",
 				Uid:                 uint32(0x2),
 			},
-			uint32(0x3): object.MetaMethod{
+			uint32(0x3): {
 				Name:                "terminate",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x3),
 			},
-			uint32(0x5): object.MetaMethod{
+			uint32(0x5): {
 				Name:                "property",
 				ParametersSignature: "(m)",
 				ReturnSignature:     "m",
 				Uid:                 uint32(0x5),
 			},
-			uint32(0x6): object.MetaMethod{
+			uint32(0x6): {
 				Name:                "setProperty",
 				ParametersSignature: "(mm)",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x6),
 			},
-			uint32(0x7): object.MetaMethod{
+			uint32(0x7): {
 				Name:                "properties",
 				ParametersSignature: "()",
 				ReturnSignature:     "[s]",
 				Uid:                 uint32(0x7),
 			},
-			uint32(0x8): object.MetaMethod{
+			uint32(0x8): {
 				Name:                "registerEventWithSignature",
 				ParametersSignature: "(IILs)",
 				ReturnSignature:     "L",
 				Uid:                 uint32(0x8),
 			},
 		},
-		Signals: map[uint32]object.MetaSignal{uint32(0x56): object.MetaSignal{
+		Signals: map[uint32]object.MetaSignal{uint32(0x56): {
 			Name:      "traceObject",
 			Signature: "((IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>)",
 			Uid:       uint32(0x56),

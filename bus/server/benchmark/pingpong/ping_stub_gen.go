@@ -90,20 +90,20 @@ func (s *stubPingPong) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "PingPong",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x64): object.MetaMethod{
+			uint32(0x64): {
 				Name:                "hello",
 				ParametersSignature: "(s)",
 				ReturnSignature:     "s",
 				Uid:                 uint32(0x64),
 			},
-			uint32(0x65): object.MetaMethod{
+			uint32(0x65): {
 				Name:                "ping",
 				ParametersSignature: "(s)",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x65),
 			},
 		},
-		Signals: map[uint32]object.MetaSignal{uint32(0x66): object.MetaSignal{
+		Signals: map[uint32]object.MetaSignal{uint32(0x66): {
 			Name:      "pong",
 			Signature: "(s)",
 			Uid:       uint32(0x66),

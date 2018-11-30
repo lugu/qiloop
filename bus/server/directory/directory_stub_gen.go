@@ -218,49 +218,49 @@ func (s *stubServiceDirectory) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "ServiceDirectory",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x64): object.MetaMethod{
+			uint32(0x64): {
 				Name:                "service",
 				ParametersSignature: "(s)",
 				ReturnSignature:     "(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>",
 				Uid:                 uint32(0x64),
 			},
-			uint32(0x65): object.MetaMethod{
+			uint32(0x65): {
 				Name:                "services",
 				ParametersSignature: "()",
 				ReturnSignature:     "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]",
 				Uid:                 uint32(0x65),
 			},
-			uint32(0x66): object.MetaMethod{
+			uint32(0x66): {
 				Name:                "registerService",
 				ParametersSignature: "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)",
 				ReturnSignature:     "I",
 				Uid:                 uint32(0x66),
 			},
-			uint32(0x67): object.MetaMethod{
+			uint32(0x67): {
 				Name:                "unregisterService",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x67),
 			},
-			uint32(0x68): object.MetaMethod{
+			uint32(0x68): {
 				Name:                "serviceReady",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x68),
 			},
-			uint32(0x69): object.MetaMethod{
+			uint32(0x69): {
 				Name:                "updateServiceInfo",
 				ParametersSignature: "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x69),
 			},
-			uint32(0x6c): object.MetaMethod{
+			uint32(0x6c): {
 				Name:                "machineId",
 				ParametersSignature: "()",
 				ReturnSignature:     "s",
 				Uid:                 uint32(0x6c),
 			},
-			uint32(0x6d): object.MetaMethod{
+			uint32(0x6d): {
 				Name:                "_socketOfService",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "o",
@@ -268,12 +268,12 @@ func (s *stubServiceDirectory) metaObject() object.MetaObject {
 			},
 		},
 		Signals: map[uint32]object.MetaSignal{
-			uint32(0x6a): object.MetaSignal{
+			uint32(0x6a): {
 				Name:      "serviceAdded",
 				Signature: "(Is)",
 				Uid:       uint32(0x6a),
 			},
-			uint32(0x6b): object.MetaSignal{
+			uint32(0x6b): {
 				Name:      "serviceRemoved",
 				Signature: "(Is)",
 				Uid:       uint32(0x6b),
