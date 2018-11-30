@@ -428,10 +428,9 @@ func nodifyPackageName(nodes []Node) Node {
 
 // nodifyPackage returns a package structure.
 func nodifyPackage(nodes []Node) Node {
-	var packageName = ""
 	packageNode := nodes[0]
 	definitions := nodes[1]
-	packageName = packageNode.(string)
+	packageName := packageNode.(string)
 	if typeList, ok := definitions.([]Type); !ok {
 		return fmt.Errorf("Expecting type list, got %+v: %+v",
 			reflect.TypeOf(definitions), definitions)

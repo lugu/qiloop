@@ -37,6 +37,9 @@ func TestPingPong(t *testing.T) {
 	}
 	services := proxy.Services(session)
 	client, err := services.PingPong()
+	if err != nil {
+		panic(err)
+	}
 
 	cancel := make(chan int)
 	pong, err := client.SignalPong(cancel)
@@ -78,6 +81,9 @@ func testRemoteAddr(b *testing.B, addr string) {
 	}
 	services := proxy.Services(session)
 	client, err := services.PingPong()
+	if err != nil {
+		panic(err)
+	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -135,6 +141,9 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	}
 	services := proxy.Services(session)
 	client, err := services.PingPong()
+	if err != nil {
+		panic(err)
+	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

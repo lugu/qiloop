@@ -81,6 +81,9 @@ func TestLookup(t *testing.T) {
 	defer server.Terminate()
 
 	cache, err := client.NewCachedSession(addr)
+	if err != nil {
+		panic(err)
+	}
 	defer cache.Destroy()
 	cache.AddService("Server", 0, object.MetaService0)
 
@@ -125,6 +128,9 @@ func TestCacheAuthError(t *testing.T) {
 
 	server, err := server.StandAloneServer(listener, server.No{},
 		server.PrivateNamespace())
+	if err != nil {
+		panic(err)
+	}
 	defer server.Terminate()
 	_, err = client.NewCachedSession(addr)
 	if err == nil {

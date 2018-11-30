@@ -156,6 +156,9 @@ func TestSelectError(t *testing.T) {
 	}
 	server, err := server.StandAloneServer(listener, server.No{},
 		server.PrivateNamespace())
+	if err != nil {
+		panic(err)
+	}
 	defer server.Terminate()
 
 	// shall fail to authenticate

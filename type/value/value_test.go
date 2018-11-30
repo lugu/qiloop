@@ -34,6 +34,9 @@ func TestValues(t *testing.T) {
 func helpValueWrite(t *testing.T, expected value.Value) {
 	buf := bytes.NewBuffer(make([]byte, 10))
 	err := expected.Write(buf)
+	if err != nil {
+		t.Errorf("failed to write: %s", err)
+	}
 	val, err := value.NewValue(buf)
 	if err != nil {
 	} else if !reflect.DeepEqual(val, expected) {

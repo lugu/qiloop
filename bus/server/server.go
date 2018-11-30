@@ -87,13 +87,13 @@ func (o *BasicObject) handleRegisterEvent(from *Context, msg *net.Message) error
 		err = fmt.Errorf("cannot read signal uid: %s", err)
 		return util.ReplyError(from.EndPoint, msg, err)
 	}
-	clientID, err := basic.ReadUint64(buf)
+	_, err = basic.ReadUint64(buf)
 	if err != nil {
 		err = fmt.Errorf("cannot read client uid: %s", err)
 		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	messageID := msg.Header.ID
-	clientID = o.AddSignalUser(signalID, messageID, from)
+	clientID := o.AddSignalUser(signalID, messageID, from)
 	var out bytes.Buffer
 	err = basic.WriteUint64(clientID, &out)
 	if err != nil {

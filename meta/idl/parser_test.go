@@ -271,6 +271,9 @@ func TestParseService1(t *testing.T) {
 		t.Fatal(err)
 	}
 	metaObj, err := object.ReadMetaObject(file)
+	if err != nil {
+		t.Fatal(err)
+	}
 	helpParserTest(t, "Service 1", "service1.idl", &metaObj)
 }
 

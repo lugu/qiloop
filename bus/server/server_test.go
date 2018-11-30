@@ -293,6 +293,9 @@ func TestRemoteServer(t *testing.T) {
 
 	addr2 := util.NewUnixAddr()
 	srv2, err := server.NewServer(sess, addr2)
+	if err != nil {
+		panic(err)
+	}
 	defer srv2.Terminate()
 
 	obj := server.NewObject(object.MetaObject{

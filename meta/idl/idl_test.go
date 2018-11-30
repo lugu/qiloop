@@ -45,5 +45,8 @@ func TestServiceDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 	metaObj, err := object.ReadMetaObject(file)
+	if err != nil {
+		panic(err)
+	}
 	helpTestGenerate(t, "service1.idl", "ServiceDirectory", metaObj)
 }

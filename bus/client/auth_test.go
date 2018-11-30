@@ -31,6 +31,9 @@ func TestAuth(t *testing.T) {
 	server, err := server.StandAloneServer(listener, auth,
 		server.PrivateNamespace())
 	defer server.Terminate()
+	if err != nil {
+		panic(err)
+	}
 
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
