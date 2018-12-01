@@ -57,6 +57,15 @@ func (o *ObjectDispatcher) Receive(m *net.Message, from *server.Context) error {
 	return from.EndPoint.Send(reply)
 }
 
+func newObject() server.Object {
+	var object ObjectDispatcher
+	handler := func(d []byte) ([]byte, error) {
+		return []byte{0xab, 0xcd}, nil
+	}
+	object.Wrap(3, handler)
+	return &object
+}
+
 func TestNewServer(t *testing.T) {
 
 	addr := util.NewUnixAddr()
@@ -67,12 +76,8 @@ func TestNewServer(t *testing.T) {
 	}
 	defer srv.Terminate()
 
-	var object ObjectDispatcher
-	handler := func(d []byte) ([]byte, error) {
-		return []byte{0xab, 0xcd}, nil
-	}
-	object.Wrap(3, handler)
-	srv.NewService("test", &object)
+	object := newObject()
+	srv.NewService("test", object)
 
 	clt, err := net.DialEndPoint(addr)
 	if err != nil {
@@ -365,7 +370,9 @@ func TestNamespace(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
 
+func TestLocalSession(t *testing.T) {
 	addr := util.NewUnixAddr()
 	srv, err := directory.NewServer(addr, nil)
 	if err != nil {
@@ -373,7 +380,42 @@ func TestNamespace(t *testing.T) {
 	}
 	defer srv.Terminate()
 
+	ns := server.PrivateNamespace()
+	// activate service directory
 	sess := ns.Session(srv)
+	_, err = sess.Proxy("ServiceDirectory", 1)
+	if err == nil {
+		t.Errorf("service directory not registered")
+	}
+	uid, err := ns.Reserve("ServiceDirectory")
+	if err != nil {
+		t.Error(err)
+	}
+	if uid != 1 {
+		t.Errorf("expecting first id, got %d", uid)
+	}
+	err = ns.Enable(uid)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = sess.Proxy("ServiceDirectory", 1)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = sess.Proxy("ServiceDirectory", 2)
+	if err == nil {
+		t.Errorf("shall not have an second object")
+	}
+	_, err = sess.Proxy("unknown", 1)
+	if err == nil {
+		t.Errorf("shall fail: wrong object id")
+	}
+	srv.NewService("known", newObject())
+	_, err = sess.Proxy("known", 1)
+	if err == nil {
+		t.Errorf("shall fail: object does not implement metaObject()")
+	}
+
 	sess.Destroy()
 }
 
@@ -489,13 +531,9 @@ func TestServer(t *testing.T) {
 }
 
 func TestServiceImpl(t *testing.T) {
-	var object ObjectDispatcher
-	handler := func(d []byte) ([]byte, error) {
-		return []byte{0xab, 0xcd}, nil
-	}
-	object.Wrap(3, handler)
-	service := server.NewService(&object)
-	uid, err := service.Add(&object)
+	object := newObject()
+	service := server.NewService(object)
+	uid, err := service.Add(object)
 	if err != nil {
 		t.Error(err)
 	}

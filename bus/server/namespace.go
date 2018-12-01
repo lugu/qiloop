@@ -86,7 +86,11 @@ func (ns *privateNamespace) Resolve(name string) (uint32, error) {
 	defer ns.Unlock()
 	serviceID, ok := ns.activated[name]
 	if !ok {
-		return 0, fmt.Errorf("service %s not activated", name)
+		_, ok := ns.reserved[name]
+		if ok {
+			return 0, fmt.Errorf("service %s not enabled", name)
+		}
+		return 0, fmt.Errorf("unknown service %s", name)
 	}
 	return serviceID, nil
 }
