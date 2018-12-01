@@ -23,12 +23,16 @@ func (c *client) nextMessageID() uint32 {
 	return c.messageID
 }
 
-func (c *client) newMessage(serviceID uint32, objectID uint32, actionID uint32, payload []byte) net.Message {
-	header := net.NewHeader(net.Call, serviceID, objectID, actionID, c.nextMessageID())
+func (c *client) newMessage(serviceID uint32, objectID uint32,
+	actionID uint32, payload []byte) net.Message {
+
+	header := net.NewHeader(net.Call, serviceID, objectID, actionID,
+		c.nextMessageID())
 	return net.NewMessage(header, payload)
 }
 
-func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error) {
+func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
+	payload []byte) ([]byte, error) {
 
 	msg := c.newMessage(serviceID, objectID, actionID, payload)
 	messageID := msg.Header.ID
@@ -60,7 +64,8 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 	// 2. send the call message.
 	if err := c.endpoint.Send(msg); err != nil {
 		c.endpoint.RemoveHandler(id)
-		return nil, fmt.Errorf("failed to call service %d, object %d, action %d: %s",
+		return nil, fmt.Errorf(
+			"failed to call service %d, object %d, action %d: %s",
 			serviceID, objectID, actionID, err)
 	}
 
@@ -73,7 +78,8 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 		buf := bytes.NewBuffer(response.Payload)
 		v, err := value.NewValue(buf)
 		if err != nil {
-			return nil, fmt.Errorf("error response read error: %s", err)
+			return nil, fmt.Errorf(
+				"error response read error: %s", err)
 		}
 		strVal, ok := v.(value.StringValue)
 		if !ok {
@@ -87,7 +93,9 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32, payloa
 // Subscribe returns a channel which returns the future value of a
 // given signal. To stop the stream one must send a value in the
 // cancel channel. Do not close the message channel.
-func (c *client) Subscribe(serviceID, objectID, actionID uint32, cancel chan int) (chan []byte, error) {
+func (c *client) Subscribe(serviceID, objectID, actionID uint32,
+	cancel chan int) (chan []byte, error) {
+
 	stream := make(chan []byte)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
