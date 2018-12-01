@@ -9,8 +9,6 @@
 [![stability-unstable](https://img.shields.io/badge/stability-unstable-yellow.svg)](https://github.com/emersion/stability-badges#unstable)
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/lugu/qiloop.svg?columns=To%20Do,In%20Progress)](https://waffle.io/lugu/qiloop)
 
-
-
 **`qiloop`** is an implementation of QiMessaging written in [Go](https://golang.org).
 
 QiMessaging is a network protocol used to build rich distributed
@@ -20,15 +18,11 @@ and is the foundation of the NAOqi SDK. For more details about
 QiMessaging, visit this [analysis of the
 protocol](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
 
-Installation
-------------
+## Installation
 
-```
-go get github.com/lugu/qiloop/...
-```
+    go get github.com/lugu/qiloop/...
 
-Demo
-----
+## Demo
 
 Here is how to connect to a server and list the running services:
 
@@ -64,38 +58,31 @@ func main() {
 }
 ```
 
-Proxy generation tutorial
--------------------------
-
+## Proxy generation tutorial
 
 By default, `qiloop` comes with two proxies: ServiceDirectory and
 LogManager.
 
 Follow [this tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md) to generate more proxy.
 
-Examples
---------
+## Examples
 
-- [info
-  demo](https://github.com/lugu/qiloop/blob/master/cmd/info/main.go)
-  illustrates how to call a service: it lists the services registered
-  to the service directory.
+-   [info demo](https://github.com/lugu/qiloop/blob/master/cmd/info/main.go)
+    illustrates how to call a service: it lists the services registered
+    to the service directory.
 
 
-- [signal
-  demo](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/signal/main.go)
-  illustrates how to subscribe to a signal: it prints a log each time
-  a service is removed from the service directory.
+-   [signal demo](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/signal/main.go)
+    illustrates how to subscribe to a signal: it prints a log each time
+    a service is removed from the service directory.
 
-Authentication
---------------
+## Authentication
 
 If you need to provide a login and a password to authenticate yourself
 to a server, create a file `$HOME/.qi-auth.conf` with you login on the
 first line and your password on the second.
 
-Status
-------
+## Status
 
 This is work in progress, you have been warned.
 
@@ -105,18 +92,18 @@ signal. Don't expect more than this.
 
 What is working:
 
-- TCP connection
-- Proxy generation
-- Calls and signals
-- IDL generation
-- TLS transport
-- Authentication
-- IDL parsing
+-   TCP connection
+-   Proxy generation
+-   Calls and signals
+-   IDL generation
+-   TLS transport
+-   Authentication
+-   IDL parsing
 
 What is under development:
 
-- Service stub generation
+-   Service stub generation
 
 What is yet to be done:
 
-- Support for properties
+-   Support for properties
