@@ -17,20 +17,31 @@ import (
 // 1. Construct a set of Types associated with context.
 // 2. Defer the resolution of the types to the proxy/stub generation.
 
+// Namespace represents a set of packages extracted from IDL files.
+// Each package is given a name and a set of types.
 type Namespace map[string]Scope
 
+// Parameter represents a method parameter. It is used to describe a
+// method.
 type Parameter struct {
 	Name string
 	Type signature.Type
 }
 
+// Method represents the signature of a method describe in an IDL
+// file.
 type Method struct {
 	Name   string
-	Id     uint32
+	ID     uint32
 	Return signature.Type
 	Params []Parameter
 }
 
+// Meta translate the method signature into a MetaMethod use in a
+// MetaObject. There is not a one-to-one mapping between the two
+// structures: Method capture the reference to other interface
+// (object) while MetaMethod treats all object with a generic
+// reference.
 func (m Method) Meta(id uint32) object.MetaMethod {
 	var meta object.MetaMethod
 	meta.Uid = id
@@ -50,32 +61,44 @@ func (m Method) Meta(id uint32) object.MetaMethod {
 	return meta
 }
 
+// Tuple returns a TupleType used to generate marshall/unmarshall
+// operations.
 func (m Method) Tuple() *signature.TupleType {
 	var tuple signature.TupleType
 	tuple.Members = make([]signature.MemberType, 0)
 	for _, p := range m.Params {
 		tuple.Members = append(tuple.Members,
-			signature.MemberType{p.Name, p.Type})
+			signature.MemberType{
+				Name: p.Name,
+				Type: p.Type,
+			})
 	}
 	return &tuple
 }
 
+// Signal represent an interface signal
 type Signal struct {
 	Name   string
-	Id     uint32
+	ID     uint32
 	Params []Parameter
 }
 
+// Tuple returns a TupleType used to generate marshall/unmarshall
+// operations.
 func (s Signal) Tuple() *signature.TupleType {
 	var tuple signature.TupleType
 	tuple.Members = make([]signature.MemberType, 0)
 	for _, p := range s.Params {
 		tuple.Members = append(tuple.Members,
-			signature.MemberType{p.Name, p.Type})
+			signature.MemberType{
+				Name: p.Name,
+				Type: p.Type,
+			})
 	}
 	return &tuple
 }
 
+// Meta returns a MetaSignal.
 func (s Signal) Meta(id uint32) object.MetaSignal {
 	var meta object.MetaSignal
 	meta.Uid = id
@@ -88,12 +111,14 @@ func (s Signal) Meta(id uint32) object.MetaSignal {
 	return meta
 }
 
+// Property represents a property
 type Property struct {
 	Name   string
-	Id     uint32
+	ID     uint32
 	Params []Parameter
 }
 
+// Meta converts a property to a MetaProperty.
 func (p Property) Meta(id uint32) object.MetaProperty {
 	var meta object.MetaProperty
 	meta.Uid = id

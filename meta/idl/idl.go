@@ -11,7 +11,8 @@ import (
 // methodName, because is the Go method name generated to avoid
 // conflicts. QiMessage do not have such constraint and thus we don't
 // use this name when creating IDL files.
-func generateMethod(writer io.Writer, set *signature.TypeSet, m object.MetaMethod, methodName string) error {
+func generateMethod(writer io.Writer, set *signature.TypeSet,
+	m object.MetaMethod, methodName string) error {
 
 	// paramType is a tuple it needs to be unified with
 	// m.MetaMethodParameter.

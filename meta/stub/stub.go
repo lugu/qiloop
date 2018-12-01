@@ -189,7 +189,7 @@ func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 	}
 	// if has not return value
 	code = jen.Id("err := s.obj.UpdateSignal").Call(
-		jen.Lit(signal.Id),
+		jen.Lit(signal.ID),
 		jen.Id("buf.Bytes()"),
 	)
 	writing = append(writing, code)
@@ -251,8 +251,8 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 	metaMethods := func(d jen.Dict) {
 		for _, method := range itf.Methods {
-			d[jen.Lit(method.Id)] = jen.Values(jen.Dict{
-				jen.Id("Uid"): jen.Lit(method.Id),
+			d[jen.Lit(method.ID)] = jen.Values(jen.Dict{
+				jen.Id("Uid"): jen.Lit(method.ID),
 				jen.Id("ReturnSignature"): jen.Lit(
 					method.Return.Signature(),
 				),
@@ -265,8 +265,8 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	metaSignals := func(d jen.Dict) {
 		for _, signal := range itf.Signals {
-			d[jen.Lit(signal.Id)] = jen.Values(jen.Dict{
-				jen.Id("Uid"):  jen.Lit(signal.Id),
+			d[jen.Lit(signal.ID)] = jen.Values(jen.Dict{
+				jen.Id("Uid"):  jen.Lit(signal.ID),
 				jen.Id("Name"): jen.Lit(signal.Name),
 				jen.Id("Signature"): jen.Lit(
 					signal.Tuple().Signature(),
@@ -344,7 +344,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	methodCall := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
 		code = jen.Id("stb.obj.Wrap").Call(
-			jen.Lit(method.Id),
+			jen.Lit(method.ID),
 			jen.Id("stb").Dot(methodName),
 		)
 		writing = append(writing, code)

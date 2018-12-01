@@ -9,7 +9,9 @@ import (
 	"testing"
 )
 
-func helpTestGenerate(t *testing.T, idlFileName, serviceName string, metaObj object.MetaObject) {
+func helpTestGenerate(t *testing.T, idlFileName, serviceName string,
+	metaObj object.MetaObject) {
+
 	path := filepath.Join("testdata", idlFileName)
 	file, err := os.Open(path)
 	if err != nil {

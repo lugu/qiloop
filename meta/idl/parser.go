@@ -635,7 +635,7 @@ func nodifyMethod(nodes []Node) Node {
 	method.Return = retType
 
 	if uid, ok := commentNode.(uint32); ok {
-		method.Id = uid
+		method.ID = uid
 	}
 	return method
 }
@@ -656,7 +656,7 @@ func nodifySignal(nodes []Node) Node {
 	signal.Name = nodes[1].(*parsec.Terminal).GetValue()
 	signal.Params = params
 	if uid, ok := commentNode.(uint32); ok {
-		signal.Id = uid
+		signal.ID = uid
 	}
 	return signal
 }
@@ -677,7 +677,7 @@ func nodifyProperty(nodes []Node) Node {
 	prop.Name = nodes[1].(*parsec.Terminal).GetValue()
 	prop.Params = params
 	if uid, ok := commentNode.(uint32); ok {
-		prop.Id = uid
+		prop.ID = uid
 	}
 	return prop
 }
@@ -697,23 +697,23 @@ func nodifyActionList(nodes []Node) Node {
 			return err
 		}
 		if method, ok := node.(Method); ok {
-			if method.Id == 0 && method.Name != "registerEvent" {
-				method.Id = customAction
+			if method.ID == 0 && method.Name != "registerEvent" {
+				method.ID = customAction
 				customAction++
 			}
-			itf.Methods[method.Id] = method
+			itf.Methods[method.ID] = method
 		} else if signal, ok := node.(Signal); ok {
-			if signal.Id == 0 {
-				signal.Id = customAction
+			if signal.ID == 0 {
+				signal.ID = customAction
 				customAction++
 			}
-			itf.Signals[signal.Id] = signal
+			itf.Signals[signal.ID] = signal
 		} else if property, ok := node.(Property); ok {
-			if property.Id == 0 {
-				property.Id = customAction
+			if property.ID == 0 {
+				property.ID = customAction
 				customAction++
 			}
-			itf.Properties[property.Id] = property
+			itf.Properties[property.ID] = property
 		} else {
 			return fmt.Errorf("Expecting action, got %+v: %+v",
 				reflect.TypeOf(node), node)

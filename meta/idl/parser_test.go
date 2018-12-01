@@ -84,7 +84,7 @@ func TestParseMethod0(t *testing.T) {
 	input := `fn methodName()`
 	expected := Method{
 		Name:   "methodName",
-		Id:     0,
+		ID:     0,
 		Return: NewVoidType(),
 		Params: []Parameter{},
 	}
@@ -95,7 +95,7 @@ func TestParseMethod0bis(t *testing.T) {
 	input := `fn methodName() //uid:200`
 	expected := Method{
 		Name:   "methodName",
-		Id:     200,
+		ID:     200,
 		Return: NewVoidType(),
 		Params: []Parameter{},
 	}
@@ -106,7 +106,7 @@ func TestParseMethod1(t *testing.T) {
 	input := `fn methodName() -> int32`
 	expected := Method{
 		Name:   "methodName",
-		Id:     0,
+		ID:     0,
 		Return: NewIntType(),
 		Params: []Parameter{},
 	}
@@ -117,7 +117,7 @@ func TestParseMethod1ter(t *testing.T) {
 	input := `fn methodName() -> float64`
 	expected := Method{
 		Name:   "methodName",
-		Id:     0,
+		ID:     0,
 		Return: NewDoubleType(),
 		Params: []Parameter{},
 	}
@@ -128,7 +128,7 @@ func TestParseMethod1bis(t *testing.T) {
 	input := `fn methodName() -> bool`
 	expected := Method{
 		Name:   "methodName",
-		Id:     0,
+		ID:     0,
 		Return: NewBoolType(),
 		Params: []Parameter{},
 	}
@@ -139,7 +139,7 @@ func TestParseMethod2(t *testing.T) {
 	input := `fn methodName(param1: int32, param2: float64)`
 	expected := Method{
 		Name:   "methodName",
-		Id:     0,
+		ID:     0,
 		Return: NewVoidType(),
 		Params: []Parameter{
 			{
@@ -158,7 +158,7 @@ func TestParseMethod3(t *testing.T) {
 	input := `fn methodName(param1: int32, param2: float64) -> bool`
 	expected := Method{
 		Name:   "methodName",
-		Id:     0,
+		ID:     0,
 		Return: NewBoolType(),
 		Params: []Parameter{
 			{
@@ -177,7 +177,7 @@ func TestParseMethod3bis(t *testing.T) {
 	input := `fn methodName(param1: int32, param2: float64) -> bool //uid:10`
 	expected := Method{
 		Name:   "methodName",
-		Id:     10,
+		ID:     10,
 		Return: NewBoolType(),
 		Params: []Parameter{
 			{
