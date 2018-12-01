@@ -58,6 +58,7 @@ func TestStructName(t *testing.T) {
 }
 
 func TestParseBasics(t *testing.T) {
+	testUtil(t, "v", NewVoidType())
 	testUtil(t, "c", NewInt8Type())
 	testUtil(t, "C", NewUint8Type())
 	testUtil(t, "w", NewInt16Type())
@@ -190,4 +191,34 @@ func TestParseTextProcessingContext(t *testing.T) {
 func TestParseRobotFullState(t *testing.T) {
 	t.SkipNow() // ValueConfidence<float> => ValueConfidence_float_
 	testSignature(t, "(ff)<ValueConfidence<float>,value,confidence>")
+}
+
+func TestGenerateType(t *testing.T) {
+	typ := NewBoolType()
+	var buf bytes.Buffer
+	GenerateType(typ, "package1", &buf)
+}
+
+func TestParseError(t *testing.T) {
+	check := func(s string) {
+		typ, err := Parse(s)
+		if err == nil {
+			t.Errorf("unexpecting parse success: %s, %#v",
+				s, typ)
+		}
+	}
+	_, err := Parse("o")
+	if err != nil {
+		t.Error(err)
+	}
+	check("")
+	check("#c")
+	check("#c")
+	check("{")
+	check("{}")
+	check("{c}")
+	check("{sss}")
+	check("[")
+	check("[]")
+	check("[sb]")
 }
