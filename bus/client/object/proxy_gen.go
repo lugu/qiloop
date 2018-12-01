@@ -333,8 +333,8 @@ func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 			payload, ok := <-chPay
 			if !ok {
 				// connection lost or cancellation.
-				close(ch)
 				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+				close(ch)
 				return
 			}
 			buf := bytes.NewBuffer(payload)

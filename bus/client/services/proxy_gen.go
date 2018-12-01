@@ -231,8 +231,8 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 			payload, ok := <-chPay
 			if !ok {
 				// connection lost or cancellation.
-				close(ch)
 				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+				close(ch)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
@@ -287,8 +287,8 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 			payload, ok := <-chPay
 			if !ok {
 				// connection lost or cancellation.
-				close(ch)
 				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+				close(ch)
 				return
 			}
 			buf := bytes.NewBuffer(payload)

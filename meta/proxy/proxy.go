@@ -356,8 +356,8 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 				jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
 				jen.Id(`if !ok {
 					// connection lost or cancellation.
-					close(ch)
 					p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+					close(ch)
 					return
 				}`),
 				jen.Id("buf := bytes.NewBuffer(payload)"),

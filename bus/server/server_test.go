@@ -285,8 +285,6 @@ func TestSession(t *testing.T) {
 
 func TestRemoteServer(t *testing.T) {
 
-	t.Skip("wait until NewServer gets a namespace from its session")
-
 	addr := util.NewUnixAddr()
 	srv, err := directory.NewServer(addr, nil)
 	if err != nil {
@@ -302,6 +300,8 @@ func TestRemoteServer(t *testing.T) {
 		t.Error(err)
 	}
 	defer srv2.Terminate()
+
+	t.Skip("wait until NewServer gets a namespace from its session")
 
 	obj := server.NewObject(object.MetaObject{
 		Description: "test",
