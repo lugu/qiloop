@@ -546,3 +546,41 @@ func TestServiceImpl(t *testing.T) {
 		t.Fatalf("shall fail")
 	}
 }
+
+func TestRouter(t *testing.T) {
+	service0 := server.ServiceAuthenticate(server.Yes{})
+	router := server.NewRouter(service0)
+	object := newObject()
+	service := server.NewService(object)
+	err := router.Add(0, service)
+	if err == nil {
+		t.Error(err)
+	}
+	err = router.Add(1, service)
+	if err != nil {
+		t.Error(err)
+	}
+	err = router.Remove(1)
+	if err != nil {
+		t.Error(err)
+	}
+	err = router.Remove(1)
+	if err == nil {
+		t.Errorf("shall fail")
+	}
+	err = router.Terminate()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestNewContext(t *testing.T) {
+	endpoint, _ := net.NewPipe()
+	context := server.NewContext(endpoint)
+	if context == nil {
+		t.Errorf("nil context")
+	}
+	if context.Authenticated == true {
+		t.Errorf("shall not")
+	}
+}
