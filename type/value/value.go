@@ -40,7 +40,7 @@ func NewValue(r io.Reader) (Value, error) {
 	}
 	f, ok := solve[s]
 	if !ok {
-		return nil, fmt.Errorf("unsuported signature: %s", s)
+		return nil, fmt.Errorf("unsuported signature: \"%s\"", s)
 	}
 	return f(r)
 }
@@ -77,7 +77,7 @@ func (b BoolValue) Value() bool {
 // Uint8Value represents a Value of an uint8.
 type Uint8Value uint8
 
-// Int constructs a Value. FIXME: Int shall be int32
+// Uint8 constructs a Value.
 func Uint8(i uint8) Value {
 	return Uint8Value(i)
 }
@@ -88,7 +88,7 @@ func newUint8(r io.Reader) (Value, error) {
 }
 
 func (i Uint8Value) signature() string {
-	return "I"
+	return "C"
 }
 
 func (i Uint8Value) Write(w io.Writer) error {
@@ -106,7 +106,7 @@ func (i Uint8Value) Value() uint8 {
 // Int8Value represents a Value of an int8.
 type Int8Value int8
 
-// Int constructs a Value. FIXME: Int shall be int32
+// Int8 constructs a Value. FIXME: Int shall be int32
 func Int8(i int8) Value {
 	return Int8Value(i)
 }
@@ -117,7 +117,7 @@ func newInt8(r io.Reader) (Value, error) {
 }
 
 func (i Int8Value) signature() string {
-	return "i"
+	return "c"
 }
 
 func (i Int8Value) Write(w io.Writer) error {
@@ -135,7 +135,7 @@ func (i Int8Value) Value() int8 {
 // Uint16Value represents a Value of an uint16.
 type Uint16Value uint16
 
-// Int constructs a Value. FIXME: Int shall be int32
+// Uint16 constructs a Value. FIXME: Int shall be int32
 func Uint16(i uint16) Value {
 	return Uint16Value(i)
 }
@@ -164,7 +164,7 @@ func (i Uint16Value) Value() uint16 {
 // Int16Value represents a Value of an int16.
 type Int16Value int16
 
-// Int constructs a Value. FIXME: Int shall be int32
+// Int16 constructs a Value. FIXME: Int shall be int32
 func Int16(i int16) Value {
 	return Int16Value(i)
 }
@@ -193,7 +193,7 @@ func (i Int16Value) Value() int16 {
 // UintValue represents a Value of an uint32.
 type UintValue uint32
 
-// Int constructs a Value. FIXME: Int shall be int32
+// Uint constructs a Value. FIXME: Int shall be int32
 func Uint(i uint32) Value {
 	return UintValue(i)
 }
@@ -364,6 +364,7 @@ func (s StringValue) Value() string {
 	return string(s)
 }
 
+// ListValue represents a list of value.
 type ListValue []Value
 
 func newList(r io.Reader) (Value, error) {
@@ -410,9 +411,12 @@ func (l ListValue) Value() []Value {
 	return []Value(l)
 }
 
+// RawValue represents an array of byte.
 type RawValue []byte
 
 const (
+	// RawValueMaxSize is the implementation maximum size of a raw
+	// value.
 	RawValueMaxSize = 10 * 1024 * 1024
 )
 

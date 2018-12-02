@@ -32,19 +32,20 @@ func TestValues(t *testing.T) {
 }
 
 func helpValueWrite(t *testing.T, expected value.Value) {
-	buf := bytes.NewBuffer(make([]byte, 10))
-	err := expected.Write(buf)
+	var buf bytes.Buffer
+	err := expected.Write(&buf)
 	if err != nil {
 		t.Errorf("failed to write: %s", err)
 	}
-	val, err := value.NewValue(buf)
+	val, err := value.NewValue(&buf)
 	if err != nil {
+		t.Errorf("failed to read: %s", err)
 	} else if !reflect.DeepEqual(val, expected) {
 		t.Errorf("value constructor error")
 	}
 }
 
-func TestValueWrite(t *testing.T) {
+func TestValueWriteRead(t *testing.T) {
 	helpValueWrite(t, value.Bool(true))
 	helpValueWrite(t, value.Bool(false))
 	helpValueWrite(t, value.Int8(0))
