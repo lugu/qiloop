@@ -222,3 +222,10 @@ func TestParseError(t *testing.T) {
 	check("[]")
 	check("[sb]")
 }
+
+func TestInternalFunc(t *testing.T) {
+	err := nodifyBasicType([]Node{})
+	if err == nil {
+		t.Errorf("unexpected")
+	}
+}

@@ -22,7 +22,12 @@ func helpTestBasics(t *testing.T, typ Type, signature, idl string,
 	if typ.Unmarshal("a") == nil {
 		panic("unmarshall is nil")
 	}
-	typ.RegisterTo(NewTypeSet())
+	set := NewTypeSet()
+	typ.RegisterTo(set)
+	file := jen.NewFile("test")
+	set.Declare(file)
+	Print(typ)
+	typ.TypeDeclaration(file)
 }
 
 func TestBasicTypes(t *testing.T) {
@@ -56,6 +61,37 @@ func TestListType(t *testing.T) {
 	helpTestBasics(t, NewTupleType([]Type{NewStringType(), NewBoolType()}), "(sb)",
 		"P0: str, P1: bool",
 		jen.Struct(jen.Id("P0").Add(jen.String()), jen.Id("P1").Add(jen.Bool())))
-	helpTestBasics(t, NewStructType("test", []MemberType{{"a", NewIntType()}}),
+	helpTestBasics(t, NewStructType("test", []MemberType{{
+		Name: "a",
+		Type: NewIntType(),
+	}}),
 		"(i)<test,a>", "test", jen.Id("test"))
+}
+
+func TestEnumType(t *testing.T) {
+	helpTestBasics(t, NewEnumType("Enum0", map[string]int{
+		"a": 1,
+		"b": 2,
+	}), "i", "Enum0", jen.Id("Enum0"))
+}
+
+func TestStructType(t *testing.T) {
+	typ := NewStructType("test", []MemberType{{
+		Name: "a",
+		Type: NewIntType(),
+	}})
+	set := NewTypeSet()
+	name := set.RegisterStructType("b", typ)
+	name2 := set.RegisterStructType("b", typ)
+	if name == name2 {
+		t.Errorf("not expecting the same name: %s", name)
+	}
+	file := jen.NewFile("test")
+	set.Declare(file)
+	if set.Search(name) == nil {
+		t.Errorf("unexpected")
+	}
+	if set.Search("unknown") != nil {
+		t.Errorf("unexpected")
+	}
 }
