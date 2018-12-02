@@ -4,10 +4,12 @@ import (
 	"github.com/lugu/qiloop/meta/signature"
 )
 
+// AuthenticateActionID represents the action id of the authentication
+// process.
 const AuthenticateActionID = 8
 
-const MinUserMethodID = 100
-
+// MetaService0 represents the service id "0" used during
+// authentication. It is a special service with only one method.
 var MetaService0 MetaObject = MetaObject{
 	Description: "Server",
 	Methods: map[uint32]MetaMethod{
@@ -26,6 +28,8 @@ var MetaService0 MetaObject = MetaObject{
 	Signals: map[uint32]MetaSignal{},
 }
 
+// ObjectMetaObject represents the generic actions all services (and
+// objects) have (except service zero, see MetaService0).
 var ObjectMetaObject MetaObject = MetaObject{
 	Description: "Object",
 	Methods: map[uint32]MetaMethod{

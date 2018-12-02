@@ -29,15 +29,15 @@ func helpParseHeader(t *testing.T, filename string, expected net.Header) {
 func TestParseCallHeader(t *testing.T) {
 	filename := "header-call-authenticate.bin"
 	expected := net.Header{
-		0x42dead42,
-		3,   // id
-		110, // size
-		0,   // version
-		1,   // type call
-		0,   // flags
-		0,   // service
-		0,   // object
-		8,   // authenticate action
+		Magic:   0x42dead42,
+		ID:      3,   // id
+		Size:    110, // size
+		Version: 0,   // version
+		Type:    1,   // type call
+		Flags:   0,   // flags
+		Service: 0,   // service
+		Object:  0,   // object
+		Action:  8,   // authenticate action
 	}
 	helpParseHeader(t, filename, expected)
 }
@@ -45,15 +45,15 @@ func TestParseCallHeader(t *testing.T) {
 func TestParseReplyHeader(t *testing.T) {
 	filename := "header-reply-authenticate.bin"
 	expected := net.Header{
-		0x42dead42,
-		3,   // id
-		138, // size
-		0,   // version
-		2,   // type call
-		0,   // flags
-		0,   // service
-		0,   // object
-		8,   // authenticate action
+		Magic:   0x42dead42,
+		ID:      3,   // id
+		Size:    138, // size
+		Version: 0,   // version
+		Type:    2,   // type reply
+		Flags:   0,   // flags
+		Service: 0,   // service
+		Object:  0,   // object
+		Action:  8,   // authenticate action
 	}
 	helpParseHeader(t, filename, expected)
 }
@@ -147,9 +147,9 @@ func (b *LimitedWriter) Write(buf []byte) (int, error) {
 		b.size -= len(buf)
 		return len(buf), nil
 	}
-	old_size := b.size
+	oldSize := b.size
 	b.size = 0
-	return old_size, io.EOF
+	return oldSize, io.EOF
 }
 
 func NewLimitedWriter(size int) io.Writer {
