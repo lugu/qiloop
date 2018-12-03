@@ -1,4 +1,5 @@
-// file generated. DO NOT EDIT.
+// Package proxy contains a generated proxy
+// File generated. DO NOT EDIT.
 package proxy
 
 import (
@@ -11,27 +12,36 @@ import (
 	"log"
 )
 
-type NewServices struct {
+// ServicesConstructor gives access to remote services
+type ServicesConstructor struct {
 	session bus.Session
 }
 
-func Services(s bus.Session) NewServices {
-	return NewServices{session: s}
+// Services gives access to the services constructor
+func Services(s bus.Session) ServicesConstructor {
+	return ServicesConstructor{session: s}
 }
 
+// PingPong is a proxy object to the remote service
 type PingPong interface {
 	object.Object
 	bus.Proxy
+	// Hello calls the remote procedure
 	Hello(P0 string) (string, error)
+	// Ping calls the remote procedure
 	Ping(P0 string) error
+	// SignalPong subscribe to a remote signal
 	SignalPong(cancel chan int) (chan struct {
 		P0 string
 	}, error)
 }
+
+// PingPongProxy implements PingPong
 type PingPongProxy struct {
 	object1.ObjectProxy
 }
 
+// NewPingPong constructs PingPong
 func NewPingPong(ses bus.Session, obj uint32) (PingPong, error) {
 	proxy, err := ses.Proxy("PingPong", obj)
 	if err != nil {
@@ -39,9 +49,13 @@ func NewPingPong(ses bus.Session, obj uint32) (PingPong, error) {
 	}
 	return &PingPongProxy{object1.ObjectProxy{proxy}}, nil
 }
-func (s NewServices) PingPong() (PingPong, error) {
+
+// PingPong retruns a proxy to a remote service
+func (s ServicesConstructor) PingPong() (PingPong, error) {
 	return NewPingPong(s.session, 1)
 }
+
+// Hello calls the remote procedure
 func (p *PingPongProxy) Hello(P0 string) (string, error) {
 	var err error
 	var ret string
@@ -61,6 +75,8 @@ func (p *PingPongProxy) Hello(P0 string) (string, error) {
 	}
 	return ret, nil
 }
+
+// Ping calls the remote procedure
 func (p *PingPongProxy) Ping(P0 string) error {
 	var err error
 	var buf *bytes.Buffer
@@ -74,6 +90,8 @@ func (p *PingPongProxy) Ping(P0 string) error {
 	}
 	return nil
 }
+
+// SignalPong subscribe to a remote signal
 func (p *PingPongProxy) SignalPong(cancel chan int) (chan struct {
 	P0 string
 }, error) {

@@ -1,4 +1,5 @@
-// file generated. DO NOT EDIT.
+// Package object contains a generated proxy
+// File generated. DO NOT EDIT.
 package object
 
 import (
@@ -12,22 +13,28 @@ import (
 	"log"
 )
 
-type NewServices struct {
+// ServicesConstructor gives access to remote services
+type ServicesConstructor struct {
 	session bus.Session
 }
 
-func Services(s bus.Session) NewServices {
-	return NewServices{session: s}
+// Services gives access to the services constructor
+func Services(s bus.Session) ServicesConstructor {
+	return ServicesConstructor{session: s}
 }
 
+// Object is a proxy object to the remote service
 type Object interface {
 	object.Object
 	bus.Proxy
 }
+
+// ObjectProxy implements Object
 type ObjectProxy struct {
 	bus.Proxy
 }
 
+// NewObject constructs Object
 func NewObject(ses bus.Session, obj uint32) (Object, error) {
 	proxy, err := ses.Proxy("Object", obj)
 	if err != nil {
@@ -35,9 +42,13 @@ func NewObject(ses bus.Session, obj uint32) (Object, error) {
 	}
 	return &ObjectProxy{proxy}, nil
 }
-func (s NewServices) Object() (Object, error) {
+
+// Object retruns a proxy to a remote service
+func (s ServicesConstructor) Object() (Object, error) {
 	return NewObject(s.session, 1)
 }
+
+// RegisterEvent calls the remote procedure
 func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
@@ -63,6 +74,8 @@ func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, er
 	}
 	return ret, nil
 }
+
+// UnregisterEvent calls the remote procedure
 func (p *ObjectProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
@@ -82,6 +95,8 @@ func (p *ObjectProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	}
 	return nil
 }
+
+// MetaObject calls the remote procedure
 func (p *ObjectProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
@@ -101,6 +116,8 @@ func (p *ObjectProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
+
+// Terminate calls the remote procedure
 func (p *ObjectProxy) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
@@ -114,6 +131,8 @@ func (p *ObjectProxy) Terminate(P0 uint32) error {
 	}
 	return nil
 }
+
+// Property calls the remote procedure
 func (p *ObjectProxy) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
@@ -133,6 +152,8 @@ func (p *ObjectProxy) Property(P0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
+
+// SetProperty calls the remote procedure
 func (p *ObjectProxy) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
@@ -149,6 +170,8 @@ func (p *ObjectProxy) SetProperty(P0 value.Value, P1 value.Value) error {
 	}
 	return nil
 }
+
+// Properties calls the remote procedure
 func (p *ObjectProxy) Properties() ([]string, error) {
 	var err error
 	var ret []string
@@ -178,6 +201,8 @@ func (p *ObjectProxy) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
+
+// RegisterEventWithSignature calls the remote procedure
 func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
@@ -206,6 +231,8 @@ func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64
 	}
 	return ret, nil
 }
+
+// IsStatsEnabled calls the remote procedure
 func (p *ObjectProxy) IsStatsEnabled() (bool, error) {
 	var err error
 	var ret bool
@@ -222,6 +249,8 @@ func (p *ObjectProxy) IsStatsEnabled() (bool, error) {
 	}
 	return ret, nil
 }
+
+// EnableStats calls the remote procedure
 func (p *ObjectProxy) EnableStats(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
@@ -235,6 +264,8 @@ func (p *ObjectProxy) EnableStats(P0 bool) error {
 	}
 	return nil
 }
+
+// Stats calls the remote procedure
 func (p *ObjectProxy) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
 	var ret map[uint32]MethodStatistics
@@ -269,6 +300,8 @@ func (p *ObjectProxy) Stats() (map[uint32]MethodStatistics, error) {
 	}
 	return ret, nil
 }
+
+// ClearStats calls the remote procedure
 func (p *ObjectProxy) ClearStats() error {
 	var err error
 	var buf *bytes.Buffer
@@ -279,6 +312,8 @@ func (p *ObjectProxy) ClearStats() error {
 	}
 	return nil
 }
+
+// IsTraceEnabled calls the remote procedure
 func (p *ObjectProxy) IsTraceEnabled() (bool, error) {
 	var err error
 	var ret bool
@@ -295,6 +330,8 @@ func (p *ObjectProxy) IsTraceEnabled() (bool, error) {
 	}
 	return ret, nil
 }
+
+// EnableTrace calls the remote procedure
 func (p *ObjectProxy) EnableTrace(P0 bool) error {
 	var err error
 	var buf *bytes.Buffer
@@ -308,6 +345,8 @@ func (p *ObjectProxy) EnableTrace(P0 bool) error {
 	}
 	return nil
 }
+
+// SignalTraceObject subscribe to a remote signal
 func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 	P0 EventTrace
 }, error) {

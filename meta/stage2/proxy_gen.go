@@ -1,4 +1,5 @@
-// file generated. DO NOT EDIT.
+// Package stage2 contains a generated proxy
+// File generated. DO NOT EDIT.
 package stage2
 
 import (
@@ -13,46 +14,67 @@ import (
 	"log"
 )
 
-type NewServices struct {
+// ServicesConstructor gives access to remote services
+type ServicesConstructor struct {
 	session bus.Session
 }
 
-func Services(s bus.Session) NewServices {
-	return NewServices{session: s}
+// Services gives access to the services constructor
+func Services(s bus.Session) ServicesConstructor {
+	return ServicesConstructor{session: s}
 }
 
+// Server is a proxy object to the remote service
 type Server interface {
 	bus.Proxy
+	// Authenticate calls the remote procedure
 	Authenticate(P0 map[string]value.Value) (map[string]value.Value, error)
 }
+
+// Object is a proxy object to the remote service
 type Object interface {
 	object.Object
 	bus.Proxy
 }
+
+// ServiceDirectory is a proxy object to the remote service
 type ServiceDirectory interface {
 	object.Object
 	bus.Proxy
+	// Service calls the remote procedure
 	Service(P0 string) (ServiceInfo, error)
+	// Services calls the remote procedure
 	Services() ([]ServiceInfo, error)
+	// RegisterService calls the remote procedure
 	RegisterService(P0 ServiceInfo) (uint32, error)
+	// UnregisterService calls the remote procedure
 	UnregisterService(P0 uint32) error
+	// ServiceReady calls the remote procedure
 	ServiceReady(P0 uint32) error
+	// UpdateServiceInfo calls the remote procedure
 	UpdateServiceInfo(P0 ServiceInfo) error
+	// MachineId calls the remote procedure
 	MachineId() (string, error)
+	// _socketOfService calls the remote procedure
 	_socketOfService(P0 uint32) (object.ObjectReference, error)
+	// SignalServiceAdded subscribe to a remote signal
 	SignalServiceAdded(cancel chan int) (chan struct {
 		P0 uint32
 		P1 string
 	}, error)
+	// SignalServiceRemoved subscribe to a remote signal
 	SignalServiceRemoved(cancel chan int) (chan struct {
 		P0 uint32
 		P1 string
 	}, error)
 }
+
+// ServerProxy implements Server
 type ServerProxy struct {
 	bus.Proxy
 }
 
+// NewServer constructs Server
 func NewServer(ses bus.Session, obj uint32) (Server, error) {
 	proxy, err := ses.Proxy("Server", obj)
 	if err != nil {
@@ -60,9 +82,13 @@ func NewServer(ses bus.Session, obj uint32) (Server, error) {
 	}
 	return &ServerProxy{proxy}, nil
 }
-func (s NewServices) Server() (Server, error) {
+
+// Server retruns a proxy to a remote service
+func (s ServicesConstructor) Server() (Server, error) {
 	return NewServer(s.session, 1)
 }
+
+// Authenticate calls the remote procedure
 func (p *ServerProxy) Authenticate(P0 map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
@@ -117,10 +143,12 @@ func (p *ServerProxy) Authenticate(P0 map[string]value.Value) (map[string]value.
 	return ret, nil
 }
 
+// ObjectProxy implements Object
 type ObjectProxy struct {
 	bus.Proxy
 }
 
+// NewObject constructs Object
 func NewObject(ses bus.Session, obj uint32) (Object, error) {
 	proxy, err := ses.Proxy("Object", obj)
 	if err != nil {
@@ -128,9 +156,13 @@ func NewObject(ses bus.Session, obj uint32) (Object, error) {
 	}
 	return &ObjectProxy{proxy}, nil
 }
-func (s NewServices) Object() (Object, error) {
+
+// Object retruns a proxy to a remote service
+func (s ServicesConstructor) Object() (Object, error) {
 	return NewObject(s.session, 1)
 }
+
+// RegisterEvent calls the remote procedure
 func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
 	var err error
 	var ret uint64
@@ -156,6 +188,8 @@ func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, er
 	}
 	return ret, nil
 }
+
+// UnregisterEvent calls the remote procedure
 func (p *ObjectProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	var err error
 	var buf *bytes.Buffer
@@ -175,6 +209,8 @@ func (p *ObjectProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 	}
 	return nil
 }
+
+// MetaObject calls the remote procedure
 func (p *ObjectProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
@@ -194,6 +230,8 @@ func (p *ObjectProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 	}
 	return ret, nil
 }
+
+// Terminate calls the remote procedure
 func (p *ObjectProxy) Terminate(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
@@ -207,6 +245,8 @@ func (p *ObjectProxy) Terminate(P0 uint32) error {
 	}
 	return nil
 }
+
+// Property calls the remote procedure
 func (p *ObjectProxy) Property(P0 value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
@@ -226,6 +266,8 @@ func (p *ObjectProxy) Property(P0 value.Value) (value.Value, error) {
 	}
 	return ret, nil
 }
+
+// SetProperty calls the remote procedure
 func (p *ObjectProxy) SetProperty(P0 value.Value, P1 value.Value) error {
 	var err error
 	var buf *bytes.Buffer
@@ -242,6 +284,8 @@ func (p *ObjectProxy) SetProperty(P0 value.Value, P1 value.Value) error {
 	}
 	return nil
 }
+
+// Properties calls the remote procedure
 func (p *ObjectProxy) Properties() ([]string, error) {
 	var err error
 	var ret []string
@@ -271,6 +315,8 @@ func (p *ObjectProxy) Properties() ([]string, error) {
 	}
 	return ret, nil
 }
+
+// RegisterEventWithSignature calls the remote procedure
 func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
@@ -299,6 +345,8 @@ func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64
 	}
 	return ret, nil
 }
+
+// SignalTraceObject subscribe to a remote signal
 func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 	P0 EventTrace
 }, error) {
@@ -349,10 +397,12 @@ func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 	return ch, nil
 }
 
+// ServiceDirectoryProxy implements ServiceDirectory
 type ServiceDirectoryProxy struct {
 	object1.ObjectProxy
 }
 
+// NewServiceDirectory constructs ServiceDirectory
 func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) {
 	proxy, err := ses.Proxy("ServiceDirectory", obj)
 	if err != nil {
@@ -360,9 +410,13 @@ func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) 
 	}
 	return &ServiceDirectoryProxy{object1.ObjectProxy{proxy}}, nil
 }
-func (s NewServices) ServiceDirectory() (ServiceDirectory, error) {
+
+// ServiceDirectory retruns a proxy to a remote service
+func (s ServicesConstructor) ServiceDirectory() (ServiceDirectory, error) {
 	return NewServiceDirectory(s.session, 1)
 }
+
+// Service calls the remote procedure
 func (p *ServiceDirectoryProxy) Service(P0 string) (ServiceInfo, error) {
 	var err error
 	var ret ServiceInfo
@@ -382,6 +436,8 @@ func (p *ServiceDirectoryProxy) Service(P0 string) (ServiceInfo, error) {
 	}
 	return ret, nil
 }
+
+// Services calls the remote procedure
 func (p *ServiceDirectoryProxy) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
@@ -411,6 +467,8 @@ func (p *ServiceDirectoryProxy) Services() ([]ServiceInfo, error) {
 	}
 	return ret, nil
 }
+
+// RegisterService calls the remote procedure
 func (p *ServiceDirectoryProxy) RegisterService(P0 ServiceInfo) (uint32, error) {
 	var err error
 	var ret uint32
@@ -430,6 +488,8 @@ func (p *ServiceDirectoryProxy) RegisterService(P0 ServiceInfo) (uint32, error) 
 	}
 	return ret, nil
 }
+
+// UnregisterService calls the remote procedure
 func (p *ServiceDirectoryProxy) UnregisterService(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
@@ -443,6 +503,8 @@ func (p *ServiceDirectoryProxy) UnregisterService(P0 uint32) error {
 	}
 	return nil
 }
+
+// ServiceReady calls the remote procedure
 func (p *ServiceDirectoryProxy) ServiceReady(P0 uint32) error {
 	var err error
 	var buf *bytes.Buffer
@@ -456,6 +518,8 @@ func (p *ServiceDirectoryProxy) ServiceReady(P0 uint32) error {
 	}
 	return nil
 }
+
+// UpdateServiceInfo calls the remote procedure
 func (p *ServiceDirectoryProxy) UpdateServiceInfo(P0 ServiceInfo) error {
 	var err error
 	var buf *bytes.Buffer
@@ -469,6 +533,8 @@ func (p *ServiceDirectoryProxy) UpdateServiceInfo(P0 ServiceInfo) error {
 	}
 	return nil
 }
+
+// MachineId calls the remote procedure
 func (p *ServiceDirectoryProxy) MachineId() (string, error) {
 	var err error
 	var ret string
@@ -485,6 +551,8 @@ func (p *ServiceDirectoryProxy) MachineId() (string, error) {
 	}
 	return ret, nil
 }
+
+// _socketOfService calls the remote procedure
 func (p *ServiceDirectoryProxy) _socketOfService(P0 uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
@@ -504,6 +572,8 @@ func (p *ServiceDirectoryProxy) _socketOfService(P0 uint32) (object.ObjectRefere
 	}
 	return ret, nil
 }
+
+// SignalServiceAdded subscribe to a remote signal
 func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct {
 	P0 uint32
 	P1 string
@@ -560,6 +630,8 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 	}()
 	return ch, nil
 }
+
+// SignalServiceRemoved subscribe to a remote signal
 func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan struct {
 	P0 uint32
 	P1 string

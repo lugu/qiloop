@@ -10,16 +10,20 @@ import (
 	"strings"
 )
 
+// Statement is imported from jennifer code generator.
 type Statement = jen.Statement
 
 func newFileAndSet(packageName string) (*jen.File, *signature.TypeSet) {
 	file := jen.NewFile(packageName)
-	file.PackageComment("file generated. DO NOT EDIT.")
+	msg := "Package " + packageName + " contains a generated proxy"
+	file.PackageComment(msg)
+	file.PackageComment("File generated. DO NOT EDIT.")
 	return file, signature.NewTypeSet()
 }
 
 func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj object.MetaObject) {
 
+	file.Comment(proxyName + " implements " + serviceName)
 	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
 		file.Type().Id(proxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	} else {
@@ -39,6 +43,7 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
 		blockContructor = jen.Id(`return &` + proxyName + `{ proxy }, nil`)
 	}
+	file.Comment("New" + serviceName + " constructs " + serviceName)
 	file.Func().Id("New"+serviceName).Params(
 		jen.Id("ses").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("obj").Uint32(),
@@ -61,8 +66,9 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 		),
 		blockContructor,
 	)
+	file.Comment(serviceName + " retruns a proxy to a remote service")
 	file.Func().Params(
-		jen.Id("s").Id("NewServices"),
+		jen.Id("s").Id("ServicesConstructor"),
 	).Id(
 		strings.Title(serviceName),
 	).Params().Params(
@@ -99,9 +105,8 @@ func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName strin
 	ret.RegisterTo(set)
 	if ret.Signature() == "v" {
 		return jen.Id(methodName).Add(tuple.Params()).Error(), nil
-	} else {
-		return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(), jen.Error()), nil
 	}
+	return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(), jen.Error()), nil
 }
 
 func generateObjectInterface(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
@@ -120,17 +125,21 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		if err != nil {
 			return fmt.Errorf("failed to render method definition %s of %s: %s", m.Name, serviceName, err)
 		}
+		comment := jen.Comment(methodName + " calls the remote procedure")
+		definitions = append(definitions, comment)
 		definitions = append(definitions, def)
 		return nil
 	}
-	signalCall := func(s object.MetaSignal, methodName string) error {
+	signalCall := func(s object.MetaSignal, signalName string) error {
 		if serviceName != "Server" && s.Uid < object.MinUserActionID {
 			return nil
 		}
-		def, err := generateSignalDef(file, set, serviceName, s, methodName)
+		def, err := generateSignalDef(file, set, serviceName, s, signalName)
 		if err != nil {
 			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
 		}
+		comment := jen.Comment(signalName + " subscribe to a remote signal")
+		definitions = append(definitions, comment)
 		definitions = append(definitions, def)
 		return nil
 	}
@@ -139,6 +148,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		return fmt.Errorf("failed to generate interface object %s: %s", serviceName, err)
 	}
 
+	file.Comment(serviceName + " is a proxy object to the remote service")
 	file.Type().Id(serviceName).Interface(
 		definitions...,
 	)
@@ -172,19 +182,21 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 }
 
 func generateNewServices(file *jen.File) {
+	file.Comment("ServicesConstructor gives access to remote services")
 	file.Type().Id(
-		"NewServices",
+		"ServicesConstructor",
 	).Struct(
 		jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session"),
 	)
+	file.Comment("Services gives access to the services constructor")
 	file.Func().Id(
 		"Services",
 	).Params(
 		jen.Id("s").Qual("github.com/lugu/qiloop/bus", "Session"),
 	).Id(
-		"NewServices",
+		"ServicesConstructor",
 	).Block(
-		jen.Id(`return NewServices{ session: s, }`),
+		jen.Id(`return ServicesConstructor{ session: s, }`),
 	)
 }
 
@@ -204,6 +216,7 @@ func cleanMetaObject(meta *object.MetaObject) {
 	}
 }
 
+// Generate writes the proxy definition of the listed meta objects.
 func Generate(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
 	file, set := newFileAndSet(packageName)
 	generateNewServices(file)
@@ -315,6 +328,7 @@ func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, 
 		retType = jen.Error()
 	}
 
+	file.Comment(methodName + " calls the remote procedure")
 	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(strings.Title(methodName)).Add(
 		tuple.Params(),
 	).Add(
@@ -373,6 +387,7 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 		jen.Return(jen.Id("ch"), jen.Nil()),
 	)
 
+	file.Comment(methodName + " subscribe to a remote signal")
 	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(methodName).Params(
 		jen.Id("cancel").Chan().Int(),
 	).Add(
@@ -383,12 +398,12 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 	return nil
 }
 
-func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName string, s object.MetaSignal, methodName string) (jen.Code, error) {
+func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName string, s object.MetaSignal, signalName string) (jen.Code, error) {
 	signalType, err := signature.Parse(s.Signature)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse signal %s: %s", s.Signature, err)
 	}
 	signalType.RegisterTo(set)
 	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
-	return jen.Id(methodName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
+	return jen.Id(signalName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
 }
