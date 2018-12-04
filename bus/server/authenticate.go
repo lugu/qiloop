@@ -85,7 +85,7 @@ type serviceAuthenticate struct {
 
 func (s *serviceAuthenticate) Receive(m *net.Message, from *Context) error {
 	if m.Header.Action != object.AuthenticateActionID {
-		return util.ReplyError(from.EndPoint, m, ActionNotFound)
+		return util.ReplyError(from.EndPoint, m, ErrActionNotFound)
 	}
 	response, err := s.wrapAuthenticate(from, m.Payload)
 

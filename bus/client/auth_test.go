@@ -117,7 +117,7 @@ func NewServer(response func(user, token string) client.CapabilityMap) net.EndPo
 
 func (s *ServerMock) Receive(m *net.Message) error {
 	if m.Header.Action != object.AuthenticateActionID {
-		return util.ReplyError(s.EndPoint, m, server.ActionNotFound)
+		return util.ReplyError(s.EndPoint, m, server.ErrActionNotFound)
 	}
 
 	if s.Response == nil {

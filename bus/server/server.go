@@ -16,30 +16,47 @@ import (
 	"sync"
 )
 
-var ServiceNotFound error = errors.New("Service not found")
-var ObjectNotFound error = errors.New("Object not found")
-var ActionNotFound error = errors.New("Action not found")
-var NotAuthenticated error = errors.New("Not authenticated")
+// ErrServiceNotFound is returned with a message refers to an unknown
+// service.
+var ErrServiceNotFound = errors.New("Service not found")
 
-type SignalUser struct {
+// ErrObjectNotFound is returned with a message refers to an unknown
+// object.
+var ErrObjectNotFound = errors.New("Object not found")
+
+// ErrActionNotFound is returned with a message refers to an unknown
+// action.
+var ErrActionNotFound = errors.New("Action not found")
+
+// ErrNotAuthenticated is returned with a message tries to contact a
+// service without prior authentication.
+var ErrNotAuthenticated = errors.New("Not authenticated")
+
+type signalUser struct {
 	signalID  uint32
 	messageID uint32
 	context   *Context
 	clientID  uint64
 }
 
+// BasicObject implements the Object interface. It handles the generic
+// method and signal. Services implementation embedded a BasicObject
+// and fill it with the extra actions they wish to handle using the
+// Wrap method. See type/object.Object for a list of the default
+// methods.
 type BasicObject struct {
 	meta      object.MetaObject
-	signals   []SignalUser
+	signals   []signalUser
 	Wrapper   bus.Wrapper
 	serviceID uint32
 	objectID  uint32
 }
 
+// NewObject construct a BasicObject from a MetaObject.
 func NewObject(meta object.MetaObject) *BasicObject {
 	var obj BasicObject
 	obj.meta = object.FullMetaObject(meta)
-	obj.signals = make([]SignalUser, 0)
+	obj.signals = make([]signalUser, 0)
 	obj.Wrapper = make(map[uint32]bus.ActionWrapper)
 	obj.Wrap(uint32(0x2), obj.wrapMetaObject)
 	// obj.Wrapper[uint32(0x3)] = obj.Terminate
@@ -50,13 +67,14 @@ func NewObject(meta object.MetaObject) *BasicObject {
 	return &obj
 }
 
+// Wrap let a BasicObject owner extend it with custom actions.
 func (o *BasicObject) Wrap(id uint32, fn bus.ActionWrapper) {
 	o.Wrapper[id] = fn
 }
 
-func (o *BasicObject) AddSignalUser(signalID, messageID uint32, from *Context) uint64 {
+func (o *BasicObject) addSignalUser(signalID, messageID uint32, from *Context) uint64 {
 	clientID := rand.Uint64()
-	newUser := SignalUser{
+	newUser := signalUser{
 		signalID,
 		messageID,
 		from,
@@ -66,7 +84,7 @@ func (o *BasicObject) AddSignalUser(signalID, messageID uint32, from *Context) u
 	return clientID
 }
 
-func (o *BasicObject) RemoveSignalUser(id uint64) error {
+func (o *BasicObject) removeSignalUser(id uint64) error {
 	return nil
 }
 
@@ -93,7 +111,7 @@ func (o *BasicObject) handleRegisterEvent(from *Context, msg *net.Message) error
 		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	messageID := msg.Header.ID
-	clientID := o.AddSignalUser(signalID, messageID, from)
+	clientID := o.addSignalUser(signalID, messageID, from)
 	var out bytes.Buffer
 	err = basic.WriteUint64(clientID, &out)
 	if err != nil {
@@ -125,15 +143,12 @@ func (o *BasicObject) handleUnregisterEvent(from *Context, msg *net.Message) err
 		err = fmt.Errorf("cannot read client uid: %s", err)
 		return util.ReplyError(from.EndPoint, msg, err)
 	}
-	err = o.RemoveSignalUser(clientID)
+	err = o.removeSignalUser(clientID)
 	if err != nil {
 		return util.ReplyError(from.EndPoint, msg, err)
 	}
 	var out bytes.Buffer
 	return o.reply(from, msg, out.Bytes())
-}
-func (o *BasicObject) MetaObject() (object.MetaObject, error) {
-	return o.meta, nil
 }
 
 func (o *BasicObject) wrapMetaObject(payload []byte) ([]byte, error) {
@@ -146,23 +161,20 @@ func (o *BasicObject) wrapMetaObject(payload []byte) ([]byte, error) {
 		return nil, fmt.Errorf("invalid object id: %d instead of %d",
 			objectID, o.objectID)
 	}
-	meta, err := o.MetaObject()
-	if err != nil {
-		return nil, err
-	}
 	var out bytes.Buffer
-	err = object.WriteMetaObject(meta, &out)
+	err = object.WriteMetaObject(o.meta, &out)
 	if err != nil {
 		return nil, err
 	}
 	return out.Bytes(), nil
 }
 
+// UpdateSignal informs the registered clients of the new state.
 func (o *BasicObject) UpdateSignal(signal uint32, value []byte) error {
-	var ret error = nil
+	var ret error
 	for _, client := range o.signals {
 		if client.signalID == signal {
-			hdr := o.NewHeader(net.Event, signal, client.messageID)
+			hdr := o.newHeader(net.Event, signal, client.messageID)
 			msg := net.NewMessage(hdr, value)
 			// FIXME: catch writing to close connection
 			err := client.context.EndPoint.Send(msg)
@@ -175,7 +187,7 @@ func (o *BasicObject) UpdateSignal(signal uint32, value []byte) error {
 }
 
 func (o *BasicObject) reply(from *Context, m *net.Message, response []byte) error {
-	hdr := o.NewHeader(net.Reply, m.Header.Action, m.Header.ID)
+	hdr := o.newHeader(net.Reply, m.Header.Action, m.Header.ID)
 	reply := net.NewMessage(hdr, response)
 	return from.EndPoint.Send(reply)
 }
@@ -183,7 +195,7 @@ func (o *BasicObject) reply(from *Context, m *net.Message, response []byte) erro
 func (o *BasicObject) handleDefault(from *Context, msg *net.Message) error {
 	a, ok := o.Wrapper[msg.Header.Action]
 	if !ok {
-		return util.ReplyError(from.EndPoint, msg, ActionNotFound)
+		return util.ReplyError(from.EndPoint, msg, ErrActionNotFound)
 	}
 	response, err := a(msg.Payload)
 	if err != nil {
@@ -206,13 +218,16 @@ func (o *BasicObject) Receive(m *net.Message, from *Context) error {
 	}
 }
 
+// OnTerminate is called when the object is terminated.
 func (o *BasicObject) OnTerminate() {
 }
 
-func (o *BasicObject) NewHeader(typ uint8, action, id uint32) net.Header {
+func (o *BasicObject) newHeader(typ uint8, action, id uint32) net.Header {
 	return net.NewHeader(typ, o.serviceID, o.objectID, action, id)
 }
 
+// Activate informs the object when it becomes online. After this
+// method returns, the object will start receiving incomming messages.
 func (o *BasicObject) Activate(sess bus.Session, serviceID,
 	objectID uint32) error {
 	o.serviceID = serviceID
@@ -220,6 +235,7 @@ func (o *BasicObject) Activate(sess bus.Session, serviceID,
 	return nil
 }
 
+// Object interface used by Server to manipulate services.
 type Object interface {
 	Receive(m *net.Message, from *Context) error
 	Activate(sess bus.Session, serviceID, objectID uint32) error
@@ -230,11 +246,15 @@ type Object interface {
 	OnTerminate()
 }
 
+// ServiceImpl implements Service. It allows a service to manage the
+// object within its domain.
 type ServiceImpl struct {
 	sync.RWMutex
 	objects map[uint32]Object
 }
 
+// NewService returns a service with the given object associated with
+// object id 1.
 func NewService(o Object) *ServiceImpl {
 	return &ServiceImpl{
 		objects: map[uint32]Object{
@@ -243,19 +263,23 @@ func NewService(o Object) *ServiceImpl {
 	}
 }
 
-func (n *ServiceImpl) Add(o Object) (uint32, error) {
-	var index uint32 = 0
+// Add is used to add an object to a service domain.
+func (s *ServiceImpl) Add(o Object) (uint32, error) {
+	var index uint32
 	// assign the first object to the index 0. following objects will
 	// be assigned random values.
-	n.Lock()
-	defer n.Unlock()
-	if len(n.objects) != 0 {
+	s.Lock()
+	defer s.Unlock()
+	if len(s.objects) != 0 {
 		index = rand.Uint32()
 	}
-	n.objects[index] = o
+	s.objects[index] = o
 	return index, nil
 }
 
+// Activate is called when a Service becomes online. After the
+// Activate method is call, the service will start receiving incomming
+// messages.
 func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) error {
 	var wait sync.WaitGroup
 	wait.Add(len(s.objects))
@@ -279,30 +303,33 @@ func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) error {
 	return nil
 }
 
-func (n *ServiceImpl) Remove(objectID uint32) error {
-	n.Lock()
-	defer n.Unlock()
-	if _, ok := n.objects[objectID]; ok {
-		delete(n.objects, objectID)
+// Remove removes an object from the service domain.
+func (s *ServiceImpl) Remove(objectID uint32) error {
+	s.Lock()
+	defer s.Unlock()
+	if _, ok := s.objects[objectID]; ok {
+		delete(s.objects, objectID)
 		return nil
 	}
 	return fmt.Errorf("Namespace: cannot remove object %d", objectID)
 }
 
-func (n *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
-	n.RLock()
-	o, ok := n.objects[m.Header.Object]
-	n.RUnlock()
+// Dispatch forwards the message to the appropriate object.
+func (s *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
+	s.RLock()
+	o, ok := s.objects[m.Header.Object]
+	s.RUnlock()
 	if ok {
 		return o.Receive(m, from)
 	}
-	return util.ReplyError(from.EndPoint, m, ObjectNotFound)
+	return util.ReplyError(from.EndPoint, m, ErrObjectNotFound)
 }
 
-func (n *ServiceImpl) Terminate() error {
-	n.RLock()
-	defer n.RUnlock()
-	for _, obj := range n.objects {
+// Terminate calls OnTerminate on all its objects.
+func (s *ServiceImpl) Terminate() error {
+	s.RLock()
+	defer s.RUnlock()
+	for _, obj := range s.objects {
 		obj.OnTerminate()
 	}
 	return nil
@@ -314,6 +341,7 @@ type Router struct {
 	services map[uint32]*ServiceImpl
 }
 
+// NewRouter construct a router with the service zero passed.
 func NewRouter(authenticator Object) *Router {
 	return &Router{
 		services: map[uint32]*ServiceImpl{
@@ -326,6 +354,8 @@ func NewRouter(authenticator Object) *Router {
 	}
 }
 
+// Activate calls the Activate method on all the services. Only after
+// the router can process messages.
 func (r *Router) Activate(sess bus.Session) error {
 	r.RLock()
 	defer r.RUnlock()
@@ -338,10 +368,11 @@ func (r *Router) Activate(sess bus.Session) error {
 	return nil
 }
 
+// Terminate terminates all the services.
 func (r *Router) Terminate() error {
 	r.RLock()
 	defer r.RUnlock()
-	var ret error = nil
+	var ret error
 	for serviceID, service := range r.services {
 		err := service.Terminate()
 		if err != nil && ret == nil {
@@ -352,6 +383,8 @@ func (r *Router) Terminate() error {
 	return ret
 }
 
+// Add Add a service ot a router. This does not call the Activate()
+// method on the service.
 func (r *Router) Add(serviceID uint32, s *ServiceImpl) error {
 	r.Lock()
 	_, ok := r.services[serviceID]
@@ -364,6 +397,7 @@ func (r *Router) Add(serviceID uint32, s *ServiceImpl) error {
 	return nil
 }
 
+// Remove removes a service from a router.
 func (r *Router) Remove(serviceID uint32) error {
 	r.Lock()
 	defer r.Unlock()
@@ -374,6 +408,8 @@ func (r *Router) Remove(serviceID uint32) error {
 	return fmt.Errorf("Router: cannot remove service %d", serviceID)
 }
 
+// Dispatch process a message. The message will be replied if the
+// router can not found the destination.
 func (r *Router) Dispatch(m *net.Message, from *Context) error {
 	r.RLock()
 	s, ok := r.services[m.Header.Service]
@@ -381,7 +417,7 @@ func (r *Router) Dispatch(m *net.Message, from *Context) error {
 	if ok {
 		return s.Dispatch(m, from)
 	}
-	return util.ReplyError(from.EndPoint, m, ServiceNotFound)
+	return util.ReplyError(from.EndPoint, m, ErrServiceNotFound)
 }
 
 // Context represents the context of the request
@@ -390,6 +426,7 @@ type Context struct {
 	Authenticated bool
 }
 
+// NewContext retuns a non authenticate context.
 func NewContext(e net.EndPoint) *Context {
 	return &Context{e, false}
 }
@@ -398,7 +435,7 @@ func NewContext(e net.EndPoint) *Context {
 // Especially, it ensure authentication is passed.
 func Firewall(m *net.Message, from *Context) error {
 	if from.Authenticated == false && m.Header.Service != 0 {
-		return NotAuthenticated
+		return ErrNotAuthenticated
 	}
 	return nil
 }
@@ -469,10 +506,14 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 	return s, nil
 }
 
+// Service represents a running service.
 type Service interface {
 	Terminate() error
 }
 
+// NewService returns a new service. The service is activated as part
+// of the creation.
+//
 // FIXME: Server registers the service to the namespace, it shall as
 // well unregister it on Server.Terminate() *and* when requested by
 // the service itself. TODO: need to add a Terminate() callback into
@@ -591,7 +632,7 @@ func (s *Server) stoppedWith(err error) {
 
 // CloseAll close the connecction. Return the first error if any.
 func (s *Server) closeAll() error {
-	var ret error = nil
+	var ret error
 	s.contextsMutex.Lock()
 	defer s.contextsMutex.Unlock()
 	for context := range s.contexts {
@@ -603,10 +644,12 @@ func (s *Server) closeAll() error {
 	return ret
 }
 
+// WaitTerminate blocks until the server has terminated.
 func (s *Server) WaitTerminate() chan error {
 	return s.waitChan
 }
 
+// Terminate stops a server.
 func (s *Server) Terminate() error {
 	close(s.closeChan)
 	err := s.listen.Close()
@@ -614,12 +657,16 @@ func (s *Server) Terminate() error {
 	return err
 }
 
+// Client returns a local client able to contact services without
+// creating a new connection.
 func (s *Server) Client() bus.Client {
 	ctl, srv := gonet.Pipe()
 	s.handle(srv, true)
 	return client.NewClient(net.NewEndPoint(ctl))
 }
 
+// Session returns a local session able to contact local services
+// without creating a new connection to the server.
 func (s *Server) Session() bus.Session {
 	return s.namespace.Session(s)
 }

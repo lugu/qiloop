@@ -41,11 +41,11 @@ func (o *ObjectDispatcher) OnTerminate() {
 
 func (o *ObjectDispatcher) Receive(m *net.Message, from *server.Context) error {
 	if o.wrapper == nil {
-		return util.ReplyError(from.EndPoint, m, server.ActionNotFound)
+		return util.ReplyError(from.EndPoint, m, server.ErrActionNotFound)
 	}
 	a, ok := o.wrapper[m.Header.Action]
 	if !ok {
-		return util.ReplyError(from.EndPoint, m, server.ActionNotFound)
+		return util.ReplyError(from.EndPoint, m, server.ErrActionNotFound)
 	}
 	response, err := a(m.Payload)
 
@@ -193,13 +193,13 @@ func TestServerReturnError(t *testing.T) {
 			t.Errorf("unexpected error:\n%s\nexpecting:\n%s", err, expected)
 		}
 	}
-	testInvalid(t, server.ServiceNotFound, invalidServiceID, objectID, actionID)
-	testInvalid(t, server.ObjectNotFound, serviceID, invalidObjectID, actionID)
-	testInvalid(t, server.ActionNotFound, serviceID, objectID, invalidActionID)
+	testInvalid(t, server.ErrServiceNotFound, invalidServiceID, objectID, actionID)
+	testInvalid(t, server.ErrObjectNotFound, serviceID, invalidObjectID, actionID)
+	testInvalid(t, server.ErrActionNotFound, serviceID, objectID, invalidActionID)
 
-	testInvalid(t, server.ObjectNotFound, serviceID, invalidObjectID, invalidActionID)
-	testInvalid(t, server.ServiceNotFound, invalidServiceID, objectID, invalidActionID)
-	testInvalid(t, server.ServiceNotFound, invalidServiceID, invalidObjectID, actionID)
+	testInvalid(t, server.ErrObjectNotFound, serviceID, invalidObjectID, invalidActionID)
+	testInvalid(t, server.ErrServiceNotFound, invalidServiceID, objectID, invalidActionID)
+	testInvalid(t, server.ErrServiceNotFound, invalidServiceID, invalidObjectID, actionID)
 	srv.Terminate()
 }
 
