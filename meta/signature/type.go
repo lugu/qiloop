@@ -416,6 +416,7 @@ func (l *ListType) RegisterTo(s *TypeSet) {
 	return
 }
 
+// TypeDeclaration writes the type declaration into file.
 func (l *ListType) TypeDeclaration(file *jen.File) {
 	return
 }
@@ -504,6 +505,7 @@ func (m *MapType) RegisterTo(s *TypeSet) {
 	return
 }
 
+// TypeDeclaration writes the type declaration into file.
 func (m *MapType) TypeDeclaration(file *jen.File) {
 	return
 }
@@ -650,6 +652,7 @@ func (t *TupleType) RegisterTo(s *TypeSet) {
 	return
 }
 
+// TypeDeclaration writes the type declaration into file.
 func (t *TupleType) TypeDeclaration(*jen.File) {
 	return
 }
@@ -710,6 +713,7 @@ func (t *TupleType) ConvertMetaObjects() {
 
 // NewStructType is a contructor for the representation of a struct.
 func NewStructType(name string, members []MemberType) *StructType {
+	// FIXME: timeval struct is not capitalized as expected.
 	name = util.CleanName(name)
 	return &StructType{name, members}
 }
@@ -756,6 +760,7 @@ func (s *StructType) RegisterTo(set *TypeSet) {
 	return
 }
 
+// TypeDeclaration writes the type declaration into file.
 func (s *StructType) TypeDeclaration(file *jen.File) {
 	fields := make([]jen.Code, len(s.Members))
 	for i, v := range s.Members {
@@ -813,12 +818,13 @@ type EnumType struct {
 	Values map[string]int
 }
 
-// used during Enum parsing
+// EnumMember is used during Enum parsing
 type EnumMember struct {
 	Const string
 	Value int
 }
 
+// NewEnumType returns an enum type
 func NewEnumType(name string, values map[string]int) Type {
 	return &EnumType{
 		Name:   name,
@@ -826,18 +832,23 @@ func NewEnumType(name string, values map[string]int) Type {
 	}
 }
 
+// Signature returns "i" since enum are integer constant.
 func (e *EnumType) Signature() string {
 	return "i"
 }
 
+// SignatureIDL returns the name of the enum.
 func (e *EnumType) SignatureIDL() string {
 	return e.Name
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (e *EnumType) TypeName() *Statement {
 	return jen.Id(e.Name)
 }
 
+// RegisterTo add the enum to the type set.
 func (e *EnumType) RegisterTo(set *TypeSet) {
 	// do not register anonymous enum
 	if e.Name == "" {
@@ -857,19 +868,26 @@ func (e *EnumType) RegisterTo(set *TypeSet) {
 	set.Types = append(set.Types, e)
 }
 
+// TypeDeclaration writes the type declaration into file.
 func (e *EnumType) TypeDeclaration(file *jen.File) {
 	file.Type().Id(e.Name).Int()
-	var defs []jen.Code = make([]jen.Code, 0)
+	var defs = make([]jen.Code, 0)
 	for i, v := range e.Values {
 		defs = append(defs, jen.Id(strings.Title(i)).Op("=").Lit(v))
 	}
 	file.Const().Defs(defs...)
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (e *EnumType) Marshal(id string, writer string) *Statement {
 	return NewIntType().Marshal(id, writer)
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (e *EnumType) Unmarshal(reader string) *Statement {
 	return NewIntType().Unmarshal(reader)
 }
