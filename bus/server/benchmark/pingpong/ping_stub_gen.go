@@ -1,4 +1,5 @@
-// file generated. DO NOT EDIT.
+// Package pingpong contains a generated stub
+// File generated. DO NOT EDIT.
 package pingpong
 
 import (
@@ -11,20 +12,26 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 )
 
+// PingPong interface of the service implementation
 type PingPong interface {
 	Activate(sess bus.Session, serviceID, objectID uint32, signal PingPongSignalHelper) error
 	OnTerminate()
 	Hello(a string) (string, error)
 	Ping(a string) error
 }
+
+// PingPongSignalHelper provided to PingPong a companion object
 type PingPongSignalHelper interface {
 	SignalPong(a string) error
 }
+
+// stubPingPong implements server.Object.
 type stubPingPong struct {
 	obj  *server.BasicObject
 	impl PingPong
 }
 
+// PingPongObject returns an object using PingPong
 func PingPongObject(impl PingPong) server.Object {
 	var stb stubPingPong
 	stb.impl = impl

@@ -13,12 +13,15 @@ func stubName(name string) string {
 	return "stub" + name
 }
 
+// GeneratePackage generate the stub for the package declaration.
 func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 	if pkg.Name == "" {
 		return fmt.Errorf("empty package name")
 	}
 	file := jen.NewFile(pkg.Name)
-	file.PackageComment("file generated. DO NOT EDIT.")
+	msg := "Package " + pkg.Name + " contains a generated stub"
+	file.PackageComment(msg)
+	file.PackageComment("File generated. DO NOT EDIT.")
 
 	set := signature.NewTypeSet()
 	for _, typ := range pkg.Types {
@@ -81,10 +84,9 @@ func generateMethodDef(itf *idl.InterfaceType, set *signature.TypeSet,
 
 	if ret.Signature() == "v" {
 		return jen.Id(methodName).Add(tuple.Params()).Params(jen.Error()), nil
-	} else {
-		return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(),
-			jen.Error()), nil
 	}
+	return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(),
+		jen.Error()), nil
 }
 
 func generateSignalDef(itf *idl.InterfaceType, set *signature.TypeSet,
@@ -363,6 +365,8 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	code = jen.Return().Op("&").Id("stb")
 	writing = append(writing, code)
 
+	file.Commentf("%s returns an object using %s", itf.Name+"Object",
+		itf.Name)
 	file.Func().Id(itf.Name+"Object").Params(
 		jen.Id("impl").Id(itf.Name),
 	).Qual(
@@ -372,6 +376,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 }
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
+	file.Commentf("%s implements server.Object.", stubName(itf.Name))
 	file.Type().Id(stubName(itf.Name)).Struct(
 		jen.Id("obj").Op("*").Qual(
 			"github.com/lugu/qiloop/bus/server", "BasicObject",
@@ -428,10 +433,13 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 			itf.Name, err)
 	}
 
+	file.Commentf("%s interface of the service implementation", itf.Name)
 	file.Type().Id(itf.Name).Interface(
 		definitions...,
 	)
 
+	file.Commentf("%s provided to %s a companion object",
+		itf.Name+"SignalHelper", itf.Name)
 	file.Type().Id(itf.Name + "SignalHelper").Interface(
 		signalDefinitions...,
 	)

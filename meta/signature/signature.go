@@ -13,7 +13,8 @@ import (
 // services. This step is referred as stage 1.
 const MetaObjectSignature string = "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
-var ObjectSignature string = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaObject,parentID,serviceID,objectID>",
+// ObjectSignature is the signature of ObjectReference.
+var ObjectSignature = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaObject,parentID,serviceID,objectID>",
 	MetaObjectSignature)
 
 // Statement is a short version for jen.Statement.
@@ -62,7 +63,7 @@ type Node = parsec.ParsecNode
 
 func nodifyBasicType(nodes []Node) Node {
 	if len(nodes) != 1 {
-		return fmt.Errorf("wrong basic arguments %+v\n", nodes)
+		return fmt.Errorf("wrong basic arguments %+v", nodes)
 	}
 	signature := nodes[0].(*parsec.Terminal).GetValue()
 	switch signature {

@@ -1,4 +1,5 @@
-// file generated. DO NOT EDIT.
+// Package directory contains a generated stub
+// File generated. DO NOT EDIT.
 package directory
 
 import (
@@ -12,6 +13,7 @@ import (
 	"io"
 )
 
+// ServiceDirectory interface of the service implementation
 type ServiceDirectory interface {
 	Activate(sess bus.Session, serviceID, objectID uint32, signal ServiceDirectorySignalHelper) error
 	OnTerminate()
@@ -24,15 +26,20 @@ type ServiceDirectory interface {
 	MachineId() (string, error)
 	_socketOfService(P0 uint32) (object.ObjectReference, error)
 }
+
+// ServiceDirectorySignalHelper provided to ServiceDirectory a companion object
 type ServiceDirectorySignalHelper interface {
 	SignalServiceAdded(P0 uint32, P1 string) error
 	SignalServiceRemoved(P0 uint32, P1 string) error
 }
+
+// stubServiceDirectory implements server.Object.
 type stubServiceDirectory struct {
 	obj  *server.BasicObject
 	impl ServiceDirectory
 }
 
+// ServiceDirectoryObject returns an object using ServiceDirectory
 func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	var stb stubServiceDirectory
 	stb.impl = impl

@@ -1,4 +1,5 @@
-// file generated. DO NOT EDIT.
+// Package stub_test contains a generated stub
+// File generated. DO NOT EDIT.
 package stub_test
 
 import (
@@ -13,6 +14,7 @@ import (
 	"io"
 )
 
+// Object interface of the service implementation
 type Object interface {
 	Activate(sess bus.Session, serviceID, objectID uint32, signal ObjectSignalHelper) error
 	OnTerminate()
@@ -25,14 +27,19 @@ type Object interface {
 	Properties() ([]string, error)
 	RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error)
 }
+
+// ObjectSignalHelper provided to Object a companion object
 type ObjectSignalHelper interface {
 	SignalTraceObject(P0 EventTrace) error
 }
+
+// stubObject implements server.Object.
 type stubObject struct {
 	obj  *server.BasicObject
 	impl Object
 }
 
+// ObjectObject returns an object using Object
 func ObjectObject(impl Object) server.Object {
 	var stb stubObject
 	stb.impl = impl

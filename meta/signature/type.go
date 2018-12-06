@@ -24,11 +24,12 @@ func (s *TypeSet) Declare(f *jen.File) {
 	}
 }
 
-// returns the registered name after collision resolution.
-// Register search if a type is in the TypeSet under a given name. If
-// the same name and signature is already present it does nothing.
-// otherwise it adds the type and search for a new which does not
-// conflict with the names already present. The new name is returned.
+// RegisterStructType returns the registered name after collision
+// resolution. Register search if a type is in the TypeSet under a
+// given name. If the same name and signature is already present it
+// does nothing. otherwise it adds the type and search for a new which
+// does not conflict with the names already present. The new name is
+// returned.
 func (s *TypeSet) RegisterStructType(originalName string, typ *StructType) string {
 	name := originalName
 	for i := 0; i < 100; i++ {
@@ -86,7 +87,7 @@ type Type interface {
 	Unmarshal(reader string) *Statement          // returns (type, err)
 }
 
-type TypeConstructor struct {
+type typeConstructor struct {
 	signature    string
 	signatureIDL string
 	typeName     *Statement
@@ -94,25 +95,25 @@ type TypeConstructor struct {
 	unmarshal    func(reader string) *Statement            // returns (type, err)
 }
 
-func (t *TypeConstructor) Signature() string {
+func (t *typeConstructor) Signature() string {
 	return t.signature
 }
-func (t *TypeConstructor) SignatureIDL() string {
+func (t *typeConstructor) SignatureIDL() string {
 	return t.signatureIDL
 }
-func (t *TypeConstructor) TypeName() *Statement {
+func (t *typeConstructor) TypeName() *Statement {
 	return t.typeName
 }
-func (t *TypeConstructor) TypeDeclaration(f *jen.File) {
+func (t *typeConstructor) TypeDeclaration(f *jen.File) {
 	return
 }
-func (t *TypeConstructor) RegisterTo(s *TypeSet) {
+func (t *typeConstructor) RegisterTo(s *TypeSet) {
 	return
 }
-func (t *TypeConstructor) Marshal(id string, writer string) *Statement {
+func (t *typeConstructor) Marshal(id string, writer string) *Statement {
 	return t.marshal(id, writer)
 }
-func (t *TypeConstructor) Unmarshal(reader string) *Statement {
+func (t *typeConstructor) Unmarshal(reader string) *Statement {
 	return t.unmarshal(reader)
 }
 
@@ -125,7 +126,7 @@ func Print(v Type) string {
 
 // NewInt8Type is a contructor for the representation of a uint64.
 func NewInt8Type() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "c",
 		signatureIDL: "int8",
 		typeName:     jen.Int8(),
@@ -140,7 +141,7 @@ func NewInt8Type() Type {
 
 // NewUint8Type is a contructor for the representation of a uint64.
 func NewUint8Type() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "C",
 		signatureIDL: "uint8",
 		typeName:     jen.Uint8(),
@@ -155,7 +156,7 @@ func NewUint8Type() Type {
 
 // NewInt16Type is a contructor for the representation of a uint64.
 func NewInt16Type() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "w",
 		signatureIDL: "int16",
 		typeName:     jen.Int16(),
@@ -170,7 +171,7 @@ func NewInt16Type() Type {
 
 // NewUint16Type is a contructor for the representation of a uint64.
 func NewUint16Type() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "W",
 		signatureIDL: "uint16",
 		typeName:     jen.Uint16(),
@@ -185,7 +186,7 @@ func NewUint16Type() Type {
 
 // NewLongType is a contructor for the representation of a uint64.
 func NewLongType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "l",
 		signatureIDL: "int64",
 		typeName:     jen.Int64(),
@@ -200,7 +201,7 @@ func NewLongType() Type {
 
 // NewULongType is a contructor for the representation of a uint64.
 func NewULongType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "L",
 		signatureIDL: "uint64",
 		typeName:     jen.Uint64(),
@@ -215,7 +216,7 @@ func NewULongType() Type {
 
 // NewFloatType is a contructor for the representation of a float32.
 func NewFloatType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "f",
 		signatureIDL: "float32",
 		typeName:     jen.Float32(),
@@ -230,7 +231,7 @@ func NewFloatType() Type {
 
 // NewDoubleType is a contructor for the representation of a float32.
 func NewDoubleType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "d",
 		signatureIDL: "float64",
 		typeName:     jen.Float64(),
@@ -245,7 +246,7 @@ func NewDoubleType() Type {
 
 // NewIntType is a contructor for the representation of an int32.
 func NewIntType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "i",
 		signatureIDL: "int32",
 		typeName:     jen.Int32(),
@@ -260,7 +261,7 @@ func NewIntType() Type {
 
 // NewUIntType is a contructor for the representation of an uint32.
 func NewUIntType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "I",
 		signatureIDL: "uint32",
 		typeName:     jen.Uint32(),
@@ -275,7 +276,7 @@ func NewUIntType() Type {
 
 // NewStringType is a contructor for the representation of a string.
 func NewStringType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "s",
 		signatureIDL: "str",
 		typeName:     jen.String(),
@@ -292,7 +293,7 @@ func NewStringType() Type {
 // absence of a return type. Only used in the context of a returned
 // type.
 func NewVoidType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "v",
 		signatureIDL: "nothing",
 		typeName:     jen.Empty(),
@@ -307,7 +308,7 @@ func NewVoidType() Type {
 
 // NewValueType is a contructor for the representation of a Value.
 func NewValueType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "m",
 		signatureIDL: "any",
 		typeName:     jen.Qual("github.com/lugu/qiloop/type/value", "Value"),
@@ -322,7 +323,7 @@ func NewValueType() Type {
 
 // NewBoolType is a contructor for the representation of a bool.
 func NewBoolType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "b",
 		signatureIDL: "bool",
 		typeName:     jen.Bool(),
@@ -338,7 +339,7 @@ func NewBoolType() Type {
 // NewMetaObjectType is a contructor for the representation of an
 // object.
 func NewMetaObjectType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    MetaObjectSignature,
 		signatureIDL: "MetaObject",
 		typeName:     jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject"),
@@ -353,7 +354,7 @@ func NewMetaObjectType() Type {
 
 // NewObjectType is a contructor for the representation of a Value.
 func NewObjectType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "o",
 		signatureIDL: "obj",
 		typeName:     jen.Qual("github.com/lugu/qiloop/type/object", "ObjectReference"),
@@ -368,7 +369,7 @@ func NewObjectType() Type {
 
 // NewUnknownType is a contructor for an unknown type.
 func NewUnknownType() Type {
-	return &TypeConstructor{
+	return &typeConstructor{
 		signature:    "X",
 		signatureIDL: "unknown",
 		typeName:     jen.Id("interface{}"),
@@ -709,7 +710,8 @@ func (t *TupleType) ConvertMetaObjects() {
 
 // NewStructType is a contructor for the representation of a struct.
 func NewStructType(name string, members []MemberType) *StructType {
-	return &StructType{util.CleanName(name), members}
+	name = util.CleanName(name)
+	return &StructType{name, members}
 }
 
 // StructType represents a struct.
