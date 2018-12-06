@@ -301,26 +301,26 @@ func (s *stubObject) metaObject() object.MetaObject {
 	}
 }
 
-type timeval struct {
-	Tv_sec  int64
-	Tv_usec int64
+type Timeval struct {
+	Tvsec  int64
+	Tvusec int64
 }
 
-func Readtimeval(r io.Reader) (s timeval, err error) {
-	if s.Tv_sec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tv_sec field: " + err.Error())
+func ReadTimeval(r io.Reader) (s Timeval, err error) {
+	if s.Tvsec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read Tvsec field: " + err.Error())
 	}
-	if s.Tv_usec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tv_usec field: " + err.Error())
+	if s.Tvusec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("failed to read Tvusec field: " + err.Error())
 	}
 	return s, nil
 }
-func Writetimeval(s timeval, w io.Writer) (err error) {
-	if err := basic.WriteInt64(s.Tv_sec, w); err != nil {
-		return fmt.Errorf("failed to write Tv_sec field: " + err.Error())
+func WriteTimeval(s Timeval, w io.Writer) (err error) {
+	if err := basic.WriteInt64(s.Tvsec, w); err != nil {
+		return fmt.Errorf("failed to write Tvsec field: " + err.Error())
 	}
-	if err := basic.WriteInt64(s.Tv_usec, w); err != nil {
-		return fmt.Errorf("failed to write Tv_usec field: " + err.Error())
+	if err := basic.WriteInt64(s.Tvusec, w); err != nil {
+		return fmt.Errorf("failed to write Tvusec field: " + err.Error())
 	}
 	return nil
 }
@@ -330,7 +330,7 @@ type EventTrace struct {
 	Kind          int32
 	SlotId        uint32
 	Arguments     value.Value
-	Timestamp     timeval
+	Timestamp     Timeval
 	UserUsTime    int64
 	SystemUsTime  int64
 	CallerContext uint32
@@ -350,7 +350,7 @@ func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Arguments, err = value.NewValue(r); err != nil {
 		return s, fmt.Errorf("failed to read Arguments field: " + err.Error())
 	}
-	if s.Timestamp, err = Readtimeval(r); err != nil {
+	if s.Timestamp, err = ReadTimeval(r); err != nil {
 		return s, fmt.Errorf("failed to read Timestamp field: " + err.Error())
 	}
 	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
@@ -380,7 +380,7 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := s.Arguments.Write(w); err != nil {
 		return fmt.Errorf("failed to write Arguments field: " + err.Error())
 	}
-	if err := Writetimeval(s.Timestamp, w); err != nil {
+	if err := WriteTimeval(s.Timestamp, w); err != nil {
 		return fmt.Errorf("failed to write Timestamp field: " + err.Error())
 	}
 	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {

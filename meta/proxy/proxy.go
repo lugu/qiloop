@@ -7,7 +7,6 @@ import (
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
-	"strings"
 )
 
 // Statement is imported from jennifer code generator.
@@ -70,7 +69,7 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 	file.Func().Params(
 		jen.Id("s").Id("ServicesConstructor"),
 	).Id(
-		strings.Title(serviceName),
+		util.CleanName(serviceName),
 	).Params().Params(
 		jen.Id(serviceName), jen.Error(),
 	).Block(
@@ -118,6 +117,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 
 	methodCall := func(m object.MetaMethod, methodName string) error {
+		methodName = util.CleanName(methodName)
 		if serviceName != "Server" && m.Uid < object.MinUserActionID {
 			return nil
 		}
@@ -131,6 +131,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		return nil
 	}
 	signalCall := func(s object.MetaSignal, signalName string) error {
+		signalName = util.CleanName(signalName)
 		if serviceName != "Server" && s.Uid < object.MinUserActionID {
 			return nil
 		}
@@ -200,35 +201,18 @@ func generateNewServices(file *jen.File) {
 	)
 }
 
-func cleanMetaObject(meta *object.MetaObject) {
-	meta.Description = util.CleanName(meta.Description)
-	for i, m := range meta.Methods {
-		m.Name = util.CleanName(m.Name)
-		meta.Methods[i] = m
-	}
-	for i, s := range meta.Signals {
-		s.Name = util.CleanName(s.Name)
-		meta.Signals[i] = s
-	}
-	for i, p := range meta.Properties {
-		p.Name = util.CleanName(p.Name)
-		meta.Properties[i] = p
-	}
-}
-
 // Generate writes the proxy definition of the listed meta objects.
 func Generate(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
 	file, set := newFileAndSet(packageName)
 	generateNewServices(file)
 
-	for i := range metaObjList {
-		cleanMetaObject(&metaObjList[i])
-	}
 	for _, metaObj := range metaObjList {
-		generateObjectInterface(metaObj, metaObj.Description, set, file)
+		serviceName := util.CleanName(metaObj.Description)
+		generateObjectInterface(metaObj, serviceName, set, file)
 	}
 	for i, metaObj := range metaObjList {
-		err := generateProxyObject(metaObj, metaObj.Description, set, file)
+		serviceName := util.CleanName(metaObj.Description)
+		err := generateProxyObject(metaObj, serviceName, set, file)
 		if err != nil {
 			return fmt.Errorf("failed to render %s (%d): %s",
 				metaObj.Description, i, err)
@@ -328,8 +312,9 @@ func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, 
 		retType = jen.Error()
 	}
 
-	file.Comment(methodName + " calls the remote procedure")
-	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(strings.Title(methodName)).Add(
+	goMethodName := util.CleanName(methodName)
+	file.Comment(goMethodName + " calls the remote procedure")
+	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(goMethodName).Add(
 		tuple.Params(),
 	).Add(
 		retType,

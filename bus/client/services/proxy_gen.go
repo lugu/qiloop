@@ -41,8 +41,8 @@ type ServiceDirectory interface {
 	UpdateServiceInfo(P0 ServiceInfo) error
 	// MachineId calls the remote procedure
 	MachineId() (string, error)
-	// _socketOfService calls the remote procedure
-	_socketOfService(P0 uint32) (object.ObjectReference, error)
+	// SocketOfService calls the remote procedure
+	SocketOfService(P0 uint32) (object.ObjectReference, error)
 	// SignalServiceAdded subscribe to a remote signal
 	SignalServiceAdded(cancel chan int) (chan struct {
 		P0 uint32
@@ -226,8 +226,8 @@ func (p *ServiceDirectoryProxy) MachineId() (string, error) {
 	return ret, nil
 }
 
-// _socketOfService calls the remote procedure
-func (p *ServiceDirectoryProxy) _socketOfService(P0 uint32) (object.ObjectReference, error) {
+// SocketOfService calls the remote procedure
+func (p *ServiceDirectoryProxy) SocketOfService(P0 uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer

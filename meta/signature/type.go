@@ -59,7 +59,7 @@ func (s *TypeSet) RegisterStructType(originalName string, typ *StructType) strin
 // Search returns a Type if a name is associated.
 func (s *TypeSet) Search(name string) Type {
 	for i, n := range s.Names {
-		if util.CleanName(n) == util.CleanName(name) {
+		if n == name {
 			return s.Types[i]
 		}
 	}
@@ -580,7 +580,7 @@ type MemberType struct {
 
 // Title is the public name of the field.
 func (m MemberType) Title() string {
-	return strings.Title(m.Name)
+	return util.CleanName(m.Name)
 }
 
 // NewTupleType is a contructor for the representation of a series of
@@ -713,8 +713,6 @@ func (t *TupleType) ConvertMetaObjects() {
 
 // NewStructType is a contructor for the representation of a struct.
 func NewStructType(name string, members []MemberType) *StructType {
-	// FIXME: timeval struct is not capitalized as expected.
-	name = util.CleanName(name)
 	return &StructType{name, members}
 }
 
@@ -739,6 +737,10 @@ func (s *StructType) Signature() string {
 		s.Name, strings.Join(names, ","))
 }
 
+func (s *StructType) name() string {
+	return util.CleanName(s.Name)
+}
+
 // SignatureIDL returns the idl signature of the struct.
 func (s *StructType) SignatureIDL() string {
 	return s.Name
@@ -747,7 +749,7 @@ func (s *StructType) SignatureIDL() string {
 // TypeName returns a statement to be inserted when the type is to be
 // declared.
 func (s *StructType) TypeName() *Statement {
-	return jen.Id(s.Name)
+	return jen.Id(s.name())
 }
 
 // RegisterTo adds the type to the TypeSet.
@@ -766,7 +768,7 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 	for i, v := range s.Members {
 		fields[i] = jen.Id(v.Title()).Add(v.Type.TypeName())
 	}
-	file.Type().Id(s.Name).Struct(fields...)
+	file.Type().Id(s.name()).Struct(fields...)
 
 	readFields := make([]jen.Code, len(s.Members)+1)
 	writeFields := make([]jen.Code, len(s.Members)+1)
@@ -787,13 +789,13 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 	readFields[len(s.Members)] = jen.Return(jen.Id("s"), jen.Nil())
 	writeFields[len(s.Members)] = jen.Return(jen.Nil())
 
-	file.Func().Id("Read"+s.Name).Params(
+	file.Func().Id("Read"+s.name()).Params(
 		jen.Id("r").Id("io.Reader"),
 	).Params(
-		jen.Id("s").Id(s.Name), jen.Err().Error(),
+		jen.Id("s").Id(s.name()), jen.Err().Error(),
 	).Block(readFields...)
-	file.Func().Id("Write"+s.Name).Params(
-		jen.Id("s").Id(s.Name),
+	file.Func().Id("Write"+s.name()).Params(
+		jen.Id("s").Id(s.name()),
 		jen.Id("w").Qual("io", "Writer"),
 	).Params(jen.Err().Error()).Block(writeFields...)
 }
@@ -802,14 +804,14 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (s *StructType) Marshal(structID string, writer string) *Statement {
-	return jen.Id("Write"+s.Name).Call(jen.Id(structID), jen.Id(writer))
+	return jen.Id("Write"+s.name()).Call(jen.Id(structID), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (s *StructType) Unmarshal(reader string) *Statement {
-	return jen.Id("Read" + s.Name).Call(jen.Id(reader))
+	return jen.Id("Read" + s.name()).Call(jen.Id(reader))
 }
 
 // EnumType represents a const.
@@ -873,7 +875,7 @@ func (e *EnumType) TypeDeclaration(file *jen.File) {
 	file.Type().Id(e.Name).Int()
 	var defs = make([]jen.Code, 0)
 	for i, v := range e.Values {
-		defs = append(defs, jen.Id(strings.Title(i)).Op("=").Lit(v))
+		defs = append(defs, jen.Id(util.CleanName(i)).Op("=").Lit(v))
 	}
 	file.Const().Defs(defs...)
 }
