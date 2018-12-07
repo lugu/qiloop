@@ -301,11 +301,13 @@ func (s *stubObject) metaObject() object.MetaObject {
 	}
 }
 
+// Timeval is serializable
 type Timeval struct {
 	Tvsec  int64
 	Tvusec int64
 }
 
+// ReadTimeval unmarshalls Timeval
 func ReadTimeval(r io.Reader) (s Timeval, err error) {
 	if s.Tvsec, err = basic.ReadInt64(r); err != nil {
 		return s, fmt.Errorf("failed to read Tvsec field: " + err.Error())
@@ -315,6 +317,8 @@ func ReadTimeval(r io.Reader) (s Timeval, err error) {
 	}
 	return s, nil
 }
+
+// WriteTimeval marshalls Timeval
 func WriteTimeval(s Timeval, w io.Writer) (err error) {
 	if err := basic.WriteInt64(s.Tvsec, w); err != nil {
 		return fmt.Errorf("failed to write Tvsec field: " + err.Error())
@@ -325,6 +329,7 @@ func WriteTimeval(s Timeval, w io.Writer) (err error) {
 	return nil
 }
 
+// EventTrace is serializable
 type EventTrace struct {
 	Id            uint32
 	Kind          int32
@@ -337,6 +342,7 @@ type EventTrace struct {
 	CalleeContext uint32
 }
 
+// ReadEventTrace unmarshalls EventTrace
 func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Id field: " + err.Error())
@@ -367,6 +373,8 @@ func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	}
 	return s, nil
 }
+
+// WriteEventTrace marshalls EventTrace
 func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
 		return fmt.Errorf("failed to write Id field: " + err.Error())
@@ -398,11 +406,13 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	return nil
 }
 
+// MetaMethodParameter is serializable
 type MetaMethodParameter struct {
 	Name        string
 	Description string
 }
 
+// ReadMetaMethodParameter unmarshalls MetaMethodParameter
 func ReadMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Name field: " + err.Error())
@@ -412,6 +422,8 @@ func ReadMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 	}
 	return s, nil
 }
+
+// WriteMetaMethodParameter marshalls MetaMethodParameter
 func WriteMetaMethodParameter(s MetaMethodParameter, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
 		return fmt.Errorf("failed to write Name field: " + err.Error())
@@ -422,6 +434,7 @@ func WriteMetaMethodParameter(s MetaMethodParameter, w io.Writer) (err error) {
 	return nil
 }
 
+// MetaMethod is serializable
 type MetaMethod struct {
 	Uid                 uint32
 	ReturnSignature     string
@@ -432,6 +445,7 @@ type MetaMethod struct {
 	ReturnDescription   string
 }
 
+// ReadMetaMethod unmarshalls MetaMethod
 func ReadMetaMethod(r io.Reader) (s MetaMethod, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
@@ -469,6 +483,8 @@ func ReadMetaMethod(r io.Reader) (s MetaMethod, err error) {
 	}
 	return s, nil
 }
+
+// WriteMetaMethod marshalls MetaMethod
 func WriteMetaMethod(s MetaMethod, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
 		return fmt.Errorf("failed to write Uid field: " + err.Error())
@@ -506,12 +522,14 @@ func WriteMetaMethod(s MetaMethod, w io.Writer) (err error) {
 	return nil
 }
 
+// MetaSignal is serializable
 type MetaSignal struct {
 	Uid       uint32
 	Name      string
 	Signature string
 }
 
+// ReadMetaSignal unmarshalls MetaSignal
 func ReadMetaSignal(r io.Reader) (s MetaSignal, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
@@ -524,6 +542,8 @@ func ReadMetaSignal(r io.Reader) (s MetaSignal, err error) {
 	}
 	return s, nil
 }
+
+// WriteMetaSignal marshalls MetaSignal
 func WriteMetaSignal(s MetaSignal, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
 		return fmt.Errorf("failed to write Uid field: " + err.Error())
@@ -537,12 +557,14 @@ func WriteMetaSignal(s MetaSignal, w io.Writer) (err error) {
 	return nil
 }
 
+// MetaProperty is serializable
 type MetaProperty struct {
 	Uid       uint32
 	Name      string
 	Signature string
 }
 
+// ReadMetaProperty unmarshalls MetaProperty
 func ReadMetaProperty(r io.Reader) (s MetaProperty, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
@@ -555,6 +577,8 @@ func ReadMetaProperty(r io.Reader) (s MetaProperty, err error) {
 	}
 	return s, nil
 }
+
+// WriteMetaProperty marshalls MetaProperty
 func WriteMetaProperty(s MetaProperty, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
 		return fmt.Errorf("failed to write Uid field: " + err.Error())
@@ -568,6 +592,7 @@ func WriteMetaProperty(s MetaProperty, w io.Writer) (err error) {
 	return nil
 }
 
+// MetaObject is serializable
 type MetaObject struct {
 	Methods     map[uint32]MetaMethod
 	Signals     map[uint32]MetaSignal
@@ -575,6 +600,7 @@ type MetaObject struct {
 	Description string
 }
 
+// ReadMetaObject unmarshalls MetaObject
 func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
 	if s.Methods, err = func() (m map[uint32]MetaMethod, err error) {
 		size, err := basic.ReadUint32(r)
@@ -644,6 +670,8 @@ func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
 	}
 	return s, nil
 }
+
+// WriteMetaObject marshalls MetaObject
 func WriteMetaObject(s MetaObject, w io.Writer) (err error) {
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Methods)), w)

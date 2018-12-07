@@ -14,14 +14,14 @@ import (
 	"log"
 )
 
-// ServicesConstructor gives access to remote services
-type ServicesConstructor struct {
+// Constructor gives access to remote services
+type Constructor struct {
 	session bus.Session
 }
 
 // Services gives access to the services constructor
-func Services(s bus.Session) ServicesConstructor {
-	return ServicesConstructor{session: s}
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
 }
 
 // Server is a proxy object to the remote service
@@ -84,7 +84,7 @@ func NewServer(ses bus.Session, obj uint32) (Server, error) {
 }
 
 // Server retruns a proxy to a remote service
-func (s ServicesConstructor) Server() (Server, error) {
+func (s Constructor) Server() (Server, error) {
 	return NewServer(s.session, 1)
 }
 
@@ -158,7 +158,7 @@ func NewObject(ses bus.Session, obj uint32) (Object, error) {
 }
 
 // Object retruns a proxy to a remote service
-func (s ServicesConstructor) Object() (Object, error) {
+func (s Constructor) Object() (Object, error) {
 	return NewObject(s.session, 1)
 }
 
@@ -412,7 +412,7 @@ func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) 
 }
 
 // ServiceDirectory retruns a proxy to a remote service
-func (s ServicesConstructor) ServiceDirectory() (ServiceDirectory, error) {
+func (s Constructor) ServiceDirectory() (ServiceDirectory, error) {
 	return NewServiceDirectory(s.session, 1)
 }
 
@@ -689,6 +689,7 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 	return ch, nil
 }
 
+// ServiceInfo is serializable
 type ServiceInfo struct {
 	Name      string
 	ServiceId uint32
@@ -698,6 +699,7 @@ type ServiceInfo struct {
 	SessionId string
 }
 
+// ReadServiceInfo unmarshalls ServiceInfo
 func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Name field: " + err.Error())
@@ -732,6 +734,8 @@ func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	}
 	return s, nil
 }
+
+// WriteServiceInfo marshalls ServiceInfo
 func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
 		return fmt.Errorf("failed to write Name field: " + err.Error())
@@ -766,11 +770,13 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	return nil
 }
 
+// Timeval is serializable
 type Timeval struct {
 	Tvsec  int64
 	Tvusec int64
 }
 
+// ReadTimeval unmarshalls Timeval
 func ReadTimeval(r io.Reader) (s Timeval, err error) {
 	if s.Tvsec, err = basic.ReadInt64(r); err != nil {
 		return s, fmt.Errorf("failed to read Tvsec field: " + err.Error())
@@ -780,6 +786,8 @@ func ReadTimeval(r io.Reader) (s Timeval, err error) {
 	}
 	return s, nil
 }
+
+// WriteTimeval marshalls Timeval
 func WriteTimeval(s Timeval, w io.Writer) (err error) {
 	if err := basic.WriteInt64(s.Tvsec, w); err != nil {
 		return fmt.Errorf("failed to write Tvsec field: " + err.Error())
@@ -790,6 +798,7 @@ func WriteTimeval(s Timeval, w io.Writer) (err error) {
 	return nil
 }
 
+// EventTrace is serializable
 type EventTrace struct {
 	Id            uint32
 	Kind          int32
@@ -802,6 +811,7 @@ type EventTrace struct {
 	CalleeContext uint32
 }
 
+// ReadEventTrace unmarshalls EventTrace
 func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Id field: " + err.Error())
@@ -832,6 +842,8 @@ func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	}
 	return s, nil
 }
+
+// WriteEventTrace marshalls EventTrace
 func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
 		return fmt.Errorf("failed to write Id field: " + err.Error())

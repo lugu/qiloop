@@ -67,7 +67,7 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 	)
 	file.Comment(serviceName + " retruns a proxy to a remote service")
 	file.Func().Params(
-		jen.Id("s").Id("ServicesConstructor"),
+		jen.Id("s").Id("Constructor"),
 	).Id(
 		util.CleanName(serviceName),
 	).Params().Params(
@@ -183,9 +183,9 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 }
 
 func generateNewServices(file *jen.File) {
-	file.Comment("ServicesConstructor gives access to remote services")
+	file.Comment("Constructor gives access to remote services")
 	file.Type().Id(
-		"ServicesConstructor",
+		"Constructor",
 	).Struct(
 		jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session"),
 	)
@@ -195,9 +195,9 @@ func generateNewServices(file *jen.File) {
 	).Params(
 		jen.Id("s").Qual("github.com/lugu/qiloop/bus", "Session"),
 	).Id(
-		"ServicesConstructor",
+		"Constructor",
 	).Block(
-		jen.Id(`return ServicesConstructor{ session: s, }`),
+		jen.Id(`return Constructor{ session: s, }`),
 	)
 }
 

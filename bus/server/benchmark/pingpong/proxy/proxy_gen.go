@@ -12,14 +12,14 @@ import (
 	"log"
 )
 
-// ServicesConstructor gives access to remote services
-type ServicesConstructor struct {
+// Constructor gives access to remote services
+type Constructor struct {
 	session bus.Session
 }
 
 // Services gives access to the services constructor
-func Services(s bus.Session) ServicesConstructor {
-	return ServicesConstructor{session: s}
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
 }
 
 // PingPong is a proxy object to the remote service
@@ -51,7 +51,7 @@ func NewPingPong(ses bus.Session, obj uint32) (PingPong, error) {
 }
 
 // PingPong retruns a proxy to a remote service
-func (s ServicesConstructor) PingPong() (PingPong, error) {
+func (s Constructor) PingPong() (PingPong, error) {
 	return NewPingPong(s.session, 1)
 }
 

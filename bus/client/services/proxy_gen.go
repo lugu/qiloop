@@ -13,14 +13,14 @@ import (
 	"log"
 )
 
-// ServicesConstructor gives access to remote services
-type ServicesConstructor struct {
+// Constructor gives access to remote services
+type Constructor struct {
 	session bus.Session
 }
 
 // Services gives access to the services constructor
-func Services(s bus.Session) ServicesConstructor {
-	return ServicesConstructor{session: s}
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
 }
 
 // ServiceDirectory is a proxy object to the remote service
@@ -86,7 +86,7 @@ func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) 
 }
 
 // ServiceDirectory retruns a proxy to a remote service
-func (s ServicesConstructor) ServiceDirectory() (ServiceDirectory, error) {
+func (s Constructor) ServiceDirectory() (ServiceDirectory, error) {
 	return NewServiceDirectory(s.session, 1)
 }
 
@@ -378,7 +378,7 @@ func NewLogManager(ses bus.Session, obj uint32) (LogManager, error) {
 }
 
 // LogManager retruns a proxy to a remote service
-func (s ServicesConstructor) LogManager() (LogManager, error) {
+func (s Constructor) LogManager() (LogManager, error) {
 	return NewLogManager(s.session, 1)
 }
 
@@ -481,6 +481,7 @@ func (p *LogManagerProxy) RemoveProvider(P0 int32) error {
 	return nil
 }
 
+// ServiceInfo is serializable
 type ServiceInfo struct {
 	Name      string
 	ServiceId uint32
@@ -490,6 +491,7 @@ type ServiceInfo struct {
 	SessionId string
 }
 
+// ReadServiceInfo unmarshalls ServiceInfo
 func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Name field: " + err.Error())
@@ -524,6 +526,8 @@ func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	}
 	return s, nil
 }
+
+// WriteServiceInfo marshalls ServiceInfo
 func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
 		return fmt.Errorf("failed to write Name field: " + err.Error())
@@ -558,6 +562,7 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	return nil
 }
 
+// LogMessage is serializable
 type LogMessage struct {
 	Source     string
 	Level      int32
@@ -569,6 +574,7 @@ type LogMessage struct {
 	SystemDate uint64
 }
 
+// ReadLogMessage unmarshalls LogMessage
 func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
 	if s.Source, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Source field: " + err.Error())
@@ -596,6 +602,8 @@ func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
 	}
 	return s, nil
 }
+
+// WriteLogMessage marshalls LogMessage
 func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Source, w); err != nil {
 		return fmt.Errorf("failed to write Source field: " + err.Error())

@@ -768,6 +768,7 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 	for i, v := range s.Members {
 		fields[i] = jen.Id(v.Title()).Add(v.Type.TypeName())
 	}
+	file.Commentf("%s is serializable", s.name())
 	file.Type().Id(s.name()).Struct(fields...)
 
 	readFields := make([]jen.Code, len(s.Members)+1)
@@ -789,11 +790,13 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 	readFields[len(s.Members)] = jen.Return(jen.Id("s"), jen.Nil())
 	writeFields[len(s.Members)] = jen.Return(jen.Nil())
 
+	file.Commentf("Read%s unmarshalls %s", s.name(), s.name())
 	file.Func().Id("Read"+s.name()).Params(
 		jen.Id("r").Id("io.Reader"),
 	).Params(
 		jen.Id("s").Id(s.name()), jen.Err().Error(),
 	).Block(readFields...)
+	file.Commentf("Write%s marshalls %s", s.name(), s.name())
 	file.Func().Id("Write"+s.name()).Params(
 		jen.Id("s").Id(s.name()),
 		jen.Id("w").Qual("io", "Writer"),

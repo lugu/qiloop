@@ -10,14 +10,14 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 )
 
-// ServicesConstructor gives access to remote services
-type ServicesConstructor struct {
+// Constructor gives access to remote services
+type Constructor struct {
 	session bus.Session
 }
 
 // Services gives access to the services constructor
-func Services(s bus.Session) ServicesConstructor {
-	return ServicesConstructor{session: s}
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
 }
 
 // Server is a proxy object to the remote service
@@ -42,7 +42,7 @@ func NewServer(ses bus.Session, obj uint32) (Server, error) {
 }
 
 // Server retruns a proxy to a remote service
-func (s ServicesConstructor) Server() (Server, error) {
+func (s Constructor) Server() (Server, error) {
 	return NewServer(s.session, 1)
 }
 

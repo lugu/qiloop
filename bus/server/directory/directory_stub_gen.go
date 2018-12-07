@@ -289,6 +289,7 @@ func (s *stubServiceDirectory) metaObject() object.MetaObject {
 	}
 }
 
+// ServiceInfo is serializable
 type ServiceInfo struct {
 	Name      string
 	ServiceId uint32
@@ -298,6 +299,7 @@ type ServiceInfo struct {
 	SessionId string
 }
 
+// ReadServiceInfo unmarshalls ServiceInfo
 func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Name field: " + err.Error())
@@ -332,6 +334,8 @@ func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	}
 	return s, nil
 }
+
+// WriteServiceInfo marshalls ServiceInfo
 func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
 		return fmt.Errorf("failed to write Name field: " + err.Error())
