@@ -95,7 +95,7 @@ type ServerMock struct {
 }
 
 func NewServer(response func(user, token string) client.CapabilityMap) net.EndPoint {
-	client, server := net.NewPipe()
+	client, server := net.Pipe()
 	s := &ServerMock{
 		EndPoint: server,
 		Response: response,

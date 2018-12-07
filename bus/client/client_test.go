@@ -13,7 +13,7 @@ import (
 
 func TestProxyCall(t *testing.T) {
 
-	serviceEndpoint, clientEndpoint := net.NewPipe()
+	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer serviceEndpoint.Close()
 	defer clientEndpoint.Close()
 

@@ -39,6 +39,8 @@ func listenUNIX(name string) (gonet.Listener, error) {
 	return gonet.Listen("unix", name)
 }
 
+// Listen reads the transport of addr and listen at the address. addr
+// can be of the form: unix://, tcp:// or tcps://.
 func Listen(addr string) (gonet.Listener, error) {
 	u, err := url.Parse(addr)
 	if err != nil {

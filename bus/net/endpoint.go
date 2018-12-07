@@ -49,6 +49,10 @@ type EndPoint interface {
 	String() string
 }
 
+// Handler represents a client of a incomming message stream. It
+// contains a filter used to decided if the message shall be sent to
+// the handler, a queue and a consumuer which process the messages and
+// a closer called when the connection is closed.
 type Handler struct {
 	filter   Filter
 	consumer Consumer
@@ -57,6 +61,7 @@ type Handler struct {
 	err      error
 }
 
+// NewHandler returns an Handler.
 func NewHandler(f Filter, c Consumer, cl Closer) *Handler {
 	h := &Handler{
 		filter:   f,
@@ -101,6 +106,11 @@ func EndPointFinalizer(conn gonet.Conn, finalizer func(EndPoint)) EndPoint {
 	return e
 }
 
+// NewEndPoint returns an EndPoint which already process incomming
+// messages. Since no handler have been register at the time of the
+// creation of the EndPoint, any message receive will be droped until
+// and Handler is registered. Prefer EndPointFinalizer for a safe way
+// to construct EndPoint.
 func NewEndPoint(conn gonet.Conn) EndPoint {
 	e := &endPoint{
 		conn:     conn,
@@ -144,17 +154,16 @@ func DialEndPoint(addr string) (EndPoint, error) {
 	u, err := url.Parse(addr)
 	if err != nil {
 		return nil, fmt.Errorf("dial: invalid address: %s", err)
-	} else {
-		switch u.Scheme {
-		case "tcp":
-			return dialTCP(u.Host)
-		case "tcps":
-			return dialTLS(u.Host)
-		case "unix":
-			return dialUNIX(strings.TrimPrefix(addr, "unix://"))
-		default:
-			return nil, fmt.Errorf("unknown URL scheme: %s", addr)
-		}
+	}
+	switch u.Scheme {
+	case "tcp":
+		return dialTCP(u.Host)
+	case "tcps":
+		return dialTLS(u.Host)
+	case "unix":
+		return dialUNIX(strings.TrimPrefix(addr, "unix://"))
+	default:
+		return nil, fmt.Errorf("unknown URL scheme: %s", addr)
 	}
 }
 
@@ -216,14 +225,23 @@ func (e *endPoint) AddHandler(f Filter, c Consumer, cl Closer) int {
 	return len(e.handlers) - 1
 }
 
-var MessageDropped error = errors.New("message dropped")
+// ErrNoMatch is returned when the message did not match any handler
+var ErrNoMatch = errors.New("message dropped: no handler match")
 
-// dispatch test all destinations for someone interrested in the
-// message.
+// ErrNoHandler is returned when there is no handler registered.
+var ErrNoHandler = errors.New("message dropped: no handler registered")
+
+// dispatch requests each handler if it match the message, if so it
+// sends it to the handler queue. If no handler is registered, it
+// returns ErrNoHandler and if no handler match the message it returns
+// ErrNoMatch.
 func (e *endPoint) dispatch(msg *Message) error {
-	dispatched := false
 	e.handlersMutex.Lock()
 	defer e.handlersMutex.Unlock()
+	if len(e.handlers) == 0 {
+		return ErrNoHandler
+	}
+	ret := ErrNoMatch
 	for i, h := range e.handlers {
 		if h == nil {
 			continue
@@ -231,18 +249,14 @@ func (e *endPoint) dispatch(msg *Message) error {
 		matched, keep := h.filter(&msg.Header)
 		if matched {
 			h.queue <- msg
-			dispatched = true
+			ret = nil
 		}
 		if !keep {
 			close(h.queue)
 			e.handlers[i] = nil
 		}
 	}
-	if dispatched {
-		return nil
-	}
-	return fmt.Errorf("dropping message: %#v (len handlers: %d)",
-		msg.Header, len(e.handlers))
+	return ret
 }
 
 // process read all messages from the end point and dispatch them one
@@ -259,7 +273,7 @@ func (e *endPoint) process() {
 		}
 		err = e.dispatch(msg)
 		if err != nil {
-			log.Printf("dispatch err: %s\n", err)
+			log.Printf("%s: %#v", err, msg.Header)
 		}
 	}
 }
@@ -287,7 +301,8 @@ func (e *endPoint) String() string {
 		e.conn.RemoteAddr().String()
 }
 
-func NewPipe() (EndPoint, EndPoint) {
+// Pipe returns a set of EndPoint connected to each other.
+func Pipe() (EndPoint, EndPoint) {
 	a, b := gonet.Pipe()
 	return NewEndPoint(a), NewEndPoint(b)
 }

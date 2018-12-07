@@ -575,7 +575,7 @@ func TestRouter(t *testing.T) {
 }
 
 func TestNewContext(t *testing.T) {
-	endpoint, _ := net.NewPipe()
+	endpoint, _ := net.Pipe()
 	context := server.NewContext(endpoint)
 	if context == nil {
 		t.Errorf("nil context")

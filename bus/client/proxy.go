@@ -65,6 +65,8 @@ func (p Proxy) Disconnect() error {
 	return fmt.Errorf("Proxy.Disconnect not yet implemented")
 }
 
+// SignalID resolve the name of the signal using the meta object and
+// returns the signal id.
 func (p Proxy) SignalID(name string) (uint32, error) {
 	return p.meta.SignalID(name)
 }

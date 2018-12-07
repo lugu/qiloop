@@ -97,7 +97,7 @@ func TestReceiveOne(t *testing.T) {
 
 func TestPingPong(t *testing.T) {
 
-	server, client := net.NewPipe()
+	server, client := net.Pipe()
 	defer server.Close()
 	defer client.Close()
 
