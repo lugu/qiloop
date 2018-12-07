@@ -15,7 +15,6 @@ import (
 // Session implements the Session interface. It is an
 // implementation of Session. It does not update the list of services
 // and returns clients.
-
 type Session struct {
 	serviceList      []services.ServiceInfo
 	serviceListMutex sync.Mutex
@@ -66,7 +65,7 @@ func (s *Session) findServiceName(name string) (i services.ServiceInfo, err erro
 	return i, fmt.Errorf("Service not found: %s", name)
 }
 
-func (s *Session) findServiceId(uid uint32) (i services.ServiceInfo, err error) {
+func (s *Session) findServiceID(uid uint32) (i services.ServiceInfo, err error) {
 	s.serviceListMutex.Lock()
 	defer s.serviceListMutex.Unlock()
 	for _, service := range s.serviceList {
@@ -77,6 +76,7 @@ func (s *Session) findServiceId(uid uint32) (i services.ServiceInfo, err error) 
 	return i, fmt.Errorf("Service ID not found: %d", uid)
 }
 
+// Proxy resolve the service name and returns a proxy to it.
 func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
 	info, err := s.findServiceName(name)
 	if err != nil {
@@ -85,8 +85,9 @@ func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
 	return newService(info, objectID)
 }
 
+// Object returns a reference to ref.
 func (s *Session) Object(ref object.ObjectReference) (o object.Object, err error) {
-	info, err := s.findServiceId(ref.ServiceID)
+	info, err := s.findServiceID(ref.ServiceID)
 	if err != nil {
 		return o, err
 	}
@@ -129,6 +130,7 @@ func BindSession(c bus.Client) (*Session, error) {
 	return s, nil
 }
 
+// NewSession connects an address and return a new session.
 func NewSession(addr string) (bus.Session, error) {
 
 	endpoint, err := net.DialEndPoint(addr)
@@ -163,6 +165,7 @@ func (s *Session) updateServiceList() {
 	}
 }
 
+// Destroy close the session.
 func (s *Session) Destroy() error {
 	// cancel both add and remove services
 	s.cancel <- 1

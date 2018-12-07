@@ -9,13 +9,14 @@ import (
 	"strings"
 )
 
-var userLogin string = ""
-var userToken string = ""
+var userLogin = ""
+var userToken = ""
 
 func init() {
 	userLogin, userToken = readUserToken()
 }
 
+// GetUserToken returns user login and token.
 func GetUserToken() (string, string) {
 	return userLogin, userToken
 }
@@ -43,6 +44,7 @@ func readUserToken() (string, string) {
 	return strings.TrimSpace(user), strings.TrimSpace(pwd)
 }
 
+// WriteUserToken save the user credentials.
 func WriteUserToken(login string, token string) error {
 	usr, err := user.Current()
 	if err != nil {
