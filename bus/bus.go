@@ -7,6 +7,7 @@ import (
 	"github.com/lugu/qiloop/type/object"
 )
 
+// MetaObject queries the meta object of the remote object.
 func MetaObject(client Client, serviceID uint32, objectID uint32) (m object.MetaObject, err error) {
 	var buf bytes.Buffer
 	err = basic.WriteUint32(objectID, &buf)

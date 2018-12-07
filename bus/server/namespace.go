@@ -9,10 +9,12 @@ import (
 	"sync"
 )
 
-// ServiceDirectory to implement Namespace interface plus an
-// implementation base on bus/session.Sesssion plus a local one for
-// testing and a method to create bus.Session from Server and its
-// Namespace.
+// Namespace is used by a server to handle services creation and local
+// session. It basically wraps the ServiceDirectory responsibility in
+// an abstract form. It serves two purpose:
+// (1) help resolve the circular dependancy between the service
+// directory and the server and (2) allows to test the server without
+// service directory.
 type Namespace interface {
 	Reserve(name string) (uint32, error)
 	Remove(serviceID uint32) error
@@ -28,6 +30,8 @@ type privateNamespace struct {
 	next      uint32
 }
 
+// PrivateNamespace implements Namespace without relying on a service
+// directory. Used for testing purpose.
 func PrivateNamespace() Namespace {
 	return &privateNamespace{
 		reserved:  make(map[string]uint32),
@@ -126,6 +130,7 @@ func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 	}
 	return client.NewProxy(clt, meta, serviceID, objectID), nil
 }
+
 func (s *localSession) Object(ref object.ObjectReference) (object.Object,
 	error) {
 	clt, err := s.Client(ref.ServiceID)

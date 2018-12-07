@@ -10,6 +10,8 @@ type Client interface {
 	Subscribe(serviceID, objectID, signalID uint32, cancel chan int) (chan []byte, error)
 }
 
+// Proxy represents a reference to a remote service. It allows to
+// call methods and subscribe signals.
 type Proxy interface {
 	Call(action string, payload []byte) ([]byte, error)
 	CallID(action uint32, payload []byte) ([]byte, error)
@@ -31,11 +33,10 @@ type Proxy interface {
 	Disconnect() error
 }
 
+// Session represents a connection to a bus: it is used to instanciate
+// proxies to services and create new services.
 type Session interface {
 	Proxy(name string, objectID uint32) (Proxy, error)
 	Object(ref object.ObjectReference) (object.Object, error)
 	Destroy() error
 }
-
-type ActionWrapper func(payload []byte) ([]byte, error)
-type Wrapper map[uint32]ActionWrapper

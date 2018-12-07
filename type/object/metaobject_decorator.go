@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// SignalUid returns the ID of a method given its name.
-func (m *MetaObject) MethodUid(name string) (uint32, error) {
+// MethodID returns the ID of a method given its name.
+func (m *MetaObject) MethodID(name string) (uint32, error) {
 	for k, method := range m.Methods {
 		if method.Name == name {
 			return k, nil
@@ -17,8 +17,8 @@ func (m *MetaObject) MethodUid(name string) (uint32, error) {
 	return 0, fmt.Errorf("failed to find method %s", name)
 }
 
-// SignalUid returns the ID of a signal given its name.
-func (m *MetaObject) SignalUid(name string) (uint32, error) {
+// SignalID returns the ID of a signal given its name.
+func (m *MetaObject) SignalID(name string) (uint32, error) {
 	for k, signal := range m.Signals {
 		if signal.Name == name {
 			return k, nil
@@ -39,27 +39,28 @@ func registerName(name string, names map[string]bool) string {
 	return newName
 }
 
-func (metaObj *MetaObject) Json() string {
-	json, _ := json.MarshalIndent(metaObj, "", "    ")
+// JSON returns a json string describing the meta object.
+func (m *MetaObject) JSON() string {
+	json, _ := json.MarshalIndent(m, "", "    ")
 	return string(json)
 }
 
 // ForEachMethodAndSignal call methodCall and signalCall for each
 // method and signal respectively. Always call them in the same order
 // and unsure the generated method names are unique within the object.
-func (metaObj *MetaObject) ForEachMethodAndSignal(
+func (m *MetaObject) ForEachMethodAndSignal(
 	methodCall func(m MetaMethod, methodName string) error,
 	signalCall func(s MetaSignal, methodName string) error) error {
 
 	methodNames := make(map[string]bool)
 	keys := make([]int, 0)
-	for k := range metaObj.Methods {
+	for k := range m.Methods {
 		keys = append(keys, int(k))
 	}
 	sort.Ints(keys)
 	for _, i := range keys {
 		k := uint32(i)
-		m := metaObj.Methods[k]
+		m := m.Methods[k]
 
 		// generate uniq name for the method
 		methodName := registerName(strings.Title(m.Name), methodNames)
@@ -68,13 +69,13 @@ func (metaObj *MetaObject) ForEachMethodAndSignal(
 		}
 	}
 	keys = make([]int, 0)
-	for k := range metaObj.Signals {
+	for k := range m.Signals {
 		keys = append(keys, int(k))
 	}
 	sort.Ints(keys)
 	for _, i := range keys {
 		k := uint32(i)
-		s := metaObj.Signals[k]
+		s := m.Signals[k]
 		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
 
 		if err := signalCall(s, methodName); err != nil {
@@ -84,6 +85,7 @@ func (metaObj *MetaObject) ForEachMethodAndSignal(
 	return nil
 }
 
+// FullMetaObject fills the meta object with generic objects methods.
 func FullMetaObject(meta MetaObject) MetaObject {
 	for i, method := range ObjectMetaObject.Methods {
 		meta.Methods[i] = method

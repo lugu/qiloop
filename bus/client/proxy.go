@@ -55,7 +55,7 @@ func (p Proxy) SubscribeSignal(signal string, cancel chan int) (chan []byte, err
 }
 
 func (p Proxy) MethodUid(name string) (uint32, error) {
-	return p.meta.MethodUid(name)
+	return p.meta.MethodID(name)
 }
 
 func (p Proxy) Disconnect() error {
@@ -63,7 +63,7 @@ func (p Proxy) Disconnect() error {
 }
 
 func (p Proxy) SignalUid(name string) (uint32, error) {
-	return p.meta.SignalUid(name)
+	return p.meta.SignalID(name)
 }
 
 // NewProxy construct a Proxy.

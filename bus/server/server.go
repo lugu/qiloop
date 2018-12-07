@@ -39,6 +39,12 @@ type signalUser struct {
 	clientID  uint64
 }
 
+// ActionWrapper handles messages for an action.
+type ActionWrapper func(payload []byte) ([]byte, error)
+
+// Wrapper is used to dispatch messages to ActionWrapper.
+type Wrapper map[uint32]ActionWrapper
+
 // BasicObject implements the Object interface. It handles the generic
 // method and signal. Services implementation embedded a BasicObject
 // and fill it with the extra actions they wish to handle using the
@@ -47,7 +53,7 @@ type signalUser struct {
 type BasicObject struct {
 	meta      object.MetaObject
 	signals   []signalUser
-	Wrapper   bus.Wrapper
+	Wrapper   Wrapper
 	serviceID uint32
 	objectID  uint32
 }
@@ -57,7 +63,7 @@ func NewObject(meta object.MetaObject) *BasicObject {
 	var obj BasicObject
 	obj.meta = object.FullMetaObject(meta)
 	obj.signals = make([]signalUser, 0)
-	obj.Wrapper = make(map[uint32]bus.ActionWrapper)
+	obj.Wrapper = make(map[uint32]ActionWrapper)
 	obj.Wrap(uint32(0x2), obj.wrapMetaObject)
 	// obj.Wrapper[uint32(0x3)] = obj.Terminate
 	// obj.Wrapper[uint32(0x5)] = obj.Property
@@ -68,7 +74,7 @@ func NewObject(meta object.MetaObject) *BasicObject {
 }
 
 // Wrap let a BasicObject owner extend it with custom actions.
-func (o *BasicObject) Wrap(id uint32, fn bus.ActionWrapper) {
+func (o *BasicObject) Wrap(id uint32, fn ActionWrapper) {
 	o.Wrapper[id] = fn
 }
 

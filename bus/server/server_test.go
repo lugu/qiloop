@@ -17,16 +17,16 @@ import (
 
 // ObjectDispatcher implements Object
 type ObjectDispatcher struct {
-	wrapper bus.Wrapper
+	wrapper server.Wrapper
 }
 
 func (o *ObjectDispatcher) UpdateSignal(signal uint32, value []byte) error {
 	panic("not available")
 }
 
-func (o *ObjectDispatcher) Wrap(id uint32, fn bus.ActionWrapper) {
+func (o *ObjectDispatcher) Wrap(id uint32, fn server.ActionWrapper) {
 	if o.wrapper == nil {
-		o.wrapper = make(map[uint32]bus.ActionWrapper)
+		o.wrapper = make(map[uint32]server.ActionWrapper)
 	}
 	o.wrapper[id] = fn
 }

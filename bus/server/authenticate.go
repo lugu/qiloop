@@ -13,22 +13,30 @@ import (
 	"io"
 )
 
+// Authenticator decides if a user/token tuple is valid. It is used to
+// construct the service server (i.e. service zero).
 type Authenticator interface {
 	Authenticate(user, token string) bool
 }
 
+// Dictionary is an Authenticator which reads its permission from a
+// dictionnary.
 func Dictionary(passwords map[string]string) Authenticator {
 	return dictionary(passwords)
 }
 
+// Yes is an Authenticator which accepts anything.
 type Yes struct{}
 
+// Authenticate returns true
 func (y Yes) Authenticate(user, token string) bool {
 	return true
 }
 
+// No is an Authenticator which refuses anything.
 type No struct{}
 
+// Authenticate returns false
 func (n No) Authenticate(user, token string) bool {
 	return false
 }
@@ -40,6 +48,7 @@ func (d dictionary) Authenticate(user, token string) bool {
 	return ok && pwd == token
 }
 
+// WriteCapabilityMap marshals the capability map.
 func WriteCapabilityMap(m client.CapabilityMap, out io.Writer) error {
 	err := basic.WriteUint32(uint32(len(m)), out)
 	if err != nil {
@@ -58,6 +67,7 @@ func WriteCapabilityMap(m client.CapabilityMap, out io.Writer) error {
 	return nil
 }
 
+// ReadCapabilityMap unmarshals the capability map.
 func ReadCapabilityMap(in io.Reader) (m client.CapabilityMap, err error) {
 
 	size, err := basic.ReadUint32(in)
@@ -152,6 +162,8 @@ func (s *serviceAuthenticate) Authenticate(from *Context, cap client.CapabilityM
 	return s.capError()
 }
 
+// ServiceAuthenticate represents the servie server (serivce zero)
+// used to authenticate a new connection.
 func ServiceAuthenticate(auth Authenticator) Object {
 	return &serviceAuthenticate{auth: auth}
 }

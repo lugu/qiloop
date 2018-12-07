@@ -8,27 +8,27 @@ import (
 
 func TestMetaObjectDecorator(t *testing.T) {
 	service0 := &object.MetaService0
-	id, err := service0.MethodUid("authenticate")
+	id, err := service0.MethodID("authenticate")
 	if err != nil {
 		panic(err)
 	}
 	if id != object.AuthenticateActionID {
 		t.Errorf("not expecting: %d", id)
 	}
-	_, err = service0.MethodUid("unknown")
+	_, err = service0.MethodID("unknown")
 	if err == nil {
 		panic("shall fail")
 	}
 
 	obj := object.FullMetaObject(*service0)
-	id, err = obj.SignalUid("traceObject")
+	id, err = obj.SignalID("traceObject")
 	if err != nil {
 		panic(err)
 	}
 	if id != 0x56 {
 		panic("unexpected id")
 	}
-	_, err = obj.SignalUid("unknown")
+	_, err = obj.SignalID("unknown")
 	if err == nil {
 		panic("shall fail")
 	}
@@ -50,7 +50,7 @@ func TestMetaObjectDecorator(t *testing.T) {
 }
 
 func TestMetaObjectJson(t *testing.T) {
-	if object.ObjectMetaObject.Json() == "" {
+	if object.ObjectMetaObject.JSON() == "" {
 		t.Errorf("not expecting empty json")
 	}
 }
