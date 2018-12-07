@@ -350,7 +350,7 @@ func (p *ObjectProxy) EnableTrace(P0 bool) error {
 func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 	P0 EventTrace
 }, error) {
-	signalID, err := p.SignalUid("traceObject")
+	signalID, err := p.SignalID("traceObject")
 	if err != nil {
 		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
 	}

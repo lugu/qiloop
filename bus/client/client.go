@@ -128,6 +128,7 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32,
 	return stream, nil
 }
 
+// NewClient returns a new client.
 func NewClient(endpoint net.EndPoint) bus.Client {
 	return &client{
 		endpoint:  endpoint,
@@ -135,6 +136,9 @@ func NewClient(endpoint net.EndPoint) bus.Client {
 	}
 }
 
+// SelectEndPoint connect to a remote peer using the list of
+// addresses. It tries local addresses first and refuses to connect
+// invalid IP addresses such as test ranges (198.18.0.x).
 func SelectEndPoint(addrs []string) (endpoint net.EndPoint, err error) {
 	if len(addrs) == 0 {
 		return endpoint, fmt.Errorf("empty address list")

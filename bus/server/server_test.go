@@ -237,7 +237,7 @@ func TestStandAloneInit(t *testing.T) {
 		object.ObjectMetaObject, serviceID, objectID)
 
 	// register to signal
-	id, err := proxy.MethodUid("registerEvent")
+	id, err := proxy.MethodID("registerEvent")
 	if err != nil {
 		t.Errorf("proxy get register event action id: %s", err)
 	}

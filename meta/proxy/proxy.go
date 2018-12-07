@@ -335,7 +335,7 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 
 	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
 	body := jen.Block(
-		jen.Id(`signalID, err := p.SignalUid("`+s.Name+`")
+		jen.Id(`signalID, err := p.SignalID("`+s.Name+`")
 		if err != nil {
 			return nil, fmt.Errorf("signal %s not available: %s", "`+s.Name+`", err)
 		}

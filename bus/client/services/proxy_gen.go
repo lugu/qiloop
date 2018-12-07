@@ -252,7 +252,7 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 	P0 uint32
 	P1 string
 }, error) {
-	signalID, err := p.SignalUid("serviceAdded")
+	signalID, err := p.SignalID("serviceAdded")
 	if err != nil {
 		return nil, fmt.Errorf("signal %s not available: %s", "serviceAdded", err)
 	}
@@ -310,7 +310,7 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 	P0 uint32
 	P1 string
 }, error) {
-	signalID, err := p.SignalUid("serviceRemoved")
+	signalID, err := p.SignalID("serviceRemoved")
 	if err != nil {
 		return nil, fmt.Errorf("signal %s not available: %s", "serviceRemoved", err)
 	}

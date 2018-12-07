@@ -95,7 +95,7 @@ func (p *PingPongProxy) Ping(P0 string) error {
 func (p *PingPongProxy) SignalPong(cancel chan int) (chan struct {
 	P0 string
 }, error) {
-	signalID, err := p.SignalUid("pong")
+	signalID, err := p.SignalID("pong")
 	if err != nil {
 		return nil, fmt.Errorf("signal %s not available: %s", "pong", err)
 	}

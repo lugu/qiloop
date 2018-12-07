@@ -9,16 +9,27 @@ import (
 )
 
 const (
-	KeyState    string = "__qi_auth_state"
-	KeyUser     string = "auth_user"
-	KeyToken    string = "auth_token"
-	KeyNewToken string = "auth_newToken"
+	// KeyState is the key of the authetication state in the capability map
+	KeyState = "__qi_auth_state"
+	// KeyUser is the key for the user name in the capability map
+	KeyUser = "auth_user"
+	// KeyToken is the key for the user token in the capability map
+	KeyToken = "auth_token"
+	// KeyNewToken is the key with the new token sent in the capability map
+	KeyNewToken = "auth_newToken"
 
-	StateError    uint32 = 1
+	// StateError indicates an authentication failure.
+	StateError uint32 = 1
+	// StateContinue indicates a new token generation procedure.
 	StateContinue uint32 = 2
-	StateDone     uint32 = 3
+	// StateDone indicates an authentication success.
+	StateDone uint32 = 3
 )
 
+// CapabilityMap is a data structure exchanged between the server and
+// the client during the authentication procedure. It is used as a
+// negociation medium between the client an the server to decides
+// which features are supported and to verify the client credentials.
 type CapabilityMap map[string]value.Value
 
 func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap, error) {
@@ -110,6 +121,9 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 	}
 }
 
+// Authenticate runs the authentication procedure of a given
+// connection. If the clients fails to authenticate itself, it returns
+// an error. In response the connection shall be closed.
 func Authenticate(endpoint net.EndPoint) error {
 	user, token := token.GetUserToken()
 	return AuthenticateUser(endpoint, user, token)

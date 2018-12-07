@@ -20,8 +20,8 @@ type Proxy interface {
 	SubscribeSignal(signal string, cancel chan int) (chan []byte, error)
 	SubscribeID(signal uint32, cancel chan int) (chan []byte, error)
 
-	MethodUid(name string) (uint32, error)
-	SignalUid(name string) (uint32, error)
+	MethodID(name string) (uint32, error)
+	SignalID(name string) (uint32, error)
 
 	// ServiceID returns the related service identifier
 	ServiceID() uint32

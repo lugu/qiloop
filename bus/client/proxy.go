@@ -23,7 +23,7 @@ func (p Proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
 
 // Call translates the name into an action id and send it to the client endpoint.
 func (p Proxy) Call(action string, payload []byte) ([]byte, error) {
-	id, err := p.MethodUid(action)
+	id, err := p.MethodID(action)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find call %s: %s", action, err)
 	}
@@ -40,29 +40,32 @@ func (p Proxy) ObjectID() uint32 {
 	return p.object
 }
 
-// Subscribe returns a channel with the values of a signal
+// SubscribeID returns a channel with the values of a signal
 func (p Proxy) SubscribeID(signal uint32, cancel chan int) (chan []byte, error) {
 	return p.client.Subscribe(p.service, p.object, signal, cancel)
 }
 
-// Subscribe returns a channel with the values of a signal
+// SubscribeSignal returns a channel with the values of a signal
 func (p Proxy) SubscribeSignal(signal string, cancel chan int) (chan []byte, error) {
-	id, err := p.SignalUid(signal)
+	id, err := p.SignalID(signal)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find signal %s: %s", signal, err)
 	}
 	return p.client.Subscribe(p.service, p.object, id, cancel)
 }
 
-func (p Proxy) MethodUid(name string) (uint32, error) {
+// MethodID resolve the name of the method using the meta object and
+// returns the method id.
+func (p Proxy) MethodID(name string) (uint32, error) {
 	return p.meta.MethodID(name)
 }
 
+// Disconnect closes the connection.
 func (p Proxy) Disconnect() error {
 	return fmt.Errorf("Proxy.Disconnect not yet implemented")
 }
 
-func (p Proxy) SignalUid(name string) (uint32, error) {
+func (p Proxy) SignalID(name string) (uint32, error) {
 	return p.meta.SignalID(name)
 }
 

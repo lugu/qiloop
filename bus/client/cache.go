@@ -15,6 +15,7 @@ type Cache struct {
 	Endpoint net.EndPoint
 }
 
+// Proxy returns a proxy object to the desired service.
 func (s *Cache) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 	serviceID, ok := s.Names[name]
 	if !ok {
@@ -26,14 +27,18 @@ func (s *Cache) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 	return NewProxy(client, meta, serviceID, objectID), nil
 }
 
+// Object creates an object from a reference.
 func (s *Cache) Object(ref object.ObjectReference) (o object.Object, err error) {
 	return o, fmt.Errorf("Not yet implemented")
 }
 
+// Destroy closes the connection.
 func (s *Cache) Destroy() error {
 	return s.Endpoint.Close()
 }
 
+// AddService manually associates the service name with a service id
+// and a meta objects.
 func (s *Cache) AddService(name string, serviceID uint32,
 	meta object.MetaObject) {
 
@@ -41,6 +46,8 @@ func (s *Cache) AddService(name string, serviceID uint32,
 	s.Services[serviceID] = meta
 }
 
+// Lookup query the given service id for its meta object and add it to
+// the cache.
 func (s *Cache) Lookup(name string, serviceID uint32) error {
 	objectID := uint32(1)
 	meta, err := bus.MetaObject(NewClient(s.Endpoint),
@@ -67,6 +74,7 @@ func NewCachedSession(addr string) (*Cache, error) {
 	return NewCache(endpoint), nil
 }
 
+// NewCache returns a new cache.
 func NewCache(e net.EndPoint) *Cache {
 	return &Cache{
 		Names:    make(map[string]uint32),

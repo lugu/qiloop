@@ -61,14 +61,14 @@ func TestProxy(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	signalID, err := directory.SignalUid("serviceAdded")
+	signalID, err := directory.SignalID("serviceAdded")
 	if err != nil {
 		t.Error(err)
 	}
 	if signalID != 106 {
 		t.Fatalf("wrong signal id")
 	}
-	methodID, err := directory.MethodUid("services")
+	methodID, err := directory.MethodID("services")
 	if err != nil {
 		t.Error(err)
 	}
