@@ -12,23 +12,25 @@ import (
 	"sync"
 )
 
-type ServiceDirectoryImpl struct {
+// serviceDirectory implements ServiceDirectory
+type serviceDirectory struct {
 	sync.RWMutex
 	staging  map[uint32]ServiceInfo
 	services map[uint32]ServiceInfo
-	lastUuid uint32
+	lastID   uint32
 	signal   ServiceDirectorySignalHelper
 }
 
-func NewServiceDirectory() *ServiceDirectoryImpl {
-	return &ServiceDirectoryImpl{
+// NewServiceDirectory returns an implementation of ServiceDirectory
+func NewServiceDirectory() *serviceDirectory {
+	return &serviceDirectory{
 		staging:  make(map[uint32]ServiceInfo),
 		services: make(map[uint32]ServiceInfo),
-		lastUuid: 0,
+		lastID:   0,
 	}
 }
 
-func (s *ServiceDirectoryImpl) Activate(sess bus.Session, serviceID,
+func (s *serviceDirectory) Activate(sess bus.Session, serviceID,
 	objectID uint32, signal ServiceDirectorySignalHelper) error {
 	s.Lock()
 	defer s.Unlock()
@@ -36,7 +38,7 @@ func (s *ServiceDirectoryImpl) Activate(sess bus.Session, serviceID,
 	return nil
 }
 
-func (s *ServiceDirectoryImpl) OnTerminate() {
+func (s *serviceDirectory) OnTerminate() {
 }
 
 func checkServiceInfo(i ServiceInfo) error {
@@ -60,7 +62,7 @@ func checkServiceInfo(i ServiceInfo) error {
 	return nil
 }
 
-func (s *ServiceDirectoryImpl) info(serviceID uint32) (ServiceInfo, error) {
+func (s *serviceDirectory) info(serviceID uint32) (ServiceInfo, error) {
 	s.RLock()
 	defer s.RUnlock()
 	info, ok := s.services[serviceID]
@@ -70,7 +72,7 @@ func (s *ServiceDirectoryImpl) info(serviceID uint32) (ServiceInfo, error) {
 	return info, nil
 }
 
-func (s *ServiceDirectoryImpl) Service(service string) (info ServiceInfo, err error) {
+func (s *serviceDirectory) Service(service string) (info ServiceInfo, err error) {
 	s.RLock()
 	defer s.RUnlock()
 	for _, info = range s.services {
@@ -87,7 +89,7 @@ func (a serviceList) Len() int           { return len(a) }
 func (a serviceList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a serviceList) Less(i, j int) bool { return a[i].ServiceId < a[j].ServiceId }
 
-func (s *ServiceDirectoryImpl) Services() ([]ServiceInfo, error) {
+func (s *serviceDirectory) Services() ([]ServiceInfo, error) {
 	s.RLock()
 	list := make([]ServiceInfo, 0, len(s.services))
 	for _, info := range s.services {
@@ -98,7 +100,7 @@ func (s *ServiceDirectoryImpl) Services() ([]ServiceInfo, error) {
 	return list, nil
 }
 
-func (s *ServiceDirectoryImpl) RegisterService(newInfo ServiceInfo) (uint32, error) {
+func (s *serviceDirectory) RegisterService(newInfo ServiceInfo) (uint32, error) {
 	if err := checkServiceInfo(newInfo); err != nil {
 		return 0, err
 	}
@@ -114,13 +116,13 @@ func (s *ServiceDirectoryImpl) RegisterService(newInfo ServiceInfo) (uint32, err
 			return 0, fmt.Errorf("Service name already ready: %s", info.Name)
 		}
 	}
-	s.lastUuid++
-	newInfo.ServiceId = s.lastUuid
-	s.staging[s.lastUuid] = newInfo
-	return s.lastUuid, nil
+	s.lastID++
+	newInfo.ServiceId = s.lastID
+	s.staging[s.lastID] = newInfo
+	return s.lastID, nil
 }
 
-func (s *ServiceDirectoryImpl) UnregisterService(id uint32) error {
+func (s *serviceDirectory) UnregisterService(id uint32) error {
 	s.Lock()
 	i, ok := s.services[id]
 	if ok {
@@ -142,7 +144,7 @@ func (s *ServiceDirectoryImpl) UnregisterService(id uint32) error {
 	return fmt.Errorf("Service not found: %d", id)
 }
 
-func (s *ServiceDirectoryImpl) ServiceReady(id uint32) error {
+func (s *serviceDirectory) ServiceReady(id uint32) error {
 	s.Lock()
 	i, ok := s.staging[id]
 	if ok {
@@ -159,7 +161,7 @@ func (s *ServiceDirectoryImpl) ServiceReady(id uint32) error {
 	return fmt.Errorf("Service id not found: %d", id)
 }
 
-func (s *ServiceDirectoryImpl) UpdateServiceInfo(i ServiceInfo) error {
+func (s *serviceDirectory) UpdateServiceInfo(i ServiceInfo) error {
 	if err := checkServiceInfo(i); err != nil {
 		return err
 	}
@@ -179,16 +181,16 @@ func (s *ServiceDirectoryImpl) UpdateServiceInfo(i ServiceInfo) error {
 	return nil
 }
 
-func (s *ServiceDirectoryImpl) MachineId() (string, error) {
+func (s *serviceDirectory) MachineId() (string, error) {
 	return util.MachineID(), nil
 }
 
-func (s *ServiceDirectoryImpl) _socketOfService(P0 uint32) (
+func (s *serviceDirectory) _socketOfService(P0 uint32) (
 	o object.ObjectReference, err error) {
 	return o, fmt.Errorf("_socketOfService not yet implemented")
 }
 
-func (s *ServiceDirectoryImpl) Namespace(addr string) server.Namespace {
+func (s *serviceDirectory) Namespace(addr string) server.Namespace {
 	return &directoryNamespace{
 		directory: s,
 		addrs: []string{
@@ -198,7 +200,7 @@ func (s *ServiceDirectoryImpl) Namespace(addr string) server.Namespace {
 }
 
 type directoryNamespace struct {
-	directory *ServiceDirectoryImpl
+	directory *serviceDirectory
 	addrs     []string
 }
 

@@ -19,14 +19,14 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 		return nil, fmt.Errorf("failed to open socket %s: %s", addr, err)
 	}
 
-	impl := NewServiceDirectory()
-	s, err := server.StandAloneServer(listener, auth, impl.Namespace(addr))
+	sd := NewServiceDirectory()
+	s, err := server.StandAloneServer(listener, auth, sd.Namespace(addr))
 	if err != nil {
 		listener.Close()
 		return nil, err
 	}
 
-	service1 := ServiceDirectoryObject(impl)
+	service1 := ServiceDirectoryObject(sd)
 	_, err = s.NewService("ServiceDirectory", service1)
 	if err != nil {
 		s.Terminate()
