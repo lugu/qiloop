@@ -99,9 +99,6 @@ What is working:
 -   TLS transport
 -   Authentication
 -   IDL parsing
-
-What is under development:
-
 -   Service stub generation
 
 What is yet to be done:
