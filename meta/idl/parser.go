@@ -2,7 +2,7 @@ package idl
 
 import (
 	"fmt"
-	. "github.com/lugu/qiloop/meta/signature"
+	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	parsec "github.com/prataprc/goparsec"
 	"io"
@@ -27,11 +27,13 @@ func basicType() parsec.Parser {
 		parsec.Atom("any", ""))
 }
 
+// Context catures the current state of the parser.
 type Context struct {
 	scope      Scope
 	typeParser parsec.Parser
 }
 
+// NewContext creates a new context.
 func NewContext() *Context {
 	var ctx Context
 	parser := func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
@@ -104,7 +106,7 @@ func returns(ctx *Context) parsec.Parser {
 func parameter(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyParam,
-		Ident(),
+		ident(),
 		parsec.Atom(":", ":"),
 		ctx.typeParser,
 	)
@@ -124,7 +126,7 @@ func parameters(ctx *Context) parsec.Parser {
 	)
 }
 
-func Ident() parsec.Parser {
+func ident() parsec.Parser {
 	return parsec.Token(`[_A-Za-z][0-9a-zA-Z_]*`, "IDENT")
 }
 
@@ -132,7 +134,7 @@ func method(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyMethod,
 		parsec.Atom("fn", "fn"),
-		Ident(),
+		ident(),
 		parsec.Atom("(", "("),
 		parameters(ctx),
 		parsec.Atom(")", ")"),
@@ -145,7 +147,7 @@ func signal(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifySignal,
 		parsec.Atom("sig", "sig"),
-		Ident(),
+		ident(),
 		parsec.Atom("(", "("),
 		parameters(ctx),
 		parsec.Atom(")", ")"),
@@ -157,7 +159,7 @@ func property(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyProperty,
 		parsec.Atom("prop", "prop"),
-		Ident(),
+		ident(),
 		parsec.Atom("(", "("),
 		parameters(ctx),
 		parsec.Atom(")", ")"),
@@ -178,7 +180,7 @@ func interfaceParser(ctx *Context) parsec.Parser {
 	return parsec.And(
 		makeNodifyInterface(ctx.scope),
 		parsec.Atom("interface", "interface"),
-		Ident(),
+		ident(),
 		comments(),
 		parsec.Kleene(nodifyActionList, action(ctx)),
 		parsec.Atom("end", "end"),
@@ -189,14 +191,14 @@ func interfaceParser(ctx *Context) parsec.Parser {
 func referenceType(ctx *Context) parsec.Parser {
 	return parsec.And(
 		makeNodifyTypeReference(ctx.scope),
-		Ident(),
+		ident(),
 	)
 }
 
 func member(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyMember,
-		Ident(),
+		ident(),
 		parsec.Atom(":", ":"),
 		ctx.typeParser,
 		comments(),
@@ -210,7 +212,7 @@ func constValue() parsec.Parser {
 func enumConst() parsec.Parser {
 	return parsec.And(
 		nodifyEnumConst,
-		Ident(),
+		ident(),
 		parsec.Atom("=", "="),
 		constValue(),
 		comments(),
@@ -221,7 +223,7 @@ func enum() parsec.Parser {
 	return parsec.And(
 		nodifyEnum,
 		parsec.Atom("enum", "enum"),
-		Ident(),
+		ident(),
 		comments(),
 		parsec.Kleene(nodifyEnumMembers, enumConst()),
 		parsec.Atom("end", "end"),
@@ -233,7 +235,7 @@ func structure(ctx *Context) parsec.Parser {
 	return parsec.And(
 		makeNodifyStructure(ctx.scope),
 		parsec.Atom("struct", "struct"),
-		Ident(),
+		ident(),
 		comments(),
 		parsec.Kleene(nodifyMemberList, member(ctx)),
 		parsec.Atom("end", "end"),
@@ -277,11 +279,16 @@ func packageParser(ctx *Context) parsec.Parser {
 	)
 }
 
+// PackageDeclaration is the result of the parsing of an IDL file. It
+// represents a package declaration containing a package name and a
+// list of declared types.
 type PackageDeclaration struct {
 	Name  string
-	Types []Type
+	Types []signature.Type
 }
 
+// ParsePackage takes an IDL file as input, parse it and returns a
+// PackageDeclaration.
 func ParsePackage(input []byte) (*PackageDeclaration, error) {
 	context := NewContext()
 	parser := packageParser(context)
@@ -326,35 +333,35 @@ func ParseIDL(reader io.Reader) ([]object.MetaObject, error) {
 	return metas, nil
 }
 
-func nodifyDeclaration(nodes []Node) Node {
+func nodifyDeclaration(nodes []signature.Node) signature.Node {
 	return nodes[0]
 }
 
-func nodifyMaybeComment(nodes []Node) Node {
+func nodifyMaybeComment(nodes []signature.Node) signature.Node {
 	return nodes[0]
 }
 
-func nodifyReturnsType(nodes []Node) Node {
+func nodifyReturnsType(nodes []signature.Node) signature.Node {
 	return nodes[1]
 }
 
-func nodifyAction(nodes []Node) Node {
+func nodifyAction(nodes []signature.Node) signature.Node {
 	return nodes[0]
 }
 
-func nodifyType(nodes []Node) Node {
+func nodifyType(nodes []signature.Node) signature.Node {
 	return nodes[0]
 }
 
-func nodifyMaybeReturns(nodes []Node) Node {
+func nodifyMaybeReturns(nodes []signature.Node) signature.Node {
 	return nodes[0]
 }
 
-func nodifyMaybeParams(nodes []Node) Node {
+func nodifyMaybeParams(nodes []signature.Node) signature.Node {
 	return nodes[0]
 }
 
-func nodifyComment(nodes []Node) Node {
+func nodifyComment(nodes []signature.Node) signature.Node {
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {
 		return ""
 	} else if comment, ok := nodes[0].(string); ok {
@@ -366,7 +373,7 @@ func nodifyComment(nodes []Node) Node {
 	}
 }
 
-func nodifyCommentContent(nodes []Node) Node {
+func nodifyCommentContent(nodes []signature.Node) signature.Node {
 	comment := nodes[1].(*parsec.Terminal).GetValue()
 	var uid uint32
 	_, err := fmt.Sscanf(comment, "uid:%d", &uid)
@@ -377,10 +384,10 @@ func nodifyCommentContent(nodes []Node) Node {
 }
 
 // returns a signature.Type or an error
-func nodifyReturns(nodes []Node) Node {
+func nodifyReturns(nodes []signature.Node) signature.Node {
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {
-		return NewVoidType()
-	} else if ret, ok := nodes[0].(Type); ok {
+		return signature.NewVoidType()
+	} else if ret, ok := nodes[0].(signature.Type); ok {
 		return ret
 	} else {
 		return fmt.Errorf("unexpected return value (%s): %v",
@@ -389,15 +396,15 @@ func nodifyReturns(nodes []Node) Node {
 }
 
 // nodifyDeclarationList returns a list of signature.Type.
-func nodifyDeclarationList(nodes []Node) Node {
-	if err, ok := checkError(nodes); ok {
+func nodifyDeclarationList(nodes []signature.Node) signature.Node {
+	if ok, err := checkError(nodes); ok {
 		return err
 	}
-	typeList := make([]Type, 0)
+	typeList := make([]signature.Type, 0)
 	for i, node := range nodes {
-		if err, ok := checkError([]Node{node}); ok {
+		if ok, err := checkError([]signature.Node{node}); ok {
 			return fmt.Errorf("failed to parse parameter %d: %s", i, err)
-		} else if typ, ok := node.(Type); ok {
+		} else if typ, ok := node.(signature.Type); ok {
 			typeList = append(typeList, typ)
 		} else {
 			return fmt.Errorf("failed to parse type %d: got %+v: %+v",
@@ -407,15 +414,15 @@ func nodifyDeclarationList(nodes []Node) Node {
 	return typeList
 }
 
-func nodifyPackageNameAnd(nodes []Node) Node {
+func nodifyPackageNameAnd(nodes []signature.Node) signature.Node {
 	return nodes[1].(*parsec.Terminal).GetValue()
 }
 
-func nodifyPackageNameMaybe(nodes []Node) Node {
+func nodifyPackageNameMaybe(nodes []signature.Node) signature.Node {
 	return nodes[0]
 }
 
-func nodifyPackageName(nodes []Node) Node {
+func nodifyPackageName(nodes []signature.Node) signature.Node {
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {
 		return ""
 	}
@@ -427,33 +434,33 @@ func nodifyPackageName(nodes []Node) Node {
 }
 
 // nodifyPackage returns a package structure.
-func nodifyPackage(nodes []Node) Node {
+func nodifyPackage(nodes []signature.Node) signature.Node {
 	packageNode := nodes[0]
 	definitions := nodes[1]
 	packageName := packageNode.(string)
-	if typeList, ok := definitions.([]Type); !ok {
+	typeList, ok := definitions.([]signature.Type)
+	if !ok {
 		return fmt.Errorf("Expecting type list, got %+v: %+v",
 			reflect.TypeOf(definitions), definitions)
-	} else {
-		return &PackageDeclaration{
-			Name:  packageName,
-			Types: typeList,
-		}
+	}
+	return &PackageDeclaration{
+		Name:  packageName,
+		Types: typeList,
 	}
 }
 
-func makeNodifyTypeReference(sc Scope) func([]Node) Node {
-	return func(nodes []Node) Node {
+func makeNodifyTypeReference(sc Scope) func([]signature.Node) signature.Node {
+	return func(nodes []signature.Node) signature.Node {
 		typeNode := nodes[0]
 		typeName := typeNode.(*parsec.Terminal).GetValue()
 		return NewRefType(typeName, sc)
 	}
 }
 
-func nodifyEnum(nodes []Node) Node {
+func nodifyEnum(nodes []signature.Node) signature.Node {
 	nameNode := nodes[1]
 	enumNode := nodes[3]
-	if enum, ok := enumNode.(*EnumType); ok {
+	if enum, ok := enumNode.(*signature.EnumType); ok {
 		enum.Name = nameNode.(*parsec.Terminal).GetValue()
 		return enum
 	} else if err, ok := enumNode.(error); ok {
@@ -463,11 +470,11 @@ func nodifyEnum(nodes []Node) Node {
 	}
 }
 
-func nodifyEnumMembers(nodes []Node) Node {
-	var enum EnumType
+func nodifyEnumMembers(nodes []signature.Node) signature.Node {
+	var enum signature.EnumType
 	enum.Values = make(map[string]int)
 	for _, node := range nodes {
-		if member, ok := node.(EnumMember); ok {
+		if member, ok := node.(signature.EnumMember); ok {
 			enum.Values[member.Const] = member.Value
 		} else if err, ok := node.(error); ok {
 			return err
@@ -478,7 +485,7 @@ func nodifyEnumMembers(nodes []Node) Node {
 	return &enum
 }
 
-func nodifyEnumConst(nodes []Node) Node {
+func nodifyEnumConst(nodes []signature.Node) signature.Node {
 	nameNode := nodes[0]
 	constNode := nodes[2]
 	valueStr := constNode.(*parsec.Terminal).GetValue()
@@ -486,20 +493,20 @@ func nodifyEnumConst(nodes []Node) Node {
 	if err != nil {
 		return fmt.Errorf("Integer expected in enum definition: %s", valueStr)
 	}
-	return EnumMember{
+	return signature.EnumMember{
 		Const: nameNode.(*parsec.Terminal).GetValue(),
 		Value: value,
 	}
 }
 
 // nodifyMember returns a MemberType or an error.
-func nodifyMember(nodes []Node) Node {
+func nodifyMember(nodes []signature.Node) signature.Node {
 	nameNode := nodes[0]
 	typeNode := nodes[2]
-	var member MemberType
+	var member signature.MemberType
 	var ok bool
 	member.Name = nameNode.(*parsec.Terminal).GetValue()
-	member.Type, ok = typeNode.(Type)
+	member.Type, ok = typeNode.(signature.Type)
 	if !ok {
 		return fmt.Errorf("Expecting Type, got %+v: %+v", reflect.TypeOf(typeNode), typeNode)
 	}
@@ -507,25 +514,25 @@ func nodifyMember(nodes []Node) Node {
 }
 
 // nodifyMemberList returns a StructType or an error.
-func nodifyMemberList(nodes []Node) Node {
-	members := make([]MemberType, len(nodes))
+func nodifyMemberList(nodes []signature.Node) signature.Node {
+	members := make([]signature.MemberType, len(nodes))
 	for i, node := range nodes {
-		if member, ok := node.(MemberType); ok {
+		if member, ok := node.(signature.MemberType); ok {
 			members[i] = member
 		} else {
 			return fmt.Errorf("MemberList: unexpected type, got %+v: %+v", reflect.TypeOf(node), node)
 		}
 	}
-	return NewStructType("parameters", members)
+	return signature.NewStructType("parameters", members)
 }
 
 // makeNodifyStructure returns a *StructType of an error.
 // the structure is added to the scope
-func makeNodifyStructure(sc Scope) func([]Node) Node {
-	return func(nodes []Node) Node {
+func makeNodifyStructure(sc Scope) func([]signature.Node) signature.Node {
+	return func(nodes []signature.Node) signature.Node {
 		nameNode := nodes[1]
 		structNode := nodes[3]
-		structType, ok := structNode.(*StructType)
+		structType, ok := structNode.(*signature.StructType)
 		if !ok {
 			return fmt.Errorf("unexpected non struct type(%s): %v",
 				reflect.TypeOf(structNode), structNode)
@@ -538,8 +545,8 @@ func makeNodifyStructure(sc Scope) func([]Node) Node {
 
 // makeNodifyInterface returns an *InterfaceType or an error
 // the InterfaceType is added to the scope
-func makeNodifyInterface(sc Scope) func([]Node) Node {
-	return func(nodes []Node) Node {
+func makeNodifyInterface(sc Scope) func([]signature.Node) signature.Node {
+	return func(nodes []signature.Node) signature.Node {
 		nameNode := nodes[1]
 		itfNode := nodes[3]
 		itf, ok := itfNode.(*InterfaceType)
@@ -554,65 +561,65 @@ func makeNodifyInterface(sc Scope) func([]Node) Node {
 	}
 }
 
-func nodifyVec(nodes []Node) Node {
+func nodifyVec(nodes []signature.Node) signature.Node {
 
 	elementNode := nodes[1]
-	elementType, ok := elementNode.(Type)
+	elementType, ok := elementNode.(signature.Type)
 	if !ok {
 		return fmt.Errorf("invalid vector element: %v", elementNode)
 	}
-	return NewListType(elementType)
+	return signature.NewListType(elementType)
 }
 
-func nodifyMap(nodes []Node) Node {
+func nodifyMap(nodes []signature.Node) signature.Node {
 
 	keyNode := nodes[1]
 	valueNode := nodes[3]
-	keyType, ok := keyNode.(Type)
+	keyType, ok := keyNode.(signature.Type)
 	if !ok {
 		return fmt.Errorf("invalid map key: %v", keyNode)
 	}
-	valueType, ok := valueNode.(Type)
+	valueType, ok := valueNode.(signature.Type)
 	if !ok {
 		return fmt.Errorf("invalid map value: %v", valueNode)
 	}
-	return NewMapType(keyType, valueType)
+	return signature.NewMapType(keyType, valueType)
 }
 
-func nodifyBasicType(nodes []Node) Node {
+func nodifyBasicType(nodes []signature.Node) signature.Node {
 	if len(nodes) != 1 {
 		return fmt.Errorf("basic type array size: %d: %s", len(nodes), nodes)
 	}
 	sig := nodes[0].(*parsec.Terminal).GetValue()
 	switch sig {
 	case "int32":
-		return NewIntType()
+		return signature.NewIntType()
 	case "uint32":
-		return NewUIntType()
+		return signature.NewUIntType()
 	case "int64":
-		return NewLongType()
+		return signature.NewLongType()
 	case "uint64":
-		return NewULongType()
+		return signature.NewULongType()
 	case "float32":
-		return NewFloatType()
+		return signature.NewFloatType()
 	case "float64":
-		return NewDoubleType()
+		return signature.NewDoubleType()
 	case "str":
-		return NewStringType()
+		return signature.NewStringType()
 	case "bool":
-		return NewBoolType()
+		return signature.NewBoolType()
 	case "any":
-		return NewValueType()
+		return signature.NewValueType()
 	case "obj":
-		return NewObjectType()
+		return signature.NewObjectType()
 	default:
 		return fmt.Errorf("unknown type: %s", sig)
 	}
 }
 
 // nodifyMethod returns a Method or an error.
-func nodifyMethod(nodes []Node) Node {
-	if err, ok := checkError(nodes); ok {
+func nodifyMethod(nodes []signature.Node) signature.Node {
+	if ok, err := checkError(nodes); ok {
 		return fmt.Errorf("failed to parse method: %s", err)
 	}
 	retNode := nodes[5]
@@ -623,7 +630,7 @@ func nodifyMethod(nodes []Node) Node {
 		return fmt.Errorf("method: failed to convert param type (%s): %v",
 			reflect.TypeOf(paramNode), paramNode)
 	}
-	retType, ok := retNode.(Type)
+	retType, ok := retNode.(signature.Type)
 	if !ok {
 		return fmt.Errorf("method: failed to convert return type (%s): %v",
 			reflect.TypeOf(retNode), retNode)
@@ -641,8 +648,8 @@ func nodifyMethod(nodes []Node) Node {
 }
 
 // nodifySignal returns either a Signal or an error.
-func nodifySignal(nodes []Node) Node {
-	if err, ok := checkError(nodes); ok {
+func nodifySignal(nodes []signature.Node) signature.Node {
+	if ok, err := checkError(nodes); ok {
 		return fmt.Errorf("failed to parse method: %s", err)
 	}
 	paramNode := nodes[3]
@@ -662,8 +669,8 @@ func nodifySignal(nodes []Node) Node {
 }
 
 // nodifyProperty returns either a Property or an error.
-func nodifyProperty(nodes []Node) Node {
-	if err, ok := checkError(nodes); ok {
+func nodifyProperty(nodes []signature.Node) signature.Node {
+	if ok, err := checkError(nodes); ok {
 		return fmt.Errorf("failed to parse method: %s", err)
 	}
 	paramNode := nodes[3]
@@ -684,7 +691,7 @@ func nodifyProperty(nodes []Node) Node {
 
 // nodifyActionList returns an *InterfaceType or an error
 // the InterfaceType has no name or namespce.
-func nodifyActionList(nodes []Node) Node {
+func nodifyActionList(nodes []signature.Node) signature.Node {
 	var itf InterfaceType
 
 	itf.Methods = make(map[uint32]Method)
@@ -722,37 +729,38 @@ func nodifyActionList(nodes []Node) Node {
 	return &itf
 }
 
-func checkError(nodes []Node) (error, bool) {
+// checkError tests if nodes is an error, if so it returns true with
+// the error, else false and nil.
+func checkError(nodes []signature.Node) (bool, error) {
 	if len(nodes) == 1 {
 		if err, ok := nodes[0].(error); ok {
-			return err, true
+			return true, err
 		}
 	}
-	return nil, false
+	return false, nil
 }
 
-func nodifyParam(nodes []Node) Node {
-	if err, ok := checkError(nodes); ok {
+func nodifyParam(nodes []signature.Node) signature.Node {
+	if ok, err := checkError(nodes); ok {
 		return err
 	}
-	if typ, ok := nodes[2].(Type); ok {
+	if typ, ok := nodes[2].(signature.Type); ok {
 		return Parameter{
 			Name: nodes[0].(*parsec.Terminal).GetValue(),
 			Type: typ,
 		}
-	} else {
-		return fmt.Errorf("failed to parse param: %s", nodes[2])
 	}
+	return fmt.Errorf("failed to parse param: %s", nodes[2])
 }
 
 // nodifyParams returns an slice of Parameter
-func nodifyParams(nodes []Node) Node {
-	if err, ok := checkError(nodes); ok {
+func nodifyParams(nodes []signature.Node) signature.Node {
+	if ok, err := checkError(nodes); ok {
 		return err
 	}
 	params := make([]Parameter, len(nodes))
 	for i, node := range nodes {
-		if err, ok := checkError([]Node{node}); ok {
+		if ok, err := checkError([]signature.Node{node}); ok {
 			return fmt.Errorf("failed to parse parameter %d: %s", i, err)
 		} else if member, ok := node.(Parameter); ok {
 			params[i] = member
@@ -764,8 +772,8 @@ func nodifyParams(nodes []Node) Node {
 }
 
 // return a slice of Parameter
-func nodifyAndParams(nodes []Node) Node {
-	if err, ok := checkError(nodes); ok {
+func nodifyAndParams(nodes []signature.Node) signature.Node {
+	if ok, err := checkError(nodes); ok {
 		return err
 	}
 	if _, ok := nodes[0].(parsec.MaybeNone); ok {

@@ -853,7 +853,7 @@ func (e *EnumType) TypeName() *Statement {
 	return jen.Id(e.Name)
 }
 
-// RegisterTo add the enum to the type set.
+// RegisterTo adds the enum to the type set.
 func (e *EnumType) RegisterTo(set *TypeSet) {
 	// do not register anonymous enum
 	if e.Name == "" {

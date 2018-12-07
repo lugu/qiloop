@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// Scope represents the scope of a type in which type declarations are
+// resolved.
 type Scope interface {
 	Add(name string, typ signature.Type) error
 	Search(name string) (signature.Type, error)
@@ -17,6 +19,7 @@ type scopeImpl struct {
 	global map[string]Scope
 }
 
+// NewScope returns a new scope.
 func NewScope() Scope {
 	return &scopeImpl{
 		local:  make(map[string]signature.Type),

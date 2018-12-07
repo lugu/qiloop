@@ -3,10 +3,11 @@ package idl
 import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
-	. "github.com/lugu/qiloop/meta/signature"
+	"github.com/lugu/qiloop/meta/signature"
 )
 
-// RefType represents a struct.
+// RefType represents a reference to an IDL interface. It
+// implements signature.Type.
 type RefType struct {
 	Scope Scope
 	Name  string
@@ -14,27 +15,35 @@ type RefType struct {
 
 // NewRefType is a contructor for the representation of a type reference to be
 // resolved with a TypeSet.
-func NewRefType(name string, scope Scope) Type {
+func NewRefType(name string, scope Scope) signature.Type {
 	return &RefType{scope, name}
 }
 
+// Signature returns the signature of the referenced type. If the
+// reference can not be resolved, it returns an invalid struct type
+// with a name describing the error.
 func (r *RefType) Signature() string {
 	t, err := r.Scope.Search(r.Name)
 	if err == nil {
 		return t.Signature()
 	}
-	return NewStructType(err.Error(), nil).Signature()
+	return signature.NewStructType(err.Error(), nil).Signature()
 }
 
+// SignatureIDL returns the IDL signature of the referenced type. If the
+// reference can not be resolved, it returns an invalid name
+// describing the error.
 func (r *RefType) SignatureIDL() string {
 	t, err := r.Scope.Search(r.Name)
 	if err == nil {
 		return t.SignatureIDL()
 	}
-	return NewStructType(err.Error(), nil).SignatureIDL()
+	return signature.NewStructType(err.Error(), nil).SignatureIDL()
 }
 
-func (r *RefType) TypeName() *Statement {
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
+func (r *RefType) TypeName() *signature.Statement {
 	t, err := r.Scope.Search(r.Name)
 	if err == nil {
 		return t.TypeName()
@@ -42,13 +51,18 @@ func (r *RefType) TypeName() *Statement {
 	return jen.Id(r.Name)
 }
 
-func (r *RefType) RegisterTo(set *TypeSet) {
+// RegisterTo adds the type to the type set. Does nothing on RefType.
+func (r *RefType) RegisterTo(set *signature.TypeSet) {
 }
 
+// TypeDeclaration writes the type declaration into file.
 func (r *RefType) TypeDeclaration(file *jen.File) {
 }
 
-func (r *RefType) Marshal(id string, writer string) *Statement {
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
+func (r *RefType) Marshal(id string, writer string) *signature.Statement {
 	t, err := r.Scope.Search(r.Name)
 	if err == nil {
 		return t.Marshal(id, writer)
@@ -58,21 +72,27 @@ func (r *RefType) Marshal(id string, writer string) *Statement {
 	)
 }
 
-func (r *RefType) Unmarshal(reader string) *Statement {
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
+func (r *RefType) Unmarshal(reader string) *signature.Statement {
 	t, err := r.Scope.Search(r.Name)
 	if err == nil {
 		return t.Unmarshal(reader)
 	}
 	return jen.Return(
 		jen.Nil(),
-		jen.Qual("fmt", "Errorf").Call(jen.Lit("reference type not implemented")),
+		jen.Qual("fmt", "Errorf").Call(
+			jen.Lit("reference type not implemented"),
+		),
 	)
 }
 
-func (r *RefType) resolve(set *TypeSet) (Type, error) {
+func (r *RefType) resolve(set *signature.TypeSet) (signature.Type, error) {
 	typ := set.Search(r.Name)
 	if typ == nil {
-		return nil, fmt.Errorf("%s: not found in typeset (size: %d).", r.Name, len(set.Types))
+		return nil, fmt.Errorf("%s: not found in typeset (size: %d)",
+			r.Name, len(set.Types))
 	}
 	return typ, nil
 }

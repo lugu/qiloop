@@ -131,6 +131,8 @@ func (p Property) Meta(id uint32) object.MetaProperty {
 	return meta
 }
 
+// InterfaceType represents a parsed IDL interface. It implements
+// signature.Type.
 type InterfaceType struct {
 	Name        string
 	PackageName string
@@ -141,23 +143,30 @@ type InterfaceType struct {
 	Namespace   Namespace
 }
 
+// Signature returns "o".
 func (s *InterfaceType) Signature() string {
 	return "o"
 }
+
+// SignatureIDL returns "obj".
 func (s *InterfaceType) SignatureIDL() string {
 	return "obj"
 }
 
+// TypeName returns a statement to be inserted when the type is to be
+// declared.
 func (s *InterfaceType) TypeName() *jen.Statement {
 	return jen.Qual(s.PackageName, s.Name)
 }
 
-// declare the interface as done by the proxy generation
+// TypeDeclaration writes the type declaration into file.
+// It generates the proxy for the interface.
 func (s *InterfaceType) TypeDeclaration(f *jen.File) {
 	// proxy.generateInterface(f, s)
 	panic("not yet implemented")
 }
 
+// RegisterTo adds the type to the type set.
 func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
 	name := s.Name
 	// loop 100 times to avoid name collision
@@ -184,6 +193,9 @@ func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
 	panic("failed to register " + name)
 }
 
+// Marshal returns a statement which represent the code needed to put
+// the variable "id" into the io.Writer "writer" while returning an
+// error.
 func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	// TODO: InterfaceType instanciation are proxy from which one
 	// can construct an ObjectReference. This ObjectReference can
@@ -194,10 +206,15 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	panic("not yet implemented")
 }
 
+// Unmarshal returns a statement which represent the code needed to read
+// from a reader "reader" of type io.Reader and returns both the value
+// read and an error.
 func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	// TODO: see Marshall
 	panic("not yet implemented")
 }
+
+// MetaObject returs the MetaObject describing the interface.
 func (s *InterfaceType) MetaObject() object.MetaObject {
 	var meta object.MetaObject
 	meta.Description = s.Name

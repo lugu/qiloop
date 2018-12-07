@@ -74,10 +74,7 @@ func TestTypeRef(t *testing.T) {
 	scope := NewScope()
 	scope.Add("Test1", signature.NewBoolType())
 
-	ref := &RefType{
-		Scope: scope,
-		Name:  "Test1",
-	}
+	ref := NewRefType("Test1", scope)
 	if ref.Signature() != "b" {
 		t.Errorf("unexpected signature: %s", ref.Signature())
 	}
@@ -93,10 +90,7 @@ func TestTypeRef(t *testing.T) {
 	ref.Marshal("a", "b")
 	ref.Unmarshal("a")
 
-	ref = &RefType{
-		Scope: scope,
-		Name:  "Unknown",
-	}
+	ref = NewRefType("Unknown", scope)
 	ref.Signature()
 	ref.SignatureIDL()
 	ref.TypeName()
