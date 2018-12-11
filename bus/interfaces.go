@@ -40,3 +40,21 @@ type Session interface {
 	Object(ref object.ObjectReference) (object.Object, error)
 	Destroy() error
 }
+
+// Server represents a local server. A server can provide with clients
+// already connected.
+type Server interface {
+	Client() Client
+}
+
+// Namespace is used by a server to register new services. It allows
+// custom name resolution. An implementation connects to the
+// servide directory. Custom implementation is possible to allow
+// interroperability with various naming services.
+type Namespace interface {
+	Reserve(name string) (uint32, error)
+	Remove(serviceID uint32) error
+	Enable(serviceID uint32) error
+	Resolve(name string) (uint32, error)
+	Session(s Server) Session
+}

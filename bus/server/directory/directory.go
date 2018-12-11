@@ -5,7 +5,6 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	objproxy "github.com/lugu/qiloop/bus/client/object"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sort"
@@ -190,7 +189,7 @@ func (s *serviceDirectory) _socketOfService(P0 uint32) (
 	return o, fmt.Errorf("_socketOfService not yet implemented")
 }
 
-func (s *serviceDirectory) Namespace(addr string) server.Namespace {
+func (s *serviceDirectory) Namespace(addr string) bus.Namespace {
 	return &directoryNamespace{
 		directory: s,
 		addrs: []string{
@@ -230,7 +229,7 @@ func (ns *directoryNamespace) Resolve(name string) (uint32, error) {
 	}
 	return info.ServiceId, nil
 }
-func (ns *directoryNamespace) Session(server *server.Server) bus.Session {
+func (ns *directoryNamespace) Session(server bus.Server) bus.Session {
 	return &directorySession{
 		server:    server,
 		namespace: ns,
@@ -238,7 +237,7 @@ func (ns *directoryNamespace) Session(server *server.Server) bus.Session {
 }
 
 type directorySession struct {
-	server    *server.Server
+	server    bus.Server
 	namespace *directoryNamespace
 }
 

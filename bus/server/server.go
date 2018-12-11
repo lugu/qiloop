@@ -451,7 +451,7 @@ func Firewall(m *net.Message, from *Context) error {
 type Server struct {
 	listen        gonet.Listener
 	addrs         []string
-	namespace     Namespace
+	namespace     bus.Namespace
 	session       bus.Session
 	Router        *Router
 	contexts      map[*Context]bool
@@ -491,7 +491,7 @@ func NewServer(session bus.Session, addr string) (*Server, error) {
 
 // StandAloneServer starts a new server
 func StandAloneServer(listener gonet.Listener, auth Authenticator,
-	namespace Namespace) (*Server, error) {
+	namespace bus.Namespace) (*Server, error) {
 
 	service0 := ServiceAuthenticate(auth)
 
@@ -550,7 +550,7 @@ func (s *Server) NewService(name string, object Object) (Service, error) {
 		return nil, err
 	}
 	// 2. initialize the service
-	err = service.Activate(s.namespace.Session(s), serviceID)
+	err = service.Activate(s.Session(), serviceID)
 	if err != nil {
 		return nil, err
 	}

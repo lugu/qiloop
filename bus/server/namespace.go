@@ -9,20 +9,6 @@ import (
 	"sync"
 )
 
-// Namespace is used by a server to handle services creation and local
-// session. It basically wraps the ServiceDirectory responsibility in
-// an abstract form. It serves two purpose:
-// (1) help resolve the circular dependancy between the service
-// directory and the server and (2) allows to test the server without
-// service directory.
-type Namespace interface {
-	Reserve(name string) (uint32, error)
-	Remove(serviceID uint32) error
-	Enable(serviceID uint32) error
-	Resolve(name string) (uint32, error)
-	Session(s *Server) bus.Session
-}
-
 type privateNamespace struct {
 	sync.Mutex
 	reserved  map[string]uint32
@@ -30,9 +16,9 @@ type privateNamespace struct {
 	next      uint32
 }
 
-// PrivateNamespace implements Namespace without relying on a service
+// PrivateNamespace implements bus.Namespace without relying on a service
 // directory. Used for testing purpose.
-func PrivateNamespace() Namespace {
+func PrivateNamespace() bus.Namespace {
 	return &privateNamespace{
 		reserved:  make(map[string]uint32),
 		activated: make(map[string]uint32),
@@ -99,7 +85,7 @@ func (ns *privateNamespace) Resolve(name string) (uint32, error) {
 	return serviceID, nil
 }
 
-func (ns *privateNamespace) Session(s *Server) bus.Session {
+func (ns *privateNamespace) Session(s bus.Server) bus.Session {
 	return &localSession{
 		namespace: ns,
 		server:    s,
@@ -107,8 +93,8 @@ func (ns *privateNamespace) Session(s *Server) bus.Session {
 }
 
 type localSession struct {
-	server    *Server
-	namespace Namespace
+	server    bus.Server
+	namespace bus.Namespace
 }
 
 func (s *localSession) Client(serviceID uint32) (bus.Client, error) {

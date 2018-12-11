@@ -531,9 +531,8 @@ func TestServer(t *testing.T) {
 }
 
 func TestServiceImpl(t *testing.T) {
-	object := newObject()
-	service := server.NewService(object)
-	uid, err := service.Add(object)
+	service := server.NewService(newObject())
+	uid, err := service.Add(newObject())
 	if err != nil {
 		t.Error(err)
 	}
