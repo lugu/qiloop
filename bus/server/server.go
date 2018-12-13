@@ -7,7 +7,6 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
@@ -471,7 +470,7 @@ func NewServer(sess bus.Session, addr string, auth Authenticator) (*Server, erro
 	}
 
 	addrs := []string{addr}
-	namespace, err := session.Namespace(sess, addrs)
+	namespace, err := Namespace(sess, addrs)
 	if err != nil {
 		return nil, err
 	}

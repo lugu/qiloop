@@ -5,6 +5,8 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	objproxy "github.com/lugu/qiloop/bus/client/object"
+	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sync"
 )
@@ -130,4 +132,67 @@ func (s *localSession) Object(ref object.ObjectReference) (object.Object,
 }
 func (s *localSession) Destroy() error {
 	return nil
+}
+
+// Namespace returns a Namespace which connects to a remote service
+// directory.
+func Namespace(session bus.Session, endpoints []string) (bus.Namespace, error) {
+	services := services.Services(session)
+	directory, err := services.ServiceDirectory()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect ServiceDirectory: %s",
+			err)
+	}
+	return &remoteNamespace{
+		session:   session,
+		Directory: directory,
+		EndPoints: endpoints,
+		SessionID: "",
+		ProcessID: util.ProcessID(),
+		MachineID: util.MachineID(),
+	}, nil
+}
+
+type remoteNamespace struct {
+	session   bus.Session
+	Directory services.ServiceDirectory
+	EndPoints []string
+	MachineID string
+	ProcessID uint32
+	SessionID string
+}
+
+func (ns *remoteNamespace) serviceInfo(name string) services.ServiceInfo {
+	return services.ServiceInfo{
+		Name:      name,
+		ServiceId: 0,
+		MachineId: ns.MachineID,
+		ProcessId: ns.ProcessID,
+		Endpoints: ns.EndPoints,
+		SessionId: ns.SessionID,
+	}
+}
+
+func (ns *remoteNamespace) Reserve(name string) (uint32, error) {
+	return ns.Directory.RegisterService(ns.serviceInfo(name))
+}
+
+func (ns *remoteNamespace) Remove(serviceID uint32) error {
+	return ns.Directory.UnregisterService(serviceID)
+}
+
+func (ns *remoteNamespace) Enable(serviceID uint32) error {
+	return ns.Directory.ServiceReady(serviceID)
+}
+
+func (ns *remoteNamespace) Resolve(name string) (uint32, error) {
+	info, err := ns.Directory.Service(name)
+	if err != nil {
+		return 0, err
+	}
+	return info.ServiceId, nil
+}
+
+func (ns *remoteNamespace) Session(s bus.Server) bus.Session {
+	return ns.session
 }
