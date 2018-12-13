@@ -254,7 +254,8 @@ func (s *directorySession) Proxy(name string, objectID uint32) (bus.Proxy, error
 	}
 	meta, err := bus.MetaObject(clt, info.ServiceId, objectID)
 	if err != nil {
-		return nil, fmt.Errorf("cannot reach metaObject: %s", err)
+		return nil, fmt.Errorf("call metaObject (service %d, object %d): %s",
+			info.ServiceId, objectID, err)
 	}
 	return client.NewProxy(clt, meta, info.ServiceId, objectID), nil
 
@@ -263,7 +264,15 @@ func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
 
 	if info.MachineId == util.MachineID() &&
 		info.ProcessId == util.ProcessID() {
-		return s.server.Client(), nil
+		// if on the same process and listening one of the
+		// same port, then by-pass connection
+		for _, addr1 := range info.Endpoints {
+			for _, addr2 := range s.namespace.addrs {
+				if addr1 == addr2 {
+					return s.server.Client(), nil
+				}
+			}
+		}
 	}
 	endpoint, err := client.SelectEndPoint(info.Endpoints)
 	if err != nil {

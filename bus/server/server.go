@@ -7,6 +7,7 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
@@ -463,19 +464,23 @@ type Server struct {
 // NewServer starts a new server which listen to addr and serve
 // incomming requests. It uses the given session to register and
 // activate the new services.
-// FIXME: update NewServer signature to add an authenticator
-func NewServer(session bus.Session, addr string) (*Server, error) {
+func NewServer(sess bus.Session, addr string, auth Authenticator) (*Server, error) {
 	l, err := net.Listen(addr)
 	if err != nil {
 		return nil, err
 	}
 
+	addrs := []string{addr}
+	namespace, err := session.Namespace(sess, addrs)
+	if err != nil {
+		return nil, err
+	}
 	s := &Server{
 		listen:        l,
-		addrs:         []string{addr},
-		session:       session,
-		namespace:     nil,
-		Router:        NewRouter(ServiceAuthenticate(Yes{})),
+		addrs:         addrs,
+		session:       sess,
+		namespace:     namespace,
+		Router:        NewRouter(ServiceAuthenticate(auth)),
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
@@ -538,10 +543,6 @@ type Service interface {
 // 3. refactor this name registration into the stub
 func (s *Server) NewService(name string, object Object) (Service, error) {
 
-	if s.namespace == nil {
-		// TODO: create a namespace from a session.
-		return nil, fmt.Errorf("server has no namespace")
-	}
 	service := NewService(object)
 
 	// 1. reserve the name

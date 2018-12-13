@@ -112,7 +112,8 @@ func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 	}
 	meta, err := bus.MetaObject(clt, serviceID, objectID)
 	if err != nil {
-		return nil, fmt.Errorf("cannot reach metaObject: %s", err)
+		return nil, fmt.Errorf("metaObject (service %d, object %d): %s",
+			serviceID, objectID, err)
 	}
 	return client.NewProxy(clt, meta, serviceID, objectID), nil
 }

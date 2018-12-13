@@ -291,38 +291,97 @@ func TestRemoteServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer srv.Terminate()
-
-	sess := srv.Session()
-
-	addr2 := util.NewUnixAddr()
-	srv2, err := server.NewServer(sess, addr2)
-	if err != nil {
-		t.Error(err)
-	}
-	defer srv2.Terminate()
-
-	t.Skip("wait until NewServer gets a namespace from its session")
-
-	obj := server.NewObject(object.MetaObject{
-		Description: "test",
+	obj1 := server.NewObject(object.MetaObject{
+		Description: "service1",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
-	_, err = srv2.NewService("test", obj)
+	_, err = srv.NewService("service1", obj1)
 	if err != nil {
 		t.Error(err)
 	}
-
-	proxy, err := sess.Proxy("test", 1)
+	sess := srv.Session()
+	services := services.Services(sess)
+	directory, err := services.ServiceDirectory()
+	if err != nil {
+		t.Fatalf("failed to connect directory: %s", err)
+	}
+	info, err := directory.Service("service1")
 	if err != nil {
 		t.Error(err)
 	}
+	if info.ServiceId != 2 {
+		t.Errorf("unexpected service id: %d", info.ServiceId)
+	}
+	proxy1, err := sess.Proxy("service1", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	metaBytes, err := proxy.Call("metaObject", []byte{1, 0, 0, 0})
+	metaBytes, err := proxy1.Call("metaObject", []byte{1, 0, 0, 0})
 	if err != nil {
 		t.Error(err)
 	}
 	buf := bytes.NewBuffer(metaBytes)
+	_, err = object.ReadMetaObject(buf)
+	if err != nil {
+		t.Error(err)
+	}
+
+	addr2 := util.NewUnixAddr()
+	srv2, err := server.NewServer(sess, addr2, server.Yes{})
+	if err != nil {
+		t.Error(err)
+	}
+	defer srv2.Terminate()
+	sess2 := srv2.Session()
+
+	obj2 := server.NewObject(object.MetaObject{
+		Description: "service2",
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+	})
+	_, err = srv2.NewService("service2", obj2)
+	if err != nil {
+		t.Error(err)
+	}
+	info, err = directory.Service("service2")
+	if err != nil {
+		t.Error(err)
+	}
+	if info.ServiceId != 3 {
+		t.Errorf("unexpected service id: %d", info.ServiceId)
+	}
+	if info.Endpoints[0] != addr2 {
+		t.Errorf("unexpected address: %s", info.Endpoints[0])
+	}
+	// access service 2 through the session of server 1
+	proxy2, err := sess.Proxy("service2", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metaBytes, err = proxy2.Call("metaObject", []byte{1, 0, 0, 0})
+	if err != nil {
+		t.Error(err)
+	}
+	buf = bytes.NewBuffer(metaBytes)
+	_, err = object.ReadMetaObject(buf)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// access service 2 through the session of server 2
+	proxy2, err = sess2.Proxy("service2", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metaBytes, err = proxy2.Call("metaObject", []byte{1, 0, 0, 0})
+	if err != nil {
+		t.Error(err)
+	}
+	buf = bytes.NewBuffer(metaBytes)
 	_, err = object.ReadMetaObject(buf)
 	if err != nil {
 		t.Error(err)
