@@ -607,7 +607,8 @@ func TestServiceImpl(t *testing.T) {
 
 func TestRouter(t *testing.T) {
 	service0 := server.ServiceAuthenticate(server.Yes{})
-	router := server.NewRouter(service0)
+	namespace := server.PrivateNamespace()
+	router := server.NewRouter(service0, namespace)
 	object := newObject()
 	service := server.NewService(object)
 	err := router.Add(0, service)
@@ -640,5 +641,87 @@ func TestNewContext(t *testing.T) {
 	}
 	if context.Authenticated == true {
 		t.Errorf("shall not")
+	}
+}
+
+type ObjectTerminaison struct {
+	server.BasicObject
+	Terminated bool
+}
+
+// OnTerminate is called when the object is terminated.
+func (o *ObjectTerminaison) OnTerminate() {
+	o.Terminated = true
+}
+
+func TestObjectTerminaison(t *testing.T) {
+
+	basicObj := server.NewObject(object.MetaObject{
+		Description: "test",
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+	})
+	obj := &ObjectTerminaison{
+		*basicObj,
+		false,
+	}
+
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv, err := server.StandAloneServer(listener, server.Yes{},
+		server.PrivateNamespace())
+	if err != nil {
+		t.Error(err)
+	}
+	srv.NewService("service1", obj)
+	srv.Terminate()
+	if obj.Terminated == false {
+		t.Error("obj shall have terminated")
+	}
+}
+
+func TestServiceTerminaison(t *testing.T) {
+	basicObj := server.NewObject(object.MetaObject{
+		Description: "test",
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+	})
+	obj := &ObjectTerminaison{
+		*basicObj,
+		false,
+	}
+
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ns := server.PrivateNamespace()
+	srv, err := server.StandAloneServer(listener, server.Yes{}, ns)
+	if err != nil {
+		t.Error(err)
+	}
+	service, err := srv.NewService("service1", obj)
+	if err != nil {
+		t.Error(err)
+	}
+	uid, err := ns.Resolve("service1")
+	if err != nil {
+		t.Error(err)
+	}
+	if uid != 1 {
+		t.Errorf("unexpectped uid: %d", uid)
+	}
+	service.Terminate()
+	if obj.Terminated == false {
+		t.Error("obj shall have terminated")
+	}
+	t.Skip("FIXME: implements router removal (namespace)")
+	_, err = ns.Resolve("service1")
+	if err == nil {
+		t.Error("shall have failed")
 	}
 }

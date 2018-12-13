@@ -241,6 +241,15 @@ func (o *BasicObject) Activate(sess bus.Session, serviceID,
 	return nil
 }
 
+// Activation represents the contract between the object and the
+// server. Objects are activated and given an Activation interface.
+type Activation interface {
+	ServiceID() uint32
+	ObjectID() uint32
+	Terminate() error
+	Session() bus.Session
+}
+
 // Object interface used by Server to manipulate services.
 type Object interface {
 	Receive(m *net.Message, from *Context) error
@@ -332,6 +341,7 @@ func (s *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 }
 
 // Terminate calls OnTerminate on all its objects.
+// FIXME: shall call router to get removed.
 func (s *ServiceImpl) Terminate() error {
 	s.RLock()
 	defer s.RUnlock()
@@ -341,14 +351,17 @@ func (s *ServiceImpl) Terminate() error {
 	return nil
 }
 
-// Router dispatch the incomming messages.
+// Router dispatch the incomming messages. A Router shall be Activated
+// before calling NewService.
 type Router struct {
 	sync.RWMutex
-	services map[uint32]*ServiceImpl
+	services  map[uint32]*ServiceImpl
+	namespace bus.Namespace
+	session   bus.Session // nil until activation
 }
 
 // NewRouter construct a router with the service zero passed.
-func NewRouter(authenticator Object) *Router {
+func NewRouter(authenticator Object, namespace bus.Namespace) *Router {
 	return &Router{
 		services: map[uint32]*ServiceImpl{
 			0: {
@@ -357,16 +370,23 @@ func NewRouter(authenticator Object) *Router {
 				},
 			},
 		},
+		namespace: namespace,
+		session:   nil,
 	}
 }
 
 // Activate calls the Activate method on all the services. Only after
 // the router can process messages.
-func (r *Router) Activate(sess bus.Session) error {
-	r.RLock()
-	defer r.RUnlock()
+func (r *Router) Activate(session bus.Session) error {
+	r.Lock()
+	if r.session != nil {
+		r.Unlock()
+		return fmt.Errorf("router already activated")
+	}
+	r.session = session
+	r.Unlock()
 	for serviceID, service := range r.services {
-		err := service.Activate(sess, serviceID)
+		err := service.Activate(session, serviceID)
 		if err != nil {
 			return err
 		}
@@ -387,6 +407,49 @@ func (r *Router) Terminate() error {
 		}
 	}
 	return ret
+}
+
+// NewService brings a new service online. It requires the router to
+// be activated (as part of a session). The steps involves are:
+// 1. request the name to the namespace (service directory)
+// 2. activate the service
+// 3. add the service to the router dispatcher
+// 4. advertize the service to the namespace (service directory)
+func (r *Router) NewService(name string, object Object) (Service, error) {
+
+	r.RLock()
+	session := r.session
+	r.RUnlock()
+
+	// if the router is not yet activated, this is an error
+	if session == nil {
+		return nil, fmt.Errorf("cannot create service prior to activation")
+	}
+
+	service := NewService(object)
+	// 1. reserve the name
+	serviceID, err := r.namespace.Reserve(name)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. activate the service
+	err = service.Activate(session, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	// 3. make it available
+	err = r.Add(serviceID, service)
+	if err != nil {
+		return nil, err
+	}
+	// 4. advertize it
+	err = r.namespace.Enable(serviceID)
+	if err != nil {
+		r.Remove(serviceID)
+		return nil, err
+	}
+	return service, nil
 }
 
 // Add Add a service ot a router. This does not call the Activate()
@@ -452,7 +515,6 @@ type Server struct {
 	listen        gonet.Listener
 	addrs         []string
 	namespace     bus.Namespace
-	session       bus.Session
 	Router        *Router
 	contexts      map[*Context]bool
 	contextsMutex sync.Mutex
@@ -474,12 +536,12 @@ func NewServer(sess bus.Session, addr string, auth Authenticator) (*Server, erro
 	if err != nil {
 		return nil, err
 	}
+	router := NewRouter(ServiceAuthenticate(auth), namespace)
 	s := &Server{
 		listen:        l,
 		addrs:         addrs,
-		session:       sess,
 		namespace:     namespace,
-		Router:        NewRouter(ServiceAuthenticate(auth)),
+		Router:        router,
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
@@ -499,10 +561,12 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 
 	service0 := ServiceAuthenticate(auth)
 
+	router := NewRouter(service0, namespace)
+
 	s := &Server{
 		listen:        listener,
 		namespace:     namespace,
-		Router:        NewRouter(service0),
+		Router:        router,
 		contexts:      make(map[*Context]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
@@ -523,49 +587,8 @@ type Service interface {
 
 // NewService returns a new service. The service is activated as part
 // of the creation.
-//
-// FIXME: Server registers the service to the namespace, it shall as
-// well unregister it on Server.Terminate() *and* when requested by
-// the service itself. TODO: need to add a Terminate() callback into
-// the signal helper which is part of the stub interface... Shall the
-// stub do the registration as well ? It has knowledge of the life
-// cycle of the service.
-//
-// - call Server.namespace.Remove(serviceID)
-// - call Server.Router.Remove()
-// - call Terminate on all objects
-// - signal WaitTerminate condition
-//
-// TODO:
-// 1. fix the proxy generation issue
-// 2. write a test auto with a service connecting a remote server
-// 3. refactor this name registration into the stub
 func (s *Server) NewService(name string, object Object) (Service, error) {
-
-	service := NewService(object)
-
-	// 1. reserve the name
-	serviceID, err := s.namespace.Reserve(name)
-	if err != nil {
-		return nil, err
-	}
-	// 2. initialize the service
-	err = service.Activate(s.Session(), serviceID)
-	if err != nil {
-		return nil, err
-	}
-	// 3. bring it online
-	err = s.Router.Add(serviceID, service)
-	if err != nil {
-		return nil, err
-	}
-	// 4. advertize it
-	err = s.namespace.Enable(serviceID)
-	if err != nil {
-		s.Router.Remove(serviceID)
-		return nil, err
-	}
-	return service, nil
+	return s.Router.NewService(name, object)
 }
 
 func (s *Server) handle(c gonet.Conn, authenticated bool) {
@@ -603,7 +626,7 @@ func (s *Server) handle(c gonet.Conn, authenticated bool) {
 }
 
 func (s *Server) activate() error {
-	err := s.Router.Activate(s.session)
+	err := s.Router.Activate(s.Session())
 	if err != nil {
 		return err
 	}
