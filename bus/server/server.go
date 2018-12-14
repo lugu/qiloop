@@ -241,13 +241,47 @@ func (o *BasicObject) Activate(sess bus.Session, serviceID,
 	return nil
 }
 
-// Activation represents the contract between the object and the
-// server. Objects are activated and given an Activation interface.
-type Activation interface {
-	ServiceID() uint32
-	ObjectID() uint32
-	Terminate() error
-	Session() bus.Session
+// Terminator is to be called when an object whish to disapear.
+type Terminator func()
+
+// Activation is sent during activation: it informs the object of the
+// context in which the object is being used.
+type Activation struct {
+	ServiceID uint32
+	ObjectID  uint32
+	Session   bus.Session
+	Terminate Terminator
+}
+
+func objectTerminator(service *ServiceImpl, objectID uint32) Terminator {
+	return func() {
+		service.Remove(objectID)
+	}
+}
+
+func serviceTerminator(router *Router, serviceID uint32) Terminator {
+	return func() {
+		router.Remove(serviceID)
+		router.namespace.Remove(serviceID)
+	}
+}
+
+func serviceActivation(router *Router, session bus.Session, serviceID uint32) Activation {
+	return Activation{
+		ServiceID: serviceID,
+		ObjectID:  1,
+		Session:   session,
+		Terminate: serviceTerminator(router, serviceID),
+	}
+}
+
+func objectActivation(service *ServiceImpl, session bus.Session, serviceID, objectID uint32) Activation {
+	return Activation{
+		ServiceID: serviceID,
+		ObjectID:  objectID,
+		Session:   session,
+		Terminate: objectTerminator(service, objectID),
+	}
 }
 
 // Object interface used by Server to manipulate services.
@@ -265,7 +299,8 @@ type Object interface {
 // object within its domain.
 type ServiceImpl struct {
 	sync.RWMutex
-	objects map[uint32]Object
+	objects   map[uint32]Object
+	terminate Terminator
 }
 
 // NewService returns a service with the given object associated with
@@ -292,16 +327,18 @@ func (s *ServiceImpl) Add(o Object) (uint32, error) {
 	return index, nil
 }
 
-// Activate is called when a Service becomes online. After the
-// Activate method is call, the service will start receiving incomming
-// messages.
-func (s *ServiceImpl) Activate(sess bus.Session, serviceID uint32) error {
+// Activate informs the service it will become active and shall be
+// ready to handle requests.
+func (s *ServiceImpl) Activate(activation Activation) error {
 	var wait sync.WaitGroup
 	wait.Add(len(s.objects))
+	s.terminate = activation.Terminate
 	ret := make(chan error, len(s.objects))
 	for objectID, obj := range s.objects {
 		go func(obj Object, objectID uint32) {
-			err := obj.Activate(sess, serviceID, objectID)
+			// TODO: implement object activation
+			err := obj.Activate(activation.Session,
+				activation.ServiceID, objectID)
 			if err != nil {
 				ret <- err
 			}
@@ -341,12 +378,15 @@ func (s *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 }
 
 // Terminate calls OnTerminate on all its objects.
-// FIXME: shall call router to get removed.
 func (s *ServiceImpl) Terminate() error {
 	s.RLock()
 	defer s.RUnlock()
+
 	for _, obj := range s.objects {
 		obj.OnTerminate()
+	}
+	if s.terminate != nil {
+		s.terminate()
 	}
 	return nil
 }
@@ -386,7 +426,8 @@ func (r *Router) Activate(session bus.Session) error {
 	r.session = session
 	r.Unlock()
 	for serviceID, service := range r.services {
-		err := service.Activate(session, serviceID)
+		activation := serviceActivation(r, session, serviceID)
+		err := service.Activate(activation)
 		if err != nil {
 			return err
 		}
@@ -396,10 +437,13 @@ func (r *Router) Activate(session bus.Session) error {
 
 // Terminate terminates all the services.
 func (r *Router) Terminate() error {
-	r.RLock()
-	defer r.RUnlock()
+	r.Lock()
+	services := r.services
+	r.services = make(map[uint32]*ServiceImpl)
+	r.Unlock()
+
 	var ret error
-	for serviceID, service := range r.services {
+	for serviceID, service := range services {
 		err := service.Terminate()
 		if err != nil && ret == nil {
 			ret = fmt.Errorf("service %d terminate: %s",
@@ -434,7 +478,7 @@ func (r *Router) NewService(name string, object Object) (Service, error) {
 	}
 
 	// 2. activate the service
-	err = service.Activate(session, serviceID)
+	err = service.Activate(serviceActivation(r, session, serviceID))
 	if err != nil {
 		return nil, err
 	}

@@ -719,7 +719,6 @@ func TestServiceTerminaison(t *testing.T) {
 	if obj.Terminated == false {
 		t.Error("obj shall have terminated")
 	}
-	t.Skip("FIXME: implements router removal (namespace)")
 	_, err = ns.Resolve("service1")
 	if err == nil {
 		t.Error("shall have failed")
