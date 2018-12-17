@@ -97,6 +97,7 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32,
 	cancel chan int) (chan []byte, error) {
 
 	stream := make(chan []byte)
+	abort := make(chan int)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Service == serviceID && hdr.Object == objectID &&
@@ -114,14 +115,18 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32,
 			recover()
 		}()
 		close(stream)
-		close(cancel)
+		close(abort)
 	}
 
 	go func(id int) {
-		_, ok := <-cancel
-		c.endpoint.RemoveHandler(id)
-		if ok {
-			close(stream)
+		select {
+		case _, ok := <-cancel:
+			c.endpoint.RemoveHandler(id)
+			if ok {
+				close(stream)
+			}
+		case _ = <-abort:
+			c.endpoint.RemoveHandler(id)
 		}
 	}(c.endpoint.AddHandler(filter, consumer, closer))
 
