@@ -34,7 +34,7 @@
 - [Serialization](#serialization)
   - [Basic types](#basic-types-1)
   - [Values](#values)
-  - [Composite types (map, list and struct)](#composite-types-map-list-and-struct)
+  - [Composite types (map, vect and struct)](#composite-types-map-vect-and-struct)
   - [Object](#object-1)
 - [Objects](#objects)
   - [Methods](#methods)
@@ -380,7 +380,7 @@ When describing the return type of a method:
 
 #### Composite types
 
-- '[' ... ']': list: a vector of elements of the same type.
+- '[' ... ']': vect: a sequence of elements of the same type.
 - '{' ... ... '}': map: associative array from a key type to an element type.
 - '(' ... ')<' ... .... '>': structure: a limited set of name element of different types.
 
@@ -468,13 +468,13 @@ type_basic = type_int | type_uint | type_string | type_float | type_double | typ
 
 type_map = "{" type_declaration type_declaration "}"
 
-type_list = "[" type_declaration "]"
+type_vect = "[" type_declaration "]"
 
 type_tuple = "(" type_declaration ")"
 
 type_definition = type_tuple "<" name "," list_of_names ">"
 
-type_declaration = type_basic | type_map | type_list | type_definition
+type_declaration = type_basic | type_map | type_vect | type_definition
 
 list_of_declarations = type_declaration | type_declaration list_of_declarations
 
@@ -490,15 +490,15 @@ all values are transmitted in little endian.
 
 ### Basic types
 
-- **integer**: 32 bits little endian signed.
-- **unsigned integer**: 32 bits little endian.
-- **long**: 64 bits little endian signed.
-- **unsigned long**: 64 bits little endian.
-- **float**: 32 bites IEEE 754 little endian.
-- **double**: 64 bites IEEE 754 little endian.
-- **boolean**: 1 byte (zero for false)
+- **integer**: 32 bits little endian signed (int32).
+- **unsigned integer**: 32 bits little endian (uint32).
+- **long**: 64 bits little endian signed (int64).
+- **unsigned long**: 64 bits little endian (uint64).
+- **float**: 32 bites IEEE 754 little endian (float32).
+- **double**: 64 bites IEEE 754 little endian (float64).
+- **boolean**: 1 byte, zero for false (bool)
 - **string**: an integer (as defined above) followed the bytes of the
-  string. Not finishing with a zero.
+  string. Not finishing with a zero (str).
 - **raw data**: an array of byte of a variable size
 
 ### Values
@@ -507,10 +507,10 @@ A value is serialized with a string (defined above) representing the
 signature of the concrete type followed with the serialized value of
 the type.
 
-### Composite types (map, list and struct)
+### Composite types (map, vect and struct)
 
-- **list**: an integer representing the size of the list followed with the
-  concatenation of the serialized elements.
+- **vect**: an integer representing the size of the sequence followed
+  with the concatenation of the serialized elements.
 
 - **map**: an integer representing the size of the map followed with the
   concatenation of the pair of serialized key and value.
@@ -535,9 +535,9 @@ This description contains the following fields:
 ## Objects
 
 An object is composed of:
-- a list of method to be called
-- a list of signals to be watched
-- a list of properties to be queried
+- a set of method to be called
+- a set of signals to be watched
+- a set of properties to be queried
 
 Within the libqi framework objects are called
 [AnyObject](http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/anyobject.html).
@@ -562,14 +562,14 @@ At the heart of QiMessaging is the feature of remote procedure calls:
 
 Here is a list of methods shared by almost every object:
 
-- 0: `registerEvent(UInt32,UInt32,UInt64) UInt64`: subscribes to a
+- 0: `registerEvent(uint32,uint32,uint64) uint64`: subscribes to a
   signal. The new values of the signal will be sent the client using
   messages of type `event`.
 
-- 1: `unregisterEvent(UInt32,UInt32,UInt64) Void`: unsubscribes
+- 1: `unregisterEvent(uint32,uint32,uint64) Void`: unsubscribes
   from a signal.
 
-- 2: `metaObject(UInt32) MetaObject`: introspects an object. It
+- 2: `metaObject(uint32) MetaObject`: introspects an object. It
   returns structure called `MetaObject` which describe an object. This
   structure contains the list of methods, signal and properties as
   well as the signature of the associated types. When communicating
@@ -577,7 +577,7 @@ Here is a list of methods shared by almost every object:
   called because it allows the client to associate the name of the
   method with the action ID.
 
-- 3: `terminate(UInt32) Void`: informs a object it is not used
+- 3: `terminate(uint32) Void`: informs a object it is not used
   anymore. This allows the object to be destroyed. It is used in the
   context of objects returned by methods. In such situation life cycle
   of the object is controlled by the client.
@@ -587,9 +587,9 @@ Here is a list of methods shared by almost every object:
 
 - 6: `setProperty(Value,Value) Void `: sets the value of a property.
 
-- 7: `properties() List<String>`
+- 7: `properties() Vect<str>`
 
-- 8: `registerEventWithSignature(UInt32,UInt32,UInt64,String) UInt64`
+- 8: `registerEventWithSignature(uint32,uint32,uint64,String) uint64`
 
 Notice: one exception is the the object 0 of service 0 which does not
 supports those methods.
@@ -694,36 +694,36 @@ Used to register new services to the bus and to list the services.
 Here is a list of the specific method offerred by the service
 directory:
 
-- 100: `service(String) ServiceInfo`: associate the name of a service
+- 100: `service(str) ServiceInfo`: associate the name of a service
   with its identifier and its network endpoint.
 
-- 101: `services() List<ServiceInfo>`: list all registered services.
+- 101: `services() Vect<ServiceInfo>`: list all registered services.
 
-- 102: `registerService(ServiceInfo) UInt32`: add a new service to the
+- 102: `registerService(ServiceInfo) uint32`: add a new service to the
   service directory.
 
-- 103: `unregisterService(UInt32) Void`: remove the service.
+- 103: `unregisterService(uint32) Void`: remove the service.
 
-- 104: `serviceReady(UInt32) Void`: informs the service directory when
+- 104: `serviceReady(uint32) Void`: informs the service directory when
   a given service is ready to receive requests.
 
 - 105: `updateServiceInfo(ServiceInfo) Void`: update the service
   information associated with a service.
 
-- 108: `machineId() String`: returns the unique identifier of the
+- 108: `machineId() str`: returns the unique identifier of the
   machine.
 
-- 109: `_socketOfService(UInt32) Object`:
+- 109: `_socketOfService(uint32) Object`:
 
 #### Signals
 
 In order to monitor the list of services, one can use the following
 signals:
 
-- 106: `serviceAdded(UInt32,String)`: informs when a new service has
+- 106: `serviceAdded(uint32,str)`: informs when a new service has
   registered to the bus.
 
-- 107: `serviceRemoved(UInt32,String)`: informs when a service has
+- 107: `serviceRemoved(uint32,str)`: informs when a service has
   quitted the bus.
 
 
@@ -837,7 +837,7 @@ There is a set of methods used for tracing (index ranging from 80 to
 
 - 81: `enableStats(Bool) Void`: enables statistics.
 
-- 82: `stats() Map<UInt32,MethodStatistics> `: returns the current
+- 82: `stats() Map<uint32,MethodStatistics> `: returns the current
   statistics
 
 - 83: `clearStats() Void `: reset the counters.
