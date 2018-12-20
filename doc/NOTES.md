@@ -509,7 +509,7 @@ the type.
 
 ### Composite types (map, vect and struct)
 
-- **vect**: an integer representing the size of the sequence followed
+- **vector**: an integer representing the size of the sequence followed
   with the concatenation of the serialized elements.
 
 - **map**: an integer representing the size of the map followed with the
@@ -562,14 +562,14 @@ At the heart of QiMessaging is the feature of remote procedure calls:
 
 Here is a list of methods shared by almost every object:
 
-- 0: `registerEvent(uint32,uint32,uint64) uint64`: subscribes to a
-  signal. The new values of the signal will be sent the client using
-  messages of type `event`.
+- 0: `fn registerEvent(objectID: uint32, signalID: uint32, handler:
+  uint64) uint64`: subscribes to a signal. The new values of the
+  signal will be sent the client using messages of type `event`.
 
-- 1: `unregisterEvent(uint32,uint32,uint64) Void`: unsubscribes
+- 1: `fn unregisterEvent(objectID: uint32, signalID: uint32, handler: uint64) void`: unsubscribes
   from a signal.
 
-- 2: `metaObject(uint32) MetaObject`: introspects an object. It
+- 2: `metaObject(objectID: uint32) MetaObject`: introspects an object. It
   returns structure called `MetaObject` which describe an object. This
   structure contains the list of methods, signal and properties as
   well as the signature of the associated types. When communicating
@@ -577,7 +577,7 @@ Here is a list of methods shared by almost every object:
   called because it allows the client to associate the name of the
   method with the action ID.
 
-- 3: `terminate(uint32) Void`: informs a object it is not used
+- 3: `terminate(objectID: uint32) void`: informs a object it is not used
   anymore. This allows the object to be destroyed. It is used in the
   context of objects returned by methods. In such situation life cycle
   of the object is controlled by the client.
@@ -585,11 +585,11 @@ Here is a list of methods shared by almost every object:
 - 5: `property(Value) Value`: returns the value associated with the
   property.
 
-- 6: `setProperty(Value,Value) Void `: sets the value of a property.
+- 6: `setProperty(Value,Value) void `: sets the value of a property.
 
 - 7: `properties() Vect<str>`
 
-- 8: `registerEventWithSignature(uint32,uint32,uint64,String) uint64`
+- 8: `registerEventWithSignature(objectID: uint32, signalID: uint32, handler: uint64, signature: String) uint64`
 
 Notice: one exception is the the object 0 of service 0 which does not
 supports those methods.
@@ -702,28 +702,28 @@ directory:
 - 102: `registerService(ServiceInfo) uint32`: add a new service to the
   service directory.
 
-- 103: `unregisterService(uint32) Void`: remove the service.
+- 103: `unregisterService(serviceID: uint32) void`: remove the service.
 
-- 104: `serviceReady(uint32) Void`: informs the service directory when
+- 104: `serviceReady(serviceID: uint32) void`: informs the service directory when
   a given service is ready to receive requests.
 
-- 105: `updateServiceInfo(ServiceInfo) Void`: update the service
+- 105: `updateServiceInfo(ServiceInfo) void`: update the service
   information associated with a service.
 
 - 108: `machineId() str`: returns the unique identifier of the
   machine.
 
-- 109: `_socketOfService(uint32) Object`:
+- 109: `_socketOfService(serviceID: uint32) Object`:
 
 #### Signals
 
 In order to monitor the list of services, one can use the following
 signals:
 
-- 106: `serviceAdded(uint32,str)`: informs when a new service has
+- 106: `serviceAdded(serviceID: uint32, name: str)`: informs when a new service has
   registered to the bus.
 
-- 107: `serviceRemoved(uint32,str)`: informs when a service has
+- 107: `serviceRemoved(serviceID: uint32, name: str)`: informs when a service has
   quitted the bus.
 
 
@@ -832,19 +832,19 @@ supported. Possible values are:
 There is a set of methods used for tracing (index ranging from 80 to
 85):
 
-- 80 `isStatsEnabled() Bool`: returns true if the statistics are
+- 80 `isStatsEnabled() bool`: returns true if the statistics are
   enabled.
 
-- 81: `enableStats(Bool) Void`: enables statistics.
+- 81: `enableStats(bool) void`: enables statistics.
 
 - 82: `stats() Map<uint32,MethodStatistics> `: returns the current
   statistics
 
-- 83: `clearStats() Void `: reset the counters.
+- 83: `clearStats() void `: reset the counters.
 
-- 84: `isTraceEnabled() Bool`: returns true if tracing is enable.
+- 84: `isTraceEnabled() bool`: returns true if tracing is enable.
 
-- 85: `enableTrace(Bool) Void`: enables / disables tracing.
+- 85: `enableTrace(bool) void`: enables / disables tracing.
 
 Most object have this signal:
 
