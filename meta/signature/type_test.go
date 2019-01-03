@@ -53,6 +53,14 @@ func TestBasicTypes(t *testing.T) {
 	helpTestBasics(t, NewUnknownType(), "X", "unknown", jen.Id("interface{}"))
 }
 
+func TestObjectSignature(t *testing.T) {
+	expectedSignature := "(b({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>III)<ObjectReference,boolean,metaObject,parentID,serviceID,objectID>"
+
+	if ObjectSignature != expectedSignature {
+		t.Errorf("invalid signature: %s", ObjectSignature)
+	}
+}
+
 func TestListType(t *testing.T) {
 	helpTestBasics(t, NewListType(NewStringType()), "[s]", "Vec<str>",
 		jen.Index().Add(jen.String()))

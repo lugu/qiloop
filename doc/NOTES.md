@@ -532,6 +532,12 @@ This description contains the following fields:
 - **integer**: service id
 - **integer**: object id
 
+If the capability *ObjectPtrUID* is enabled, the object contains an
+extra field (See ObjectPtrUID section):
+
+- **20 bytes**: object UID (the signature would be
+  `(IIIII)<UID,i1,i2,i3,i4,i5>`)
+
 ## Objects
 
 An object is composed of:
@@ -820,6 +826,17 @@ supported. Possible values are:
 - `"ObjectPtrUID"`: boolean `value`
 
 - `"RemoteCancelableCalls"`: boolean `value`
+
+##### Object UID (ObjectPtrUID)
+
+When the capability "ObjectPtrUID" is enabled the object type ("o") is
+serialized with an extra object UID of 20 bytes.
+
+In order to make this identifier uniq, libqi computes it using the
+SHA1 digest of the concatenation of a machine identifier (128 bits), a
+process identifier (128 bits), and the value of the memory address of
+the underlying object (which can be 32 or 64 bits). SHA1 are 160 bits
+and so this UID is composed of 20 bytes.
 
 ## Routing
 ### Message destination
