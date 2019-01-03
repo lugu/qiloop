@@ -526,14 +526,22 @@ really serialized. What is serialized is the description of this
 object.
 
 This description contains the following fields:
-- **bool**: unknown usage
-- **MetaObject**: description of the object (explained later)
-- **integer**: unknown usage
-- **integer**: service id
-- **integer**: object id
 
-If the capability *ObjectPtrUID* is enabled, the object contains an
-extra field (See ObjectPtrUID section):
+- **MetaObject**: description of the object (explained later).
+- **unsigned integer**: service id
+- **unsigned integer**: object id
+
+If the capability *MetaObjectCache* is enabled, the description of the
+object becomes:
+- **bool**: transmit meta object: boolean value indicating if the meta
+  object will be transmited next.
+- **MetaObject**: only sent if the previous filed is true.
+- **unsigned integer**: meta object id
+- **unsigned integer**: service id
+- **unsigned integer**: object id
+
+If the capability *ObjectPtrUID* is enabled, the object description
+contains an extra field (See ObjectPtrUID section):
 
 - **20 bytes**: object UID (the signature would be
   `(IIIII)<UID,i1,i2,i3,i4,i5>`)
@@ -826,6 +834,16 @@ supported. Possible values are:
 - `"ObjectPtrUID"`: boolean `value`
 
 - `"RemoteCancelableCalls"`: boolean `value`
+
+##### MetaObject cache (MetaObjectCache)
+
+The capability "MetaObjectCache" controls how to serialize the object
+type ("o"). When enabled an identifier of the meta object is generated
+and send along with the object. If an object sharing the same meta
+object is requested, the meta object can be omited.
+
+This is capability avoids the re-transmission of large meta object
+when numerous reference are created.
 
 ##### Object UID (ObjectPtrUID)
 
