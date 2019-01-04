@@ -272,8 +272,9 @@ Each message have a type. Possible types are:
 - **Post** (4): Call a method but without expecting an answer. Payload
   contains the arguments of the method.
 - **Event** (5): Inform of a new signal state. Events are sent
-  following a call to the registerEvent method. unregisterEvent stops
-  the stream of events. The payload is the new value of the signal.
+  following a call to the `registerEvent` method. `unregisterEvent`
+  stops the stream of events. The payload is the new value of the
+  signal.
 - **Capability** (6):
 - **Cancel** (7): Request the interruption of the remote procedure
   call.
@@ -534,7 +535,7 @@ This description contains the following fields:
 If the capability *MetaObjectCache* is enabled, the description of the
 object becomes:
 - **bool**: transmit meta object: boolean value indicating if the meta
-  object will be transmited next.
+  object will be transmitted next.
 - **MetaObject**: only sent if the previous filed is true.
 - **unsigned integer**: meta object id
 - **unsigned integer**: service id
@@ -605,7 +606,7 @@ Here is a list of methods shared by almost every object:
 
 - 8: `registerEventWithSignature(objectID: uint32, signalID: uint32, handler: uint64, signature: String) uint64`
 
-Notice: one exception is the the object 0 of service 0 which does not
+Notice: one exception is the object 0 of service 0 which does not
 supports those methods.
 
 The `MetaObject` is useful to interact with an object. Especially it
@@ -614,7 +615,7 @@ signature. The next section describes this `MetaObject`.
 
 #### Specific methods
 
-Allong with the previously describe methods, objects can have as many
+Along with the previously describe methods, objects can have as many
 methods as needed. Those specific methods have indexes which start
 from 100.
 
@@ -705,7 +706,7 @@ Used to register new services to the bus and to list the services.
 
 #### Methods
 
-Here is a list of the specific method offerred by the service
+Here is a list of the specific method offered by the service
 directory:
 
 - 100: `service(str) ServiceInfo`: associate the name of a service
@@ -748,7 +749,7 @@ signals:
 ### Endpoints
 
 The `ServiceInfo` data structure which describes a service contains a
-list of addresses whre to contact the service.
+list of addresses where to contact the service.
 
 ### TCP
 
