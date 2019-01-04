@@ -221,7 +221,7 @@ struct header_t {
     uint32_t magic;      // constant value
     uint32_t message_id; // identifier to associate call/reply messages
     uint32_t size;       // size of the payload
-    uint32_t version;    // protocol version (0)
+    uint16_t version;    // protocol version (0)
     uint8_t  type;       // type of message (call, reply, event, ...)
     uint8_t  flags;      // flags
     uint32_t service_id; // service id
