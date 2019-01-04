@@ -9,7 +9,7 @@ type impl struct {
 }
 
 func NewPingPong() PingPong {
-	return &impl{}
+	return new(impl)
 }
 
 func (p *impl) Activate(sess bus.Session, serviceID, objectID uint32,

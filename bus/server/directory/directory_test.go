@@ -254,7 +254,7 @@ func TestServiceDirectoryInfo(t *testing.T) {
 		t.Fatalf("shall reject empty process info")
 	}
 	info = newInfo("test")
-	info.Endpoints = []string{}
+	info.Endpoints = make([]string, 0)
 	_, err = impl.RegisterService(info)
 	if err == nil {
 		t.Fatalf("shall reject empty endpoint info")

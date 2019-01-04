@@ -52,8 +52,7 @@ func mapType(ctx *Context) parsec.Parser {
 		ctx.typeParser,
 		parsec.Atom(",", ","),
 		ctx.typeParser,
-		parsec.Atom(">", ">"),
-	)
+		parsec.Atom(">", ">"))
 }
 
 func vecType(ctx *Context) parsec.Parser {
@@ -61,8 +60,7 @@ func vecType(ctx *Context) parsec.Parser {
 		nodifyVec,
 		parsec.Atom("Vec<", "Vec<"),
 		ctx.typeParser,
-		parsec.Atom(">", ">"),
-	)
+		parsec.Atom(">", ">"))
 }
 
 func typeParser(ctx *Context) parsec.Parser {
@@ -698,7 +696,7 @@ func nodifyActionList(nodes []signature.Node) signature.Node {
 	itf.Signals = make(map[uint32]Signal)
 	itf.Properties = make(map[uint32]Property)
 
-	var customAction uint32 = 100
+	var customAction = uint32(100)
 	for _, node := range nodes {
 		if err, ok := node.(error); ok {
 			return err

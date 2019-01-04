@@ -86,7 +86,7 @@ func TestParseMethod0(t *testing.T) {
 		Name:   "methodName",
 		ID:     0,
 		Return: NewVoidType(),
-		Params: []Parameter{},
+		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod0", input, expected)
 }
@@ -97,7 +97,7 @@ func TestParseMethod0bis(t *testing.T) {
 		Name:   "methodName",
 		ID:     200,
 		Return: NewVoidType(),
-		Params: []Parameter{},
+		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod0bis", input, expected)
 }
@@ -108,7 +108,7 @@ func TestParseMethod1(t *testing.T) {
 		Name:   "methodName",
 		ID:     0,
 		Return: NewIntType(),
-		Params: []Parameter{},
+		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod1", input, expected)
 }
@@ -119,7 +119,7 @@ func TestParseMethod1ter(t *testing.T) {
 		Name:   "methodName",
 		ID:     0,
 		Return: NewDoubleType(),
-		Params: []Parameter{},
+		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod1ter", input, expected)
 }
@@ -130,7 +130,7 @@ func TestParseMethod1bis(t *testing.T) {
 		Name:   "methodName",
 		ID:     0,
 		Return: NewBoolType(),
-		Params: []Parameter{},
+		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod1bis", input, expected)
 }
@@ -481,8 +481,8 @@ func TestParseSimpleIDL(t *testing.T) {
 				ReturnDescription: "nothing",
 			},
 		},
-		Signals:    map[uint32]object.MetaSignal{},
-		Properties: map[uint32]object.MetaProperty{},
+		Signals:    make(map[uint32]object.MetaSignal),
+		Properties: make(map[uint32]object.MetaProperty),
 	}
 	idl := `
 	struct B

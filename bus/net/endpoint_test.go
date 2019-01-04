@@ -150,7 +150,7 @@ func TestEndPointFinalizer(t *testing.T) {
 	a, b := gonet.Pipe()
 	defer a.Close()
 	go func() {
-		msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})
+		msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
 		msg.Write(a)
 	}()
 	filter := func(hrd *net.Header) (bool, bool) {
@@ -199,7 +199,7 @@ func TestEndpointShallAcceptMultipleHandlers(t *testing.T) {
 	for i := range ids {
 		ids[i] = endpoint.AddHandler(filter, consumer, closer)
 	}
-	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})
+	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
 	msg.Write(a)
 
 	for _, id := range ids {
@@ -221,7 +221,7 @@ func TestEndpointShallAcceptMultipleHandlers(t *testing.T) {
 func TestEndPoint_ShallDropMessages(t *testing.T) {
 	a, b := gonet.Pipe()
 	defer a.Close()
-	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), []byte{})
+	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
 	endpoint := net.NewEndPoint(b)
 	if endpoint.String() == "" {
 		panic("empty name")

@@ -104,7 +104,7 @@ func TestParseUlong(t *testing.T) {
 }
 
 func TestParseLong(t *testing.T) {
-	bytes := []byte{1, 0, 0, 0, 0x6C, 0xff, 0, 0, 0, 0, 0, 0, 0x77}
+	bytes := []byte{1, 0, 0, 0, 0x6c, 0xff, 0, 0, 0, 0, 0, 0, 0x77}
 	helpParseValue(t, bytes, value.Long(0x77000000000000ff))
 }
 

@@ -100,11 +100,11 @@ func TestProxy(t *testing.T) {
 	if err == nil {
 		// TODO
 	}
-	_, err = directory.Call("unknown service", []byte{})
+	_, err = directory.Call("unknown service", make([]byte, 0))
 	if err == nil {
 		t.Fatalf("must fail")
 	}
-	resp, err := directory.Call("services", []byte{})
+	resp, err := directory.Call("services", make([]byte, 0))
 	if err != nil {
 		t.Error(err)
 	}
@@ -172,7 +172,7 @@ func TestSelectError(t *testing.T) {
 		t.Fatalf("shall fail to authenticate")
 	}
 	// shall refuse to connect to empty list
-	_, err = client.SelectEndPoint([]string{})
+	_, err = client.SelectEndPoint(make([]string, 0))
 	if err == nil {
 		t.Fatalf("empty list")
 	}

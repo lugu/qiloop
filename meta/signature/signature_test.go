@@ -111,7 +111,7 @@ func TestParseTuple(t *testing.T) {
 }
 
 func TestParseDefinition(t *testing.T) {
-	testUtil(t, "()<test>", NewStructType("test", []MemberType{}))
+	testUtil(t, "()<test>", NewStructType("test", make([]MemberType, 0)))
 	testUtil(t, "(s)<test,a>", NewStructType("test", []MemberType{NewMemberType("a", NewStringType())}))
 	testUtil(t, "(ss)<test,a,a>", NewStructType("test", []MemberType{
 		NewMemberType("a", NewStringType()),
@@ -224,7 +224,7 @@ func TestParseError(t *testing.T) {
 }
 
 func TestInternalFunc(t *testing.T) {
-	err := nodifyBasicType([]Node{})
+	err := nodifyBasicType(make([]Node, 0))
 	if err == nil {
 		t.Errorf("unexpected")
 	}

@@ -9,10 +9,10 @@ import (
 )
 
 // Magic is a constant to discriminate between message and garbage.
-const Magic uint32 = 0x42dead42
+const Magic = uint32(0x42dead42)
 
 // Version is the supported version of the protocol.
-const Version uint16 = 0
+const Version = 0
 
 // Message types:
 const (
@@ -29,7 +29,7 @@ const (
 
 // HeaderSize is the size of a message header. It is the
 // minimum size of a message.
-const HeaderSize uint32 = 28
+const HeaderSize = 28
 
 // Header represents a message header.
 type Header struct {

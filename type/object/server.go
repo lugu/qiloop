@@ -25,7 +25,7 @@ var MetaService0 MetaObject = MetaObject{
 			},
 		},
 	},
-	Signals: map[uint32]MetaSignal{},
+	Signals: make(map[uint32]MetaSignal),
 }
 
 // ObjectMetaObject represents the generic actions all services (and

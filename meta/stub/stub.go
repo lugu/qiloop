@@ -106,7 +106,7 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	code := jen.Id("buf").Op(":=").Qual(
 		"bytes", "NewBuffer",
 	).Call(jen.Id("payload"))
-	if len(method.Params) > 0 {
+	if len(method.Params) != 0 {
 		writing = append(writing, code)
 	}
 
