@@ -58,6 +58,8 @@
     - [Authentication state](#authentication-state)
     - [Authentication credentials](#authentication-credentials)
     - [Protocol feature negotiation](#protocol-feature-negotiation)
+      - [MetaObject cache (MetaObjectCache)](#metaobject-cache-metaobjectcache)
+      - [Object UID (ObjectPtrUID)](#object-uid-objectptruid)
 - [Routing](#routing)
   - [Message destination](#message-destination)
   - [Message origin](#message-origin)
