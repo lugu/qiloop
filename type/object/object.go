@@ -21,6 +21,11 @@ type Object interface {
 
 	RegisterEvent(serviceID uint32, signalID uint32, handler uint64) (uint64, error)
 	UnregisterEvent(serviceID uint32, signalID uint32, handler uint64) error
+
+	// RegisterEventWithSignature: is similar with RegisterEvent:
+	// it subscribes to a signal. The value of the signal is
+	// converted to the type described by the signature.
+	// Not supported.
 	RegisterEventWithSignature(serviceID uint32, signalID uint32, handler uint64, signature string) (uint64, error)
 
 	// Property returns the value of the property.

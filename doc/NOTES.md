@@ -284,6 +284,17 @@ Each message have a type. Possible types are:
 
 #### Flags
 
+Flags are used to synchronise the processing of a message between the
+two ends.
+
+- **Dynamic payload** (0x1): when enabled it means the type of the
+  payload of a message is a value instead of the expected type. This
+  is used in conjunction with registerEventWithSignature which request
+  events to be converted to a value of a specific signature. In such
+  case, this flag is set in the header of the message which carry the
+  events to inform the destination: the type of the payload is a value
+  and not the origin type of of the signal.
+
 #### Service ID
 
 Each service registered to the service directory (described below) is
