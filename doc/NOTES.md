@@ -621,14 +621,21 @@ from 100.
 
 ### Signals
 
-A signal represents a variable whose state can change in time. When
-the state of the signal change, notifications are sent. One can
-subscribe to a signal using `registerEvent` and unsubscribe with
-`unregisterEvent`. Once registered, a client will receive new values
-taken by a signal by messages of type `event` which contain the new
-value.
+A signal represents asynchronous event which can be watched. It is a
+notification mechanism. One can subscribe to a signal using
+`registerEvent` and unsubscribe with `unregisterEvent`. Once
+registered, a client will receive new values taken by a signal by
+messages of type `event` which contain the new value.
 
 ### Properties
+
+A property represents a variable whose value can change in time. When
+the state of the property changes, notification event is emitted. The
+current value of a property can be query by calling the `property`
+method and changed by calling `setProperty`. One can monitor state
+changes using `registerEventWithSignature` and unsubscribe with
+`unregisterEvent`.
+
 ### MetaObject
 
 `MetaObject` is a structure which describes an object. The description
