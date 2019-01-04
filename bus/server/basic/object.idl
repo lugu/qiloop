@@ -1,8 +1,8 @@
 package basic
 
 interface Object
-	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
-	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn registerEvent(serviceID: uint32, signalID: uint32, handler: uint64) -> uint64 //uid:0
+	fn unregisterEvent(serviceID: uint32, signalID: uint32, handler: uint64) //uid:1
 	fn metaObject(P0: uint32) -> MetaObject //uid:2
 	fn terminate(P0: uint32) //uid:3
 	fn property(P0: any) -> any //uid:5

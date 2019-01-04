@@ -18,8 +18,8 @@ import (
 type Object interface {
 	Activate(sess bus.Session, serviceID, objectID uint32, signal ObjectSignalHelper) error
 	OnTerminate()
-	RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error)
-	UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error
+	RegisterEvent(serviceID uint32, signalID uint32, handler uint64) (uint64, error)
+	UnregisterEvent(serviceID uint32, signalID uint32, handler uint64) error
 	MetaObject(P0 uint32) (MetaObject, error)
 	Terminate(P0 uint32) error
 	Property(P0 value.Value) (value.Value, error)
@@ -67,19 +67,19 @@ func (s *stubObject) Receive(msg *net.Message, from *server.Context) error {
 }
 func (s *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := basic.ReadUint32(buf)
+	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read serviceID: %s", err)
 	}
-	P1, err := basic.ReadUint32(buf)
+	signalID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P1: %s", err)
+		return nil, fmt.Errorf("cannot read signalID: %s", err)
 	}
-	P2, err := basic.ReadUint64(buf)
+	handler, err := basic.ReadUint64(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P2: %s", err)
+		return nil, fmt.Errorf("cannot read handler: %s", err)
 	}
-	ret, callErr := s.impl.RegisterEvent(P0, P1, P2)
+	ret, callErr := s.impl.RegisterEvent(serviceID, signalID, handler)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -92,19 +92,19 @@ func (s *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 }
 func (s *stubObject) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := basic.ReadUint32(buf)
+	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read serviceID: %s", err)
 	}
-	P1, err := basic.ReadUint32(buf)
+	signalID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P1: %s", err)
+		return nil, fmt.Errorf("cannot read signalID: %s", err)
 	}
-	P2, err := basic.ReadUint64(buf)
+	handler, err := basic.ReadUint64(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P2: %s", err)
+		return nil, fmt.Errorf("cannot read handler: %s", err)
 	}
-	callErr := s.impl.UnregisterEvent(P0, P1, P2)
+	callErr := s.impl.UnregisterEvent(serviceID, signalID, handler)
 	if callErr != nil {
 		return nil, callErr
 	}
