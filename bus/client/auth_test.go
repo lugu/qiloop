@@ -152,7 +152,7 @@ func (s *ServerMock) wrapAuthenticate(payload []byte) ([]byte, error) {
 
 func (s *ServerMock) capError() client.CapabilityMap {
 	return client.CapabilityMap{
-		client.KeyState: value.Uint(client.StateError),
+		client.KeyState: value.Int(client.StateError),
 	}
 }
 
@@ -175,7 +175,7 @@ func (s *ServerMock) Authenticate(cap client.CapabilityMap) client.CapabilityMap
 	return s.Response(user, token)
 }
 
-func helpTest(t *testing.T, user, token string, status uint32) {
+func helpTest(t *testing.T, user, token string, status int32) {
 	response := func(gotUser, gotToken string) client.CapabilityMap {
 		if user != gotUser {
 			panic("not expecting user " + gotUser)
@@ -186,12 +186,12 @@ func helpTest(t *testing.T, user, token string, status uint32) {
 		if status == client.StateContinue {
 			status = client.StateDone
 			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
+				client.KeyState:    value.Int(client.StateContinue),
 				client.KeyNewToken: value.String(token),
 			}
 		}
 		return client.CapabilityMap{
-			client.KeyState: value.Uint(status),
+			client.KeyState: value.Int(status),
 		}
 	}
 	endpoint := NewServer(response)
@@ -221,7 +221,7 @@ func TestAuthContinue(t *testing.T) {
 	helpTest(t, "userA", "correct passwd", client.StateDone)
 	helpTest(t, "userA", "incorrect passwd", client.StateError)
 	helpTest(t, "userA", "negotiation", client.StateContinue)
-	helpTest(t, "userA", "invalid state", uint32(0xdead))
+	helpTest(t, "userA", "invalid state", int32(0xdead))
 }
 
 func helpAuthError(t *testing.T, user, token string,
@@ -260,14 +260,14 @@ func TestAuthError(t *testing.T) {
 	// missing new token
 	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
 		return client.CapabilityMap{
-			client.KeyState: value.Uint(client.StateContinue),
+			client.KeyState: value.Int(client.StateContinue),
 		}
 	})
 
 	// wrong new token type
 	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
 		return client.CapabilityMap{
-			client.KeyState:    value.Uint(client.StateContinue),
+			client.KeyState:    value.Int(client.StateContinue),
 			client.KeyNewToken: value.Uint(12),
 		}
 	})
@@ -278,7 +278,7 @@ func TestAuthError(t *testing.T) {
 		if state == 1 {
 			state = 2
 			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
+				client.KeyState:    value.Int(client.StateContinue),
 				client.KeyNewToken: value.String("bb"),
 			}
 		}
@@ -297,7 +297,7 @@ func TestAuthError(t *testing.T) {
 		if state == 1 {
 			state = 2
 			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
+				client.KeyState:    value.Int(client.StateContinue),
 				client.KeyNewToken: value.String("bb"),
 			}
 		}
@@ -312,12 +312,12 @@ func TestAuthError(t *testing.T) {
 		if state == 1 {
 			state = 2
 			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
+				client.KeyState:    value.Int(client.StateContinue),
 				client.KeyNewToken: value.String("bb"),
 			}
 		}
 		return client.CapabilityMap{
-			client.KeyState: value.Uint(1234),
+			client.KeyState: value.Int(1234),
 		}
 	})
 
@@ -327,12 +327,12 @@ func TestAuthError(t *testing.T) {
 		if state == 1 {
 			state = 2
 			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
+				client.KeyState:    value.Int(client.StateContinue),
 				client.KeyNewToken: value.String("bb"),
 			}
 		}
 		return client.CapabilityMap{
-			client.KeyState: value.Uint(client.StateContinue),
+			client.KeyState: value.Int(client.StateContinue),
 		}
 	})
 
@@ -342,12 +342,12 @@ func TestAuthError(t *testing.T) {
 		if state == 1 {
 			state = 2
 			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
+				client.KeyState:    value.Int(client.StateContinue),
 				client.KeyNewToken: value.String("bb"),
 			}
 		}
 		return client.CapabilityMap{
-			client.KeyState: value.Uint(client.StateError),
+			client.KeyState: value.Int(client.StateError),
 		}
 	})
 
@@ -358,7 +358,7 @@ func TestAuthError(t *testing.T) {
 		if state == 1 {
 			state = 2
 			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
+				client.KeyState:    value.Int(client.StateContinue),
 				client.KeyNewToken: value.String("bb"),
 			}
 		}
