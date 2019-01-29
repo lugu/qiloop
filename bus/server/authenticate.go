@@ -133,7 +133,7 @@ func (s *serviceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([
 
 func (s *serviceAuthenticate) capError() client.CapabilityMap {
 	return client.CapabilityMap{
-		client.KeyState: value.Int(client.StateError),
+		client.KeyState: value.Uint(client.StateError),
 	}
 }
 
@@ -156,7 +156,7 @@ func (s *serviceAuthenticate) Authenticate(from *Context, cap client.CapabilityM
 	if s.auth.Authenticate(user, token) {
 		from.Authenticated = true
 		return client.CapabilityMap{
-			client.KeyState: value.Int(client.StateDone),
+			client.KeyState: value.Uint(client.StateDone),
 		}
 	}
 	return s.capError()

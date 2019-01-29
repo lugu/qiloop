@@ -88,7 +88,7 @@ func NewLimitedWriter(size int) io.Writer {
 
 func TestWriterCapabilityMapError(t *testing.T) {
 	c := client.CapabilityMap{
-		client.KeyState: value.Int(client.StateDone),
+		client.KeyState: value.Uint(client.StateDone),
 	}
 	var buf bytes.Buffer
 	err := server.WriteCapabilityMap(c, &buf)
@@ -113,7 +113,7 @@ func TestWriterCapabilityMapError(t *testing.T) {
 
 func TestReadHeaderError(t *testing.T) {
 	c := client.CapabilityMap{
-		client.KeyState: value.Int(client.StateDone),
+		client.KeyState: value.Uint(client.StateDone),
 	}
 	var buf bytes.Buffer
 	err := server.WriteCapabilityMap(c, &buf)

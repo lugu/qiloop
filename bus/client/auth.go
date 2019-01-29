@@ -19,11 +19,11 @@ const (
 	KeyNewToken = "auth_newToken"
 
 	// StateError indicates an authentication failure.
-	StateError int32 = 1
+	StateError uint32 = 1
 	// StateContinue indicates a new token generation procedure.
-	StateContinue int32 = 2
+	StateContinue uint32 = 2
 	// StateDone indicates an authentication success.
-	StateDone int32 = 3
+	StateDone uint32 = 3
 )
 
 // CapabilityMap is a data structure exchanged between the server and
@@ -77,11 +77,11 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	if !ok {
 		return fmt.Errorf("missing authentication state")
 	}
-	status, ok := statusValue.(value.IntValue)
+	status, ok := statusValue.(value.UintValue)
 	if !ok {
 		return fmt.Errorf("authentication state format error")
 	}
-	switch int32(status) {
+	switch uint32(status) {
 	case StateDone:
 		return token.WriteUserToken(user, string(newToken))
 	case StateContinue:
@@ -105,11 +105,11 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 	if !ok {
 		return fmt.Errorf("missing authentication state")
 	}
-	status, ok := statusValue.(value.IntValue)
+	status, ok := statusValue.(value.UintValue)
 	if !ok {
 		return fmt.Errorf("authentication status error")
 	}
-	switch int32(status) {
+	switch uint32(status) {
 	case StateDone:
 		return nil
 	case StateContinue:
