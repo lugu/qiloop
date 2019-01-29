@@ -79,7 +79,12 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	}
 	status, ok := statusValue.(value.UintValue)
 	if !ok {
-		return fmt.Errorf("authentication state format error")
+		status2, ok := statusValue.(value.IntValue)
+		if !ok {
+			return fmt.Errorf("authentication status error (%#v)",
+				statusValue)
+		}
+		status = value.UintValue(uint32(status2.Value()))
 	}
 	switch uint32(status) {
 	case StateDone:
@@ -107,7 +112,12 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 	}
 	status, ok := statusValue.(value.UintValue)
 	if !ok {
-		return fmt.Errorf("authentication status error")
+		status2, ok := statusValue.(value.IntValue)
+		if !ok {
+			return fmt.Errorf("authentication status error (%#v)",
+				statusValue)
+		}
+		status = value.UintValue(uint32(status2.Value()))
 	}
 	switch uint32(status) {
 	case StateDone:

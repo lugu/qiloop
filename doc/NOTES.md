@@ -804,7 +804,8 @@ authentication procedure.
 The status of the authentication procedure is stored in this
 capability map under the key:
 
-- `"__qi_auth_state"`: integer `value`
+- `"__qi_auth_state"`: unsigned integer `value` (libqi 2.5 uses an
+  integer `value`)
 
 Possible values are:
 
