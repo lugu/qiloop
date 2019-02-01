@@ -45,8 +45,8 @@ func (p Proxy) SubscribeID(signal uint32, cancel chan int) (chan []byte, error) 
 	return p.client.Subscribe(p.service, p.object, signal, cancel)
 }
 
-// SubscribeSignal returns a channel with the values of a signal
-func (p Proxy) SubscribeSignal(signal string, cancel chan int) (chan []byte, error) {
+// Subscribe returns a channel with the values of a signal
+func (p Proxy) Subscribe(signal string, cancel chan int) (chan []byte, error) {
 	id, err := p.SignalID(signal)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find signal %s: %s", signal, err)

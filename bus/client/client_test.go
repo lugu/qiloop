@@ -87,12 +87,12 @@ func TestProxy(t *testing.T) {
 		t.Error(err)
 	}
 	cancel <- 1
-	_, err = directory.SubscribeSignal("serviceAdded", cancel)
+	_, err = directory.Subscribe("serviceAdded", cancel)
 	if err != nil {
 		t.Error(err)
 	}
 	cancel <- 1
-	_, err = directory.SubscribeSignal("unknownSignal", cancel)
+	_, err = directory.Subscribe("unknownSignal", cancel)
 	if err == nil {
 		t.Fatalf("must fail")
 	}
