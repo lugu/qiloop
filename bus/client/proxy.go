@@ -40,16 +40,22 @@ func (p Proxy) ObjectID() uint32 {
 	return p.object
 }
 
-// SubscribeID returns a channel with the values of a signal
-func (p Proxy) SubscribeID(signal uint32, cancel chan int) (chan []byte, error) {
-	return p.client.Subscribe(p.service, p.object, signal, cancel)
+// SubscribeID returns a channel with the values of a signal or a
+// property.
+func (p Proxy) SubscribeID(action uint32, cancel chan int) (chan []byte, error) {
+	return p.client.Subscribe(p.service, p.object, action, cancel)
 }
 
-// Subscribe returns a channel with the values of a signal
-func (p Proxy) Subscribe(signal string, cancel chan int) (chan []byte, error) {
-	id, err := p.SignalID(signal)
+// Subscribe returns a channel with the values of a signal or a
+// property.
+func (p Proxy) Subscribe(action string, cancel chan int) (chan []byte, error) {
+	id, err := p.SignalID(action)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find signal %s: %s", signal, err)
+		id, err = p.PropertyID(action)
+		if err != nil {
+			return nil, fmt.Errorf("cannot find signal or property %s",
+				action)
+		}
 	}
 	return p.client.Subscribe(p.service, p.object, id, cancel)
 }
@@ -69,6 +75,12 @@ func (p Proxy) Disconnect() error {
 // returns the signal id.
 func (p Proxy) SignalID(name string) (uint32, error) {
 	return p.meta.SignalID(name)
+}
+
+// PropertyID resolve the name of the property using the meta object and
+// returns the property id.
+func (p Proxy) PropertyID(name string) (uint32, error) {
+	return p.meta.PropertyID(name)
 }
 
 // NewProxy construct a Proxy.

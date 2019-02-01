@@ -17,11 +17,12 @@ type Proxy interface {
 	CallID(action uint32, payload []byte) ([]byte, error)
 
 	// SignalSubscribe returns a channel with the values of a signal
-	Subscribe(signal string, cancel chan int) (chan []byte, error)
-	SubscribeID(signal uint32, cancel chan int) (chan []byte, error)
+	Subscribe(action string, cancel chan int) (chan []byte, error)
+	SubscribeID(action uint32, cancel chan int) (chan []byte, error)
 
 	MethodID(name string) (uint32, error)
 	SignalID(name string) (uint32, error)
+	PropertyID(name string) (uint32, error)
 
 	// TODO
 	// Properties() ([]string, error)

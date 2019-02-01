@@ -17,14 +17,24 @@ func (m *MetaObject) MethodID(name string) (uint32, error) {
 	return 0, fmt.Errorf("failed to find method %s", name)
 }
 
-// SignalID returns the ID of a signal given its name.
+// SignalID returns the ID of a signal
 func (m *MetaObject) SignalID(name string) (uint32, error) {
-	for k, signal := range m.Signals {
+	for _, signal := range m.Signals {
 		if signal.Name == name {
-			return k, nil
+			return signal.Uid, nil
 		}
 	}
 	return 0, fmt.Errorf("failed to find signal %s", name)
+}
+
+// PropertyID returns the ID of a property
+func (m *MetaObject) PropertyID(name string) (uint32, error) {
+	for _, property := range m.Properties {
+		if property.Name == name {
+			return property.Uid, nil
+		}
+	}
+	return 0, fmt.Errorf("failed to find property %s", name)
 }
 
 func registerName(name string, names map[string]bool) string {
