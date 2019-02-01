@@ -355,8 +355,7 @@ func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
 	}
 
-	handlerID := uint64(signalID)<<32 + 1 // FIXME: read it from proxy
-	_, err = p.RegisterEvent(p.ObjectID(), signalID, handlerID)
+	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
 	}
