@@ -18,14 +18,14 @@ func main() {
 		log.Fatalf("failed to connect log manager: %s", err)
 	}
 
-	cancel := make(chan int)
-
-	channel, err := directory.SignalServiceRemoved(cancel)
+	cancel, channel, err := directory.SubscribeServiceAdded()
 	if err != nil {
 		log.Fatalf("failed to get remote signal channel: %s", err)
 	}
 
-	for e := range channel {
-		log.Printf("service removed: %s (%d)", e.P1, e.P0)
+	for i := 0; i < 10; i++ {
+		e := <-channel
+		log.Printf("service added: %s (%d)", e.P1, e.P0)
 	}
+	cancel()
 }

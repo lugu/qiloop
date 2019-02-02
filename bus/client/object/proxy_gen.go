@@ -346,25 +346,25 @@ func (p *ObjectProxy) EnableTrace(P0 bool) error {
 	return nil
 }
 
-// SignalTraceObject subscribe to a remote signal
-func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
+// SubscribeTraceObject subscribe to a remote signal
+func (p *ObjectProxy) SubscribeTraceObject() (func(), chan struct {
 	P0 EventTrace
 }, error) {
 	signalID, err := p.SignalID("traceObject")
 	if err != nil {
-		return nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
+		return nil, nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
 	}
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
 	}
 	ch := make(chan struct {
 		P0 EventTrace
 	})
-	chPay, err := p.SubscribeID(signalID, cancel)
+	cancel, chPay, err := p.SubscribeID(signalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
 	}
 	go func() {
 		for {
@@ -393,7 +393,7 @@ func (p *ObjectProxy) SignalTraceObject(cancel chan int) (chan struct {
 			ch <- e
 		}
 	}()
-	return ch, nil
+	return cancel, ch, nil
 }
 
 // MinMaxSum is serializable

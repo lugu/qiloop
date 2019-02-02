@@ -40,7 +40,7 @@ func TestMetaObjectDecorator(t *testing.T) {
 		return nil
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
-		if signalName != "Signal"+strings.Title(s.Name) {
+		if signalName != "Subscribe"+strings.Title(s.Name) {
 			t.Errorf("incoherent name: %s and %s", signalName,
 				strings.Title(s.Name))
 		}

@@ -41,8 +41,7 @@ func TestPingPong(t *testing.T) {
 		panic(err)
 	}
 
-	cancel := make(chan int)
-	pong, err := client.SignalPong(cancel)
+	cancel, pong, err := client.SubscribePong()
 	if err != nil {
 		panic(err)
 	}
@@ -60,6 +59,7 @@ func TestPingPong(t *testing.T) {
 	if answer.P0 != "hello" {
 		panic(err)
 	}
+	cancel()
 }
 
 func testRemoteAddr(b *testing.B, addr string) {

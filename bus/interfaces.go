@@ -6,8 +6,11 @@ import (
 
 // Client represents a client connection to a service.
 type Client interface {
-	Call(serviceID uint32, objectID uint32, actionID uint32, payload []byte) ([]byte, error)
-	Subscribe(serviceID, objectID, signalID uint32, cancel chan int) (chan []byte, error)
+	Call(serviceID uint32, objectID uint32, methodID uint32, payload []byte) ([]byte, error)
+	// Subscribe registers to a signal or a property. Returns a
+	// cancel callback, a channel to receive the payload and an
+	// error.
+	Subscribe(serviceID, objectID, actionID uint32) (func(), chan []byte, error)
 }
 
 // Proxy represents a reference to a remote service. It allows to
@@ -17,8 +20,8 @@ type Proxy interface {
 	CallID(action uint32, payload []byte) ([]byte, error)
 
 	// SignalSubscribe returns a channel with the values of a signal
-	Subscribe(action string, cancel chan int) (chan []byte, error)
-	SubscribeID(action uint32, cancel chan int) (chan []byte, error)
+	Subscribe(action string) (func(), chan []byte, error)
+	SubscribeID(action uint32) (func(), chan []byte, error)
 
 	MethodID(name string) (uint32, error)
 	SignalID(name string) (uint32, error)

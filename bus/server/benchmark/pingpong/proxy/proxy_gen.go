@@ -30,8 +30,8 @@ type PingPong interface {
 	Hello(P0 string) (string, error)
 	// Ping calls the remote procedure
 	Ping(P0 string) error
-	// SignalPong subscribe to a remote signal
-	SignalPong(cancel chan int) (chan struct {
+	// SubscribePong subscribe to a remote signal
+	SubscribePong() (func(), chan struct {
 		P0 string
 	}, error)
 }
@@ -91,25 +91,25 @@ func (p *PingPongProxy) Ping(P0 string) error {
 	return nil
 }
 
-// SignalPong subscribe to a remote signal
-func (p *PingPongProxy) SignalPong(cancel chan int) (chan struct {
+// SubscribePong subscribe to a remote signal
+func (p *PingPongProxy) SubscribePong() (func(), chan struct {
 	P0 string
 }, error) {
 	signalID, err := p.SignalID("pong")
 	if err != nil {
-		return nil, fmt.Errorf("signal %s not available: %s", "pong", err)
+		return nil, nil, fmt.Errorf("signal %s not available: %s", "pong", err)
 	}
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
 	}
 	ch := make(chan struct {
 		P0 string
 	})
-	chPay, err := p.SubscribeID(signalID, cancel)
+	cancel, chPay, err := p.SubscribeID(signalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
 	}
 	go func() {
 		for {
@@ -138,5 +138,5 @@ func (p *PingPongProxy) SignalPong(cancel chan int) (chan struct {
 			ch <- e
 		}
 	}()
-	return ch, nil
+	return cancel, ch, nil
 }

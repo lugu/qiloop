@@ -512,12 +512,11 @@ func TestServer(t *testing.T) {
 		t.Errorf("not expecting %d", len(list))
 	}
 
-	cancel := make(chan int)
-	added, err := directory.SignalServiceAdded(cancel)
+	cancelAdded, added, err := directory.SubscribeServiceAdded()
 	if err != nil {
 		t.Error(err)
 	}
-	removed, err := directory.SignalServiceRemoved(cancel)
+	cancelRemoved, removed, err := directory.SubscribeServiceRemoved()
 	if err != nil {
 		t.Error(err)
 	}
@@ -577,8 +576,8 @@ func TestServer(t *testing.T) {
 	if info2.P1 != "test" {
 		t.Fatalf(info.Name)
 	}
-	cancel <- 1
-	cancel <- 1
+	cancelAdded()
+	cancelRemoved()
 	_, ok = <-added
 	if ok {
 		t.Fatalf("unexpected added ok")

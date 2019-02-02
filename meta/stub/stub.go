@@ -7,6 +7,7 @@ import (
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
+	"strings"
 )
 
 func stubName(name string) string {
@@ -215,7 +216,6 @@ func generateSignalHelper(file *jen.File, itf *idl.InterfaceType,
 	if err != nil {
 		return fmt.Errorf("failed to create signal helper body: %s", err)
 	}
-
 	file.Func().Params(
 		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id(signalName).Add(tuple.Params()).Error().Add(body)
@@ -235,6 +235,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	signalCall := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
+		signalName = strings.Replace(signalName, "Subscribe", "Signal", 1)
 		err := generateSignalHelper(file, itf, signal, signalName)
 		if err != nil {
 			return fmt.Errorf("failed to create signal marshall %s of %s: %s",
@@ -418,6 +419,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	}
 	signalCall := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
+		signalName = strings.Replace(signalName, "Subscribe", "Signal", 1)
 		def, err := generateSignalDef(itf, set, signal, signalName)
 		if err != nil {
 			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name,

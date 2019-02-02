@@ -86,7 +86,7 @@ func (m *MetaObject) ForEachMethodAndSignal(
 	for _, i := range keys {
 		k := uint32(i)
 		s := m.Signals[k]
-		methodName := registerName("Signal"+strings.Title(s.Name), methodNames)
+		methodName := registerName("Subscribe"+strings.Title(s.Name), methodNames)
 
 		if err := signalCall(s, methodName); err != nil {
 			return fmt.Errorf("signal callback failed for %s: %s", s.Name, err)

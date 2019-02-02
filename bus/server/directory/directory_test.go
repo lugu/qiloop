@@ -347,12 +347,11 @@ func TestStub(t *testing.T) {
 		t.Errorf("not expecting %d", len(list))
 	}
 
-	cancel := make(chan int)
-	added, err := directory.SignalServiceAdded(cancel)
+	_, added, err := directory.SubscribeServiceAdded()
 	if err != nil {
 		t.Error(err)
 	}
-	removed, err := directory.SignalServiceRemoved(cancel)
+	_, removed, err := directory.SubscribeServiceRemoved()
 	if err != nil {
 		t.Error(err)
 	}

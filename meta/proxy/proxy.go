@@ -333,21 +333,21 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 
 	signalType.RegisterTo(set)
 
-	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
+	retType := jen.Params(jen.Func().Params(), jen.Chan().Add(signalType.TypeName()), jen.Error())
 	body := jen.Block(
 		jen.Id(`signalID, err := p.SignalID("`+s.Name+`")
 		if err != nil {
-			return nil, fmt.Errorf("signal %s not available: %s", "`+s.Name+`", err)
+			return nil, nil, fmt.Errorf("signal %s not available: %s", "`+s.Name+`", err)
 		}
 
 		handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
 		if err != nil {
-			return nil, fmt.Errorf("failed to register event for %s: %s", "`+s.Name+`", err)
+			return nil, nil, fmt.Errorf("failed to register event for %s: %s", "`+s.Name+`", err)
 		}`),
 		jen.Id("ch").Op(":=").Make(jen.Chan().Add(signalType.TypeName())),
-		jen.List(jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SubscribeID").Call(jen.Id("signalID"), jen.Id("cancel")),
+		jen.List(jen.Id("cancel"), jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SubscribeID").Call(jen.Id("signalID")),
 		jen.Id(`if err != nil {
-			return nil, fmt.Errorf("failed to request signal: %s", err)
+			return nil, nil, fmt.Errorf("failed to request signal: %s", err)
 		}`),
 		jen.Go().Func().Params().Block(
 			jen.For().Block(
@@ -368,13 +368,11 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, 
 				jen.Id(`ch<- e`),
 			),
 		).Call(),
-		jen.Return(jen.Id("ch"), jen.Nil()),
+		jen.Return(jen.Id("cancel"), jen.Id("ch"), jen.Nil()),
 	)
 
 	file.Comment(methodName + " subscribe to a remote signal")
-	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(methodName).Params(
-		jen.Id("cancel").Chan().Int(),
-	).Add(
+	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(methodName).Params().Add(
 		retType,
 	).Add(
 		body,
@@ -388,6 +386,6 @@ func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName strin
 		return nil, fmt.Errorf("failed to parse signal %s: %s", s.Signature, err)
 	}
 	signalType.RegisterTo(set)
-	retType := jen.Params(jen.Chan().Add(signalType.TypeName()), jen.Error())
-	return jen.Id(signalName).Params(jen.Id("cancel").Chan().Int()).Add(retType), nil
+	retType := jen.Params(jen.Func().Params(), jen.Chan().Add(signalType.TypeName()), jen.Error())
+	return jen.Id(signalName).Params().Add(retType), nil
 }

@@ -43,13 +43,13 @@ type ServiceDirectory interface {
 	MachineId() (string, error)
 	// SocketOfService calls the remote procedure
 	SocketOfService(P0 uint32) (object.ObjectReference, error)
-	// SignalServiceAdded subscribe to a remote signal
-	SignalServiceAdded(cancel chan int) (chan struct {
+	// SubscribeServiceAdded subscribe to a remote signal
+	SubscribeServiceAdded() (func(), chan struct {
 		P0 uint32
 		P1 string
 	}, error)
-	// SignalServiceRemoved subscribe to a remote signal
-	SignalServiceRemoved(cancel chan int) (chan struct {
+	// SubscribeServiceRemoved subscribe to a remote signal
+	SubscribeServiceRemoved() (func(), chan struct {
 		P0 uint32
 		P1 string
 	}, error)
@@ -247,27 +247,27 @@ func (p *ServiceDirectoryProxy) SocketOfService(P0 uint32) (object.ObjectReferen
 	return ret, nil
 }
 
-// SignalServiceAdded subscribe to a remote signal
-func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct {
+// SubscribeServiceAdded subscribe to a remote signal
+func (p *ServiceDirectoryProxy) SubscribeServiceAdded() (func(), chan struct {
 	P0 uint32
 	P1 string
 }, error) {
 	signalID, err := p.SignalID("serviceAdded")
 	if err != nil {
-		return nil, fmt.Errorf("signal %s not available: %s", "serviceAdded", err)
+		return nil, nil, fmt.Errorf("signal %s not available: %s", "serviceAdded", err)
 	}
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to register event for %s: %s", "serviceAdded", err)
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceAdded", err)
 	}
 	ch := make(chan struct {
 		P0 uint32
 		P1 string
 	})
-	chPay, err := p.SubscribeID(signalID, cancel)
+	cancel, chPay, err := p.SubscribeID(signalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
 	}
 	go func() {
 		for {
@@ -301,30 +301,30 @@ func (p *ServiceDirectoryProxy) SignalServiceAdded(cancel chan int) (chan struct
 			ch <- e
 		}
 	}()
-	return ch, nil
+	return cancel, ch, nil
 }
 
-// SignalServiceRemoved subscribe to a remote signal
-func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan struct {
+// SubscribeServiceRemoved subscribe to a remote signal
+func (p *ServiceDirectoryProxy) SubscribeServiceRemoved() (func(), chan struct {
 	P0 uint32
 	P1 string
 }, error) {
 	signalID, err := p.SignalID("serviceRemoved")
 	if err != nil {
-		return nil, fmt.Errorf("signal %s not available: %s", "serviceRemoved", err)
+		return nil, nil, fmt.Errorf("signal %s not available: %s", "serviceRemoved", err)
 	}
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to register event for %s: %s", "serviceRemoved", err)
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceRemoved", err)
 	}
 	ch := make(chan struct {
 		P0 uint32
 		P1 string
 	})
-	chPay, err := p.SubscribeID(signalID, cancel)
+	cancel, chPay, err := p.SubscribeID(signalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
 	}
 	go func() {
 		for {
@@ -358,7 +358,7 @@ func (p *ServiceDirectoryProxy) SignalServiceRemoved(cancel chan int) (chan stru
 			ch <- e
 		}
 	}()
-	return ch, nil
+	return cancel, ch, nil
 }
 
 // LogManagerProxy implements LogManager

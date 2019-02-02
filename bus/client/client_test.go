@@ -81,22 +81,22 @@ func TestProxy(t *testing.T) {
 	if directory.ServiceID() != 1 {
 		t.Fatalf("wrong service id")
 	}
-	cancel := make(chan int)
-	_, err = directory.SubscribeID(signalID, cancel)
+	var cancel func()
+	cancel, _, err = directory.SubscribeID(signalID)
 	if err != nil {
 		t.Error(err)
 	}
-	cancel <- 1
-	_, err = directory.Subscribe("serviceAdded", cancel)
+	cancel()
+	cancel, _, err = directory.Subscribe("serviceAdded")
 	if err != nil {
 		t.Error(err)
 	}
-	cancel <- 1
-	_, err = directory.Subscribe("unknownSignal", cancel)
+	cancel()
+	_, _, err = directory.Subscribe("unknownSignal")
 	if err == nil {
 		t.Fatalf("must fail")
 	}
-	_, err = directory.SubscribeID(12345, cancel)
+	_, _, err = directory.SubscribeID(12345)
 	if err == nil {
 		// TODO
 	}

@@ -19,7 +19,7 @@ type Session struct {
 	serviceList      []services.ServiceInfo
 	serviceListMutex sync.Mutex
 	Directory        services.ServiceDirectory
-	cancel           chan int
+	cancel           func()
 	added            chan struct {
 		P0 uint32
 		P1 string
@@ -118,14 +118,18 @@ func BindSession(c bus.Client) (*Session, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list services: %s", err)
 	}
-	s.cancel = make(chan int)
-	s.removed, err = s.Directory.SignalServiceRemoved(s.cancel)
+	var cancelRemoved, cancelAdded func()
+	cancelRemoved, s.removed, err = s.Directory.SubscribeServiceRemoved()
 	if err != nil {
 		return nil, fmt.Errorf("failed to subscribe remove signal: %s", err)
 	}
-	s.added, err = s.Directory.SignalServiceAdded(s.cancel)
+	cancelAdded, s.added, err = s.Directory.SubscribeServiceAdded()
 	if err != nil {
 		return nil, fmt.Errorf("failed to subscribe added signal: %s", err)
+	}
+	s.cancel = func() {
+		cancelRemoved()
+		cancelAdded()
 	}
 	return s, nil
 }
@@ -167,9 +171,7 @@ func (s *Session) updateServiceList() {
 
 // Destroy close the session.
 func (s *Session) Destroy() error {
-	// cancel both add and remove services
-	s.cancel <- 1
-	s.cancel <- 1
+	s.cancel()
 	return s.Directory.Disconnect()
 }
 

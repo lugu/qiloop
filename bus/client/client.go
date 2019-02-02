@@ -93,11 +93,16 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 // Subscribe returns a channel which returns the future value of a
 // given signal. To stop the stream one must send a value in the
 // cancel channel. Do not close the message channel.
-func (c *client) Subscribe(serviceID, objectID, actionID uint32,
-	cancel chan int) (chan []byte, error) {
+func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
+	func(), chan []byte, error) {
 
 	stream := make(chan []byte)
 	abort := make(chan int)
+	stop := make(chan int)
+
+	cancel := func() {
+		close(abort)
+	}
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Service == serviceID && hdr.Object == objectID &&
@@ -111,26 +116,20 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32,
 		return nil
 	}
 	closer := func(err error) {
-		defer func() {
-			recover()
-		}()
-		close(stream)
-		close(abort)
+		close(stop)
 	}
 
 	go func(id int) {
 		select {
-		case _, ok := <-cancel:
+		case _ = <-stop:
 			c.endpoint.RemoveHandler(id)
-			if ok {
-				close(stream)
-			}
 		case _ = <-abort:
 			c.endpoint.RemoveHandler(id)
 		}
+		close(stream)
 	}(c.endpoint.AddHandler(filter, consumer, closer))
 
-	return stream, nil
+	return cancel, stream, nil
 }
 
 // NewClient returns a new client.

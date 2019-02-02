@@ -42,22 +42,23 @@ func (p Proxy) ObjectID() uint32 {
 
 // SubscribeID returns a channel with the values of a signal or a
 // property.
-func (p Proxy) SubscribeID(action uint32, cancel chan int) (chan []byte, error) {
-	return p.client.Subscribe(p.service, p.object, action, cancel)
+func (p Proxy) SubscribeID(action uint32) (func(), chan []byte, error) {
+	return p.client.Subscribe(p.service, p.object, action)
 }
 
 // Subscribe returns a channel with the values of a signal or a
 // property.
-func (p Proxy) Subscribe(action string, cancel chan int) (chan []byte, error) {
+func (p Proxy) Subscribe(action string) (func(), chan []byte, error) {
 	id, err := p.SignalID(action)
 	if err != nil {
 		id, err = p.PropertyID(action)
 		if err != nil {
-			return nil, fmt.Errorf("cannot find signal or property %s",
-				action)
+			return nil, nil,
+				fmt.Errorf("cannot find signal or property %s",
+					action)
 		}
 	}
-	return p.client.Subscribe(p.service, p.object, id, cancel)
+	return p.client.Subscribe(p.service, p.object, id)
 }
 
 // MethodID resolve the name of the method using the meta object and
