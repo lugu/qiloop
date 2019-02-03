@@ -46,7 +46,23 @@ func TestMetaObjectDecorator(t *testing.T) {
 		}
 		return nil
 	}
-	obj.ForEachMethodAndSignal(method, signal)
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		if getMethodName != strings.Title(p.Name) {
+			t.Errorf("incoherent name: %s and %s", getMethodName,
+				strings.Title(p.Name))
+		}
+		if setMethodName != "Set"+strings.Title(p.Name) {
+			t.Errorf("incoherent name: %s and %s", setMethodName,
+				"Set"+strings.Title(p.Name))
+		}
+		if subscribeMethodName != "Subscribe"+strings.Title(p.Name) {
+			t.Errorf("incoherent name: %s and %s",
+				subscribeMethodName, "Subscribe"+strings.Title(p.Name))
+		}
+		return nil
+	}
+	obj.ForEachMethodAndSignal(method, signal, property)
 }
 
 func TestMetaObjectJson(t *testing.T) {

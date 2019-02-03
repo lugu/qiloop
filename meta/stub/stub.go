@@ -224,7 +224,7 @@ func generateSignalHelper(file *jen.File, itf *idl.InterfaceType,
 
 func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 
-	methodCall := func(m object.MetaMethod, methodName string) error {
+	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
 		err := generateMethodMarshal(file, itf, method, methodName)
 		if err != nil {
@@ -233,7 +233,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 		}
 		return nil
 	}
-	signalCall := func(s object.MetaSignal, signalName string) error {
+	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
 		signalName = strings.Replace(signalName, "Subscribe", "Signal", 1)
 		err := generateSignalHelper(file, itf, signal, signalName)
@@ -243,9 +243,14 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 		}
 		return nil
 	}
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		// TODO: add property methods
+		return nil
+	}
 
 	meta := itf.MetaObject()
-	if err := meta.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
+	if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
 		return fmt.Errorf("failed to generate interface object %s: %s",
 			itf.Name, err)
 	}
@@ -344,7 +349,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	).Call(jen.Id("stb.metaObject()"))
 	writing = append(writing, code)
 
-	methodCall := func(m object.MetaMethod, methodName string) error {
+	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
 		code = jen.Id("stb.obj.Wrap").Call(
 			jen.Lit(method.ID),
@@ -354,12 +359,17 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 		return nil
 	}
 
-	signalCall := func(m object.MetaSignal, signalName string) error {
+	signal := func(m object.MetaSignal, signalName string) error {
+		return nil
+	}
+
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
 		return nil
 	}
 
 	meta := itf.MetaObject()
-	if err := meta.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
+	if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
 		return fmt.Errorf("failed to generate interface object %s: %s",
 			itf.Name, err)
 	}
@@ -407,7 +417,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	terminate := jen.Id("OnTerminate()")
 	definitions = append(definitions, terminate)
 
-	methodCall := func(m object.MetaMethod, methodName string) error {
+	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
 		def, err := generateMethodDef(itf, set, method, methodName)
 		if err != nil {
@@ -417,7 +427,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		definitions = append(definitions, def)
 		return nil
 	}
-	signalCall := func(s object.MetaSignal, signalName string) error {
+	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
 		signalName = strings.Replace(signalName, "Subscribe", "Signal", 1)
 		def, err := generateSignalDef(itf, set, signal, signalName)
@@ -428,9 +438,15 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		signalDefinitions = append(signalDefinitions, def)
 		return nil
 	}
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		// TODO: force an initial value to be passed during object
+		// creation.
+		return nil
+	}
 
 	meta := itf.MetaObject()
-	if err := meta.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
+	if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
 		return fmt.Errorf("failed to generate interface object %s: %s",
 			itf.Name, err)
 	}

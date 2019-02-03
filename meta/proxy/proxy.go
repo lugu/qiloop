@@ -116,7 +116,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 	}
 	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 
-	methodCall := func(m object.MetaMethod, methodName string) error {
+	method := func(m object.MetaMethod, methodName string) error {
 		methodName = util.CleanName(methodName)
 		if serviceName != "Server" && m.Uid < object.MinUserActionID {
 			return nil
@@ -130,7 +130,7 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		definitions = append(definitions, def)
 		return nil
 	}
-	signalCall := func(s object.MetaSignal, signalName string) error {
+	signal := func(s object.MetaSignal, signalName string) error {
 		signalName = util.CleanName(signalName)
 		if serviceName != "Server" && s.Uid < object.MinUserActionID {
 			return nil
@@ -144,8 +144,13 @@ func generateObjectInterface(metaObj object.MetaObject, serviceName string, set 
 		definitions = append(definitions, def)
 		return nil
 	}
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		// TODO: add property interfaces
+		return nil
+	}
 
-	if err := metaObj.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
+	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
 		return fmt.Errorf("failed to generate interface object %s: %s", serviceName, err)
 	}
 
@@ -161,22 +166,27 @@ func generateProxyObject(metaObj object.MetaObject, serviceName string, set *sig
 	proxyName := serviceName + "Proxy"
 	generateProxyType(file, serviceName, proxyName, metaObj)
 
-	methodCall := func(m object.MetaMethod, methodName string) error {
+	method := func(m object.MetaMethod, methodName string) error {
 		if serviceName != "Object" && serviceName != "Server" &&
 			m.Uid < object.MinUserActionID {
 			return nil
 		}
 		return generateMethod(file, set, proxyName, m, methodName)
 	}
-	signalCall := func(s object.MetaSignal, methodName string) error {
+	signal := func(s object.MetaSignal, methodName string) error {
 		if serviceName != "Object" && serviceName != "Server" &&
 			s.Uid < object.MinUserActionID {
 			return nil
 		}
 		return generateSignal(file, set, proxyName, s, methodName)
 	}
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		// TODO: add property methods
+		return nil
+	}
 
-	if err := metaObj.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
+	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
 		return fmt.Errorf("failed to generate proxy object %s: %s", serviceName, err)
 	}
 	return nil

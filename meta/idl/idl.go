@@ -95,14 +95,18 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 
 	fmt.Fprintf(writer, "interface %s\n", serviceName)
 
-	methodCall := func(m object.MetaMethod, methodName string) error {
+	method := func(m object.MetaMethod, methodName string) error {
 		return generateMethod(writer, set, m, methodName)
 	}
-	signalCall := func(s object.MetaSignal, methodName string) error {
+	signal := func(s object.MetaSignal, methodName string) error {
 		return generateSignal(writer, set, s, methodName)
 	}
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		return nil
+	}
 
-	if err := metaObj.ForEachMethodAndSignal(methodCall, signalCall); err != nil {
+	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
 		return fmt.Errorf("failed to generate proxy object %s: %s", serviceName, err)
 	}
 	fmt.Fprintf(writer, "end\n")

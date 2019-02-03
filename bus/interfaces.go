@@ -27,11 +27,6 @@ type Proxy interface {
 	SignalID(name string) (uint32, error)
 	PropertyID(name string) (uint32, error)
 
-	// TODO
-	// Properties() ([]string, error)
-	// Property(name string) (value.Value, error)
-	// SetProperty(name string, value value.Value) error
-
 	// ServiceID returns the related service identifier
 	ServiceID() uint32
 	// ServiceID returns object identifier within the service
