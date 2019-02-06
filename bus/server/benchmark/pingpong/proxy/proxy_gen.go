@@ -32,7 +32,7 @@ type PingPong interface {
 	Ping(a string) error
 	// SubscribePong subscribe to a remote signal
 	SubscribePong() (func(), chan struct {
-		a string
+		A string
 	}, error)
 }
 
@@ -93,7 +93,7 @@ func (p *PingPongProxy) Ping(a string) error {
 
 // SubscribePong subscribe to a remote signal
 func (p *PingPongProxy) SubscribePong() (func(), chan struct {
-	a string
+	A string
 }, error) {
 	signalID, err := p.SignalID("pong")
 	if err != nil {
@@ -105,7 +105,7 @@ func (p *PingPongProxy) SubscribePong() (func(), chan struct {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
 	}
 	ch := make(chan struct {
-		a string
+		A string
 	})
 	cancel, chPay, err := p.SubscribeID(signalID)
 	if err != nil {
@@ -123,9 +123,9 @@ func (p *PingPongProxy) SubscribePong() (func(), chan struct {
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := func() (s struct {
-				a string
+				A string
 			}, err error) {
-				s.a, err = basic.ReadString(buf)
+				s.A, err = basic.ReadString(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}

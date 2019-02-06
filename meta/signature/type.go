@@ -639,7 +639,7 @@ func (t *TupleType) Params() *Statement {
 func (t *TupleType) TypeName() *Statement {
 	params := make([]jen.Code, 0)
 	for _, typ := range t.Members {
-		params = append(params, jen.Id(typ.Name).Add(typ.Type.TypeName()))
+		params = append(params, jen.Id(strings.Title(typ.Name)).Add(typ.Type.TypeName()))
 	}
 	return jen.Struct(params...)
 }
@@ -663,7 +663,7 @@ func (t *TupleType) TypeDeclaration(*jen.File) {
 func (t *TupleType) Marshal(tupleID string, writer string) *Statement {
 	statements := make([]jen.Code, 0)
 	for _, typ := range t.Members {
-		s1 := jen.Err().Op("=").Add(typ.Type.Marshal(tupleID+"."+typ.Name, writer))
+		s1 := jen.Err().Op("=").Add(typ.Type.Marshal(tupleID+"."+strings.Title(typ.Name), writer))
 		s2 := jen.Id(`if (err != nil) {
 			return fmt.Errorf("failed to write tuple member: %s", err)
 		}`)
@@ -682,7 +682,7 @@ func (t *TupleType) Marshal(tupleID string, writer string) *Statement {
 func (t *TupleType) Unmarshal(reader string) *Statement {
 	statements := make([]jen.Code, 0)
 	for _, typ := range t.Members {
-		s1 := jen.List(jen.Id("s."+typ.Name), jen.Err()).Op("=").Add(typ.Type.Unmarshal(reader))
+		s1 := jen.List(jen.Id("s."+strings.Title(typ.Name)), jen.Err()).Op("=").Add(typ.Type.Unmarshal(reader))
 		s2 := jen.Id(`if (err != nil) {
 			return s, fmt.Errorf("failed to read tuple member: %s", err)
 		}`)

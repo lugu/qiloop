@@ -56,7 +56,7 @@ func TestPingPong(t *testing.T) {
 	client.Ping("hello")
 	answer := <-pong
 
-	if answer.P0 != "hello" {
+	if answer.A != "hello" {
 		panic(err)
 	}
 	cancel()
