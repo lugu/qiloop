@@ -27,12 +27,12 @@ type PingPong interface {
 	object.Object
 	bus.Proxy
 	// Hello calls the remote procedure
-	Hello(P0 string) (string, error)
+	Hello(a string) (string, error)
 	// Ping calls the remote procedure
-	Ping(P0 string) error
+	Ping(a string) error
 	// SubscribePong subscribe to a remote signal
 	SubscribePong() (func(), chan struct {
-		P0 string
+		a string
 	}, error)
 }
 
@@ -56,13 +56,13 @@ func (s Constructor) PingPong() (PingPong, error) {
 }
 
 // Hello calls the remote procedure
-func (p *PingPongProxy) Hello(P0 string) (string, error) {
+func (p *PingPongProxy) Hello(a string) (string, error) {
 	var err error
 	var ret string
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteString(a, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize a: %s", err)
 	}
 	response, err := p.Call("hello", buf.Bytes())
 	if err != nil {
@@ -77,12 +77,12 @@ func (p *PingPongProxy) Hello(P0 string) (string, error) {
 }
 
 // Ping calls the remote procedure
-func (p *PingPongProxy) Ping(P0 string) error {
+func (p *PingPongProxy) Ping(a string) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteString(a, buf); err != nil {
+		return fmt.Errorf("failed to serialize a: %s", err)
 	}
 	_, err = p.Call("ping", buf.Bytes())
 	if err != nil {
@@ -93,7 +93,7 @@ func (p *PingPongProxy) Ping(P0 string) error {
 
 // SubscribePong subscribe to a remote signal
 func (p *PingPongProxy) SubscribePong() (func(), chan struct {
-	P0 string
+	a string
 }, error) {
 	signalID, err := p.SignalID("pong")
 	if err != nil {
@@ -105,7 +105,7 @@ func (p *PingPongProxy) SubscribePong() (func(), chan struct {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
 	}
 	ch := make(chan struct {
-		P0 string
+		a string
 	})
 	cancel, chPay, err := p.SubscribeID(signalID)
 	if err != nil {
@@ -123,9 +123,9 @@ func (p *PingPongProxy) SubscribePong() (func(), chan struct {
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := func() (s struct {
-				P0 string
+				a string
 			}, err error) {
-				s.P0, err = basic.ReadString(buf)
+				s.a, err = basic.ReadString(buf)
 				if err != nil {
 					return s, fmt.Errorf("failed to read tuple member: %s", err)
 				}

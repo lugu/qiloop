@@ -24,7 +24,7 @@ func Services(s bus.Session) Constructor {
 type Server interface {
 	bus.Proxy
 	// Authenticate calls the remote procedure
-	Authenticate(P0 map[string]value.Value) (map[string]value.Value, error)
+	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
 }
 
 // ServerProxy implements Server
@@ -47,17 +47,17 @@ func (s Constructor) Server() (Server, error) {
 }
 
 // Authenticate calls the remote procedure
-func (p *ServerProxy) Authenticate(P0 map[string]value.Value) (map[string]value.Value, error) {
+func (p *ServerProxy) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(P0)), buf)
+		err := basic.WriteUint32(uint32(len(capability)), buf)
 		if err != nil {
 			return fmt.Errorf("failed to write map size: %s", err)
 		}
-		for k, v := range P0 {
+		for k, v := range capability {
 			err = basic.WriteString(k, buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
@@ -69,7 +69,7 @@ func (p *ServerProxy) Authenticate(P0 map[string]value.Value) (map[string]value.
 		}
 		return nil
 	}(); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+		return ret, fmt.Errorf("failed to serialize capability: %s", err)
 	}
 	response, err := p.Call("authenticate", buf.Bytes())
 	if err != nil {
