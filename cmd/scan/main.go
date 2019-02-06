@@ -6,7 +6,6 @@ import (
 	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/meta/idl"
-	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
@@ -35,18 +34,14 @@ func open(filename string) io.WriteCloser {
 
 func main() {
 	var serverURL = flag.String("qi-url", "tcp://localhost:9559", "server URL")
-	var proxyFile = flag.String("proxy", "", "File to write proxies")
 	var idlFile = flag.String("idl", "-", "File to write IDL definition (default stdout)")
 	var serviceName = flag.String("service", "", "Use to generate a single service (default all)")
 	var packageName = flag.String("package", "services", "Name of the generated package")
 
 	flag.Parse()
 
-	output := open(*proxyFile)
+	output := open(*idlFile)
 	defer output.Close()
-
-	outputIDL := open(*idlFile)
-	defer outputIDL.Close()
 
 	sess, err := session.NewSession(*serverURL)
 	if err != nil {
@@ -92,16 +87,12 @@ func main() {
 			meta := cache.Services[s.ServiceId]
 			meta.Description = s.Name
 			objects = append(objects, meta)
-			err = idl.GenerateIDL(outputIDL, s.Name, meta)
+			err = idl.GenerateIDL(output, s.Name, meta)
 			if err != nil {
 				log.Printf("failed to generate IDL of %s: %s",
 					s.Name, err)
 			}
 			break
 		}
-	}
-	err = proxy.Generate(objects, *packageName, output)
-	if err != nil {
-		log.Printf("%s", err)
 	}
 }

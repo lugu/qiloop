@@ -4,38 +4,42 @@ import (
 	"flag"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/proxy"
-	"github.com/lugu/qiloop/type/object"
+	"io/ioutil"
 	"log"
 	"os"
 )
 
 func main() {
-	var idlFile = flag.String("idl", "", "idl file")
-	var packageName = flag.String("package", "", "package name")
-	var proxyFile = flag.String("proxy", "proxy_gen.go", "file to generate")
+	var filename = flag.String("idl", "", "IDL file")
+	var out = flag.String("output", "-", "go file to generate")
 	flag.Parse()
 
-	metas := make([]object.MetaObject, 0)
-
-	f, err := os.Open(*idlFile)
+	file, err := os.Open(*filename)
 	if err != nil {
-		log.Fatalf("failed to open %s: %s", *idlFile, err)
-	}
-	objects, err := idl.ParseIDL(f)
-	f.Close()
-	if err != nil {
-		log.Fatalf("failed to parse %s: %s", *idlFile, err)
-	}
-	for _, meta := range objects {
-		metas = append(metas, meta)
+		log.Fatalf("cannot open %s: %s", *filename, err)
 	}
 
-	proxies, err := os.Create(*proxyFile)
-	defer proxies.Close()
+	input, err := ioutil.ReadAll(file)
+	file.Close()
 	if err != nil {
-		log.Fatalf("failed to create proxies.go: %s", err)
+		log.Fatalf("cannot read %s: %s", *filename, err)
 	}
-	if err := proxy.Generate(metas, *packageName, proxies); err != nil {
-		log.Fatalf("failed to generate proxies: %s", err)
+
+	pkg, err := idl.ParsePackage([]byte(input))
+	if err != nil {
+		log.Fatalf("failed to parse %s: %s", *filename, err)
+	}
+
+	output := os.Stdout
+	if *out != "-" {
+		output, err = os.Create(*out)
+		if err != nil {
+			log.Fatalf("failed to create %s: %s", *out, err)
+		}
+		defer output.Close()
+	}
+
+	if err := proxy.GeneratePackage(output, pkg); err != nil {
+		log.Fatalf("failed to generate output: %s", err)
 	}
 }
