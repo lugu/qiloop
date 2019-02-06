@@ -1,4 +1,4 @@
-package pingpong
+package proxy
 
 interface PingPong
         fn hello(a: str) -> str

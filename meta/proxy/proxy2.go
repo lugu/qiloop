@@ -20,6 +20,8 @@ func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 	file.PackageComment(msg)
 	file.PackageComment("File generated. DO NOT EDIT.")
 
+	generateNewServices(file)
+
 	set := signature.NewTypeSet()
 	for _, typ := range pkg.Types {
 		err := generateType(file, set, typ)
@@ -28,11 +30,11 @@ func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 		}
 	}
 
+	set.Declare(file)
 	return file.Render(w)
 }
 
 func generateType(file *jen.File, set *signature.TypeSet, typ signature.Type) error {
-
 	itf, ok := typ.(*idl.InterfaceType)
 	if ok {
 		metaObj := itf.MetaObject()
@@ -45,6 +47,5 @@ func generateType(file *jen.File, set *signature.TypeSet, typ signature.Type) er
 				metaObj.Description, err)
 		}
 	}
-	set.Declare(file)
 	return nil
 }
