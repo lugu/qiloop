@@ -55,22 +55,6 @@ type ServiceDirectory interface {
 	}, error)
 }
 
-// LogManager is a proxy object to the remote service
-type LogManager interface {
-	object.Object
-	bus.Proxy
-	// Log calls the remote procedure
-	Log(P0 []LogMessage) error
-	// CreateListener calls the remote procedure
-	CreateListener() (object.ObjectReference, error)
-	// GetListener calls the remote procedure
-	GetListener() (object.ObjectReference, error)
-	// AddProvider calls the remote procedure
-	AddProvider(P0 object.ObjectReference) (int32, error)
-	// RemoveProvider calls the remote procedure
-	RemoveProvider(P0 int32) error
-}
-
 // ServiceDirectoryProxy implements ServiceDirectory
 type ServiceDirectoryProxy struct {
 	object1.ObjectProxy
@@ -359,6 +343,22 @@ func (p *ServiceDirectoryProxy) SubscribeServiceRemoved() (func(), chan struct {
 		}
 	}()
 	return cancel, ch, nil
+}
+
+// LogManager is a proxy object to the remote service
+type LogManager interface {
+	object.Object
+	bus.Proxy
+	// Log calls the remote procedure
+	Log(P0 []LogMessage) error
+	// CreateListener calls the remote procedure
+	CreateListener() (object.ObjectReference, error)
+	// GetListener calls the remote procedure
+	GetListener() (object.ObjectReference, error)
+	// AddProvider calls the remote procedure
+	AddProvider(P0 object.ObjectReference) (int32, error)
+	// RemoveProvider calls the remote procedure
+	RemoveProvider(P0 int32) error
 }
 
 // LogManagerProxy implements LogManager
