@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
@@ -12,15 +13,205 @@ import (
 // Statement is imported from jennifer code generator.
 type Statement = jen.Statement
 
-func newFileAndSet(packageName string) (*jen.File, *signature.TypeSet) {
-	file := jen.NewFile(packageName)
-	msg := "Package " + packageName + " contains a generated proxy"
+// GeneratePackage generate the proxy for the package declaration.
+func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
+
+	if pkg.Name == "" {
+		return fmt.Errorf("empty package name")
+	}
+	file := jen.NewFile(pkg.Name)
+	msg := "Package " + pkg.Name + " contains a generated proxy"
 	file.PackageComment(msg)
 	file.PackageComment("File generated. DO NOT EDIT.")
-	return file, signature.NewTypeSet()
+
+	generateNewServices(file)
+
+	set := signature.NewTypeSet()
+	for _, typ := range pkg.Types {
+		err := generateType(file, set, typ)
+		if err != nil {
+			return err
+		}
+	}
+
+	set.Declare(file)
+	return file.Render(w)
 }
 
-func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj object.MetaObject) {
+func generateType(file *jen.File, set *signature.TypeSet, typ signature.Type) error {
+	itf, ok := typ.(*idl.InterfaceType)
+	if ok {
+		serviceName := util.CleanName(itf.Name)
+		generateObjectInterface(itf, serviceName, set, file)
+
+		err := generateProxyObject(itf, serviceName, set, file)
+		if err != nil {
+			return fmt.Errorf("failed to render %s: %s",
+				itf.Name, err)
+		}
+	} else {
+		typ.RegisterTo(set)
+	}
+	return nil
+}
+
+func generateNewServices(file *jen.File) {
+	file.Comment("Constructor gives access to remote services")
+	file.Type().Id(
+		"Constructor",
+	).Struct(
+		jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session"),
+	)
+	file.Comment("Services gives access to the services constructor")
+	file.Func().Id(
+		"Services",
+	).Params(
+		jen.Id("s").Qual("github.com/lugu/qiloop/bus", "Session"),
+	).Id(
+		"Constructor",
+	).Block(
+		jen.Id(`return Constructor{ session: s, }`),
+	)
+}
+
+func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
+	set *signature.TypeSet, file *jen.File) error {
+
+	definitions := make([]jen.Code, 0)
+	if serviceName != "Server" {
+		definitions = append(definitions,
+			jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
+	}
+	definitions = append(definitions,
+		jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+
+	method := func(m object.MetaMethod, methodName string) error {
+		method := itf.Methods[m.Uid]
+		methodName = util.CleanName(methodName)
+		if serviceName != "Server" && m.Uid < object.MinUserActionID {
+			return nil
+		}
+		def, err := generateMethodDef(file, set, serviceName, method,
+			methodName)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to render method definition %s of %s: %s",
+				m.Name, serviceName, err)
+		}
+		comment := jen.Comment(methodName + " calls the remote procedure")
+		definitions = append(definitions, comment)
+		definitions = append(definitions, def)
+		return nil
+	}
+	signal := func(s object.MetaSignal, signalName string) error {
+		signal := itf.Signals[s.Uid]
+		signalName = util.CleanName(signalName)
+		if serviceName != "Server" && s.Uid < object.MinUserActionID {
+			return nil
+		}
+		def, err := generateSignalDef(file, set, serviceName, signal,
+			signalName)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to render signal %s of %s: %s",
+				s.Name, serviceName, err)
+		}
+		comment := jen.Comment(signalName + " subscribe to a remote signal")
+		definitions = append(definitions, comment)
+		definitions = append(definitions, def)
+		return nil
+	}
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		// TODO: add property interfaces
+		return nil
+	}
+
+	metaObj := itf.MetaObject()
+	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
+		return fmt.Errorf("failed to generate interface object %s: %s",
+			serviceName, err)
+	}
+
+	file.Comment(serviceName + " is a proxy object to the remote service")
+	file.Type().Id(serviceName).Interface(
+		definitions...,
+	)
+	return nil
+}
+
+func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName string,
+	signal idl.Signal, signalName string) (jen.Code, error) {
+
+	signalType := signal.Tuple()
+	signalType.RegisterTo(set)
+	retType := jen.Params(jen.Func().Params(),
+		jen.Chan().Add(signalType.TypeName()), jen.Error())
+	return jen.Id(signalName).Params().Add(retType), nil
+}
+
+func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName string,
+	method idl.Method, methodName string) (jen.Code, error) {
+
+	paramType := method.Tuple()
+	paramType.RegisterTo(set)
+	paramType.ConvertMetaObjects()
+
+	returnType := method.Return
+
+	// implementation detail: use object.MetaObject when generating
+	// proxy in order for proxy to implement the object.Object
+	// interface.
+	if returnType.Signature() == signature.MetaObjectSignature {
+		returnType = signature.NewMetaObjectType()
+	}
+	returnType.RegisterTo(set)
+	if returnType.Signature() == "v" {
+		return jen.Id(methodName).Add(paramType.Params()).Error(), nil
+	}
+	return jen.Id(methodName).Add(
+		paramType.Params(),
+	).Params(returnType.TypeName(), jen.Error()), nil
+}
+
+func generateProxyObject(itf *idl.InterfaceType, serviceName string,
+	set *signature.TypeSet, file *jen.File) error {
+
+	proxyName := serviceName + "Proxy"
+	generateProxyType(file, serviceName, proxyName, itf)
+
+	method := func(m object.MetaMethod, methodName string) error {
+		method := itf.Methods[m.Uid]
+		if serviceName != "Object" && serviceName != "Server" &&
+			m.Uid < object.MinUserActionID {
+			return nil
+		}
+		return generateMethod(file, set, proxyName, method, methodName)
+	}
+	signal := func(s object.MetaSignal, methodName string) error {
+		signal := itf.Signals[s.Uid]
+		if serviceName != "Object" && serviceName != "Server" &&
+			s.Uid < object.MinUserActionID {
+			return nil
+		}
+		return generateSignal(file, set, proxyName, signal, methodName)
+	}
+	property := func(p object.MetaProperty, getMethodName, setMethodName,
+		subscribeMethodName string) error {
+		// TODO: add property methods
+		return nil
+	}
+
+	metaObj := itf.MetaObject()
+	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
+		return fmt.Errorf("failed to generate proxy object %s: %s",
+			serviceName, err)
+	}
+	return nil
+}
+
+func generateProxyType(file *jen.File, serviceName, proxyName string,
+	itf *idl.InterfaceType) {
 
 	file.Comment(proxyName + " implements " + serviceName)
 	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
@@ -77,166 +268,107 @@ func generateProxyType(file *jen.File, serviceName, proxyName string, metaObj ob
 	)
 }
 
-func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName string, m object.MetaMethod, methodName string) (jen.Code, error) {
+func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string,
+	method idl.Method, methodName string) error {
 
-	paramType, err := signature.Parse(m.ParametersSignature)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse parameters %s: %s", m.ParametersSignature, err)
-	}
+	paramType := method.Tuple()
 	paramType.RegisterTo(set)
-	tuple, ok := paramType.(*signature.TupleType)
-	if !ok {
-		tuple = signature.NewTupleType([]signature.Type{paramType})
-	}
-	tuple.ConvertMetaObjects()
+	paramType.ConvertMetaObjects()
 
-	ret, err := signature.Parse(m.ReturnSignature)
+	returnType := method.Return
+
+	// use object.MetaObject when generating proxy in order for
+	// proxy to implement the object.Object interface.
+	if returnType.Signature() == signature.MetaObjectSignature {
+		returnType = signature.NewMetaObjectType()
+	}
+	returnType.RegisterTo(set)
+
+	body, err := methodBodyBlock(method, paramType, returnType)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse return: %s: %s", m.ReturnSignature, err)
+		return fmt.Errorf("failed to generate body: %s", err)
 	}
 
-	// implementation detail: use object.MetaObject when generating
-	// proxy in order for proxy to implement the object.Object
-	// interface.
-	if ret.Signature() == signature.MetaObjectSignature {
-		ret = signature.NewMetaObjectType()
-	}
-	ret.RegisterTo(set)
-	if ret.Signature() == "v" {
-		return jen.Id(methodName).Add(tuple.Params()).Error(), nil
-	}
-	return jen.Id(methodName).Add(tuple.Params()).Params(ret.TypeName(), jen.Error()), nil
-}
-
-func generateObjectInterface(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
-
-	definitions := make([]jen.Code, 0)
-	if serviceName != "Server" {
-		definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
-	}
-	definitions = append(definitions, jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
-
-	method := func(m object.MetaMethod, methodName string) error {
-		methodName = util.CleanName(methodName)
-		if serviceName != "Server" && m.Uid < object.MinUserActionID {
-			return nil
-		}
-		def, err := generateMethodDef(file, set, serviceName, m, methodName)
-		if err != nil {
-			return fmt.Errorf("failed to render method definition %s of %s: %s", m.Name, serviceName, err)
-		}
-		comment := jen.Comment(methodName + " calls the remote procedure")
-		definitions = append(definitions, comment)
-		definitions = append(definitions, def)
-		return nil
-	}
-	signal := func(s object.MetaSignal, signalName string) error {
-		signalName = util.CleanName(signalName)
-		if serviceName != "Server" && s.Uid < object.MinUserActionID {
-			return nil
-		}
-		def, err := generateSignalDef(file, set, serviceName, s, signalName)
-		if err != nil {
-			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name, serviceName, err)
-		}
-		comment := jen.Comment(signalName + " subscribe to a remote signal")
-		definitions = append(definitions, comment)
-		definitions = append(definitions, def)
-		return nil
-	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
-		// TODO: add property interfaces
-		return nil
+	returnCode := jen.Params(returnType.TypeName(), jen.Error())
+	if returnType.Signature() == "v" {
+		returnCode = jen.Error()
 	}
 
-	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate interface object %s: %s", serviceName, err)
-	}
-
-	file.Comment(serviceName + " is a proxy object to the remote service")
-	file.Type().Id(serviceName).Interface(
-		definitions...,
+	goMethodName := util.CleanName(methodName)
+	file.Comment(goMethodName + " calls the remote procedure")
+	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(goMethodName).Add(
+		paramType.Params(),
+	).Add(
+		returnCode,
+	).Add(
+		body,
 	)
 	return nil
 }
 
-func generateProxyObject(metaObj object.MetaObject, serviceName string, set *signature.TypeSet, file *jen.File) error {
+func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string,
+	signal idl.Signal, methodName string) error {
 
-	proxyName := serviceName + "Proxy"
-	generateProxyType(file, serviceName, proxyName, metaObj)
+	signalType := signal.Tuple()
+	signalType.RegisterTo(set)
 
-	method := func(m object.MetaMethod, methodName string) error {
-		if serviceName != "Object" && serviceName != "Server" &&
-			m.Uid < object.MinUserActionID {
-			return nil
-		}
-		return generateMethod(file, set, proxyName, m, methodName)
-	}
-	signal := func(s object.MetaSignal, methodName string) error {
-		if serviceName != "Object" && serviceName != "Server" &&
-			s.Uid < object.MinUserActionID {
-			return nil
-		}
-		return generateSignal(file, set, proxyName, s, methodName)
-	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
-		// TODO: add property methods
-		return nil
-	}
-
-	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate proxy object %s: %s", serviceName, err)
-	}
-	return nil
-}
-
-func generateNewServices(file *jen.File) {
-	file.Comment("Constructor gives access to remote services")
-	file.Type().Id(
-		"Constructor",
-	).Struct(
-		jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session"),
+	retType := jen.Params(
+		jen.Func().Params(),
+		jen.Chan().Add(signalType.TypeName()),
+		jen.Error(),
 	)
-	file.Comment("Services gives access to the services constructor")
-	file.Func().Id(
-		"Services",
-	).Params(
-		jen.Id("s").Qual("github.com/lugu/qiloop/bus", "Session"),
-	).Id(
-		"Constructor",
-	).Block(
-		jen.Id(`return Constructor{ session: s, }`),
-	)
-}
-
-// Generate writes the proxy definition of the listed meta objects.
-func Generate(metaObjList []object.MetaObject, packageName string, w io.Writer) error {
-	file, set := newFileAndSet(packageName)
-	generateNewServices(file)
-
-	for _, metaObj := range metaObjList {
-		serviceName := util.CleanName(metaObj.Description)
-		generateObjectInterface(metaObj, serviceName, set, file)
-	}
-	for i, metaObj := range metaObjList {
-		serviceName := util.CleanName(metaObj.Description)
-		err := generateProxyObject(metaObj, serviceName, set, file)
+	body := jen.Block(
+		jen.Id(`signalID, err := p.SignalID("`+signal.Name+`")
 		if err != nil {
-			return fmt.Errorf("failed to render %s (%d): %s",
-				metaObj.Description, i, err)
+			return nil, nil, fmt.Errorf("signal %s not available: %s", "`+signal.Name+`", err)
 		}
-	}
-	set.Declare(file)
 
-	if err := file.Render(w); err != nil {
-		return fmt.Errorf("failed to render %s: %s", packageName, err)
-	}
+		handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to register event for %s: %s", "`+signal.Name+`", err)
+		}`),
+		jen.Id("ch").Op(":=").Make(jen.Chan().Add(signalType.TypeName())),
+		jen.List(
+			jen.Id("cancel"),
+			jen.Id("chPay"),
+			jen.Err(),
+		).Op(":=").Id("p.SubscribeID").Call(jen.Id("signalID")),
+		jen.Id(`if err != nil {
+			return nil, nil, fmt.Errorf("failed to request signal: %s", err)
+		}`),
+		jen.Go().Func().Params().Block(jen.For().Block(
+			jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
+			jen.Id(`if !ok {
+					// connection lost or cancellation.
+					close(ch)
+					p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+					return
+				}`),
+			jen.Id("buf := bytes.NewBuffer(payload)"),
+			jen.Id("_ = buf // discard unused variable error"),
+			jen.List(jen.Id("e"),
+				jen.Err()).Op(":=").Add(signalType.Unmarshal("buf")),
+			jen.If(jen.Id("err").Op("!=").Nil()).Block(
+				jen.Qual("log", "Printf").Call(
+					jen.Lit("failed to unmarshall tuple: %s"),
+					jen.Id("err"),
+				),
+				jen.Continue(),
+			),
+			jen.Id(`ch<- e`),
+		)).Call(),
+		jen.Return(jen.Id("cancel"), jen.Id("ch"), jen.Nil()),
+	)
+
+	file.Comment(methodName + " subscribe to a remote signal")
+	file.Func().Params(
+		jen.Id("p").Op("*").Id(serviceName),
+	).Id(methodName).Params().Add(retType).Add(body)
 	return nil
 }
 
-func methodBodyBlock(m object.MetaMethod, params *signature.TupleType, ret signature.Type) (*Statement, error) {
+func methodBodyBlock(method idl.Method, params *signature.TupleType,
+	ret signature.Type) (*Statement, error) {
 	writing := make([]jen.Code, 0)
 	writing = append(writing, jen.Var().Err().Error())
 	if ret.Signature() != "v" {
@@ -256,24 +388,24 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleType, ret signa
 		}
 	}
 	if ret.Signature() != "v" {
-		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.Call("%s", buf.Bytes())`, m.Name)))
+		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.Call("%s", buf.Bytes())`, method.Name)))
 	} else {
-		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.Call("%s", buf.Bytes())`, m.Name)))
+		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.Call("%s", buf.Bytes())`, method.Name)))
 	}
 	if ret.Signature() != "v" {
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
-			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
+			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("call %s failed: %s", err)`, method.Name, "%s")),
 		))
 	} else {
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
-			jen.Id(fmt.Sprintf(`return fmt.Errorf("call %s failed: %s", err)`, m.Name, "%s")),
+			jen.Id(fmt.Sprintf(`return fmt.Errorf("call %s failed: %s", err)`, method.Name, "%s")),
 		))
 	}
 	if ret.Signature() != "v" {
 		writing = append(writing, jen.Id("buf = bytes.NewBuffer(response)"))
 		writing = append(writing, jen.Id("ret, err =").Add(ret.Unmarshal("buf")))
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
-			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("failed to parse %s response: %s", err)`, m.Name, "%s")),
+			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("failed to parse %s response: %s", err)`, method.Name, "%s")),
 		))
 		writing = append(writing, jen.Return(jen.Id("ret"), jen.Nil()))
 	} else {
@@ -283,119 +415,4 @@ func methodBodyBlock(m object.MetaMethod, params *signature.TupleType, ret signa
 	return jen.Block(
 		writing...,
 	), nil
-}
-
-func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string, m object.MetaMethod, methodName string) error {
-
-	paramType, err := signature.Parse(m.ParametersSignature)
-	if err != nil {
-		return fmt.Errorf("failed to parse parameters %s: %s", m.ParametersSignature, err)
-	}
-	paramType.RegisterTo(set)
-	tuple, ok := paramType.(*signature.TupleType)
-	if !ok {
-		tuple = signature.NewTupleType([]signature.Type{paramType})
-	}
-
-	tuple.ConvertMetaObjects()
-
-	ret, err := signature.Parse(m.ReturnSignature)
-	if err != nil {
-		return fmt.Errorf("failed to parse return: %s: %s", m.ReturnSignature, err)
-	}
-
-	// implementation detail: use object.MetaObject when generating
-	// proxy in order for proxy to implement the object.Object
-	// interface.
-	if ret.Signature() == signature.MetaObjectSignature {
-		ret = signature.NewMetaObjectType()
-	}
-	ret.RegisterTo(set)
-
-	body, err := methodBodyBlock(m, tuple, ret)
-	if err != nil {
-		return fmt.Errorf("failed to generate body: %s", err)
-	}
-
-	retType := jen.Params(ret.TypeName(), jen.Error())
-	if ret.Signature() == "v" {
-		retType = jen.Error()
-	}
-
-	goMethodName := util.CleanName(methodName)
-	file.Comment(goMethodName + " calls the remote procedure")
-	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(goMethodName).Add(
-		tuple.Params(),
-	).Add(
-		retType,
-	).Add(
-		body,
-	)
-	return nil
-}
-
-func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string, s object.MetaSignal, methodName string) error {
-
-	signalType, err := signature.Parse(s.Signature)
-	if err != nil {
-		return fmt.Errorf("failed to parse signal %s: %s", s.Signature, err)
-	}
-
-	signalType.RegisterTo(set)
-
-	retType := jen.Params(jen.Func().Params(), jen.Chan().Add(signalType.TypeName()), jen.Error())
-	body := jen.Block(
-		jen.Id(`signalID, err := p.SignalID("`+s.Name+`")
-		if err != nil {
-			return nil, nil, fmt.Errorf("signal %s not available: %s", "`+s.Name+`", err)
-		}
-
-		handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to register event for %s: %s", "`+s.Name+`", err)
-		}`),
-		jen.Id("ch").Op(":=").Make(jen.Chan().Add(signalType.TypeName())),
-		jen.List(jen.Id("cancel"), jen.Id("chPay"), jen.Err()).Op(":=").Id("p.SubscribeID").Call(jen.Id("signalID")),
-		jen.Id(`if err != nil {
-			return nil, nil, fmt.Errorf("failed to request signal: %s", err)
-		}`),
-		jen.Go().Func().Params().Block(
-			jen.For().Block(
-				jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
-				jen.Id(`if !ok {
-					// connection lost or cancellation.
-					close(ch)
-					p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
-					return
-				}`),
-				jen.Id("buf := bytes.NewBuffer(payload)"),
-				jen.Id("_ = buf // discard unused variable error"),
-				jen.List(jen.Id("e"), jen.Err()).Op(":=").Add(signalType.Unmarshal("buf")),
-				jen.If(jen.Id("err").Op("!=").Nil()).Block(
-					jen.Qual("log", "Printf").Call(jen.Lit("failed to unmarshall tuple: %s"), jen.Id("err")),
-					jen.Continue(),
-				),
-				jen.Id(`ch<- e`),
-			),
-		).Call(),
-		jen.Return(jen.Id("cancel"), jen.Id("ch"), jen.Nil()),
-	)
-
-	file.Comment(methodName + " subscribe to a remote signal")
-	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(methodName).Params().Add(
-		retType,
-	).Add(
-		body,
-	)
-	return nil
-}
-
-func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName string, s object.MetaSignal, signalName string) (jen.Code, error) {
-	signalType, err := signature.Parse(s.Signature)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse signal %s: %s", s.Signature, err)
-	}
-	signalType.RegisterTo(set)
-	retType := jen.Params(jen.Func().Params(), jen.Chan().Add(signalType.TypeName()), jen.Error())
-	return jen.Id(signalName).Params().Add(retType), nil
 }
