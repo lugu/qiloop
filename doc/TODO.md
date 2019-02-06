@@ -11,7 +11,6 @@ Unsorted TODO list
 - benchmark bandwith
 - websocket protocol
 - object reference resolution
-- proxy from IDL
 - support for properties
 - terminate without error
 - guide line for an improved protocol
