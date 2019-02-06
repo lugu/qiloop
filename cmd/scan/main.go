@@ -36,7 +36,6 @@ func main() {
 	var serverURL = flag.String("qi-url", "tcp://localhost:9559", "server URL")
 	var idlFile = flag.String("idl", "-", "File to write IDL definition (default stdout)")
 	var serviceName = flag.String("service", "", "Use to generate a single service (default all)")
-	var packageName = flag.String("package", "services", "Name of the generated package")
 
 	flag.Parse()
 
