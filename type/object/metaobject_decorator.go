@@ -102,7 +102,7 @@ func (m *MetaObject) ForEachMethodAndSignal(
 	for _, i := range keys {
 		k := uint32(i)
 		p := m.Properties[k]
-		getMethodName := registerName(strings.Title(p.Name),
+		getMethodName := registerName("Get"+strings.Title(p.Name),
 			methodNames)
 		setMethodName := registerName("Set"+strings.Title(p.Name),
 			methodNames)

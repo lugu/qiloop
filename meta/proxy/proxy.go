@@ -123,7 +123,26 @@ func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
 	}
 	property := func(p object.MetaProperty, getMethodName, setMethodName,
 		subscribeMethodName string) error {
-		// TODO: add property interfaces
+		property := itf.Properties[p.Uid]
+		if serviceName != "Server" && p.Uid < object.MinUserActionID {
+			return nil
+		}
+		get, set, sub, err := generatePropertyDef(file, set, serviceName, property,
+			getMethodName, setMethodName, subscribeMethodName)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to render property %s of %s: %s",
+				p.Name, serviceName, err)
+		}
+		comment := jen.Comment(getMethodName + " returns the property value")
+		definitions = append(definitions, comment)
+		definitions = append(definitions, get)
+		comment = jen.Comment(getMethodName + " sets the property value")
+		definitions = append(definitions, comment)
+		definitions = append(definitions, set)
+		comment = jen.Comment(subscribeMethodName + " regusters to a property")
+		definitions = append(definitions, comment)
+		definitions = append(definitions, sub)
 		return nil
 	}
 
@@ -148,6 +167,26 @@ func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName strin
 	retType := jen.Params(jen.Func().Params(),
 		jen.Chan().Add(signalType.TypeName()), jen.Error())
 	return jen.Id(signalName).Params().Add(retType), nil
+}
+
+// generatePropertyDef returns the set, get and subscribe methods
+func generatePropertyDef(file *jen.File, set *signature.TypeSet, serviceName string,
+	property idl.Property, getMethodName, setMethodName, subscribeMethodName string) (jen.Code, jen.Code, jen.Code, error) {
+
+	propertyType := property.Tuple()
+	propertyType.RegisterTo(set)
+
+	retType := jen.Params(propertyType.TypeName(), jen.Error())
+	getMethod := jen.Id(getMethodName).Params().Add(retType)
+
+	paramType := jen.Params(propertyType.TypeName(), jen.Error())
+	setMethod := jen.Id(setMethodName).Params(paramType).Error()
+
+	retType = jen.Params(jen.Func().Params(),
+		jen.Chan().Add(propertyType.TypeName()), jen.Error())
+	subscribeMethod := jen.Id(subscribeMethodName).Params().Add(retType)
+
+	return getMethod, setMethod, subscribeMethod, nil
 }
 
 func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName string,

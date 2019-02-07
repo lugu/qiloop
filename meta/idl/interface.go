@@ -118,6 +118,21 @@ type Property struct {
 	Params []Parameter
 }
 
+// Tuple returns a TupleType used to generate marshall/unmarshall
+// operations.
+func (s Property) Tuple() *signature.TupleType {
+	var tuple signature.TupleType
+	tuple.Members = make([]signature.MemberType, 0)
+	for _, p := range s.Params {
+		tuple.Members = append(tuple.Members,
+			signature.MemberType{
+				Name: p.Name,
+				Type: p.Type,
+			})
+	}
+	return &tuple
+}
+
 // Meta converts a property to a MetaProperty.
 func (p Property) Meta(id uint32) object.MetaProperty {
 	var meta object.MetaProperty
