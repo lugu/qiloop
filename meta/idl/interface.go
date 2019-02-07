@@ -242,8 +242,8 @@ func (s *InterfaceType) MetaObject() object.MetaObject {
 	for id, s := range s.Signals {
 		meta.Signals[id] = s.Meta(id)
 	}
-	for id, p := range s.Signals {
-		meta.Signals[id] = p.Meta(id)
+	for id, p := range s.Properties {
+		meta.Properties[id] = p.Meta(id)
 	}
 	return meta
 }
