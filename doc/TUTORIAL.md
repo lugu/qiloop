@@ -24,24 +24,38 @@ go get github.com/lugu/qiloop/...
 ## Create a package
 
 ```
-mkdir -p $GOPATH/src/test/services
-cd $GOPATH/src/test
+mkdir -p $GOPATH/src/demo
+cd $GOPATH/src/demo
 ```
 
 ## Generate the proxy
 
-`qiloop` uses the command `scan` to generate the Go code to access the
-service.
+Two steps:
+- contact the running instance of ALVideoDevice to generate an IDL
+  file. This is done using the `rscan` command.
 
-The following example generates a proxy for ALVideoDevice (`test/services/services.go`):
+- generate the specialized proxy of ALVideoDevice from the IDL file.
+  This is done using the `proxygen` command.
+
+The following example generates a proxy for ALVideoDevice (`demo/video_proxy.go`):
 
 ```
-$GOPATH/bin/scan -qi-url tcp://127.0.0.1:9559 -proxy test/services/services.go -service ALVideoDevice
+$GOPATH/bin/rscan -qi-url tcp://127.0.0.1:9559 -idl demo/video_device.idl -service ALVideoDevice
 ```
+
+Add one line at the top of the IDL file video_device.idl to specify a
+package name:
+'package main`
+
+Then generate the proxy with:
+```
+$GOPATH/bin/proxygen -idl demo/video_device.idl -output video_proxy.go
+```
+
 
 ## Proxy usage
 
-Finally, the main program (`test/main.go`) which uses the proxy of
+Finally, the main program (`demo/main.go`) which uses the proxy of
 ALVideoDevice to obtain a image from a camera:
 
 ```golang
@@ -52,7 +66,6 @@ import (
 	"github.com/lugu/qiloop/type/value"
 	"log"
 	"os"
-	"test/services"
 )
 
 const (
@@ -67,8 +80,8 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	srv := services.Services(sess)
-	videoDevice, err := srv.ALVideoDevice()
+	services := Services(sess)
+	videoDevice, err := services.ALVideoDevice()
 	if err != nil {
 		log.Fatalf("failed to create video device: %s", err)
 	}
@@ -96,12 +109,13 @@ func main() {
 		log.Fatalf("can not create file")
 	}
 	file.Write(pixels)
+        file.Close()
 }
 ```
 
 Since a lot of code is generated, use `go doc` to browse the
 documentation of ALVideoDevice:
 ```
-go doc test/services.ALVideoDevice
+go doc demo
 
 ```

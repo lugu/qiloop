@@ -67,7 +67,7 @@ Follow [this tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.m
 
 ## Examples
 
--   [info demo](https://github.com/lugu/qiloop/blob/master/cmd/info/main.go)
+-   [rinfo demo](https://github.com/lugu/qiloop/blob/master/cmd/rinfo/main.go)
     illustrates how to call a service: it lists the services registered
     to the service directory.
 
