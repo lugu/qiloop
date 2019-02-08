@@ -31,9 +31,7 @@ type PingPong interface {
 	// Ping calls the remote procedure
 	Ping(a string) error
 	// SubscribePong subscribe to a remote signal
-	SubscribePong() (func(), chan struct {
-		A string
-	}, error)
+	SubscribePong() (func(), chan string, error)
 }
 
 // PingPongProxy implements PingPong
@@ -91,25 +89,21 @@ func (p *PingPongProxy) Ping(a string) error {
 	return nil
 }
 
-// SubscribePong subscribe to a remote signal
-func (p *PingPongProxy) SubscribePong() (func(), chan struct {
-	A string
-}, error) {
-	signalID, err := p.SignalID("pong")
+// SubscribePong subscribe to a remote property
+func (p *PingPongProxy) SubscribePong() (func(), chan string, error) {
+	propertyID, err := p.SignalID("pong")
 	if err != nil {
-		return nil, nil, fmt.Errorf("signal %s not available: %s", "pong", err)
+		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
 	}
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
 	}
-	ch := make(chan struct {
-		A string
-	})
-	cancel, chPay, err := p.SubscribeID(signalID)
+	ch := make(chan string)
+	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
 	}
 	go func() {
 		for {
@@ -117,20 +111,12 @@ func (p *PingPongProxy) SubscribePong() (func(), chan struct {
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := func() (s struct {
-				A string
-			}, err error) {
-				s.A, err = basic.ReadString(buf)
-				if err != nil {
-					return s, fmt.Errorf("failed to read tuple member: %s", err)
-				}
-				return s, nil
-			}()
+			e, err := basic.ReadString(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue

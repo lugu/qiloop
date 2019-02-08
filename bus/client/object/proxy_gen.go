@@ -346,25 +346,21 @@ func (p *ObjectProxy) EnableTrace(P0 bool) error {
 	return nil
 }
 
-// SubscribeTraceObject subscribe to a remote signal
-func (p *ObjectProxy) SubscribeTraceObject() (func(), chan struct {
-	P0 EventTrace
-}, error) {
-	signalID, err := p.SignalID("traceObject")
+// SubscribeTraceObject subscribe to a remote property
+func (p *ObjectProxy) SubscribeTraceObject() (func(), chan EventTrace, error) {
+	propertyID, err := p.SignalID("traceObject")
 	if err != nil {
-		return nil, nil, fmt.Errorf("signal %s not available: %s", "traceObject", err)
+		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)
 	}
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
 	}
-	ch := make(chan struct {
-		P0 EventTrace
-	})
-	cancel, chPay, err := p.SubscribeID(signalID)
+	ch := make(chan EventTrace)
+	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
 	}
 	go func() {
 		for {
@@ -372,20 +368,12 @@ func (p *ObjectProxy) SubscribeTraceObject() (func(), chan struct {
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := func() (s struct {
-				P0 EventTrace
-			}, err error) {
-				s.P0, err = ReadEventTrace(buf)
-				if err != nil {
-					return s, fmt.Errorf("failed to read tuple member: %s", err)
-				}
-				return s, nil
-			}()
+			e, err := ReadEventTrace(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue

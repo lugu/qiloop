@@ -405,11 +405,11 @@ func TestStub(t *testing.T) {
 	if info2.P1 != "test" {
 		t.Fatalf(info.Name)
 	}
-	info2, ok = <-removed
+	info3, ok := <-removed
 	if !ok {
 		t.Fatalf("unexpected")
 	}
-	if info2.P1 != "test" {
+	if info3.P1 != "test" {
 		t.Fatalf(info.Name)
 	}
 }

@@ -20,14 +20,8 @@ type Session struct {
 	serviceListMutex sync.Mutex
 	Directory        services.ServiceDirectory
 	cancel           func()
-	added            chan struct {
-		P0 uint32
-		P1 string
-	}
-	removed chan struct {
-		P0 uint32
-		P1 string
-	}
+	added            chan services.ServiceAdded
+	removed          chan services.ServiceRemoved
 }
 
 func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Object, error) {

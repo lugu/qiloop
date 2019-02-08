@@ -44,15 +44,9 @@ type ServiceDirectory interface {
 	// SocketOfService calls the remote procedure
 	SocketOfService(P0 uint32) (object.ObjectReference, error)
 	// SubscribeServiceAdded subscribe to a remote signal
-	SubscribeServiceAdded() (func(), chan struct {
-		P0 uint32
-		P1 string
-	}, error)
+	SubscribeServiceAdded() (func(), chan ServiceAdded, error)
 	// SubscribeServiceRemoved subscribe to a remote signal
-	SubscribeServiceRemoved() (func(), chan struct {
-		P0 uint32
-		P1 string
-	}, error)
+	SubscribeServiceRemoved() (func(), chan ServiceRemoved, error)
 }
 
 // ServiceDirectoryProxy implements ServiceDirectory
@@ -231,27 +225,21 @@ func (p *ServiceDirectoryProxy) SocketOfService(P0 uint32) (object.ObjectReferen
 	return ret, nil
 }
 
-// SubscribeServiceAdded subscribe to a remote signal
-func (p *ServiceDirectoryProxy) SubscribeServiceAdded() (func(), chan struct {
-	P0 uint32
-	P1 string
-}, error) {
-	signalID, err := p.SignalID("serviceAdded")
+// SubscribeServiceAdded subscribe to a remote property
+func (p *ServiceDirectoryProxy) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
+	propertyID, err := p.SignalID("serviceAdded")
 	if err != nil {
-		return nil, nil, fmt.Errorf("signal %s not available: %s", "serviceAdded", err)
+		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceAdded", err)
 	}
-	ch := make(chan struct {
-		P0 uint32
-		P1 string
-	})
-	cancel, chPay, err := p.SubscribeID(signalID)
+	ch := make(chan ServiceAdded)
+	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
 	}
 	go func() {
 		for {
@@ -259,25 +247,12 @@ func (p *ServiceDirectoryProxy) SubscribeServiceAdded() (func(), chan struct {
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := func() (s struct {
-				P0 uint32
-				P1 string
-			}, err error) {
-				s.P0, err = basic.ReadUint32(buf)
-				if err != nil {
-					return s, fmt.Errorf("failed to read tuple member: %s", err)
-				}
-				s.P1, err = basic.ReadString(buf)
-				if err != nil {
-					return s, fmt.Errorf("failed to read tuple member: %s", err)
-				}
-				return s, nil
-			}()
+			e, err := ReadServiceAdded(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -288,27 +263,21 @@ func (p *ServiceDirectoryProxy) SubscribeServiceAdded() (func(), chan struct {
 	return cancel, ch, nil
 }
 
-// SubscribeServiceRemoved subscribe to a remote signal
-func (p *ServiceDirectoryProxy) SubscribeServiceRemoved() (func(), chan struct {
-	P0 uint32
-	P1 string
-}, error) {
-	signalID, err := p.SignalID("serviceRemoved")
+// SubscribeServiceRemoved subscribe to a remote property
+func (p *ServiceDirectoryProxy) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
+	propertyID, err := p.SignalID("serviceRemoved")
 	if err != nil {
-		return nil, nil, fmt.Errorf("signal %s not available: %s", "serviceRemoved", err)
+		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
 	}
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceRemoved", err)
 	}
-	ch := make(chan struct {
-		P0 uint32
-		P1 string
-	})
-	cancel, chPay, err := p.SubscribeID(signalID)
+	ch := make(chan ServiceRemoved)
+	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request signal: %s", err)
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
 	}
 	go func() {
 		for {
@@ -316,25 +285,12 @@ func (p *ServiceDirectoryProxy) SubscribeServiceRemoved() (func(), chan struct {
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := func() (s struct {
-				P0 uint32
-				P1 string
-			}, err error) {
-				s.P0, err = basic.ReadUint32(buf)
-				if err != nil {
-					return s, fmt.Errorf("failed to read tuple member: %s", err)
-				}
-				s.P1, err = basic.ReadString(buf)
-				if err != nil {
-					return s, fmt.Errorf("failed to read tuple member: %s", err)
-				}
-				return s, nil
-			}()
+			e, err := ReadServiceRemoved(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -475,6 +431,62 @@ func (p *LogManagerProxy) RemoveProvider(P0 int32) error {
 	_, err = p.Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
+	}
+	return nil
+}
+
+// ServiceAdded is serializable
+type ServiceAdded struct {
+	P0 uint32
+	P1 string
+}
+
+// ReadServiceAdded unmarshalls ServiceAdded
+func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
+	if s.P0, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read P0 field: " + err.Error())
+	}
+	if s.P1, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read P1 field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteServiceAdded marshalls ServiceAdded
+func WriteServiceAdded(s ServiceAdded, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.P0, w); err != nil {
+		return fmt.Errorf("failed to write P0 field: " + err.Error())
+	}
+	if err := basic.WriteString(s.P1, w); err != nil {
+		return fmt.Errorf("failed to write P1 field: " + err.Error())
+	}
+	return nil
+}
+
+// ServiceRemoved is serializable
+type ServiceRemoved struct {
+	P0 uint32
+	P1 string
+}
+
+// ReadServiceRemoved unmarshalls ServiceRemoved
+func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
+	if s.P0, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read P0 field: " + err.Error())
+	}
+	if s.P1, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read P1 field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteServiceRemoved marshalls ServiceRemoved
+func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.P0, w); err != nil {
+		return fmt.Errorf("failed to write P0 field: " + err.Error())
+	}
+	if err := basic.WriteString(s.P1, w); err != nil {
+		return fmt.Errorf("failed to write P1 field: " + err.Error())
 	}
 	return nil
 }

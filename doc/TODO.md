@@ -12,3 +12,4 @@ Unsorted TODO list
 - object reference resolution
 - support for properties
 - terminate without error
+- proxy/stub: register composite types
