@@ -67,14 +67,14 @@ Follow [this tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.m
 
 ## Examples
 
--   [rinfo demo](https://github.com/lugu/qiloop/blob/master/cmd/rinfo/main.go)
-    illustrates how to call a service: it lists the services registered
-    to the service directory.
+-   [method call](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/method/main.go)
+    illustrates how to call a method of a service: this example lists
+    the services registered to the service directory.
 
 
--   [signal demo](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/signal/main.go)
-    illustrates how to subscribe to a signal: it prints a log each time
-    a service is removed from the service directory.
+-   [signal registration](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/signal/main.go)
+    illustrates how to subscribe to a signal: this example prints a
+    log each time a service is added to the service directory.
 
 ## Authentication
 

@@ -12,13 +12,13 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	srv := services.Services(sess)
-	directory, err := srv.ServiceDirectory()
+	proxies := services.Services(sess)
+	directory, err := proxies.ServiceDirectory()
 	if err != nil {
 		log.Fatalf("failed to connect log manager: %s", err)
 	}
 
-	cancel, channel, err := directory.SubscribeServiceAdded()
+	unsubscribe, channel, err := directory.SubscribeServiceAdded()
 	if err != nil {
 		log.Fatalf("failed to get remote signal channel: %s", err)
 	}
@@ -27,5 +27,5 @@ func main() {
 		e := <-channel
 		log.Printf("service added: %s (%d)", e.P1, e.P0)
 	}
-	cancel()
+	unsubscribe()
 }

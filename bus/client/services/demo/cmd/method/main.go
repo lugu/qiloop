@@ -12,8 +12,8 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	srv := services.Services(sess)
-	directory, err := srv.ServiceDirectory()
+	proxies := services.Services(sess)
+	directory, err := proxies.ServiceDirectory()
 	if err != nil {
 		log.Fatalf("failed to create directory: %s", err)
 	}
@@ -23,7 +23,8 @@ func main() {
 		log.Fatalf("failed to list services: %s", err)
 	}
 
+	log.Printf("Services:")
 	for _, info := range serviceList {
-		log.Printf("service %s, id: %d", info.Name, info.ServiceId)
+		log.Printf(" * %s (id: %d)", info.Name, info.ServiceId)
 	}
 }
