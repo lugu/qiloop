@@ -103,6 +103,7 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 	}
 	property := func(p object.MetaProperty, getMethodName, setMethodName,
 		subscribeMethodName string) error {
+		// TODO: write property
 		return nil
 	}
 

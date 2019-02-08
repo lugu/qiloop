@@ -42,11 +42,15 @@ func generateType(file *jen.File, set *signature.TypeSet, typ signature.Type) er
 	itf, ok := typ.(*idl.InterfaceType)
 	if ok {
 		serviceName := util.CleanName(itf.Name)
-		generateObjectInterface(itf, serviceName, set, file)
-
-		err := generateProxyObject(itf, serviceName, set, file)
+		err := generateObjectInterface(itf, serviceName, set, file)
 		if err != nil {
-			return fmt.Errorf("failed to render %s: %s",
+			return fmt.Errorf("failed to render interface %s: %s",
+				itf.Name, err)
+		}
+
+		err = generateProxyObject(itf, serviceName, set, file)
+		if err != nil {
+			return fmt.Errorf("failed to render proxy %s: %s",
 				itf.Name, err)
 		}
 	} else {
@@ -91,16 +95,13 @@ func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
 		if serviceName != "Server" && m.Uid < object.MinUserActionID {
 			return nil
 		}
-		def, err := generateMethodDef(file, set, serviceName, method,
-			methodName)
+		err := generateMethodDef(file, set, serviceName, method,
+			methodName, &definitions)
 		if err != nil {
 			return fmt.Errorf(
 				"failed to render method definition %s of %s: %s",
 				m.Name, serviceName, err)
 		}
-		comment := jen.Comment(methodName + " calls the remote procedure")
-		definitions = append(definitions, comment)
-		definitions = append(definitions, def)
 		return nil
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
@@ -109,16 +110,13 @@ func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
 		if serviceName != "Server" && s.Uid < object.MinUserActionID {
 			return nil
 		}
-		def, err := generateSignalDef(file, set, serviceName, signal,
-			signalName)
+		err := generateSignalDef(file, set, serviceName, signal,
+			signalName, &definitions)
 		if err != nil {
 			return fmt.Errorf(
 				"failed to render signal %s of %s: %s",
 				s.Name, serviceName, err)
 		}
-		comment := jen.Comment(signalName + " subscribe to a remote signal")
-		definitions = append(definitions, comment)
-		definitions = append(definitions, def)
 		return nil
 	}
 	property := func(p object.MetaProperty, getMethodName, setMethodName,
@@ -127,22 +125,14 @@ func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
 		if serviceName != "Server" && p.Uid < object.MinUserActionID {
 			return nil
 		}
-		get, set, sub, err := generatePropertyDef(file, set, serviceName, property,
-			getMethodName, setMethodName, subscribeMethodName)
+		err := generatePropertyDef(file, set, serviceName, property,
+			getMethodName, setMethodName, subscribeMethodName,
+			&definitions)
 		if err != nil {
 			return fmt.Errorf(
 				"failed to render property %s of %s: %s",
 				p.Name, serviceName, err)
 		}
-		comment := jen.Comment(getMethodName + " returns the property value")
-		definitions = append(definitions, comment)
-		definitions = append(definitions, get)
-		comment = jen.Comment(getMethodName + " sets the property value")
-		definitions = append(definitions, comment)
-		definitions = append(definitions, set)
-		comment = jen.Comment(subscribeMethodName + " regusters to a property")
-		definitions = append(definitions, comment)
-		definitions = append(definitions, sub)
 		return nil
 	}
 
@@ -160,37 +150,52 @@ func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
 }
 
 func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName string,
-	signal idl.Signal, signalName string) (jen.Code, error) {
+	signal idl.Signal, signalName string, definitions *[]jen.Code) error {
 
-	signalType := signal.Tuple()
+	signalType := signal.Type()
 	signalType.RegisterTo(set)
 	retType := jen.Params(jen.Func().Params(),
 		jen.Chan().Add(signalType.TypeName()), jen.Error())
-	return jen.Id(signalName).Params().Add(retType), nil
+	comment := jen.Comment(signalName + " subscribe to a remote signal")
+	*definitions = append(*definitions, comment)
+	def := jen.Id(signalName).Params().Add(retType)
+	*definitions = append(*definitions, def)
+	return nil
 }
 
 // generatePropertyDef returns the set, get and subscribe methods
 func generatePropertyDef(file *jen.File, set *signature.TypeSet, serviceName string,
-	property idl.Property, getMethodName, setMethodName, subscribeMethodName string) (jen.Code, jen.Code, jen.Code, error) {
+	property idl.Property, getMethodName, setMethodName,
+	subscribeMethodName string, definitions *[]jen.Code) error {
 
-	propertyType := property.Tuple()
+	propertyType := property.Type()
 	propertyType.RegisterTo(set)
 
+	/* TODO: need to be implemented
 	retType := jen.Params(propertyType.TypeName(), jen.Error())
 	getMethod := jen.Id(getMethodName).Params().Add(retType)
+	comment := jen.Comment(getMethodName + " returns the property value")
+	*definitions = append(*definitions, comment)
+	*definitions = append(*definitions, getMethod)
 
 	paramType := jen.Params(propertyType.TypeName(), jen.Error())
-	setMethod := jen.Id(setMethodName).Params(paramType).Error()
+	setMethod := jen.Id(setMethodName).Add(paramType).Error()
+	comment = jen.Comment(setMethodName + " sets the property value")
+	*definitions = append(*definitions, comment)
+	*definitions = append(*definitions, setMethod)
+	*/
 
-	retType = jen.Params(jen.Func().Params(),
+	retType := jen.Params(jen.Func().Params(),
 		jen.Chan().Add(propertyType.TypeName()), jen.Error())
 	subscribeMethod := jen.Id(subscribeMethodName).Params().Add(retType)
-
-	return getMethod, setMethod, subscribeMethod, nil
+	comment := jen.Comment(subscribeMethodName + " regusters to a property")
+	*definitions = append(*definitions, comment)
+	*definitions = append(*definitions, subscribeMethod)
+	return nil
 }
 
 func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName string,
-	method idl.Method, methodName string) (jen.Code, error) {
+	method idl.Method, methodName string, definitions *[]jen.Code) error {
 
 	paramType := method.Tuple()
 	paramType.RegisterTo(set)
@@ -205,12 +210,20 @@ func generateMethodDef(file *jen.File, set *signature.TypeSet, serviceName strin
 		returnType = signature.NewMetaObjectType()
 	}
 	returnType.RegisterTo(set)
-	if returnType.Signature() == "v" {
-		return jen.Id(methodName).Add(paramType.Params()).Error(), nil
-	}
-	return jen.Id(methodName).Add(
+
+	comment := jen.Comment(methodName + " calls the remote procedure")
+	*definitions = append(*definitions, comment)
+
+	def := jen.Id(methodName).Add(
 		paramType.Params(),
-	).Params(returnType.TypeName(), jen.Error()), nil
+	).Params(returnType.TypeName(), jen.Error())
+
+	if returnType.Signature() == "v" {
+		def = jen.Id(methodName).Add(paramType.Params()).Error()
+	}
+
+	*definitions = append(*definitions, def)
+	return nil
 }
 
 func generateProxyObject(itf *idl.InterfaceType, serviceName string,
@@ -237,8 +250,13 @@ func generateProxyObject(itf *idl.InterfaceType, serviceName string,
 	}
 	property := func(p object.MetaProperty, getMethodName, setMethodName,
 		subscribeMethodName string) error {
-		// TODO: add property methods
-		return nil
+		property := itf.Properties[p.Uid]
+		if serviceName != "Object" && serviceName != "Server" &&
+			p.Uid < object.MinUserActionID {
+			return nil
+		}
+		return generateProperty(file, set, proxyName, property,
+			getMethodName, setMethodName, subscribeMethodName)
 	}
 
 	metaObj := itf.MetaObject()
@@ -345,48 +363,49 @@ func generateMethod(file *jen.File, set *signature.TypeSet, serviceName string,
 	return nil
 }
 
-func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string,
-	signal idl.Signal, methodName string) error {
-
-	signalType := signal.Tuple()
-	signalType.RegisterTo(set)
+func generateSubscribe(file *jen.File, serviceName, actionName, methodName string,
+	actionType signature.Type, isSignal bool) {
 
 	retType := jen.Params(
 		jen.Func().Params(),
-		jen.Chan().Add(signalType.TypeName()),
+		jen.Chan().Add(actionType.TypeName()),
 		jen.Error(),
 	)
+	methodID := "PropertyID"
+	if isSignal {
+		methodID = "SignalID"
+	}
 	body := jen.Block(
-		jen.Id(`signalID, err := p.SignalID("`+signal.Name+`")
+		jen.Id(`propertyID, err := p.`+methodID+`("`+actionName+`")
 		if err != nil {
-			return nil, nil, fmt.Errorf("signal %s not available: %s", "`+signal.Name+`", err)
+			return nil, nil, fmt.Errorf("property %s not available: %s", "`+actionName+`", err)
 		}
 
-		handlerID, err := p.RegisterEvent(p.ObjectID(), signalID, 0)
+		handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to register event for %s: %s", "`+signal.Name+`", err)
+			return nil, nil, fmt.Errorf("failed to register event for %s: %s", "`+actionName+`", err)
 		}`),
-		jen.Id("ch").Op(":=").Make(jen.Chan().Add(signalType.TypeName())),
+		jen.Id("ch").Op(":=").Make(jen.Chan().Add(actionType.TypeName())),
 		jen.List(
 			jen.Id("cancel"),
 			jen.Id("chPay"),
 			jen.Err(),
-		).Op(":=").Id("p.SubscribeID").Call(jen.Id("signalID")),
+		).Op(":=").Id("p.SubscribeID").Call(jen.Id("propertyID")),
 		jen.Id(`if err != nil {
-			return nil, nil, fmt.Errorf("failed to request signal: %s", err)
+			return nil, nil, fmt.Errorf("failed to request property: %s", err)
 		}`),
 		jen.Go().Func().Params().Block(jen.For().Block(
 			jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
 			jen.Id(`if !ok {
 					// connection lost or cancellation.
 					close(ch)
-					p.UnregisterEvent(p.ObjectID(), signalID, handlerID)
+					p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 					return
 				}`),
 			jen.Id("buf := bytes.NewBuffer(payload)"),
 			jen.Id("_ = buf // discard unused variable error"),
 			jen.List(jen.Id("e"),
-				jen.Err()).Op(":=").Add(signalType.Unmarshal("buf")),
+				jen.Err()).Op(":=").Add(actionType.Unmarshal("buf")),
 			jen.If(jen.Id("err").Op("!=").Nil()).Block(
 				jen.Qual("log", "Printf").Call(
 					jen.Lit("failed to unmarshall tuple: %s"),
@@ -399,10 +418,30 @@ func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string,
 		jen.Return(jen.Id("cancel"), jen.Id("ch"), jen.Nil()),
 	)
 
-	file.Comment(methodName + " subscribe to a remote signal")
+	file.Comment(methodName + " subscribe to a remote property")
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(serviceName),
 	).Id(methodName).Params().Add(retType).Add(body)
+}
+
+func generateSignal(file *jen.File, set *signature.TypeSet, serviceName string,
+	signal idl.Signal, methodName string) error {
+
+	signalType := signal.Type()
+	signalType.RegisterTo(set)
+
+	generateSubscribe(file, serviceName, signal.Name, methodName, signalType, true)
+
+	return nil
+}
+func generateProperty(file *jen.File, set *signature.TypeSet, serviceName string,
+	property idl.Property, getMethodName, setMethodName, subscribeMethodName string) error {
+
+	propertyType := property.Type()
+	propertyType.RegisterTo(set)
+
+	generateSubscribe(file, serviceName, property.Name, subscribeMethodName, propertyType, false)
+
 	return nil
 }
 

@@ -76,6 +76,13 @@ func (m Method) Tuple() *signature.TupleType {
 	return &tuple
 }
 
+func (m Method) Type() signature.Type {
+	if len(m.Params) == 1 {
+		return m.Params[0].Type
+	}
+	return m.Tuple()
+}
+
 // Signal represent an interface signal
 type Signal struct {
 	Name   string
@@ -96,6 +103,15 @@ func (s Signal) Tuple() *signature.TupleType {
 			})
 	}
 	return &tuple
+}
+
+// Type returns a StructType used to generate marshall/unmarshall
+// operations.
+func (s Signal) Type() signature.Type {
+	if len(s.Params) == 1 {
+		return s.Params[0].Type
+	}
+	return signature.NewStructType(s.Name, s.Tuple().Members)
 }
 
 // Meta returns a MetaSignal.
@@ -131,6 +147,15 @@ func (s Property) Tuple() *signature.TupleType {
 			})
 	}
 	return &tuple
+}
+
+// Type returns a StructType used to generate marshall/unmarshall
+// operations.
+func (p Property) Type() signature.Type {
+	if len(p.Params) == 1 {
+		return p.Params[0].Type
+	}
+	return signature.NewStructType(p.Name, p.Tuple().Members)
 }
 
 // Meta converts a property to a MetaProperty.
