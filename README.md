@@ -32,28 +32,28 @@ package main
 import (
 	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/session"
-	"log"
 )
 
 func main() {
 	sess, err := session.NewSession("tcp://localhost:9559")
 	if err != nil {
-		log.Fatalf("failed to connect: %s", err)
+		panic(err)
 	}
 
-	srv := services.Services(sess)
-	directory, err := srv.ServiceDirectory()
+	proxies := services.Services(sess)
+
+	directory, err := proxies.ServiceDirectory()
 	if err != nil {
-		log.Fatalf("failed to create directory: %s", err)
+		panic(err)
 	}
 
 	serviceList, err := directory.Services()
 	if err != nil {
-		log.Fatalf("failed to list services: %s", err)
+		panic(err)
 	}
 
 	for _, info := range serviceList {
-		log.Printf("service %s, id: %d", info.Name, info.ServiceId)
+		println("service " + info.Name)
 	}
 }
 ```
