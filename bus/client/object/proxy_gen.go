@@ -49,19 +49,19 @@ func (s Constructor) Object() (Object, error) {
 }
 
 // RegisterEvent calls the remote procedure
-func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, error) {
+func (p *ObjectProxy) RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
 	}
-	if err = basic.WriteUint32(P1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P1: %s", err)
+	if err = basic.WriteUint32(actionID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize actionID: %s", err)
 	}
-	if err = basic.WriteUint64(P2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P2: %s", err)
+	if err = basic.WriteUint64(handler, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize handler: %s", err)
 	}
 	response, err := p.Call("registerEvent", buf.Bytes())
 	if err != nil {
@@ -76,18 +76,18 @@ func (p *ObjectProxy) RegisterEvent(P0 uint32, P1 uint32, P2 uint64) (uint64, er
 }
 
 // UnregisterEvent calls the remote procedure
-func (p *ObjectProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
+func (p *ObjectProxy) UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return fmt.Errorf("failed to serialize objectID: %s", err)
 	}
-	if err = basic.WriteUint32(P1, buf); err != nil {
-		return fmt.Errorf("failed to serialize P1: %s", err)
+	if err = basic.WriteUint32(actionID, buf); err != nil {
+		return fmt.Errorf("failed to serialize actionID: %s", err)
 	}
-	if err = basic.WriteUint64(P2, buf); err != nil {
-		return fmt.Errorf("failed to serialize P2: %s", err)
+	if err = basic.WriteUint64(handler, buf); err != nil {
+		return fmt.Errorf("failed to serialize handler: %s", err)
 	}
 	_, err = p.Call("unregisterEvent", buf.Bytes())
 	if err != nil {
@@ -97,13 +97,13 @@ func (p *ObjectProxy) UnregisterEvent(P0 uint32, P1 uint32, P2 uint64) error {
 }
 
 // MetaObject calls the remote procedure
-func (p *ObjectProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
+func (p *ObjectProxy) MetaObject(objectID uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
 	}
 	response, err := p.Call("metaObject", buf.Bytes())
 	if err != nil {
@@ -118,12 +118,12 @@ func (p *ObjectProxy) MetaObject(P0 uint32) (object.MetaObject, error) {
 }
 
 // Terminate calls the remote procedure
-func (p *ObjectProxy) Terminate(P0 uint32) error {
+func (p *ObjectProxy) Terminate(objectID uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return fmt.Errorf("failed to serialize objectID: %s", err)
 	}
 	_, err = p.Call("terminate", buf.Bytes())
 	if err != nil {
@@ -133,13 +133,13 @@ func (p *ObjectProxy) Terminate(P0 uint32) error {
 }
 
 // Property calls the remote procedure
-func (p *ObjectProxy) Property(P0 value.Value) (value.Value, error) {
+func (p *ObjectProxy) Property(name value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = P0.Write(buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = name.Write(buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize name: %s", err)
 	}
 	response, err := p.Call("property", buf.Bytes())
 	if err != nil {
@@ -154,15 +154,15 @@ func (p *ObjectProxy) Property(P0 value.Value) (value.Value, error) {
 }
 
 // SetProperty calls the remote procedure
-func (p *ObjectProxy) SetProperty(P0 value.Value, P1 value.Value) error {
+func (p *ObjectProxy) SetProperty(name value.Value, value value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = P0.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = name.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize name: %s", err)
 	}
-	if err = P1.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize P1: %s", err)
+	if err = value.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize value: %s", err)
 	}
 	_, err = p.Call("setProperty", buf.Bytes())
 	if err != nil {
@@ -203,19 +203,19 @@ func (p *ObjectProxy) Properties() ([]string, error) {
 }
 
 // RegisterEventWithSignature calls the remote procedure
-func (p *ObjectProxy) RegisterEventWithSignature(P0 uint32, P1 uint32, P2 uint64, P3 string) (uint64, error) {
+func (p *ObjectProxy) RegisterEventWithSignature(objectID uint32, actionID uint32, handler uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
 	}
-	if err = basic.WriteUint32(P1, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P1: %s", err)
+	if err = basic.WriteUint32(actionID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize actionID: %s", err)
 	}
-	if err = basic.WriteUint64(P2, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P2: %s", err)
+	if err = basic.WriteUint64(handler, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize handler: %s", err)
 	}
 	if err = basic.WriteString(P3, buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize P3: %s", err)
@@ -251,12 +251,12 @@ func (p *ObjectProxy) IsStatsEnabled() (bool, error) {
 }
 
 // EnableStats calls the remote procedure
-func (p *ObjectProxy) EnableStats(P0 bool) error {
+func (p *ObjectProxy) EnableStats(enabled bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteBool(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteBool(enabled, buf); err != nil {
+		return fmt.Errorf("failed to serialize enabled: %s", err)
 	}
 	_, err = p.Call("enableStats", buf.Bytes())
 	if err != nil {
@@ -332,12 +332,12 @@ func (p *ObjectProxy) IsTraceEnabled() (bool, error) {
 }
 
 // EnableTrace calls the remote procedure
-func (p *ObjectProxy) EnableTrace(P0 bool) error {
+func (p *ObjectProxy) EnableTrace(traced bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteBool(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteBool(traced, buf); err != nil {
+		return fmt.Errorf("failed to serialize traced: %s", err)
 	}
 	_, err = p.Call("enableTrace", buf.Bytes())
 	if err != nil {

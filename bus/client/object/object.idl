@@ -1,21 +1,21 @@
 package object
 
 interface Object
-	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
-	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
-	fn metaObject(P0: uint32) -> MetaObject //uid:2
-	fn terminate(P0: uint32) //uid:3
-	fn property(P0: any) -> any //uid:5
-	fn setProperty(P0: any, P1: any) //uid:6
+	fn registerEvent(objectID: uint32, actionID: uint32, handler: uint64) -> uint64 //uid:0
+	fn unregisterEvent(objectID: uint32, actionID: uint32, handler: uint64) //uid:1
+	fn metaObject(objectID: uint32) -> MetaObject //uid:2
+	fn terminate(objectID: uint32) //uid:3
+	fn property(name: any) -> any //uid:5
+	fn setProperty(name: any, value: any) //uid:6
 	fn properties() -> Vec<str> //uid:7
-	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn registerEventWithSignature(objectID: uint32, actionID: uint32, handler: uint64, P3: str) -> uint64 //uid:8
 	fn isStatsEnabled() -> bool //uid:80
-	fn enableStats(P0: bool) //uid:81
+	fn enableStats(enabled: bool) //uid:81
 	fn stats() -> Map<uint32,MethodStatistics> //uid:82
 	fn clearStats() //uid:83
 	fn isTraceEnabled() -> bool //uid:84
-	fn enableTrace(P0: bool) //uid:85
-	sig traceObject(P0: EventTrace) //uid:86
+	fn enableTrace(traced: bool) //uid:85
+	sig traceObject(event: EventTrace) //uid:86
 end
 struct MetaMethodParameter
 	name: str

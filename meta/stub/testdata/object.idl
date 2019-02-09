@@ -1,30 +1,21 @@
 package stub_test
 
 interface Object
-	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
-	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
-	fn metaObject(P0: uint32) -> MetaObject //uid:2
-	fn terminate(P0: uint32) //uid:3
-	fn property(P0: any) -> any //uid:5
-	fn setProperty(P0: any, P1: any) //uid:6
+	fn registerEvent(objectID: uint32, actionID: uint32, handler: uint64) -> uint64 //uid:0
+	fn unregisterEvent(objectID: uint32, actionID: uint32, handler: uint64) //uid:1
+	fn metaObject(objectID: uint32) -> MetaObject //uid:2
+	fn terminate(objectID: uint32) //uid:3
+	fn property(name: any) -> any //uid:5
+	fn setProperty(name: any, value: any) //uid:6
 	fn properties() -> Vec<str> //uid:7
-	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
-	sig traceObject(P0: EventTrace) //uid:86
-end
-struct timeval
-	tv_sec: int64
-	tv_usec: int64
-end
-struct EventTrace
-	id: uint32
-	kind: int32
-	slotId: uint32
-	arguments: any
-	timestamp: timeval
-	userUsTime: int64
-	systemUsTime: int64
-	callerContext: uint32
-	calleeContext: uint32
+	fn registerEventWithSignature(objectID: uint32, actionID: uint32, handler: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(enabled: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(traced: bool) //uid:85
+	sig traceObject(event: EventTrace) //uid:86
 end
 struct MetaMethodParameter
 	name: str
@@ -54,4 +45,30 @@ struct MetaObject
 	signals: Map<uint32,MetaSignal>
 	properties: Map<uint32,MetaProperty>
 	description: str
+end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
+struct timeval
+	tv_sec: int64
+	tv_usec: int64
+end
+struct EventTrace
+	id: uint32
+	kind: int32
+	slotId: uint32
+	arguments: any
+	timestamp: timeval
+	userUsTime: int64
+	systemUsTime: int64
+	callerContext: uint32
+	calleeContext: uint32
 end

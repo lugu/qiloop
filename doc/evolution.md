@@ -1,8 +1,8 @@
 Possible evolutions
 ===================
 
-Authentication
---------------
+Peer to peer authentication
+---------------------------
 
 Problem: only the service directory connection is authenticated.
 Peer to peer connection requires authentication.
@@ -44,3 +44,13 @@ Problem: A client of a given service can guess the object id
 destinated to another client and hijack it.
 
 Solution: Use true random number for service and object id.
+
+Object isolation
+----------------
+
+Problem: Some basic methods take an object id as parameter allowing
+a client to interfer with objects she have not referenced.
+
+Solution: Remove the object id parameter from the following methods:
+MetaObject, Terminate, RegisterEvent, UnregisterEvent,
+RegisterEventWithSignature.

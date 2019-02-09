@@ -1,0 +1,8 @@
+package tester
+
+interface Dummy
+        fn hello()
+        sig ping(msg: str)
+        prop status(msg: str)
+        prop coordinate(x: int32, y: int32)
+end
