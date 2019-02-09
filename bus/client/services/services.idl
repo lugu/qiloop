@@ -1,17 +1,18 @@
 package services
 
 interface ServiceDirectory
-	fn service(P0: str) -> ServiceInfo //uid:100
+	fn service(name: str) -> ServiceInfo //uid:100
 	fn services() -> Vec<ServiceInfo> //uid:101
-	fn registerService(P0: ServiceInfo) -> uint32 //uid:102
-	fn unregisterService(P0: uint32) //uid:103
-	fn serviceReady(P0: uint32) //uid:104
-	fn updateServiceInfo(P0: ServiceInfo) //uid:105
+	fn registerService(info: ServiceInfo) -> uint32 //uid:102
+	fn unregisterService(serviceID: uint32) //uid:103
+	fn serviceReady(serviceID: uint32) //uid:104
+	fn updateServiceInfo(info: ServiceInfo) //uid:105
 	fn machineId() -> str //uid:108
-	fn _socketOfService(P0: uint32) -> obj //uid:109
-	sig serviceAdded(P0: uint32, P1: str) //uid:106
-	sig serviceRemoved(P0: uint32, P1: str) //uid:107
+	fn _socketOfService(serviceID: uint32) -> obj //uid:109
+	sig serviceAdded(serviceID: uint32, name: str) //uid:106
+	sig serviceRemoved(serviceID: uint32, name: str) //uid:107
 end
+
 struct ServiceInfo
 	name: str
 	serviceId: uint32
@@ -20,6 +21,7 @@ struct ServiceInfo
 	endpoints: Vec<str>
 	sessionId: str
 end
+
 interface LogManager
 	fn log(P0: Vec<LogMessage>) //uid:100
 	fn createListener() -> obj //uid:101
@@ -27,6 +29,7 @@ interface LogManager
 	fn addProvider(P0: obj) -> int32 //uid:103
 	fn removeProvider(P0: int32) //uid:104
 end
+
 struct LogMessage
 	source: str
 	level: int32

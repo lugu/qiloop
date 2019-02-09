@@ -28,21 +28,21 @@ type ServiceDirectory interface {
 	object.Object
 	bus.Proxy
 	// Service calls the remote procedure
-	Service(P0 string) (ServiceInfo, error)
+	Service(name string) (ServiceInfo, error)
 	// Services calls the remote procedure
 	Services() ([]ServiceInfo, error)
 	// RegisterService calls the remote procedure
-	RegisterService(P0 ServiceInfo) (uint32, error)
+	RegisterService(info ServiceInfo) (uint32, error)
 	// UnregisterService calls the remote procedure
-	UnregisterService(P0 uint32) error
+	UnregisterService(serviceID uint32) error
 	// ServiceReady calls the remote procedure
-	ServiceReady(P0 uint32) error
+	ServiceReady(serviceID uint32) error
 	// UpdateServiceInfo calls the remote procedure
-	UpdateServiceInfo(P0 ServiceInfo) error
+	UpdateServiceInfo(info ServiceInfo) error
 	// MachineId calls the remote procedure
 	MachineId() (string, error)
 	// SocketOfService calls the remote procedure
-	SocketOfService(P0 uint32) (object.ObjectReference, error)
+	SocketOfService(serviceID uint32) (object.ObjectReference, error)
 	// SubscribeServiceAdded subscribe to a remote signal
 	SubscribeServiceAdded() (func(), chan ServiceAdded, error)
 	// SubscribeServiceRemoved subscribe to a remote signal
@@ -69,13 +69,13 @@ func (s Constructor) ServiceDirectory() (ServiceDirectory, error) {
 }
 
 // Service calls the remote procedure
-func (p *ServiceDirectoryProxy) Service(P0 string) (ServiceInfo, error) {
+func (p *ServiceDirectoryProxy) Service(name string) (ServiceInfo, error) {
 	var err error
 	var ret ServiceInfo
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteString(name, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize name: %s", err)
 	}
 	response, err := p.Call("service", buf.Bytes())
 	if err != nil {
@@ -121,13 +121,13 @@ func (p *ServiceDirectoryProxy) Services() ([]ServiceInfo, error) {
 }
 
 // RegisterService calls the remote procedure
-func (p *ServiceDirectoryProxy) RegisterService(P0 ServiceInfo) (uint32, error) {
+func (p *ServiceDirectoryProxy) RegisterService(info ServiceInfo) (uint32, error) {
 	var err error
 	var ret uint32
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = WriteServiceInfo(info, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize info: %s", err)
 	}
 	response, err := p.Call("registerService", buf.Bytes())
 	if err != nil {
@@ -142,12 +142,12 @@ func (p *ServiceDirectoryProxy) RegisterService(P0 ServiceInfo) (uint32, error) 
 }
 
 // UnregisterService calls the remote procedure
-func (p *ServiceDirectoryProxy) UnregisterService(P0 uint32) error {
+func (p *ServiceDirectoryProxy) UnregisterService(serviceID uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(serviceID, buf); err != nil {
+		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	_, err = p.Call("unregisterService", buf.Bytes())
 	if err != nil {
@@ -157,12 +157,12 @@ func (p *ServiceDirectoryProxy) UnregisterService(P0 uint32) error {
 }
 
 // ServiceReady calls the remote procedure
-func (p *ServiceDirectoryProxy) ServiceReady(P0 uint32) error {
+func (p *ServiceDirectoryProxy) ServiceReady(serviceID uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(serviceID, buf); err != nil {
+		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	_, err = p.Call("serviceReady", buf.Bytes())
 	if err != nil {
@@ -172,12 +172,12 @@ func (p *ServiceDirectoryProxy) ServiceReady(P0 uint32) error {
 }
 
 // UpdateServiceInfo calls the remote procedure
-func (p *ServiceDirectoryProxy) UpdateServiceInfo(P0 ServiceInfo) error {
+func (p *ServiceDirectoryProxy) UpdateServiceInfo(info ServiceInfo) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = WriteServiceInfo(info, buf); err != nil {
+		return fmt.Errorf("failed to serialize info: %s", err)
 	}
 	_, err = p.Call("updateServiceInfo", buf.Bytes())
 	if err != nil {
@@ -205,13 +205,13 @@ func (p *ServiceDirectoryProxy) MachineId() (string, error) {
 }
 
 // SocketOfService calls the remote procedure
-func (p *ServiceDirectoryProxy) SocketOfService(P0 uint32) (object.ObjectReference, error) {
+func (p *ServiceDirectoryProxy) SocketOfService(serviceID uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteUint32(serviceID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	response, err := p.Call("_socketOfService", buf.Bytes())
 	if err != nil {
@@ -437,56 +437,56 @@ func (p *LogManagerProxy) RemoveProvider(P0 int32) error {
 
 // ServiceAdded is serializable
 type ServiceAdded struct {
-	P0 uint32
-	P1 string
+	ServiceID uint32
+	Name      string
 }
 
 // ReadServiceAdded unmarshalls ServiceAdded
 func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
-	if s.P0, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read P0 field: " + err.Error())
+	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
 	}
-	if s.P1, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read P1 field: " + err.Error())
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
 	}
 	return s, nil
 }
 
 // WriteServiceAdded marshalls ServiceAdded
 func WriteServiceAdded(s ServiceAdded, w io.Writer) (err error) {
-	if err := basic.WriteUint32(s.P0, w); err != nil {
-		return fmt.Errorf("failed to write P0 field: " + err.Error())
+	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
+		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
 	}
-	if err := basic.WriteString(s.P1, w); err != nil {
-		return fmt.Errorf("failed to write P1 field: " + err.Error())
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
 	}
 	return nil
 }
 
 // ServiceRemoved is serializable
 type ServiceRemoved struct {
-	P0 uint32
-	P1 string
+	ServiceID uint32
+	Name      string
 }
 
 // ReadServiceRemoved unmarshalls ServiceRemoved
 func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
-	if s.P0, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read P0 field: " + err.Error())
+	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
 	}
-	if s.P1, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read P1 field: " + err.Error())
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
 	}
 	return s, nil
 }
 
 // WriteServiceRemoved marshalls ServiceRemoved
 func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
-	if err := basic.WriteUint32(s.P0, w); err != nil {
-		return fmt.Errorf("failed to write P0 field: " + err.Error())
+	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
+		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
 	}
-	if err := basic.WriteString(s.P1, w); err != nil {
-		return fmt.Errorf("failed to write P1 field: " + err.Error())
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
 	}
 	return nil
 }

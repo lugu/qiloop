@@ -25,7 +25,7 @@ func main() {
 
 	for i := 0; i < 10; i++ {
 		e := <-channel
-		log.Printf("service added: %s (%d)", e.P1, e.P0)
+		log.Printf("service added: %s (%d)", e.Name, e.ServiceID)
 	}
 	unsubscribe()
 }

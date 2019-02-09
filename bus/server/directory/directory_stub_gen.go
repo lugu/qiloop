@@ -17,20 +17,20 @@ import (
 type ServiceDirectory interface {
 	Activate(sess bus.Session, serviceID, objectID uint32, signal ServiceDirectorySignalHelper) error
 	OnTerminate()
-	Service(P0 string) (ServiceInfo, error)
+	Service(name string) (ServiceInfo, error)
 	Services() ([]ServiceInfo, error)
-	RegisterService(P0 ServiceInfo) (uint32, error)
-	UnregisterService(P0 uint32) error
-	ServiceReady(P0 uint32) error
-	UpdateServiceInfo(P0 ServiceInfo) error
+	RegisterService(info ServiceInfo) (uint32, error)
+	UnregisterService(serviceID uint32) error
+	ServiceReady(serviceID uint32) error
+	UpdateServiceInfo(info ServiceInfo) error
 	MachineId() (string, error)
-	_socketOfService(P0 uint32) (object.ObjectReference, error)
+	_socketOfService(serviceID uint32) (object.ObjectReference, error)
 }
 
 // ServiceDirectorySignalHelper provided to ServiceDirectory a companion object
 type ServiceDirectorySignalHelper interface {
-	SignalServiceAdded(P0 uint32, P1 string) error
-	SignalServiceRemoved(P0 uint32, P1 string) error
+	SignalServiceAdded(serviceID uint32, name string) error
+	SignalServiceRemoved(serviceID uint32, name string) error
 }
 
 // stubServiceDirectory implements server.Object.
@@ -67,11 +67,11 @@ func (s *stubServiceDirectory) Receive(msg *net.Message, from *server.Context) e
 }
 func (s *stubServiceDirectory) Service(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := basic.ReadString(buf)
+	name, err := basic.ReadString(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read name: %s", err)
 	}
-	ret, callErr := s.impl.Service(P0)
+	ret, callErr := s.impl.Service(name)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -108,11 +108,11 @@ func (s *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
 }
 func (s *stubServiceDirectory) RegisterService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := ReadServiceInfo(buf)
+	info, err := ReadServiceInfo(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read info: %s", err)
 	}
-	ret, callErr := s.impl.RegisterService(P0)
+	ret, callErr := s.impl.RegisterService(info)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -125,11 +125,11 @@ func (s *stubServiceDirectory) RegisterService(payload []byte) ([]byte, error) {
 }
 func (s *stubServiceDirectory) UnregisterService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := basic.ReadUint32(buf)
+	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read serviceID: %s", err)
 	}
-	callErr := s.impl.UnregisterService(P0)
+	callErr := s.impl.UnregisterService(serviceID)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -138,11 +138,11 @@ func (s *stubServiceDirectory) UnregisterService(payload []byte) ([]byte, error)
 }
 func (s *stubServiceDirectory) ServiceReady(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := basic.ReadUint32(buf)
+	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read serviceID: %s", err)
 	}
-	callErr := s.impl.ServiceReady(P0)
+	callErr := s.impl.ServiceReady(serviceID)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -151,11 +151,11 @@ func (s *stubServiceDirectory) ServiceReady(payload []byte) ([]byte, error) {
 }
 func (s *stubServiceDirectory) UpdateServiceInfo(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := ReadServiceInfo(buf)
+	info, err := ReadServiceInfo(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read info: %s", err)
 	}
-	callErr := s.impl.UpdateServiceInfo(P0)
+	callErr := s.impl.UpdateServiceInfo(info)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -176,11 +176,11 @@ func (s *stubServiceDirectory) MachineId(payload []byte) ([]byte, error) {
 }
 func (s *stubServiceDirectory) _socketOfService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	P0, err := basic.ReadUint32(buf)
+	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P0: %s", err)
+		return nil, fmt.Errorf("cannot read serviceID: %s", err)
 	}
-	ret, callErr := s.impl._socketOfService(P0)
+	ret, callErr := s.impl._socketOfService(serviceID)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -191,13 +191,13 @@ func (s *stubServiceDirectory) _socketOfService(payload []byte) ([]byte, error) 
 	}
 	return out.Bytes(), nil
 }
-func (s *stubServiceDirectory) SignalServiceAdded(P0 uint32, P1 string) error {
+func (s *stubServiceDirectory) SignalServiceAdded(serviceID uint32, name string) error {
 	var buf bytes.Buffer
-	if err := basic.WriteUint32(P0, &buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err := basic.WriteUint32(serviceID, &buf); err != nil {
+		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
-	if err := basic.WriteString(P1, &buf); err != nil {
-		return fmt.Errorf("failed to serialize P1: %s", err)
+	if err := basic.WriteString(name, &buf); err != nil {
+		return fmt.Errorf("failed to serialize name: %s", err)
 	}
 	err := s.obj.UpdateSignal(uint32(0x6a), buf.Bytes())
 
@@ -206,13 +206,13 @@ func (s *stubServiceDirectory) SignalServiceAdded(P0 uint32, P1 string) error {
 	}
 	return nil
 }
-func (s *stubServiceDirectory) SignalServiceRemoved(P0 uint32, P1 string) error {
+func (s *stubServiceDirectory) SignalServiceRemoved(serviceID uint32, name string) error {
 	var buf bytes.Buffer
-	if err := basic.WriteUint32(P0, &buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err := basic.WriteUint32(serviceID, &buf); err != nil {
+		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
-	if err := basic.WriteString(P1, &buf); err != nil {
-		return fmt.Errorf("failed to serialize P1: %s", err)
+	if err := basic.WriteString(name, &buf); err != nil {
+		return fmt.Errorf("failed to serialize name: %s", err)
 	}
 	err := s.obj.UpdateSignal(uint32(0x6b), buf.Bytes())
 

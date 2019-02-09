@@ -566,14 +566,14 @@ func TestServer(t *testing.T) {
 	if !ok {
 		t.Fatalf("unexpected")
 	}
-	if info2.P1 != "test" {
+	if info2.Name != "test" {
 		t.Fatalf(info.Name)
 	}
 	info3, ok := <-removed
 	if !ok {
 		t.Fatalf("unexpected")
 	}
-	if info3.P1 != "test" {
+	if info3.Name != "test" {
 		t.Fatalf(info.Name)
 	}
 	cancelAdded()

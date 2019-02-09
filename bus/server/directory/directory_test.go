@@ -44,18 +44,21 @@ type mockServiceDirectorySignalHelper struct {
 	expectedUid  uint32
 }
 
-func newServiceDirectorySignalHelper(t *testing.T, name string, uid uint32) dir.ServiceDirectorySignalHelper {
+func newServiceDirectorySignalHelper(t *testing.T, name string,
+	uid uint32) dir.ServiceDirectorySignalHelper {
 	return &mockServiceDirectorySignalHelper{
 		t:            t,
 		expectedName: name,
 		expectedUid:  uid,
 	}
 }
-func (h *mockServiceDirectorySignalHelper) SignalServiceAdded(P0 uint32, P1 string) error {
+func (h *mockServiceDirectorySignalHelper) SignalServiceAdded(
+	serviceID uint32, name string) error {
 	return nil
 }
 
-func (h *mockServiceDirectorySignalHelper) SignalServiceRemoved(P0 uint32, P1 string) error {
+func (h *mockServiceDirectorySignalHelper) SignalServiceRemoved(
+	serviceID uint32, name string) error {
 	return nil
 }
 
@@ -402,14 +405,14 @@ func TestStub(t *testing.T) {
 	if !ok {
 		t.Fatalf("unexpected")
 	}
-	if info2.P1 != "test" {
+	if info2.Name != "test" {
 		t.Fatalf(info.Name)
 	}
 	info3, ok := <-removed
 	if !ok {
 		t.Fatalf("unexpected")
 	}
-	if info3.P1 != "test" {
+	if info3.Name != "test" {
 		t.Fatalf(info.Name)
 	}
 }
