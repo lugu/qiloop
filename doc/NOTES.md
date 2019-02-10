@@ -63,7 +63,14 @@
 - [Routing](#routing)
   - [Message destination](#message-destination)
   - [Message origin](#message-origin)
-  - [Message transferred](#message-transferred)
+  - [Basic scenario](#basic-scenario)
+  - [Client objects](#client-objects)
+  - [Message transfer](#message-transfer)
+- [Gateway](#gateway)
+  - [Motivation](#motivation)
+  - [Description](#description)
+  - [Constrains](#constrains)
+  - [Algorithm](#algorithm)
 - [Misc](#misc)
   - [Object Statistics and tracing](#object-statistics-and-tracing)
   - [Interoperability](#interoperability)
@@ -879,11 +886,165 @@ the underlying object (which can be 32 or 64 bits). SHA1 are 160 bits
 and so this UID is composed of 20 bytes.
 
 ## Routing
+
+This section describes how messages are exchanges between clients and
+services.
+
 ### Message destination
+
+The message destination is indicated in the header of the message with
+the service ID field. The service ID is associated with an endpoint by
+the service directory which maintains a list of endpoint for every
+service.
+
 ### Message origin
-### Message transferred
+
+While the destination of a message is specified with the service ID
+field, its origin is not described in the message header. Therefore
+services are supposed to answer a message using the established
+connection of the incoming message.
+
+Because of this, service do not have the ability to know "who" called
+them (other than "this established connection").
+
+### Basic scenario
+
+Most of the time, clients connect to services and send messages at
+destination of the services they have contacted. The services answer
+with other messages sent via the established connection of the client.
+
+In this situation messages are exchanged directly between the two
+parties involved. No need to route any message.
+
+### Client objects
+
+QiMessaging allows objects to be passed as argument of methods:
+objects are first class citizen.
+
+Let's consider an example: instead of sending the content of the file,
+the client create an object which represents the file and pass it to a
+service. This way the service can access any part of the file without
+having to transfer the entire file over the network: it uses the
+file's objet methods seek and read. The qi:file API of libqi works
+like this (see FilePtr).
+
+When a client wants to call such method it need to create an object.
+For the object to be passed as an argument it must be associated with
+a service ID and an object ID. Since clients are not associated with a
+service namespace they must borrow a service ID and a object ID.
+
+In such situation, the client object is associated with the service ID
+of the service it calls. The object ID is (randomly) chosen by the
+client between 2^31 and 2^32-1.
+
+This method presents two (major) drawbacks:
+
+    1. There is a risk of collision on the object ID: Two clients can
+       choose the same object ID.
+
+    2. An object can not longer be directly contacted based on its
+       service ID.
+
+This concept of ObjectPtrUID mitigates some of the issues related to
+the collision problem: it allows two object references to be compared
+for identity.
+
+### Message transfer
+
+In the case of client object, the service acts as a middle man between
+the incoming request and the client object. In order to handle method
+calls, the service must maintain a table associating the object ID
+with the connection.
+
+| object ID | client connection |
+
+Since the client object will reply when called, the service must be
+able to route the client object response. This can be done with a
+table associating the set (object ID, message ID) with the connection
+of the incoming message.
+
+| (object ID, message ID) | calling connection |
+
+Moreover, in the case of a signal / property subscription, the client
+object can emit messages at destination of registered clients.
+
+In such case it is unclear how the service will be able to route the
+messages appropriately.
+
+## Gateway
+
+### Motivation
+
+From a security perspective, one may want to impose two kinds of
+restrictions:
+- restrict which user can connect to the bus
+- restrict which services a user can connect to
+
+The gateway tries to address those needs.
+
+### Description
+
+The gateway listens to an external network interface for incoming
+connection and verifies the user credentials. Then it handles the
+incoming messages transparently such that the user do not establish
+any direct connection to the services.
+
+### Constrains
+
+Before discussing a solution, let's understand the problem:
+
+a. external parties shall only communication with the gateway and the
+   gateway shall be able to prevent an external party for accessing a
+   service if it wants to.
+
+b. both internal and external parties shall not be affected by the
+   gateway (i.e. the gateway shall be transparent).
+
+c. external parties shall be able to create "client object" at the
+   destination of any service.
+
+d. external parties shall be able to register new services to which
+   bother external and internal client shall be able to access.
+
+### Algorithm
+
+From (a) and (b), the view of the service directory from outside must
+be different from the view inside. This can be accomplished with a
+"shadow" service directory embedded in the gateway.
+
+The purpose of this service directory is:
+
+1. to replace the real endpoint (i.e. URL)
+2. to filter access to some services
+
+In order to address (c) and (d) it is important to realize:
+
+ - Messages do not carry information about their origin. In other
+   words, the header contains the service ID of the destination but no
+   information about the origin of the message: the origin is
+   identified by the established connection.
+
+ - Message ID are not unique and likely to overlap between two clients:
+   during a call the message ID is generated by the client in order to
+   distinguish the response of two concurrent calls to the same method
+   of the same object.
+
+Conclusion: When an external party sends a message at destination to a
+service she has not yet contacted, a new connection must be
+established by the gateway to this service. This connection must be
+dedicated to traffic at destination of this particular external party.
+
+Also When an external party declares a new service to the "shadow"
+directory, the gateway must listen to a new port and register it to
+the "real" service directory. Any incoming connection to this port
+shall establish a new connection to the external endpoint.
+
+Since external parties do not share established connection, there is
+not need to maintain a routing table within the gateway: the gateway
+just forwards the messages between the sockets.
 
 ## Misc
+
 ### Object Statistics and tracing
 
 There is a set of methods used for tracing (index ranging from 80 to

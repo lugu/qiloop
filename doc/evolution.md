@@ -8,7 +8,7 @@ Problem: only the service directory connection is authenticated.
 Peer to peer connection requires authentication.
 
 Solution: Once authenticated with the service directory, use the
-session id of the service info data as a token when contacting other
+session ID of the service info data as a token when contacting other
 services.
 
 Local transport
@@ -40,17 +40,40 @@ Solution: WebSocket would allow pure JS implementations.
 Object privacy
 --------------
 
-Problem: A client of a given service can guess the object id
-destinated to another client and hijack it.
+Problem: A client of a given service can guess the object ID
+designated to another client and hijack it.
 
-Solution: Use true random number for service and object id.
+Solution: Use true random number for service and object ID.
 
 Object isolation
 ----------------
 
-Problem: Some basic methods take an object id as parameter allowing
-a client to interfer with objects she have not referenced.
+Problem: The following methods take an object ID parameter for no
+reason: MetaObject, Terminate, RegisterEvent, UnregisterEvent,
+RegisterEventWithSignature. Implementing them correctly is complex in
+the case of client objects.
 
-Solution: Remove the object id parameter from the following methods:
-MetaObject, Terminate, RegisterEvent, UnregisterEvent,
-RegisterEventWithSignature.
+Solution: Remove the object ID parameter from the following methods:
+
+object ID collision
+-------------------
+
+problem: clients of the same service can create objects with the same
+object ID. This breaks the assumption that the destination of a
+message is unique.
+
+solution: let the service decide of the object ID using a generic
+method such as: leaseObject -> uint32.
+
+Client object routing
+---------------------
+
+problem: client objects impose some kind of routing. Since
+signal/property registration is done using method calls, the service
+needs to inspect the message payload in order know who subscribes to
+what.
+
+solution: add some new types of messages: subscribe and unsubscribe.
+Using those message type an implementation of a router would not need
+to analyze the payload anymore (such lightweight implementation do not
+requires supports for signatures and serialization).
