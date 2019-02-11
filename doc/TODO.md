@@ -11,5 +11,4 @@ Unsorted TODO list
 - websocket protocol
 - object reference resolution
 - support for properties
-- terminate without error
 - proxy/stub: register composite types
