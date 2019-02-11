@@ -162,6 +162,6 @@ func (s *serviceAuthenticate) Authenticate(from *Context, cap client.CapabilityM
 
 // ServiceAuthenticate represents the servie server (serivce zero)
 // used to authenticate a new connection.
-func ServiceAuthenticate(auth Authenticator) Object {
+func ServiceAuthenticate(auth Authenticator) ServerObject {
 	return &serviceAuthenticate{auth: auth}
 }

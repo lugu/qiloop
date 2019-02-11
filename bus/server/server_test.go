@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-// ObjectDispatcher implements Object
+// ObjectDispatcher implements ServerObject
 type ObjectDispatcher struct {
 	wrapper server.Wrapper
 }
@@ -55,7 +55,7 @@ func (o *ObjectDispatcher) Receive(m *net.Message, from *server.Context) error {
 	return from.EndPoint.Send(reply)
 }
 
-func newObject() server.Object {
+func newObject() server.ServerObject {
 	var object ObjectDispatcher
 	handler := func(d []byte) ([]byte, error) {
 		return []byte{0xab, 0xcd}, nil

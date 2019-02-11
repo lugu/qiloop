@@ -1,5 +1,5 @@
 // Package directory contains a generated stub
-// File generated. DO NOT EDIT.
+// File generated.
 package directory
 
 import (
@@ -32,14 +32,14 @@ type ServiceDirectorySignalHelper interface {
 	SignalServiceRemoved(serviceID uint32, name string) error
 }
 
-// stubServiceDirectory implements server.Object.
+// stubServiceDirectory implements server.ServerObject.
 type stubServiceDirectory struct {
 	obj  *server.BasicObject
 	impl ServiceDirectory
 }
 
 // ServiceDirectoryObject returns an object using ServiceDirectory
-func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
+func ServiceDirectoryObject(impl ServiceDirectory) server.ServerObject {
 	var stb stubServiceDirectory
 	stb.impl = impl
 	stb.obj = server.NewObject(stb.metaObject())

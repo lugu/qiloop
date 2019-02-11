@@ -45,7 +45,7 @@ type ActionWrapper func(payload []byte) ([]byte, error)
 // Wrapper is used to dispatch messages to ActionWrapper.
 type Wrapper map[uint32]ActionWrapper
 
-// BasicObject implements the Object interface. It handles the generic
+// BasicObject implements the ServerObject interface. It handles the generic
 // method and signal. Services implementation embedded a BasicObject
 // and fill it with the extra actions they wish to handle using the
 // Wrap method. See type/object.Object for a list of the default
@@ -299,8 +299,8 @@ func objectActivation(service *ServiceImpl, session bus.Session, serviceID, obje
 	}
 }
 
-// Object interface used by Server to manipulate services.
-type Object interface {
+// ServerObject interface used by Server to manipulate services.
+type ServerObject interface {
 	Receive(m *net.Message, from *Context) error
 	Activate(activation Activation) error
 	OnTerminate()
@@ -310,22 +310,22 @@ type Object interface {
 // object within its domain.
 type ServiceImpl struct {
 	sync.RWMutex
-	objects   map[uint32]Object
+	objects   map[uint32]ServerObject
 	terminate Terminator
 }
 
 // NewService returns a service with the given object associated with
 // object id 1.
-func NewService(o Object) *ServiceImpl {
+func NewService(o ServerObject) *ServiceImpl {
 	return &ServiceImpl{
-		objects: map[uint32]Object{
+		objects: map[uint32]ServerObject{
 			1: o,
 		},
 	}
 }
 
 // Add is used to add an object to a service domain.
-func (s *ServiceImpl) Add(o Object) (uint32, error) {
+func (s *ServiceImpl) Add(o ServerObject) (uint32, error) {
 	var index uint32
 	// assign the first object to the index 0. following objects will
 	// be assigned random values.
@@ -346,7 +346,7 @@ func (s *ServiceImpl) Activate(activation Activation) error {
 	s.terminate = activation.Terminate
 	ret := make(chan error, len(s.objects))
 	for objectID, obj := range s.objects {
-		go func(obj Object, objectID uint32) {
+		go func(obj ServerObject, objectID uint32) {
 			objActivation := objectActivation(s, activation.Session,
 				activation.ServiceID, objectID)
 			err := obj.Activate(objActivation)
@@ -412,11 +412,11 @@ type Router struct {
 }
 
 // NewRouter construct a router with the service zero passed.
-func NewRouter(authenticator Object, namespace bus.Namespace) *Router {
+func NewRouter(authenticator ServerObject, namespace bus.Namespace) *Router {
 	return &Router{
 		services: map[uint32]*ServiceImpl{
 			0: {
-				objects: map[uint32]Object{
+				objects: map[uint32]ServerObject{
 					0: authenticator,
 				},
 			},
@@ -470,7 +470,7 @@ func (r *Router) Terminate() error {
 // 2. activate the service
 // 3. add the service to the router dispatcher
 // 4. advertize the service to the namespace (service directory)
-func (r *Router) NewService(name string, object Object) (Service, error) {
+func (r *Router) NewService(name string, object ServerObject) (Service, error) {
 
 	r.RLock()
 	session := r.session
@@ -642,7 +642,7 @@ type Service interface {
 
 // NewService returns a new service. The service is activated as part
 // of the creation.
-func (s *Server) NewService(name string, object Object) (Service, error) {
+func (s *Server) NewService(name string, object ServerObject) (Service, error) {
 	return s.Router.NewService(name, object)
 }
 

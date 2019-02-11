@@ -388,13 +388,13 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	file.Func().Id(itf.Name+"Object").Params(
 		jen.Id("impl").Id(itf.Name),
 	).Qual(
-		"github.com/lugu/qiloop/bus/server", "Object",
+		"github.com/lugu/qiloop/bus/server", "ServerObject",
 	).Block(writing...)
 	return nil
 }
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
-	file.Commentf("%s implements server.Object.", stubName(itf.Name))
+	file.Commentf("%s implements server.ServerObject.", stubName(itf.Name))
 	file.Type().Id(stubName(itf.Name)).Struct(
 		jen.Id("obj").Op("*").Qual(
 			"github.com/lugu/qiloop/bus/server", "BasicObject",

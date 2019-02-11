@@ -1,5 +1,5 @@
 // Package basic contains a generated stub
-// File generated. DO NOT EDIT.
+// File generated.
 package basic
 
 import (
@@ -38,14 +38,14 @@ type ObjectSignalHelper interface {
 	SignalTraceObject(event EventTrace) error
 }
 
-// stubObject implements server.Object.
+// stubObject implements server.ServerObject.
 type stubObject struct {
 	obj  *server.BasicObject
 	impl Object
 }
 
 // ObjectObject returns an object using Object
-func ObjectObject(impl Object) server.Object {
+func ObjectObject(impl Object) server.ServerObject {
 	var stb stubObject
 	stb.impl = impl
 	stb.obj = server.NewObject(stb.metaObject())

@@ -1,5 +1,5 @@
 // Package pingpong contains a generated stub
-// File generated. DO NOT EDIT.
+// File generated.
 package pingpong
 
 import (
@@ -24,14 +24,14 @@ type PingPongSignalHelper interface {
 	SignalPong(a string) error
 }
 
-// stubPingPong implements server.Object.
+// stubPingPong implements server.ServerObject.
 type stubPingPong struct {
 	obj  *server.BasicObject
 	impl PingPong
 }
 
 // PingPongObject returns an object using PingPong
-func PingPongObject(impl PingPong) server.Object {
+func PingPongObject(impl PingPong) server.ServerObject {
 	var stb stubPingPong
 	stb.impl = impl
 	stb.obj = server.NewObject(stb.metaObject())
