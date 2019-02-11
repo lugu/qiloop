@@ -2,7 +2,6 @@ package server_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/net"
@@ -31,8 +30,7 @@ func (o *ObjectDispatcher) Wrap(id uint32, fn server.ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
-func (o *ObjectDispatcher) Activate(sess bus.Session, serviceID,
-	objectID uint32) error {
+func (o *ObjectDispatcher) Activate(activation server.Activation) error {
 	return nil
 }
 

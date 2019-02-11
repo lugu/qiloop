@@ -5,6 +5,7 @@ import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	objproxy "github.com/lugu/qiloop/bus/client/object"
+	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sort"
@@ -29,11 +30,11 @@ func NewServiceDirectory() *serviceDirectory {
 	}
 }
 
-func (s *serviceDirectory) Activate(sess bus.Session, serviceID,
-	objectID uint32, signal ServiceDirectorySignalHelper) error {
+func (s *serviceDirectory) Activate(activation server.Activation,
+	helper ServiceDirectorySignalHelper) error {
 	s.Lock()
 	defer s.Unlock()
-	s.signal = signal
+	s.signal = helper
 	return nil
 }
 

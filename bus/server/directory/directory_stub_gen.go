@@ -5,7 +5,6 @@ package directory
 import (
 	"bytes"
 	"fmt"
-	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -15,7 +14,7 @@ import (
 
 // ServiceDirectory interface of the service implementation
 type ServiceDirectory interface {
-	Activate(sess bus.Session, serviceID, objectID uint32, signal ServiceDirectorySignalHelper) error
+	Activate(activation server.Activation, helper ServiceDirectorySignalHelper) error
 	OnTerminate()
 	Service(name string) (ServiceInfo, error)
 	Services() ([]ServiceInfo, error)
@@ -54,9 +53,9 @@ func ServiceDirectoryObject(impl ServiceDirectory) server.Object {
 	stb.obj.Wrap(uint32(0x6d), stb._socketOfService)
 	return &stb
 }
-func (s *stubServiceDirectory) Activate(sess bus.Session, serviceID, objectID uint32) error {
-	s.obj.Activate(sess, serviceID, objectID)
-	return s.impl.Activate(sess, serviceID, objectID, s)
+func (s *stubServiceDirectory) Activate(activation server.Activation) error {
+	s.obj.Activate(activation)
+	return s.impl.Activate(activation, s)
 }
 func (s *stubServiceDirectory) OnTerminate() {
 	s.impl.OnTerminate()

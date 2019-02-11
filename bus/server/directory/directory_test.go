@@ -3,6 +3,7 @@ package directory_test
 import (
 	"bytes"
 	proxy "github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/server"
 	dir "github.com/lugu/qiloop/bus/server/directory"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
@@ -118,7 +119,13 @@ func compareInfo(t *testing.T, observed, expected dir.ServiceInfo) {
 func TestServerDirectory(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
 	impl := dir.NewServiceDirectory()
-	impl.Activate(nil, 1, 1, helper)
+	activation := server.Activation{
+		ServiceID: 1,
+		ObjectID:  1,
+		Session:   nil,
+		Terminate: func() {},
+	}
+	impl.Activate(activation, helper)
 	info := newInfo("test")
 	uid, err := impl.RegisterService(info)
 	if err != nil {
@@ -193,7 +200,13 @@ func TestServerDirectory(t *testing.T) {
 func TestServiceDirectoryInfo(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
 	impl := dir.NewServiceDirectory()
-	impl.Activate(nil, 1, 1, helper)
+	activation := server.Activation{
+		ServiceID: 1,
+		ObjectID:  1,
+		Session:   nil,
+		Terminate: func() {},
+	}
+	impl.Activate(activation, helper)
 	info := newInfo("test")
 	uid, err := impl.RegisterService(info)
 	if err != nil {
@@ -280,7 +293,13 @@ func TestServiceDirectoryInfo(t *testing.T) {
 func TestNamespace(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
 	impl := dir.NewServiceDirectory()
-	impl.Activate(nil, 1, 1, helper)
+	activation := server.Activation{
+		ServiceID: 1,
+		ObjectID:  1,
+		Session:   nil,
+		Terminate: func() {},
+	}
+	impl.Activate(activation, helper)
 	info := newInfo("test")
 	uid, err := impl.RegisterService(info)
 	if err != nil {

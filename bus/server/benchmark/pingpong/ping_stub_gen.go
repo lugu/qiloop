@@ -5,7 +5,6 @@ package pingpong
 import (
 	"bytes"
 	"fmt"
-	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -14,7 +13,7 @@ import (
 
 // PingPong interface of the service implementation
 type PingPong interface {
-	Activate(sess bus.Session, serviceID, objectID uint32, signal PingPongSignalHelper) error
+	Activate(activation server.Activation, helper PingPongSignalHelper) error
 	OnTerminate()
 	Hello(a string) (string, error)
 	Ping(a string) error
@@ -40,9 +39,9 @@ func PingPongObject(impl PingPong) server.Object {
 	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb
 }
-func (s *stubPingPong) Activate(sess bus.Session, serviceID, objectID uint32) error {
-	s.obj.Activate(sess, serviceID, objectID)
-	return s.impl.Activate(sess, serviceID, objectID, s)
+func (s *stubPingPong) Activate(activation server.Activation) error {
+	s.obj.Activate(activation)
+	return s.impl.Activate(activation, s)
 }
 func (s *stubPingPong) OnTerminate() {
 	s.impl.OnTerminate()

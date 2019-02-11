@@ -5,7 +5,6 @@ package basic
 import (
 	"bytes"
 	"fmt"
-	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -16,7 +15,7 @@ import (
 
 // Object interface of the service implementation
 type Object interface {
-	Activate(sess bus.Session, serviceID, objectID uint32, signal ObjectSignalHelper) error
+	Activate(activation server.Activation, helper ObjectSignalHelper) error
 	OnTerminate()
 	RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error)
 	UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error
@@ -66,9 +65,9 @@ func ObjectObject(impl Object) server.Object {
 	stb.obj.Wrap(uint32(0x55), stb.EnableTrace)
 	return &stb
 }
-func (s *stubObject) Activate(sess bus.Session, serviceID, objectID uint32) error {
-	s.obj.Activate(sess, serviceID, objectID)
-	return s.impl.Activate(sess, serviceID, objectID, s)
+func (s *stubObject) Activate(activation server.Activation) error {
+	s.obj.Activate(activation)
+	return s.impl.Activate(activation, s)
 }
 func (s *stubObject) OnTerminate() {
 	s.impl.OnTerminate()
