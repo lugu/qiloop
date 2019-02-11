@@ -12,6 +12,7 @@ import (
 func main() {
 	var filename = flag.String("idl", "", "IDL file")
 	var out = flag.String("output", "-", "go file to produce")
+	var packageName = flag.String("path", "", "optional package name")
 
 	flag.Parse()
 
@@ -41,7 +42,7 @@ func main() {
 	if len(pkg.Types) == 0 {
 		log.Fatalf("parse error: missing type")
 	}
-	err = stub.GeneratePackage(output, pkg)
+	err = stub.GeneratePackage(output, *packageName, pkg)
 	if err != nil {
 		log.Fatalf("failed to generate stub: %s", err)
 	}

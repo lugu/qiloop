@@ -15,11 +15,17 @@ func stubName(name string) string {
 }
 
 // GeneratePackage generate the stub for the package declaration.
-func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
+func GeneratePackage(w io.Writer, packagePath string,
+	pkg *idl.PackageDeclaration) error {
+
 	if pkg.Name == "" {
-		return fmt.Errorf("empty package name")
+		if strings.Contains(packagePath, "/") {
+			pkg.Name = packagePath[strings.LastIndex(packagePath, "/")+1:]
+		} else {
+			return fmt.Errorf("empty package name")
+		}
 	}
-	file := jen.NewFile(pkg.Name)
+	file := jen.NewFilePathName(packagePath, pkg.Name)
 	msg := "Package " + pkg.Name + " contains a generated stub"
 	file.PackageComment(msg)
 	file.PackageComment("File generated. DO NOT EDIT.")

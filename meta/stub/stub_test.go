@@ -15,7 +15,7 @@ func helpGenerate(t *testing.T, input string) {
 		t.Fatalf("parse error: missing type")
 	}
 	var buf bytes.Buffer
-	err = GeneratePackage(&buf, pkg)
+	err = GeneratePackage(&buf, "", pkg)
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +27,7 @@ func helpGenerate(t *testing.T, input string) {
 func TestEmptyPackageName(t *testing.T) {
 	var buf bytes.Buffer
 	var pkg idl.PackageDeclaration
-	err := GeneratePackage(&buf, &pkg)
+	err := GeneratePackage(&buf, "", &pkg)
 	if err == nil {
 		t.Errorf("shall not generate package without name")
 	}
