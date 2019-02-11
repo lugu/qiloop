@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
@@ -108,8 +107,7 @@ func (s *serviceAuthenticate) Receive(m *net.Message, from *Context) error {
 	return from.EndPoint.Send(reply)
 }
 
-func (s *serviceAuthenticate) Activate(sess bus.Session, serviceID,
-	objectID uint32) error {
+func (s *serviceAuthenticate) Activate(activation Activation) error {
 	return nil
 }
 

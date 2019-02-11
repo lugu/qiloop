@@ -56,6 +56,7 @@ type BasicObject struct {
 	Wrapper   Wrapper
 	serviceID uint32
 	objectID  uint32
+	terminate Terminator
 }
 
 // NewObject construct a BasicObject from a MetaObject.
@@ -65,7 +66,7 @@ func NewObject(meta object.MetaObject) *BasicObject {
 	obj.signals = make([]signalUser, 0)
 	obj.Wrapper = make(map[uint32]ActionWrapper)
 	obj.Wrap(uint32(0x2), obj.wrapMetaObject)
-	// obj.Wrapper[uint32(0x3)] = obj.Terminate
+	obj.Wrap(uint32(0x3), obj.wrapTerminate)
 	// obj.Wrapper[uint32(0x5)] = obj.Property
 	// obj.Wrapper[uint32(0x6)] = obj.SetProperty
 	// obj.Wrapper[uint32(0x7)] = obj.Properties
@@ -225,6 +226,11 @@ func (o *BasicObject) Receive(m *net.Message, from *Context) error {
 }
 
 // OnTerminate is called when the object is terminated.
+func (o *BasicObject) wrapTerminate(payload []byte) ([]byte, error) {
+	o.terminate()
+	return nil, nil
+}
+
 func (o *BasicObject) OnTerminate() {
 }
 
@@ -234,10 +240,10 @@ func (o *BasicObject) newHeader(typ uint8, action, id uint32) net.Header {
 
 // Activate informs the object when it becomes online. After this
 // method returns, the object will start receiving incomming messages.
-func (o *BasicObject) Activate(sess bus.Session, serviceID,
-	objectID uint32) error {
-	o.serviceID = serviceID
-	o.objectID = objectID
+func (o *BasicObject) Activate(activation Activation) error {
+	o.serviceID = activation.ServiceID
+	o.objectID = activation.ObjectID
+	o.terminate = activation.Terminate
 	return nil
 }
 
@@ -287,11 +293,7 @@ func objectActivation(service *ServiceImpl, session bus.Session, serviceID, obje
 // Object interface used by Server to manipulate services.
 type Object interface {
 	Receive(m *net.Message, from *Context) error
-	Activate(sess bus.Session, serviceID, objectID uint32) error
-	// - call Server.directory.Remove()
-	// - call Server.Router.Remove()
-	// - call Terminate on all objects
-	// - signal WaitTerminate condition
+	Activate(activation Activation) error
 	OnTerminate()
 }
 
@@ -336,9 +338,9 @@ func (s *ServiceImpl) Activate(activation Activation) error {
 	ret := make(chan error, len(s.objects))
 	for objectID, obj := range s.objects {
 		go func(obj Object, objectID uint32) {
-			// TODO: implement object activation
-			err := obj.Activate(activation.Session,
+			objActivation := objectActivation(s, activation.Session,
 				activation.ServiceID, objectID)
+			err := obj.Activate(objActivation)
 			if err != nil {
 				ret <- err
 			}

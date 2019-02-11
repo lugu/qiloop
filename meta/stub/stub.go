@@ -312,14 +312,15 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	file.Func().Params(
 		jen.Id("s").Op("*").Id(stubName(itf.Name)),
 	).Id("Activate").Params(
-		jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
-		jen.Id("serviceID"),
-		jen.Id("objectID").Uint32(),
+		jen.Id("activation").Qual(
+			"github.com/lugu/qiloop/bus/server",
+			"Activation",
+		),
 	).Params(
 		jen.Error(),
 	).Block(
-		jen.Id(`s.obj.Activate(sess, serviceID, objectID)`),
-		jen.Id(`return s.impl.Activate(sess, serviceID, objectID, s)`),
+		jen.Id(`s.obj.Activate(activation)`),
+		jen.Id(`return s.impl.Activate(activation, s)`),
 	)
 	file.Func().Params(
 		jen.Id("s").Op("*").Id(stubName(itf.Name)),
@@ -406,10 +407,9 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	definitions := make([]jen.Code, 0)
 	signalDefinitions := make([]jen.Code, 0)
 	activate := jen.Id("Activate").Params(
-		jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
-		jen.Id("serviceID"),
-		jen.Id("objectID").Uint32(),
-		jen.Id("signal").Id(itf.Name+"SignalHelper"),
+		jen.Id("activation").Qual("github.com/lugu/qiloop/bus/server",
+			"Activation"),
+		jen.Id("helper").Id(itf.Name+"SignalHelper"),
 	).Params(
 		jen.Error(),
 	)
