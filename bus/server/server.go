@@ -227,8 +227,17 @@ func (o *BasicObject) Receive(m *net.Message, from *Context) error {
 
 // OnTerminate is called when the object is terminated.
 func (o *BasicObject) wrapTerminate(payload []byte) ([]byte, error) {
+	buf := bytes.NewBuffer(payload)
+	objectID, err := basic.ReadUint32(buf)
+	if err != nil {
+		return nil, fmt.Errorf("Terminate failed: %s", err)
+	}
+	if objectID != o.objectID {
+		return nil, fmt.Errorf("cannot terminate %d, only %d",
+			objectID, o.objectID)
+	}
 	o.terminate()
-	return nil, nil
+	return make([]byte, 0), nil
 }
 
 func (o *BasicObject) OnTerminate() {
