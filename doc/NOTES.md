@@ -140,7 +140,7 @@ How does QiMessaging compares with:
 
 * **Component Object Model (COM)**: Both COM and QiMessaging offer an
   IPC mechanism independent of a particular programming language which
-  can be easily binded to various languages. libqi supports C++ and
+  can be easily bound to various languages. libqi supports C++ and
   Python. NAOqi has JavaScript binding among many other binding. Both
   COM and QiMessaging can use reference counting to manage the life
   time of an object.
@@ -870,17 +870,16 @@ supported. Possible values are:
 The capability "MetaObjectCache" controls how to serialize the object
 type ("o"). When enabled an identifier of the meta object is generated
 and send along with the object. If an object sharing the same meta
-object is requested, the meta object can be omited.
+object is requested, the meta object can be omitted.
 
-This is capability avoids the re-transmission of large meta object
-when numerous reference are created.
+This capability avoids the re-transmission of large meta objects.
 
 ##### Object UID (ObjectPtrUID)
 
 When the capability "ObjectPtrUID" is enabled the object type ("o") is
 serialized with an extra object UID of 20 bytes.
 
-In order to make this identifier uniq, libqi computes it using the
+In order to make this identifier unique, libqi computes it using the
 SHA1 digest of the concatenation of a machine identifier (128 bits), a
 process identifier (128 bits), and the value of the memory address of
 the underlying object (which can be 32 or 64 bits). SHA1 are 160 bits
