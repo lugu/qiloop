@@ -52,7 +52,7 @@
 - [Networking](#networking)
   - [Endpoints](#endpoints)
   - [TCP](#tcp)
-  - [SSL](#ssl)
+  - [TLS](#tls)
 - [Authentication](#authentication)
   - [CapabilityMap](#capabilitymap)
     - [Authentication state](#authentication-state)
@@ -114,7 +114,7 @@ header and a payload. Different type of message allow different
 interactions (some message types are "Call", "Reply", "Cancel",
 "Event"). Those messages are transmitted using a transport protocol
 defined by an string (such as: "tcp://localhost:9559"). Currently
-libqi supports two transport protocols (TCP and SSL).
+libqi supports two transport protocols (TCP and TLS).
 
 ### Comparisons
 
@@ -783,9 +783,9 @@ list of addresses where to contact the service.
 
 The default port to contact the service directory is 9559.
 
-### SSL
+### TLS
 
-SSL is supported using the addressing scheme `tcps://` in the
+TLS is supported using the addressing scheme `tcps://` in the
 `ServiceInfo` description of the service.
 
 ## Authentication
