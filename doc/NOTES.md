@@ -925,25 +925,26 @@ Let's consider an example: instead of sending the content of the file,
 the client create an object which represents the file and pass it to a
 service. This way the service can access any part of the file without
 having to transfer the entire file over the network: it uses the
-file's objet methods seek and read. The qi:file API of libqi works
+file's object methods seek and read. The qi:file API of libqi works
 like this (see FilePtr).
 
-When a client wants to call such method it need to create an object.
-For the object to be passed as an argument it must be associated with
-a service ID and an object ID. Since clients are not associated with a
-service namespace they must borrow a service ID and a object ID.
+When a client wants to call such method it needs to create an object.
+For this object to become an argument of a method it must be
+associated with a service ID and an object ID. Since clients are not
+associated with a service they must borrow a service ID and a object
+ID.
 
 In such situation, the client object is associated with the service ID
 of the service it calls. The object ID is (randomly) chosen by the
 client between 2^31 and 2^32-1.
 
-This method presents two (major) drawbacks:
+This method presents two drawbacks:
 
-    1. There is a risk of collision on the object ID: Two clients can
-       choose the same object ID.
+1. There is a risk of collision on the object ID: Two clients can
+   choose the same object ID.
 
-    2. An object can not longer be directly contacted based on its
-       service ID.
+2. An object can not longer be directly contacted based on its
+   service ID.
 
 This concept of ObjectPtrUID mitigates some of the issues related to
 the collision problem: it allows two object references to be compared
@@ -952,7 +953,7 @@ for identity.
 ### Message transfer
 
 In the case of client object, the service acts as a middle man between
-the incoming request and the client object. In order to handle method
+the incoming requests and the client object. In order to handle method
 calls, the service must maintain a table associating the object ID
 with the connection.
 
@@ -963,13 +964,12 @@ able to route the client object response. This can be done with a
 table associating the set (object ID, message ID) with the connection
 of the incoming message.
 
-| (object ID, message ID) | calling connection |
+| (object ID, action ID, message ID) | calling connection |
 
 Moreover, in the case of a signal / property subscription, the client
-object can emit messages at destination of registered clients.
-
-In such case it is unclear how the service will be able to route the
-messages appropriately.
+object can emit messages at destination of registered clients. In such
+case it is unclear how the service will be able to route the messages
+appropriately.
 
 ## Gateway
 
