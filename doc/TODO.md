@@ -12,3 +12,5 @@ Unsorted TODO list
 - object reference resolution
 - support for properties
 - proxy/stub: register composite types
+- qiloop command to replace rlist rscan and proxygen
+- move basic object into bus/server/basic
