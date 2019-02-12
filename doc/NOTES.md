@@ -905,14 +905,13 @@ field, its origin is not described in the message header. Therefore
 services are supposed to answer a message using the established
 connection of the incoming message.
 
-Because of this, service do not have the ability to know "who" called
+Because of this, services do not have the ability to know "who" called
 them (other than "this established connection").
 
 ### Basic scenario
 
-Most of the time, a client connects to services and sends a message at
-destination of the service it has contacted. The service answers with
-other message sent via the established connection by the client.
+A client establish a connection to an endpoint associated with a
+service in order to exchange messages with an object of the service.
 
 In this situation messages are exchanged directly between the two
 parties involved. No need to route any message.
@@ -930,40 +929,47 @@ file's object methods seek and read. The qi:file API of libqi works
 like this (see FilePtr).
 
 When a client wants to call such method it needs to create an object.
-For this object to become an argument of a method it must be
-associated with a service ID and an object ID. Since clients are not
-associated with a service they must borrow a service ID and a object
-ID.
+This documents calls such object a *client object* since it is created
+by the client as opposed to objects created by a service. This
+terminology is not shared by libqi. Refer to [libqi internal
+documentation](http://doc.aldebaran.com/2-8/dev/libqi/internal/messaging.html)
+on this subject.
 
-In such situation, the client object is associated with the service ID
-of the service it calls. The object ID is (randomly) chosen by the
-client between 2^31 and 2^32-1.
+For an object to be passed as argument of a method it must be
+associated with a service ID and an object ID. Since clients do not
+belongs to services they must borrow a service ID and a object ID.
 
-This method presents two drawbacks:
+In such situation, the client will create an object with the service
+ID of the service it calls. The object ID will be chosen (by the
+client) between 2^31 and 2^32-1.
+
+This approach have two drawbacks:
 
 1. There is a risk of collision on the object ID: Two clients can
    choose the same object ID.
 
-2. An object can not longer be directly contacted based on its
-   service ID.
+2. It is not possible to establish a direct connection between such
+   object and its clients: the service acts as a middle man.
 
-This concept of ObjectPtrUID mitigates some of issues related to the
-collision problem: it allows two object references to be compared for
-identity.
+Remark: Because of the collision issue, equality between objects can
+not be computed by comparing the service ID and the object ID of the
+two objects. To solve this problem, the concept of ObjectPtrUID was
+introduced.
 
 ### Message transfer
 
 In the case of client object, the service acts as a middle man between
-the incoming requests and the client object. In order to handle method
-calls, the service must maintain a table associating the object ID
-with the connection.
+the incoming requests and the client which created the object. In
+order to handle method calls, the service must maintain a table
+associating the object ID with the connection of the client which
+created the object.
 
 | object ID | client connection |
 
 Since the client object will reply when called, the service must be
 able to route the client object response. This can be done with a
-table associating the set (object ID, message ID) with the connection
-of the incoming message.
+table associating the set (object ID, action ID, message ID) with the
+connection of the incoming message.
 
 | (object ID, action ID, message ID) | calling connection |
 
