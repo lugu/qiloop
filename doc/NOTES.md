@@ -121,7 +121,7 @@ libqi supports two transport protocols (TCP and SSL).
 How does QiMessaging compares with:
 
 * **D-Bus**: Both QiMessaging and D-Bus allow introspection (i.e. it
-  is possible to list of the services and their methods). Both have a
+  is possible to list of services and their methods). Both have a
   concept of asynchronous notification. D-Bus have a well defined
   permissions system. QiMessaging doesn't includes permissions but has
   authentication. QiMessaging allows different applications to
@@ -271,7 +271,7 @@ Each message have a type. Possible types are:
 
 - **Unknown** (0): not used
 - **Call** (1): Initiate a remote procedure call. The payload of the
-  message is the parameters of the method. The object and the method
+  message is the parameter list of the method. The object and the method
   are identified by the fields Service, Object and Action described
   below.
 - **Reply** (2): Response to remote procedure call message. The payload
@@ -279,7 +279,7 @@ Each message have a type. Possible types are:
 - **Error** (3): Signal an error. Can be used in response to a call
   message. Payload is a value (values are described below).
 - **Post** (4): Call a method but without expecting an answer. Payload
-  contains the arguments of the method.
+  contains the list arguments of the method.
 - **Event** (5): Inform of a new signal state. Events are sent
   following a call to the `registerEvent` method. `unregisterEvent`
   stops the stream of events. The payload is the new value of the
@@ -306,7 +306,7 @@ two ends.
 
 Each service registered to the service directory (described below) is
 given a unique identifier. The service identifier act as a namespace
-for the objects associated with the service.
+for objects associated with the service.
 
 #### Object ID
 
@@ -323,7 +323,8 @@ message.
 
 The payload is optional. Its content depends on the type of message.
 
-- `call` message: the payload contains the parameters of the method called.
+- `call` message: the payload contains the list parameters of the
+  method called.
 
 - `reply` message: the payload contains the returned value of the
   call.
@@ -333,8 +334,8 @@ The payload is optional. Its content depends on the type of message.
 
 - `event` message: the payload contains the new value of the signal.
 
-- `post` message: the payload contains the parameters of the method
-  called.
+- `post` message: the payload contains the list parameters of the
+  method called.
 
 In order to send a `call` message, one needs to know the prototype of
 the method to be called. Since every method have a different
@@ -368,7 +369,7 @@ different places of the protocol. A signature can represents:
 
 - the type of a signal
 
-- the type of the arguments of a method
+- the type of arguments of a method
 
 - the type of the data returned by a method call.
 
@@ -377,7 +378,7 @@ different places of the protocol. A signature can represents:
 
 ### Types
 
-libqi [documentation](http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signature.html) on the various type.
+Types are documented as part of [libqi documentation](http://doc.aldebaran.com/2-5/dev/libqi/api/cpp/type/signature.html).
 
 #### Basic types
 
@@ -518,8 +519,8 @@ all values are transmitted in little endian.
 - **float**: 32 bites IEEE 754 little endian (float32).
 - **double**: 64 bites IEEE 754 little endian (float64).
 - **boolean**: 1 byte, zero for false (bool)
-- **string**: an integer (as defined above) followed the bytes of the
-  string. Not finishing with a zero (str).
+- **string**: an integer (as defined above) followed with the bytes of
+  the string. Not finishing with a zero (str).
 - **raw data**: an array of byte of a variable size
 
 ### Values
@@ -659,8 +660,8 @@ changes using `registerEventWithSignature` and unsubscribe with
 ### MetaObject
 
 `MetaObject` is a structure which describes an object. The description
-includes the list of the methods along with their parameters and
-return type.
+includes the list of methods along with their parameters and return
+type.
 
 Since every object has a method which returns a MetaObect, every
 instance of a MetaObect contains a description of the `MetaObject` type.
@@ -719,9 +720,9 @@ type MetaProperty struct {
 
 ## Services
 
-The list of the services on the bus can be query using a service
-(service directory). This makes this bus discoverable. Each service
-exposes the list of its methods, signals and properties.
+The list of services on the bus can be query using a service (service
+directory). This makes this bus discoverable. Each service exposes the
+list of its methods, signals and properties.
 
 ### Service Server (ID 0)
 
@@ -909,9 +910,9 @@ them (other than "this established connection").
 
 ### Basic scenario
 
-Most of the time, clients connect to services and send messages at
-destination of the services they have contacted. The services answer
-with other messages sent via the established connection of the client.
+Most of the time, a client connects to services and sends a message at
+destination of the service it has contacted. The service answers with
+other message sent via the established connection by the client.
 
 In this situation messages are exchanged directly between the two
 parties involved. No need to route any message.
@@ -946,9 +947,9 @@ This method presents two drawbacks:
 2. An object can not longer be directly contacted based on its
    service ID.
 
-This concept of ObjectPtrUID mitigates some of the issues related to
-the collision problem: it allows two object references to be compared
-for identity.
+This concept of ObjectPtrUID mitigates some of issues related to the
+collision problem: it allows two object references to be compared for
+identity.
 
 ### Message transfer
 
@@ -1041,7 +1042,7 @@ shall establish a new connection to the external endpoint.
 
 Since external parties do not share established connection, there is
 not need to maintain a routing table within the gateway: the gateway
-just forwards the messages between the sockets.
+just forwards messages between the sockets.
 
 ## Misc
 
@@ -1050,8 +1051,7 @@ just forwards the messages between the sockets.
 There is a set of methods used for tracing (index ranging from 80 to
 85):
 
-- 80 `isStatsEnabled() bool`: returns true if the statistics are
-  enabled.
+- 80 `isStatsEnabled() bool`: returns true if statistics are enabled.
 
 - 81: `enableStats(bool) void`: enables statistics.
 
