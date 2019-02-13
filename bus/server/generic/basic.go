@@ -7,7 +7,6 @@ import (
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
-	"github.com/lugu/qiloop/type/object"
 	"math/rand"
 )
 
@@ -18,36 +17,30 @@ type signalUser struct {
 	clientID  uint64
 }
 
-// BasicObject implements the ServerObject interface. It handles the generic
-// method and signal. Services implementation embedded a BasicObject
-// and fill it with the extra actions they wish to handle using the
-// Wrap method. See type/object.Object for a list of the default
-// methods.
-//
-// TODO: make BasicObject the strict minimum. Build GenericObject on
-// top of it.
+// BasicObject implements the ServerObject interface. It handles the
+// generic methods and signals common to all objects. Services
+// implementation embedded a BasicObject and fill it with the extra
+// actions they wish to handle using the Wrap method. See
+// type/object.Object for a list of the default methods.
 type BasicObject struct {
-	meta      object.MetaObject
 	signals   []signalUser
 	Wrapper   server.Wrapper
 	serviceID uint32
 	objectID  uint32
-	terminate server.Terminator
 }
 
-// NewObject construct a BasicObject from a MetaObject.
-func NewObject(meta object.MetaObject) *BasicObject {
-	var obj BasicObject
-	obj.meta = object.FullMetaObject(meta)
-	obj.signals = make([]signalUser, 0)
-	obj.Wrapper = make(map[uint32]server.ActionWrapper)
-	obj.Wrap(uint32(0x2), obj.wrapMetaObject)
-	obj.Wrap(uint32(0x3), obj.wrapTerminate)
-	// obj.Wrapper[uint32(0x5)] = obj.Property
-	// obj.Wrapper[uint32(0x6)] = obj.SetProperty
-	// obj.Wrapper[uint32(0x7)] = obj.Properties
-	// obj.Wrapper[uint32(0x8)] = obj.RegisterEventWithSignature
-	return &obj
+type Object interface {
+	server.ServerObject
+	UpdateSignal(signal uint32, value []byte) error
+	Wrap(id uint32, fn server.ActionWrapper)
+}
+
+// NewBasicObject construct a BasicObject from a MetaObject.
+func NewBasicObject() *BasicObject {
+	return &BasicObject{
+		signals: make([]signalUser, 0),
+		Wrapper: make(map[uint32]server.ActionWrapper),
+	}
 }
 
 // Wrap let a BasicObject owner extend it with custom actions.
@@ -140,24 +133,6 @@ func (o *BasicObject) handleUnregisterEvent(from *server.Context,
 	return o.reply(from, msg, out.Bytes())
 }
 
-func (o *BasicObject) wrapMetaObject(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
-	objectID, err := basic.ReadUint32(buf)
-	if err != nil {
-		return nil, err
-	}
-	if objectID != o.objectID {
-		return nil, fmt.Errorf("invalid object id: %d instead of %d",
-			objectID, o.objectID)
-	}
-	var out bytes.Buffer
-	err = object.WriteMetaObject(o.meta, &out)
-	if err != nil {
-		return nil, err
-	}
-	return out.Bytes(), nil
-}
-
 // UpdateSignal informs the registered clients of the new state.
 func (o *BasicObject) UpdateSignal(signal uint32, value []byte) error {
 	var ret error
@@ -212,21 +187,6 @@ func (o *BasicObject) Receive(m *net.Message, from *server.Context) error {
 	}
 }
 
-// OnTerminate is called when the object is terminated.
-func (o *BasicObject) wrapTerminate(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
-	objectID, err := basic.ReadUint32(buf)
-	if err != nil {
-		return nil, fmt.Errorf("Terminate failed: %s", err)
-	}
-	if objectID != o.objectID {
-		return nil, fmt.Errorf("cannot terminate %d, only %d",
-			objectID, o.objectID)
-	}
-	o.terminate()
-	return make([]byte, 0), nil
-}
-
 func (o *BasicObject) OnTerminate() {
 }
 
@@ -239,6 +199,5 @@ func (o *BasicObject) newHeader(typ uint8, action, id uint32) net.Header {
 func (o *BasicObject) Activate(activation server.Activation) error {
 	o.serviceID = activation.ServiceID
 	o.objectID = activation.ObjectID
-	o.terminate = activation.Terminate
 	return nil
 }

@@ -35,7 +35,7 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.ServerObject.
 type stubServiceDirectory struct {
-	obj  *generic.BasicObject
+	obj  generic.Object
 	impl ServiceDirectory
 }
 

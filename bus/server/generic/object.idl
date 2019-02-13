@@ -1,6 +1,6 @@
 package generic
 
-interface Object
+interface Generic
 	fn registerEvent(objectID: uint32, actionID: uint32, handler: uint64) -> uint64 //uid:0
 	fn unregisterEvent(objectID: uint32, actionID: uint32, handler: uint64) //uid:1
 	fn metaObject(objectID: uint32) -> MetaObject //uid:2

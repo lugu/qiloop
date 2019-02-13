@@ -27,7 +27,7 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.ServerObject.
 type stubPingPong struct {
-	obj  *generic.BasicObject
+	obj  generic.Object
 	impl PingPong
 }
 

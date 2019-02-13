@@ -85,9 +85,13 @@ func generateMethodDef(itf *idl.InterfaceType, set *signature.TypeSet,
 
 	tuple := method.Tuple()
 	ret := method.Return
+	// resolve MetaObject references for Generic objet.
+	if ret.Signature() == signature.MetaObjectSignature {
+		ret = signature.NewMetaObjectType()
+	}
 
 	tuple.RegisterTo(set)
-	method.Return.RegisterTo(set)
+	ret.RegisterTo(set)
 
 	if ret.Signature() == "v" {
 		return jen.Id(methodName).Add(tuple.Params()).Params(jen.Error()), nil
@@ -134,8 +138,15 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 		)
 		writing = append(writing, code)
 	}
+	ret := method.Return
+
+	// resolve MetaObject references for Generic objet.
+	if ret.Signature() == signature.MetaObjectSignature {
+		ret = signature.NewMetaObjectType()
+	}
+
 	// if has not return value
-	if method.Return.Signature() == "v" {
+	if ret.Signature() == "v" {
 		code = jen.Id("callErr := s.impl").Dot(methodName).Call(params...)
 	} else {
 		code = jen.Id("ret, callErr := s.impl").Dot(methodName).Call(params...)
@@ -146,8 +157,8 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	}
 	var out bytes.Buffer`)
 	writing = append(writing, code)
-	if method.Return.Signature() != "v" {
-		code = jen.Id("errOut").Op(":=").Add(method.Return.Marshal("ret", "&out"))
+	if ret.Signature() != "v" {
+		code = jen.Id("errOut").Op(":=").Add(ret.Marshal("ret", "&out"))
 		writing = append(writing, code)
 
 		code = jen.Id(`if errOut != nil {
@@ -350,10 +361,17 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing = append(writing, code)
 	code = jen.Id("stb.impl = impl")
 	writing = append(writing, code)
-	code = jen.Id("stb.obj").Op("=").Qual(
-		"github.com/lugu/qiloop/bus/server/generic",
-		"NewObject",
-	).Call(jen.Id("stb.metaObject()"))
+	if itf.Name == "Generic" {
+		code = jen.Id("stb.obj").Op("=").Qual(
+			"github.com/lugu/qiloop/bus/server/generic",
+			"NewBasicObject",
+		).Call()
+	} else {
+		code = jen.Id("stb.obj").Op("=").Qual(
+			"github.com/lugu/qiloop/bus/server/generic",
+			"NewObject",
+		).Call(jen.Id("stb.metaObject()"))
+	}
 	writing = append(writing, code)
 
 	method := func(m object.MetaMethod, methodName string) error {
@@ -396,8 +414,8 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Commentf("%s implements server.ServerObject.", stubName(itf.Name))
 	file.Type().Id(stubName(itf.Name)).Struct(
-		jen.Id("obj").Op("*").Qual(
-			"github.com/lugu/qiloop/bus/server/generic", "BasicObject",
+		jen.Id("obj").Qual(
+			"github.com/lugu/qiloop/bus/server/generic", "Object",
 		),
 		jen.Id("impl").Id(itf.Name),
 	)

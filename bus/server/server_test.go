@@ -643,7 +643,7 @@ func TestNewContext(t *testing.T) {
 }
 
 type ObjectTerminaison struct {
-	generic.BasicObject
+	generic.Object
 	Terminated bool
 }
 
@@ -654,13 +654,13 @@ func (o *ObjectTerminaison) OnTerminate() {
 
 func TestObjectTerminaison(t *testing.T) {
 
-	basicObj := generic.NewObject(object.MetaObject{
+	impl := generic.NewObject(object.MetaObject{
 		Description: "test",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
 	obj := &ObjectTerminaison{
-		*basicObj,
+		impl,
 		false,
 	}
 
@@ -682,13 +682,13 @@ func TestObjectTerminaison(t *testing.T) {
 }
 
 func TestServiceTerminaison(t *testing.T) {
-	basicObj := generic.NewObject(object.MetaObject{
+	impl := generic.NewObject(object.MetaObject{
 		Description: "test",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
 	})
 	obj := &ObjectTerminaison{
-		*basicObj,
+		impl,
 		false,
 	}
 

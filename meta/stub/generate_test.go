@@ -20,7 +20,7 @@ type Object interface {
 	OnTerminate()
 	RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error)
 	UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error
-	MetaObject(objectID uint32) (MetaObject, error)
+	MetaObject(objectID uint32) (object.MetaObject, error)
 	Terminate(objectID uint32) error
 	Property(name value.Value) (value.Value, error)
 	SetProperty(name value.Value, value value.Value) error
@@ -41,7 +41,7 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.ServerObject.
 type stubObject struct {
-	obj  *generic.BasicObject
+	obj  generic.Object
 	impl Object
 }
 
@@ -134,7 +134,7 @@ func (s *stubObject) MetaObject(payload []byte) ([]byte, error) {
 		return nil, callErr
 	}
 	var out bytes.Buffer
-	errOut := WriteMetaObject(ret, &out)
+	errOut := object.WriteMetaObject(ret, &out)
 	if errOut != nil {
 		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}

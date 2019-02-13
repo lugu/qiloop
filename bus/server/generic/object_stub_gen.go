@@ -13,13 +13,13 @@ import (
 	"io"
 )
 
-// Object interface of the service implementation
-type Object interface {
-	Activate(activation server.Activation, helper ObjectSignalHelper) error
+// Generic interface of the service implementation
+type Generic interface {
+	Activate(activation server.Activation, helper GenericSignalHelper) error
 	OnTerminate()
 	RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error)
 	UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error
-	MetaObject(objectID uint32) (MetaObject, error)
+	MetaObject(objectID uint32) (object.MetaObject, error)
 	Terminate(objectID uint32) error
 	Property(name value.Value) (value.Value, error)
 	SetProperty(name value.Value, value value.Value) error
@@ -33,22 +33,22 @@ type Object interface {
 	EnableTrace(traced bool) error
 }
 
-// ObjectSignalHelper provided to Object a companion object
-type ObjectSignalHelper interface {
+// GenericSignalHelper provided to Generic a companion object
+type GenericSignalHelper interface {
 	SignalTraceObject(event EventTrace) error
 }
 
-// stubObject implements server.ServerObject.
-type stubObject struct {
-	obj  *BasicObject
-	impl Object
+// stubGeneric implements server.ServerObject.
+type stubGeneric struct {
+	obj  Object
+	impl Generic
 }
 
-// ObjectObject returns an object using Object
-func ObjectObject(impl Object) server.ServerObject {
-	var stb stubObject
+// GenericObject returns an object using Generic
+func GenericObject(impl Generic) server.ServerObject {
+	var stb stubGeneric
 	stb.impl = impl
-	stb.obj = NewObject(stb.metaObject())
+	stb.obj = NewBasicObject()
 	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
 	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
 	stb.obj.Wrap(uint32(0x2), stb.MetaObject)
@@ -65,18 +65,18 @@ func ObjectObject(impl Object) server.ServerObject {
 	stb.obj.Wrap(uint32(0x55), stb.EnableTrace)
 	return &stb
 }
-func (s *stubObject) Activate(activation server.Activation) error {
+func (s *stubGeneric) Activate(activation server.Activation) error {
 	s.obj.Activate(activation)
 	return s.impl.Activate(activation, s)
 }
-func (s *stubObject) OnTerminate() {
+func (s *stubGeneric) OnTerminate() {
 	s.impl.OnTerminate()
 	s.obj.OnTerminate()
 }
-func (s *stubObject) Receive(msg *net.Message, from *server.Context) error {
+func (s *stubGeneric) Receive(msg *net.Message, from *server.Context) error {
 	return s.obj.Receive(msg, from)
 }
-func (s *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
+func (s *stubGeneric) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -101,7 +101,7 @@ func (s *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) UnregisterEvent(payload []byte) ([]byte, error) {
+func (s *stubGeneric) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -122,7 +122,7 @@ func (s *stubObject) UnregisterEvent(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubObject) MetaObject(payload []byte) ([]byte, error) {
+func (s *stubGeneric) MetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -133,13 +133,13 @@ func (s *stubObject) MetaObject(payload []byte) ([]byte, error) {
 		return nil, callErr
 	}
 	var out bytes.Buffer
-	errOut := WriteMetaObject(ret, &out)
+	errOut := object.WriteMetaObject(ret, &out)
 	if errOut != nil {
 		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) Terminate(payload []byte) ([]byte, error) {
+func (s *stubGeneric) Terminate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -152,7 +152,7 @@ func (s *stubObject) Terminate(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubObject) Property(payload []byte) ([]byte, error) {
+func (s *stubGeneric) Property(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
@@ -169,7 +169,7 @@ func (s *stubObject) Property(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) SetProperty(payload []byte) ([]byte, error) {
+func (s *stubGeneric) SetProperty(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
@@ -186,7 +186,7 @@ func (s *stubObject) SetProperty(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubObject) Properties(payload []byte) ([]byte, error) {
+func (s *stubGeneric) Properties(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Properties()
 	if callErr != nil {
 		return nil, callErr
@@ -210,7 +210,7 @@ func (s *stubObject) Properties(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) RegisterEventWithSignature(payload []byte) ([]byte, error) {
+func (s *stubGeneric) RegisterEventWithSignature(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -239,7 +239,7 @@ func (s *stubObject) RegisterEventWithSignature(payload []byte) ([]byte, error) 
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) IsStatsEnabled(payload []byte) ([]byte, error) {
+func (s *stubGeneric) IsStatsEnabled(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.IsStatsEnabled()
 	if callErr != nil {
 		return nil, callErr
@@ -251,7 +251,7 @@ func (s *stubObject) IsStatsEnabled(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) EnableStats(payload []byte) ([]byte, error) {
+func (s *stubGeneric) EnableStats(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	enabled, err := basic.ReadBool(buf)
 	if err != nil {
@@ -264,7 +264,7 @@ func (s *stubObject) EnableStats(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubObject) Stats(payload []byte) ([]byte, error) {
+func (s *stubGeneric) Stats(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.Stats()
 	if callErr != nil {
 		return nil, callErr
@@ -292,7 +292,7 @@ func (s *stubObject) Stats(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) ClearStats(payload []byte) ([]byte, error) {
+func (s *stubGeneric) ClearStats(payload []byte) ([]byte, error) {
 	callErr := s.impl.ClearStats()
 	if callErr != nil {
 		return nil, callErr
@@ -300,7 +300,7 @@ func (s *stubObject) ClearStats(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubObject) IsTraceEnabled(payload []byte) ([]byte, error) {
+func (s *stubGeneric) IsTraceEnabled(payload []byte) ([]byte, error) {
 	ret, callErr := s.impl.IsTraceEnabled()
 	if callErr != nil {
 		return nil, callErr
@@ -312,7 +312,7 @@ func (s *stubObject) IsTraceEnabled(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubObject) EnableTrace(payload []byte) ([]byte, error) {
+func (s *stubGeneric) EnableTrace(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	traced, err := basic.ReadBool(buf)
 	if err != nil {
@@ -325,7 +325,7 @@ func (s *stubObject) EnableTrace(payload []byte) ([]byte, error) {
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubObject) SignalTraceObject(event EventTrace) error {
+func (s *stubGeneric) SignalTraceObject(event EventTrace) error {
 	var buf bytes.Buffer
 	if err := WriteEventTrace(event, &buf); err != nil {
 		return fmt.Errorf("failed to serialize event: %s", err)
@@ -337,9 +337,9 @@ func (s *stubObject) SignalTraceObject(event EventTrace) error {
 	}
 	return nil
 }
-func (s *stubObject) metaObject() object.MetaObject {
+func (s *stubGeneric) metaObject() object.MetaObject {
 	return object.MetaObject{
-		Description: "Object",
+		Description: "Generic",
 		Methods: map[uint32]object.MetaMethod{
 			uint32(0x0): {
 				Name:                "registerEvent",
