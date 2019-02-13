@@ -7,6 +7,7 @@ import (
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus/server/generic"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -146,7 +147,7 @@ func TestServerReturnError(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Empty meta object:
-	obj := server.NewObject(object.MetaObject{
+	obj := generic.NewObject(object.MetaObject{
 		Description: "test",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
@@ -209,7 +210,7 @@ func TestStandAloneInit(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Empty meta object:
-	obj := server.NewObject(object.MetaObject{
+	obj := generic.NewObject(object.MetaObject{
 		Description: "test",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
@@ -250,7 +251,7 @@ func TestSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	obj := server.NewObject(object.MetaObject{
+	obj := generic.NewObject(object.MetaObject{
 		Description: "test",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
@@ -289,7 +290,7 @@ func TestRemoteServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer srv.Terminate()
-	obj1 := server.NewObject(object.MetaObject{
+	obj1 := generic.NewObject(object.MetaObject{
 		Description: "service1",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
@@ -334,7 +335,7 @@ func TestRemoteServer(t *testing.T) {
 	defer srv2.Terminate()
 	sess2 := srv2.Session()
 
-	obj2 := server.NewObject(object.MetaObject{
+	obj2 := generic.NewObject(object.MetaObject{
 		Description: "service2",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
@@ -642,7 +643,7 @@ func TestNewContext(t *testing.T) {
 }
 
 type ObjectTerminaison struct {
-	server.BasicObject
+	generic.BasicObject
 	Terminated bool
 }
 
@@ -653,7 +654,7 @@ func (o *ObjectTerminaison) OnTerminate() {
 
 func TestObjectTerminaison(t *testing.T) {
 
-	basicObj := server.NewObject(object.MetaObject{
+	basicObj := generic.NewObject(object.MetaObject{
 		Description: "test",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
@@ -681,7 +682,7 @@ func TestObjectTerminaison(t *testing.T) {
 }
 
 func TestServiceTerminaison(t *testing.T) {
-	basicObj := server.NewObject(object.MetaObject{
+	basicObj := generic.NewObject(object.MetaObject{
 		Description: "test",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),

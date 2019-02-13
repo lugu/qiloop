@@ -1,5 +1,5 @@
 // Package stub_test contains a generated stub
-// File generated.
+// File generated. DO NOT EDIT.
 package stub_test
 
 import (
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
+	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
@@ -40,7 +41,7 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.ServerObject.
 type stubObject struct {
-	obj  *server.BasicObject
+	obj  *generic.BasicObject
 	impl Object
 }
 
@@ -48,7 +49,7 @@ type stubObject struct {
 func ObjectObject(impl Object) server.ServerObject {
 	var stb stubObject
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject())
 	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
 	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
 	stb.obj.Wrap(uint32(0x2), stb.MetaObject)

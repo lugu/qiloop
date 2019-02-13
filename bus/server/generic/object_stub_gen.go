@@ -1,6 +1,6 @@
-// Package basic contains a generated stub
-// File generated.
-package basic
+// Package generic contains a generated stub
+// File generated. DO NOT EDIT.
+package generic
 
 import (
 	"bytes"
@@ -40,7 +40,7 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.ServerObject.
 type stubObject struct {
-	obj  *server.BasicObject
+	obj  *BasicObject
 	impl Object
 }
 
@@ -48,7 +48,7 @@ type stubObject struct {
 func ObjectObject(impl Object) server.ServerObject {
 	var stb stubObject
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject())
+	stb.obj = NewObject(stb.metaObject())
 	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
 	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
 	stb.obj.Wrap(uint32(0x2), stb.MetaObject)

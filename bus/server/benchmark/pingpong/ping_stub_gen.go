@@ -1,5 +1,5 @@
 // Package pingpong contains a generated stub
-// File generated.
+// File generated. DO NOT EDIT.
 package pingpong
 
 import (
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
+	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 )
@@ -26,7 +27,7 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.ServerObject.
 type stubPingPong struct {
-	obj  *server.BasicObject
+	obj  *generic.BasicObject
 	impl PingPong
 }
 
@@ -34,7 +35,7 @@ type stubPingPong struct {
 func PingPongObject(impl PingPong) server.ServerObject {
 	var stb stubPingPong
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject())
 	stb.obj.Wrap(uint32(0x64), stb.Hello)
 	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb

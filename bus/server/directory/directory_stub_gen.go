@@ -1,5 +1,5 @@
 // Package directory contains a generated stub
-// File generated.
+// File generated. DO NOT EDIT.
 package directory
 
 import (
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
+	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"io"
@@ -34,7 +35,7 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.ServerObject.
 type stubServiceDirectory struct {
-	obj  *server.BasicObject
+	obj  *generic.BasicObject
 	impl ServiceDirectory
 }
 
@@ -42,7 +43,7 @@ type stubServiceDirectory struct {
 func ServiceDirectoryObject(impl ServiceDirectory) server.ServerObject {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject())
 	stb.obj.Wrap(uint32(0x64), stb.Service)
 	stb.obj.Wrap(uint32(0x65), stb.Services)
 	stb.obj.Wrap(uint32(0x66), stb.RegisterService)
