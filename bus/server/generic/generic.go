@@ -6,6 +6,7 @@ import (
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
+	"sync"
 )
 
 // ErrWrongObjectID is returned when a method argument is given the
@@ -27,6 +28,8 @@ type objectImpl struct {
 	objectID  uint32
 	signal    GenericSignalHelper
 	terminate server.Terminator
+	stats     map[uint32]MethodStatistics
+	statsLock sync.RWMutex
 }
 
 // NewObject returns an Object which implements ServerObject. It
@@ -36,7 +39,8 @@ type objectImpl struct {
 // type/object.Object for a list of the default methods.
 func NewObject(meta object.MetaObject) Object {
 	impl := &objectImpl{
-		meta: object.FullMetaObject(meta),
+		meta:  object.FullMetaObject(meta),
+		stats: nil,
 	}
 	obj := GenericObject(impl)
 	stub := obj.(*stubGeneric)
@@ -101,19 +105,49 @@ func (o *objectImpl) RegisterEventWithSignature(objectID uint32,
 }
 
 func (o *objectImpl) IsStatsEnabled() (bool, error) {
-	panic("Not yet implemented")
+	o.statsLock.RLock()
+	defer o.statsLock.RUnlock()
+	return o.stats != nil, nil
+}
+
+func (o *objectImpl) ActivateStats() {
+}
+
+func (o *objectImpl) DeactivateStats() {
 }
 
 func (o *objectImpl) EnableStats(enabled bool) error {
-	panic("Not yet implemented")
+	o.statsLock.Lock()
+	defer o.statsLock.Unlock()
+	if enabled && o.stats == nil {
+		o.stats = make(map[uint32]MethodStatistics)
+		o.ActivateStats()
+	} else {
+		o.stats = nil
+		o.DeactivateStats()
+	}
+	return nil
 }
 
 func (o *objectImpl) Stats() (map[uint32]MethodStatistics, error) {
-	panic("Not yet implemented")
+	stats := make(map[uint32]MethodStatistics)
+	o.statsLock.RLock()
+	defer o.statsLock.RUnlock()
+	if o.stats != nil {
+		for id, stat := range o.stats {
+			stats[id] = stat
+		}
+	}
+	return stats, nil
 }
 
 func (o *objectImpl) ClearStats() error {
-	panic("Not yet implemented")
+	o.statsLock.Lock()
+	defer o.statsLock.Unlock()
+	if o.stats != nil {
+		o.stats = make(map[uint32]MethodStatistics)
+	}
+	return nil
 }
 
 func (o *objectImpl) IsTraceEnabled() (bool, error) {
