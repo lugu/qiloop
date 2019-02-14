@@ -161,12 +161,12 @@ func (o *BasicObject) reply(from *server.Context, m *net.Message,
 func (o *BasicObject) handleDefault(from *server.Context,
 	msg *net.Message) error {
 
-	a, ok := o.wrapper[msg.Header.Action]
+	fn, ok := o.wrapper[msg.Header.Action]
 	if !ok {
 		return util.ReplyError(from.EndPoint, msg,
 			server.ErrActionNotFound)
 	}
-	response, err := a(msg.Payload)
+	response, err := fn(msg.Payload)
 	if err != nil {
 		return util.ReplyError(from.EndPoint, msg, err)
 	}

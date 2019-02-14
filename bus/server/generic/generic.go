@@ -7,6 +7,7 @@ import (
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 	"sync"
+	"time"
 )
 
 // ErrWrongObjectID is returned when a method argument is given the
@@ -22,14 +23,15 @@ func (s *stubGeneric) Wrap(id uint32, fn server.ActionWrapper) {
 }
 
 type objectImpl struct {
-	obj       *BasicObject
-	meta      object.MetaObject
-	serviceID uint32
-	objectID  uint32
-	signal    GenericSignalHelper
-	terminate server.Terminator
-	stats     map[uint32]MethodStatistics
-	statsLock sync.RWMutex
+	obj          *BasicObject
+	meta         object.MetaObject
+	serviceID    uint32
+	objectID     uint32
+	signal       GenericSignalHelper
+	terminate    server.Terminator
+	stats        map[uint32]MethodStatistics
+	statsLock    sync.RWMutex
+	statsWrapper server.Wrapper
 }
 
 // NewObject returns an Object which implements ServerObject. It
@@ -39,8 +41,9 @@ type objectImpl struct {
 // type/object.Object for a list of the default methods.
 func NewObject(meta object.MetaObject) Object {
 	impl := &objectImpl{
-		meta:  object.FullMetaObject(meta),
-		stats: nil,
+		meta:         object.FullMetaObject(meta),
+		stats:        nil,
+		statsWrapper: make(map[uint32]server.ActionWrapper),
 	}
 	obj := GenericObject(impl)
 	stub := obj.(*stubGeneric)
@@ -55,6 +58,12 @@ func (o *objectImpl) Activate(activation server.Activation,
 	o.serviceID = activation.ServiceID
 	o.objectID = activation.ObjectID
 	o.terminate = activation.Terminate
+
+	// During activation, all the action wrapper have been
+	// registered. Dupplicate them to enable method statistics.
+	for id, fn := range o.obj.wrapper {
+		o.statsWrapper[id] = o.observer(id, fn)
+	}
 	return nil
 }
 
@@ -110,10 +119,35 @@ func (o *objectImpl) IsStatsEnabled() (bool, error) {
 	return o.stats != nil, nil
 }
 
-func (o *objectImpl) ActivateStats() {
+func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
+	m.Count++
+	duration := float32(t)
+	m.Wall.CumulatedValue += duration
+	if duration < m.Wall.MinValue {
+		m.Wall.MinValue = duration
+	}
+	if duration > m.Wall.MaxValue {
+		m.Wall.MaxValue = duration
+	}
+	return m
 }
 
-func (o *objectImpl) DeactivateStats() {
+func (o *objectImpl) observer(id uint32, fn server.ActionWrapper) server.ActionWrapper {
+	return func(payload []byte) ([]byte, error) {
+		start := time.Now()
+		ret, err := fn(payload)
+		duration := time.Since(start)
+		o.statsLock.Lock()
+		if o.stats != nil {
+			o.stats[id] = o.stats[id].updateWith(duration)
+		}
+		defer o.statsLock.Unlock()
+		return ret, err
+	}
+}
+
+func (o *objectImpl) swipeWrapper() {
+	o.statsWrapper, o.obj.wrapper = o.obj.wrapper, o.statsWrapper
 }
 
 func (o *objectImpl) EnableStats(enabled bool) error {
@@ -121,10 +155,10 @@ func (o *objectImpl) EnableStats(enabled bool) error {
 	defer o.statsLock.Unlock()
 	if enabled && o.stats == nil {
 		o.stats = make(map[uint32]MethodStatistics)
-		o.ActivateStats()
+		o.swipeWrapper()
 	} else {
 		o.stats = nil
-		o.DeactivateStats()
+		o.swipeWrapper()
 	}
 	return nil
 }
