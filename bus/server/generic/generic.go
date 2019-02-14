@@ -132,16 +132,17 @@ func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 	return m
 }
 
+// observer returns an ActionWrapper based on fn which records statistics
 func (o *objectImpl) observer(id uint32, fn server.ActionWrapper) server.ActionWrapper {
 	return func(payload []byte) ([]byte, error) {
 		start := time.Now()
 		ret, err := fn(payload)
 		duration := time.Since(start)
 		o.statsLock.Lock()
+		defer o.statsLock.Unlock()
 		if o.stats != nil {
 			o.stats[id] = o.stats[id].updateWith(duration)
 		}
-		defer o.statsLock.Unlock()
 		return ret, err
 	}
 }
@@ -156,7 +157,7 @@ func (o *objectImpl) EnableStats(enabled bool) error {
 	if enabled && o.stats == nil {
 		o.stats = make(map[uint32]MethodStatistics)
 		o.swipeWrapper()
-	} else {
+	} else if !enabled && o.stats != nil {
 		o.stats = nil
 		o.swipeWrapper()
 	}
