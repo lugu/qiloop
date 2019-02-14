@@ -24,7 +24,7 @@ type signalUser struct {
 // type/object.Object for a list of the default methods.
 type BasicObject struct {
 	signals   []signalUser
-	Wrapper   server.Wrapper
+	wrapper   server.Wrapper
 	serviceID uint32
 	objectID  uint32
 }
@@ -39,13 +39,13 @@ type Object interface {
 func NewBasicObject() *BasicObject {
 	return &BasicObject{
 		signals: make([]signalUser, 0),
-		Wrapper: make(map[uint32]server.ActionWrapper),
+		wrapper: make(map[uint32]server.ActionWrapper),
 	}
 }
 
 // Wrap let a BasicObject owner extend it with custom actions.
 func (o *BasicObject) Wrap(id uint32, fn server.ActionWrapper) {
-	o.Wrapper[id] = fn
+	o.wrapper[id] = fn
 }
 
 func (o *BasicObject) addSignalUser(signalID, messageID uint32,
@@ -161,7 +161,7 @@ func (o *BasicObject) reply(from *server.Context, m *net.Message,
 func (o *BasicObject) handleDefault(from *server.Context,
 	msg *net.Message) error {
 
-	a, ok := o.Wrapper[msg.Header.Action]
+	a, ok := o.wrapper[msg.Header.Action]
 	if !ok {
 		return util.ReplyError(from.EndPoint, msg,
 			server.ErrActionNotFound)
