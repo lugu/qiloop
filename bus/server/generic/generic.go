@@ -35,17 +35,13 @@ type objectImpl struct {
 // extra actions they wish to handle using the Wrap method. See
 // type/object.Object for a list of the default methods.
 func NewObject(meta object.MetaObject) Object {
-	obj := GenericObject(genericObject(meta))
-	stub := obj.(*stubGeneric)
-	return stub
-}
-
-func genericObject(meta object.MetaObject) Generic {
-	impl := objectImpl{
-		obj:  NewBasicObject(),
+	impl := &objectImpl{
 		meta: object.FullMetaObject(meta),
 	}
-	return &impl
+	obj := GenericObject(impl)
+	stub := obj.(*stubGeneric)
+	impl.obj = stub.obj.(*BasicObject)
+	return stub
 }
 
 func (o *objectImpl) Activate(activation server.Activation,
