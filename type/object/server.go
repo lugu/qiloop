@@ -81,6 +81,42 @@ var ObjectMetaObject MetaObject = MetaObject{
 			Name:                "registerEventWithSignature",
 			ParametersSignature: "(IILs)",
 		},
+		uint32(0x50): {
+			Name:                "isStatsEnabled",
+			ParametersSignature: "()",
+			ReturnSignature:     "b",
+			Uid:                 uint32(0x50),
+		},
+		uint32(0x51): {
+			Name:                "enableStats",
+			ParametersSignature: "(b)",
+			ReturnSignature:     "v",
+			Uid:                 uint32(0x51),
+		},
+		uint32(0x52): {
+			Name:                "stats",
+			ParametersSignature: "()",
+			ReturnSignature:     "{I(I(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>)<MethodStatistics,count,wall,user,system>}",
+			Uid:                 uint32(0x52),
+		},
+		uint32(0x53): {
+			Name:                "clearStats",
+			ParametersSignature: "()",
+			ReturnSignature:     "v",
+			Uid:                 uint32(0x53),
+		},
+		uint32(0x54): {
+			Name:                "isTraceEnabled",
+			ParametersSignature: "()",
+			ReturnSignature:     "b",
+			Uid:                 uint32(0x54),
+		},
+		uint32(0x55): {
+			Name:                "enableTrace",
+			ParametersSignature: "(b)",
+			ReturnSignature:     "v",
+			Uid:                 uint32(0x55),
+		},
 	},
 	Signals: map[uint32]MetaSignal{
 		0x56: {

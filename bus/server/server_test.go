@@ -65,6 +65,15 @@ func newObject() server.ServerObject {
 	return &object
 }
 
+func NewObject(name string) generic.Object {
+	return generic.NewObject(object.MetaObject{
+		Description: name,
+		Methods:     make(map[uint32]object.MetaMethod),
+		Signals:     make(map[uint32]object.MetaSignal),
+		Properties:  make(map[uint32]object.MetaProperty),
+	})
+}
+
 func TestNewServer(t *testing.T) {
 
 	addr := util.NewUnixAddr()
@@ -147,17 +156,12 @@ func TestServerReturnError(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Empty meta object:
-	obj := generic.NewObject(object.MetaObject{
-		Description: "test",
-		Methods:     make(map[uint32]object.MetaMethod),
-		Signals:     make(map[uint32]object.MetaSignal),
-	})
-
 	srv, err := server.StandAloneServer(listener, server.Yes{},
 		server.PrivateNamespace())
 	if err != nil {
 		t.Error(err)
 	}
+	obj := NewObject("test")
 	srv.NewService("test", obj)
 
 	cltNet, err := net.DialEndPoint(addr)
@@ -209,12 +213,6 @@ func TestStandAloneInit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Empty meta object:
-	obj := generic.NewObject(object.MetaObject{
-		Description: "test",
-		Methods:     make(map[uint32]object.MetaMethod),
-		Signals:     make(map[uint32]object.MetaSignal),
-	})
 
 	srv, err := server.StandAloneServer(listener, server.Yes{},
 		server.PrivateNamespace())
@@ -222,6 +220,7 @@ func TestStandAloneInit(t *testing.T) {
 		t.Error(err)
 	}
 	defer srv.Terminate()
+	obj := NewObject("test")
 	srv.NewService("test", obj)
 
 	clt, err := net.DialEndPoint(addr)
@@ -251,11 +250,6 @@ func TestSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	obj := generic.NewObject(object.MetaObject{
-		Description: "test",
-		Methods:     make(map[uint32]object.MetaMethod),
-		Signals:     make(map[uint32]object.MetaSignal),
-	})
 
 	srv, err := server.StandAloneServer(listener, server.Yes{},
 		server.PrivateNamespace())
@@ -263,6 +257,7 @@ func TestSession(t *testing.T) {
 		t.Error(err)
 	}
 	defer srv.Terminate()
+	obj := NewObject("test")
 	srv.NewService("test", obj)
 
 	sess := srv.Session()
@@ -290,11 +285,8 @@ func TestRemoteServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer srv.Terminate()
-	obj1 := generic.NewObject(object.MetaObject{
-		Description: "service1",
-		Methods:     make(map[uint32]object.MetaMethod),
-		Signals:     make(map[uint32]object.MetaSignal),
-	})
+
+	obj1 := NewObject("service1")
 	_, err = srv.NewService("service1", obj1)
 	if err != nil {
 		t.Error(err)
@@ -335,11 +327,7 @@ func TestRemoteServer(t *testing.T) {
 	defer srv2.Terminate()
 	sess2 := srv2.Session()
 
-	obj2 := generic.NewObject(object.MetaObject{
-		Description: "service2",
-		Methods:     make(map[uint32]object.MetaMethod),
-		Signals:     make(map[uint32]object.MetaSignal),
-	})
+	obj2 := NewObject("service2")
 	_, err = srv2.NewService("service2", obj2)
 	if err != nil {
 		t.Error(err)
@@ -654,13 +642,8 @@ func (o *ObjectTerminaison) OnTerminate() {
 
 func TestObjectTerminaison(t *testing.T) {
 
-	impl := generic.NewObject(object.MetaObject{
-		Description: "test",
-		Methods:     make(map[uint32]object.MetaMethod),
-		Signals:     make(map[uint32]object.MetaSignal),
-	})
 	obj := &ObjectTerminaison{
-		impl,
+		NewObject("test"),
 		false,
 	}
 
@@ -682,13 +665,8 @@ func TestObjectTerminaison(t *testing.T) {
 }
 
 func TestServiceTerminaison(t *testing.T) {
-	impl := generic.NewObject(object.MetaObject{
-		Description: "test",
-		Methods:     make(map[uint32]object.MetaMethod),
-		Signals:     make(map[uint32]object.MetaSignal),
-	})
 	obj := &ObjectTerminaison{
-		impl,
+		NewObject("test"),
 		false,
 	}
 

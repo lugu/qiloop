@@ -126,5 +126,8 @@ func FullMetaObject(meta MetaObject) MetaObject {
 	for i, signal := range ObjectMetaObject.Signals {
 		meta.Signals[i] = signal
 	}
+	for i, property := range ObjectMetaObject.Properties {
+		meta.Properties[i] = property
+	}
 	return meta
 }

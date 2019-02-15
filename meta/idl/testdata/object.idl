@@ -7,6 +7,12 @@ interface Object
 	fn setProperty(P0: any, P1: any) //uid:6
 	fn properties() -> Vec<str> //uid:7
 	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
 	sig traceObject(P0: EventTrace) //uid:86
 end
 struct MetaMethodParameter
@@ -37,6 +43,17 @@ struct MetaObject
 	signals: Map<uint32,MetaSignal>
 	properties: Map<uint32,MetaProperty>
 	description: str
+end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
 end
 struct timeval
 	tv_sec: int64
