@@ -64,6 +64,7 @@ func TestValueWriteRead(t *testing.T) {
 	helpValueWrite(t, value.Float(0))
 	helpValueWrite(t, value.String(""))
 	helpValueWrite(t, value.String("keep testing"))
+	helpValueWrite(t, value.Void())
 }
 
 func helpParseValue(t *testing.T, b []byte, expected value.Value) {
@@ -135,4 +136,9 @@ func TestParseListValue(t *testing.T) {
 		value.String("LIb"),
 		value.Bool(true),
 	}))
+}
+
+func TestParseVoidValue(t *testing.T) {
+	bytes := []byte{1, 0, 0, 0, 0x76}
+	helpParseValue(t, bytes, value.Void())
 }

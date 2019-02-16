@@ -3,9 +3,11 @@ package generic
 import (
 	"errors"
 	"fmt"
+	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
+	"log"
 	"sync"
 	"time"
 )
@@ -13,6 +15,10 @@ import (
 // ErrWrongObjectID is returned when a method argument is given the
 // wrong object ID.
 var ErrWrongObjectID = errors.New("Wrong object ID")
+
+// ErrNotYetImplemented is returned when a feature is not yet
+// implemented.
+var ErrNotYetImplemented = errors.New("Not supported")
 
 func (s *stubGeneric) UpdateSignal(signal uint32, value []byte) error {
 	return s.obj.UpdateSignal(signal, value)
@@ -97,20 +103,20 @@ func (o *objectImpl) Terminate(objectID uint32) error {
 }
 
 func (o *objectImpl) Property(name value.Value) (value.Value, error) {
-	panic("Not yet implemented")
+	return nil, ErrNotYetImplemented
 }
 
 func (o *objectImpl) SetProperty(name value.Value, value value.Value) error {
-	panic("Not yet implemented")
+	return ErrNotYetImplemented
 }
 
 func (o *objectImpl) Properties() ([]string, error) {
-	panic("Not yet implemented")
+	return nil, ErrNotYetImplemented
 }
 
 func (o *objectImpl) RegisterEventWithSignature(objectID uint32,
 	actionID uint32, handler uint64, P3 string) (uint64, error) {
-	panic("Not yet implemented")
+	return 0, fmt.Errorf("Not yet implemented")
 }
 
 func (o *objectImpl) IsStatsEnabled() (bool, error) {
@@ -186,9 +192,44 @@ func (o *objectImpl) ClearStats() error {
 }
 
 func (o *objectImpl) IsTraceEnabled() (bool, error) {
-	panic("Not yet implemented")
+	return o.obj.tracer != nil, nil
 }
 
-func (o *objectImpl) EnableTrace(traced bool) error {
-	panic("Not yet implemented")
+func (o *objectImpl) EnableTrace(enable bool) error {
+	tracer := o.obj.Tracer()
+	if !enable && tracer != nil {
+		o.obj.SetTracer(nil)
+	} else if enable && tracer == nil {
+		tracer := make(chan *net.Message, 10)
+		go func() {
+			for msg := range tracer {
+				err := o.trace(msg)
+				if err != nil {
+					log.Printf("failed to trace: %s", err)
+				}
+			}
+		}()
+		o.obj.SetTracer(tracer)
+	}
+	return nil
+}
+
+func (o *objectImpl) trace(msg *net.Message) error {
+	// do not trace traceObject signal
+	if msg.Header.Action == 86 {
+		return nil
+	}
+	now := time.Now()
+	timeval := Timeval{
+		Tvsec:  int64(now.Second()),
+		Tvusec: int64(now.Nanosecond() / 1000),
+	}
+	event := EventTrace{
+		Id:        msg.Header.Action,
+		Kind:      int32(msg.Header.Type),
+		SlotId:    msg.Header.ID,
+		Arguments: value.Void(),
+		Timestamp: timeval,
+	}
+	return o.signal.SignalTraceObject(event)
 }

@@ -93,6 +93,12 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 // Subscribe returns a channel which returns the future value of a
 // given signal. To stop the stream one must send a value in the
 // cancel channel. Do not close the message channel.
+//
+// BUG: signal cancel is racy: the Handler.run() can be
+// running after a call to RemoveHandler due to channel
+// buffering. In such case, run() will send messge to a
+// consumer after the closer has been called.
+// see generic_test.go for an example
 func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 	func(), chan []byte, error) {
 

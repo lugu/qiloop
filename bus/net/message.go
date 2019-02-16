@@ -158,7 +158,8 @@ type Message struct {
 func (m *Message) Write(w io.Writer) error {
 
 	if uint32(len(m.Payload)) != m.Header.Size {
-		return fmt.Errorf("invalid message size: %d instead of %d", len(m.Payload), m.Header.Size)
+		return fmt.Errorf("invalid message size: %d instead of %d",
+			len(m.Payload), m.Header.Size)
 	}
 
 	// Pack header and payload in a buffer and then it to the network.
@@ -169,15 +170,17 @@ func (m *Message) Write(w io.Writer) error {
 	}
 
 	if size, err := buf.Write(m.Payload); err != nil {
-		return fmt.Errorf("failed to write message payload: %s", err)
+		return fmt.Errorf("failed to write payload: %s", err)
 	} else if size != int(m.Header.Size) {
-		return fmt.Errorf("failed to write message payload (%d instead of %d)", size, m.Header.Size)
+		return fmt.Errorf("failed to write payload (%d instead of %d)",
+			size, m.Header.Size)
 	}
 
 	if size, err := w.Write(buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to send message: %s", err)
 	} else if size != int(m.Header.Size+HeaderSize) {
-		return fmt.Errorf("message not completly wrote (%d instead of %d)", size, m.Header.Size+HeaderSize)
+		return fmt.Errorf("message not completly wrote (%d instead of %d)",
+			size, m.Header.Size+HeaderSize)
 	}
 	return nil
 }

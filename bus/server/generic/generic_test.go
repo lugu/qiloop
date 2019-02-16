@@ -131,3 +131,68 @@ func TestMethodStatistics(t *testing.T) {
 		t.Errorf("Stats shall not be enabled")
 	}
 }
+
+func TestTraceEvent(t *testing.T) {
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv, err := server.StandAloneServer(listener, server.Yes{},
+		server.PrivateNamespace())
+	if err != nil {
+		t.Error(err)
+	}
+	srv.NewService("serviceA", newObject())
+
+	sess := srv.Session()
+	client, err := sess.Proxy("serviceA", 1)
+	if err != nil {
+		t.Error(err)
+	}
+	remoteObj := &proxy.ObjectProxy{client}
+	enabled, err := remoteObj.IsTraceEnabled()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enabled {
+		t.Errorf("Trace shall not be enabled")
+	}
+	err = remoteObj.EnableTrace(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// FIXME: signal cancel is racy: the Handler.run() can be
+	// running after a call to RemoveHandler due to channel
+	// buffering. In such case, run() will send messge to a
+	// consumer after the closer has been called.
+	_, traces, err := remoteObj.SubscribeTraceObject()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	enabled, err = remoteObj.IsTraceEnabled()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !enabled {
+		t.Errorf("Trace shall be enabled")
+	}
+	trace := <-traces
+	// action shall be related to tracing
+	if trace.Id < 84 || trace.Id > 86 {
+		t.Errorf("unexpected action %d", trace.Id)
+	}
+	err = remoteObj.EnableTrace(false)
+	if err != nil {
+		t.Error(err)
+	}
+	enabled, err = remoteObj.IsTraceEnabled()
+	if err != nil {
+		t.Error(err)
+	}
+	if enabled {
+		t.Errorf("Trace shall not be enabled")
+	}
+}

@@ -37,6 +37,7 @@ func NewValue(r io.Reader) (Value, error) {
 		"f":   newFloat,
 		"[m]": newList,
 		"r":   newRaw,
+		"v":   newVoid,
 	}
 	f, ok := solve[s]
 	if !ok {
@@ -472,4 +473,27 @@ func (b RawValue) Write(w io.Writer) error {
 // Value returns the actual value
 func (b RawValue) Value() []byte {
 	return []byte(b)
+}
+
+// VoidValue represents nothing.
+type VoidValue struct{}
+
+// Void returns an empty value
+func Void() Value {
+	return VoidValue{}
+}
+
+func newVoid(r io.Reader) (Value, error) {
+	return VoidValue{}, nil
+}
+
+func (b VoidValue) signature() string {
+	return "v"
+}
+
+func (b VoidValue) Write(w io.Writer) error {
+	if err := basic.WriteString(b.signature(), w); err != nil {
+		return err
+	}
+	return nil
 }
