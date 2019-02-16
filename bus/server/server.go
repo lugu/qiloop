@@ -164,6 +164,7 @@ func (s *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 	if ok {
 		return o.Receive(m, from)
 	}
+	// FIXME: check the message type. Only reply to call messages.
 	return util.ReplyError(from.EndPoint, m, ErrObjectNotFound)
 }
 
@@ -320,6 +321,7 @@ func (r *Router) Dispatch(m *net.Message, from *Context) error {
 	if ok {
 		return s.Dispatch(m, from)
 	}
+	// FIXME: check the message type. Only reply to call messages.
 	return util.ReplyError(from.EndPoint, m, ErrServiceNotFound)
 }
 
@@ -438,6 +440,7 @@ func (s *Server) handle(c gonet.Conn, authenticated bool) {
 		if err != nil {
 			log.Printf("missing authentication from %s: %#v",
 				context.EndPoint.String(), msg.Header)
+			// FIXME: Only reply to call messages.
 			return util.ReplyError(context.EndPoint, msg, err)
 		}
 		return s.Router.Dispatch(msg, context)

@@ -177,6 +177,10 @@ func (o *BasicObject) handleDefault(from *server.Context,
 // The returned error is not destinated to the client which have
 // already be replied.
 func (o *BasicObject) Receive(m *net.Message, from *server.Context) error {
+	// FIXME: handle message type:
+	// post => reply goes to /dev/null
+	// error => not welcome
+	// event => ???
 	switch m.Header.Action {
 	case 0x0:
 		return o.handleRegisterEvent(from, m)

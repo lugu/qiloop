@@ -23,15 +23,15 @@ func (s *stubGeneric) Wrap(id uint32, fn server.ActionWrapper) {
 }
 
 type objectImpl struct {
-	obj          *BasicObject
-	meta         object.MetaObject
-	serviceID    uint32
-	objectID     uint32
-	signal       GenericSignalHelper
-	terminate    server.Terminator
-	stats        map[uint32]MethodStatistics
-	statsLock    sync.RWMutex
-	statsWrapper server.Wrapper
+	obj               *BasicObject
+	meta              object.MetaObject
+	serviceID         uint32
+	objectID          uint32
+	signal            GenericSignalHelper
+	terminate         server.Terminator
+	stats             map[uint32]MethodStatistics
+	statsLock         sync.RWMutex
+	observableWrapper server.Wrapper
 }
 
 // NewObject returns an Object which implements ServerObject. It
@@ -41,9 +41,9 @@ type objectImpl struct {
 // type/object.Object for a list of the default methods.
 func NewObject(meta object.MetaObject) Object {
 	impl := &objectImpl{
-		meta:         object.FullMetaObject(meta),
-		stats:        nil,
-		statsWrapper: make(map[uint32]server.ActionWrapper),
+		meta:              object.FullMetaObject(meta),
+		stats:             nil,
+		observableWrapper: make(map[uint32]server.ActionWrapper),
 	}
 	obj := GenericObject(impl)
 	stub := obj.(*stubGeneric)
@@ -62,7 +62,7 @@ func (o *objectImpl) Activate(activation server.Activation,
 	// During activation, all the action wrapper have been
 	// registered. Dupplicate them to enable method statistics.
 	for id, fn := range o.obj.wrapper {
-		o.statsWrapper[id] = o.observer(id, fn)
+		o.observableWrapper[id] = o.observer(id, fn)
 	}
 	return nil
 }
@@ -148,7 +148,7 @@ func (o *objectImpl) observer(id uint32, fn server.ActionWrapper) server.ActionW
 }
 
 func (o *objectImpl) swipeWrapper() {
-	o.statsWrapper, o.obj.wrapper = o.obj.wrapper, o.statsWrapper
+	o.observableWrapper, o.obj.wrapper = o.obj.wrapper, o.observableWrapper
 }
 
 func (o *objectImpl) EnableStats(enabled bool) error {
