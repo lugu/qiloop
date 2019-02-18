@@ -184,9 +184,10 @@ func TestEndpointShallAcceptMultipleHandlers(t *testing.T) {
 	filter := func(hrd *net.Header) (bool, bool) {
 		return true, true
 	}
-	wait := make(chan *net.Message, 10)
+	var wait sync.WaitGroup
+
 	consumer := func(msg *net.Message) error {
-		wait <- msg
+		wait.Done()
 		return nil
 	}
 	closer := func(err error) {
@@ -197,20 +198,18 @@ func TestEndpointShallAcceptMultipleHandlers(t *testing.T) {
 
 	ids := make([]int, 20)
 	for i := range ids {
+		wait.Add(1)
 		ids[i] = endpoint.AddHandler(filter, consumer, closer)
 	}
 	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
 	msg.Write(a)
 
+	wait.Wait()
 	for _, id := range ids {
-		msg, ok := <-wait
-		if !ok {
-			panic("expecting a message")
+		err := endpoint.RemoveHandler(id)
+		if err != nil {
+			panic(err)
 		}
-		if msg == nil {
-			panic("not expected nil")
-		}
-		endpoint.RemoveHandler(id)
 	}
 	err := endpoint.RemoveHandler(ids[0])
 	if err == nil {

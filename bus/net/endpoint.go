@@ -58,6 +58,7 @@ type Handler struct {
 	consumer Consumer
 	closer   Closer
 	queue    chan *Message
+	cancel   chan struct{}
 	err      error
 }
 
@@ -68,23 +69,40 @@ func NewHandler(f Filter, c Consumer, cl Closer) *Handler {
 		consumer: c,
 		closer:   cl,
 		queue:    make(chan *Message, 10),
+		cancel:   make(chan struct{}),
 	}
 	go h.run()
 	return h
 }
 
+// Stop stops the handler main loop. If immediatly, the pending
+// messages in the queue will be dropped, else the queue will be
+// processed before terminating the handler.
+func (h *Handler) Stop(immediatly bool) {
+	if immediatly {
+		close(h.cancel)
+	} else {
+		close(h.queue)
+	}
+}
+
 func (h *Handler) run() {
+loop:
 	for {
-		msg, ok := <-h.queue
-		if !ok {
-			h.closer(h.err)
-			return
-		}
-		err := h.consumer(msg)
-		if err != nil {
-			log.Printf("failed to consume message: %s", err)
+		select {
+		case msg, ok := <-h.queue:
+			if !ok {
+				break loop
+			}
+			err := h.consumer(msg)
+			if err != nil {
+				log.Printf("failed to consume message: %s", err)
+			}
+		case <-h.cancel:
+			break loop
 		}
 	}
+	h.closer(h.err)
 }
 
 type endPoint struct {
@@ -183,7 +201,7 @@ func (e *endPoint) closeWith(err error) error {
 	for id, handler := range e.handlers {
 		if handler != nil {
 			handler.err = err
-			close(handler.queue)
+			handler.Stop(false)
 			e.handlers[id] = nil
 		}
 	}
@@ -202,7 +220,7 @@ func (e *endPoint) RemoveHandler(id int) error {
 	e.handlersMutex.Lock()
 	defer e.handlersMutex.Unlock()
 	if id >= 0 && id < len(e.handlers) && e.handlers[id] != nil {
-		close(e.handlers[id].queue)
+		e.handlers[id].Stop(true)
 		e.handlers[id] = nil
 		return nil
 	}
@@ -252,7 +270,7 @@ func (e *endPoint) dispatch(msg *Message) error {
 			ret = nil
 		}
 		if !keep {
-			close(h.queue)
+			h.Stop(false)
 			e.handlers[i] = nil
 		}
 	}

@@ -163,11 +163,7 @@ func TestTraceEvent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// FIXME: signal cancel is racy: the Handler.run() can be
-	// running after a call to RemoveHandler due to channel
-	// buffering. In such case, run() will send messge to a
-	// consumer after the closer has been called.
-	_, traces, err := remoteObj.SubscribeTraceObject()
+	cancel, traces, err := remoteObj.SubscribeTraceObject()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,10 +176,10 @@ func TestTraceEvent(t *testing.T) {
 		t.Errorf("Trace shall be enabled")
 	}
 	trace := <-traces
-	// action shall be related to tracing
-	if trace.Id < 84 || trace.Id > 86 {
+	if trace.Id < 84 || trace.Id > 86 { // tracing actions
 		t.Errorf("unexpected action %d", trace.Id)
 	}
+	cancel()
 	err = remoteObj.EnableTrace(false)
 	if err != nil {
 		t.Error(err)
