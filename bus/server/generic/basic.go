@@ -7,6 +7,7 @@ import (
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
+	"io"
 	"math/rand"
 	"sync"
 )
@@ -14,6 +15,7 @@ import (
 type signalUser struct {
 	signalID  uint32
 	messageID uint32
+	clientID  uint64
 	context   *server.Context
 }
 
@@ -60,6 +62,7 @@ func (o *BasicObject) addSignalUser(signalID, messageID uint32,
 	newUser := signalUser{
 		signalID,
 		messageID,
+		clientID,
 		from,
 	}
 	o.signalsMutex.Lock()
@@ -165,7 +168,9 @@ func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
 
 	for _, client := range signals {
 		err := o.replyEvent(&client, id, value)
-		if err != nil {
+		if err == io.EOF {
+			o.removeSignalUser(client.clientID)
+		} else if err != nil {
 			ret = err
 		}
 	}
