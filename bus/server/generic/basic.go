@@ -28,8 +28,7 @@ type BasicObject struct {
 	wrapper      server.Wrapper
 	serviceID    uint32
 	objectID     uint32
-	tracer       chan *net.Message
-	tracerMutex  sync.RWMutex
+	tracer       func(*net.Message)
 }
 
 type Object interface {
@@ -63,14 +62,14 @@ func (o *BasicObject) addSignalUser(signalID, messageID uint32,
 		messageID,
 		from,
 	}
-	o.tracerMutex.Lock()
+	o.signalsMutex.Lock()
 	_, ok := o.signals[clientID]
 	if !ok {
 		o.signals[clientID] = newUser
-		o.tracerMutex.Unlock()
+		o.signalsMutex.Unlock()
 		return clientID
 	}
-	o.tracerMutex.Unlock()
+	o.signalsMutex.Unlock()
 	// pick another random number
 	return o.addSignalUser(signalID, messageID, from)
 }
@@ -78,9 +77,9 @@ func (o *BasicObject) addSignalUser(signalID, messageID uint32,
 // removeSignalUser unregister the given contex to events.
 // FIXME: shall all unsubscribe context when the connection is lost
 func (o *BasicObject) removeSignalUser(clientID uint64) error {
-	o.tracerMutex.Lock()
+	o.signalsMutex.Lock()
 	delete(o.signals, clientID)
-	defer o.tracerMutex.Unlock()
+	defer o.signalsMutex.Unlock()
 	return nil
 }
 
@@ -156,13 +155,13 @@ func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
 	var ret error
 	signals := make([]signalUser, 0)
 
-	o.tracerMutex.RLock()
+	o.signalsMutex.RLock()
 	for _, client := range o.signals {
 		if client.signalID == id {
 			signals = append(signals, client)
 		}
 	}
-	o.tracerMutex.RUnlock()
+	o.signalsMutex.RUnlock()
 
 	for _, client := range signals {
 		err := o.replyEvent(&client, id, value)
@@ -173,25 +172,9 @@ func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
 	return ret
 }
 
-func (o *BasicObject) SetTracer(tracer chan *net.Message) {
-	o.tracerMutex.Lock()
-	defer o.tracerMutex.Unlock()
-	if o.tracer != nil {
-		close(o.tracer)
-	}
-	o.tracer = tracer
-}
-
-func (o *BasicObject) Tracer() chan *net.Message {
-	o.tracerMutex.RLock()
-	defer o.tracerMutex.RUnlock()
-	return o.tracer
-}
-
 func (o *BasicObject) trace(msg *net.Message) {
-	tracer := o.Tracer()
-	if tracer != nil {
-		tracer <- msg
+	if o.tracer != nil {
+		o.tracer(msg)
 	}
 }
 

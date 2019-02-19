@@ -158,16 +158,14 @@ func TestTraceEvent(t *testing.T) {
 	if enabled {
 		t.Errorf("Trace shall not be enabled")
 	}
-	err = remoteObj.EnableTrace(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	cancel, traces, err := remoteObj.SubscribeTraceObject()
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	err = remoteObj.EnableTrace(true)
+	if err != nil {
+		t.Fatal(err)
+	}
 	enabled, err = remoteObj.IsTraceEnabled()
 	if err != nil {
 		t.Fatal(err)
@@ -177,7 +175,7 @@ func TestTraceEvent(t *testing.T) {
 	}
 	trace := <-traces
 	if trace.Id < 84 || trace.Id > 86 { // tracing actions
-		t.Errorf("unexpected action %d", trace.Id)
+		t.Errorf("unexpected action %#v", trace)
 	}
 	cancel()
 	err = remoteObj.EnableTrace(false)

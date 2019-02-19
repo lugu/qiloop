@@ -38,6 +38,8 @@ type objectImpl struct {
 	stats             map[uint32]MethodStatistics
 	statsLock         sync.RWMutex
 	observableWrapper server.Wrapper
+	traceEnabled      bool
+	traceMutex        sync.RWMutex
 }
 
 // NewObject returns an Object which implements ServerObject. It
@@ -53,8 +55,13 @@ func NewObject(meta object.MetaObject) Object {
 	}
 	obj := GenericObject(impl)
 	stub := obj.(*stubGeneric)
-	impl.obj = stub.obj.(*BasicObject)
+	impl.basicObject(stub.obj.(*BasicObject))
 	return stub
+}
+
+func (o *objectImpl) basicObject(obj *BasicObject) {
+	o.obj = obj
+	obj.tracer = o.tracer()
 }
 
 func (o *objectImpl) Activate(activation server.Activation,
@@ -192,32 +199,34 @@ func (o *objectImpl) ClearStats() error {
 }
 
 func (o *objectImpl) IsTraceEnabled() (bool, error) {
-	return o.obj.tracer != nil, nil
+	o.traceMutex.RLock()
+	defer o.traceMutex.RUnlock()
+	return o.traceEnabled, nil
 }
 
 func (o *objectImpl) EnableTrace(enable bool) error {
-	tracer := o.obj.Tracer()
-	if !enable && tracer != nil {
-		o.obj.SetTracer(nil)
-	} else if enable && tracer == nil {
-		tracer := make(chan *net.Message, 10)
-		go func() {
-			for msg := range tracer {
-				err := o.trace(msg)
-				if err != nil {
-					log.Printf("failed to trace: %s", err)
-				}
-			}
-		}()
-		o.obj.SetTracer(tracer)
-	}
+	o.traceMutex.RLock()
+	defer o.traceMutex.RUnlock()
+	o.traceEnabled = enable
 	return nil
 }
 
-func (o *objectImpl) trace(msg *net.Message) error {
+func (o *objectImpl) tracer() func(msg *net.Message) {
+	return func(msg *net.Message) {
+		o.trace(msg)
+	}
+}
+
+func (o *objectImpl) trace(msg *net.Message) {
+	o.traceMutex.RLock()
+	enabled := o.traceEnabled
+	o.traceMutex.RUnlock()
+	if !enabled {
+		return
+	}
 	// do not trace traceObject signal
 	if msg.Header.Action == 86 {
-		return nil
+		return
 	}
 	now := time.Now()
 	timeval := Timeval{
@@ -231,5 +240,8 @@ func (o *objectImpl) trace(msg *net.Message) error {
 		Arguments: value.Void(),
 		Timestamp: timeval,
 	}
-	return o.signal.SignalTraceObject(event)
+	err := o.signal.SignalTraceObject(event)
+	if err != nil {
+		log.Printf("trace error: %s", err)
+	}
 }
