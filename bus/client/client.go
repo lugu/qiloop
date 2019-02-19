@@ -100,13 +100,13 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 // consumer after the closer has been called.
 // see generic_test.go for an example
 func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
-	func(), chan []byte, error) {
+	cancel func(), events chan []byte, err error) {
 
-	stream := make(chan []byte)
 	abort := make(chan int)
-	stop := make(chan int)
+	closed := make(chan int)
 
-	cancel := func() {
+	events = make(chan []byte)
+	cancel = func() {
 		close(abort)
 	}
 
@@ -118,24 +118,23 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 		return false, true
 	}
 	consumer := func(msg *net.Message) error {
-		stream <- msg.Payload
+		events <- msg.Payload
 		return nil
 	}
 	closer := func(err error) {
-		close(stop)
+		close(closed)
+		close(events)
 	}
 
 	go func(id int) {
 		select {
-		case _ = <-stop:
-			c.endpoint.RemoveHandler(id)
-		case _ = <-abort:
+		case <-closed:
+		case <-abort:
 			c.endpoint.RemoveHandler(id)
 		}
-		close(stream)
 	}(c.endpoint.AddHandler(filter, consumer, closer))
 
-	return cancel, stream, nil
+	return cancel, events, nil
 }
 
 // NewClient returns a new client.

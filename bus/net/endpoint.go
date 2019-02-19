@@ -62,7 +62,9 @@ type Handler struct {
 	err      error
 }
 
-// NewHandler returns an Handler.
+// NewHandler returns an Handler: f is call on each incomming message,
+// c is called if f returns true. cl is always called when the handler
+// is effectively closed.
 func NewHandler(f Filter, c Consumer, cl Closer) *Handler {
 	h := &Handler{
 		filter:   f,
