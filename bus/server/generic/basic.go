@@ -222,10 +222,12 @@ func (o *BasicObject) handleDefault(from *server.Context,
 // already be replied.
 func (o *BasicObject) Receive(msg *net.Message, from *server.Context) error {
 	o.trace(msg)
-	// FIXME: handle message type:
-	// post => reply goes to /dev/null
-	// error => not welcome
-	// event => ???
+
+	if msg.Header.Type != net.Call {
+		err := fmt.Errorf("unsupported message type: %d",
+			msg.Header.Type)
+		return o.replyError(from, msg, err)
+	}
 	switch msg.Header.Action {
 	case 0x0:
 		return o.handleRegisterEvent(from, msg)
