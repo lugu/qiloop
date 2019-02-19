@@ -15,7 +15,6 @@ type signalUser struct {
 	signalID  uint32
 	messageID uint32
 	context   *server.Context
-	clientID  uint64
 }
 
 // BasicObject implements the ServerObject interface. It handles the
@@ -24,12 +23,13 @@ type signalUser struct {
 // actions they wish to handle using the Wrap method. See
 // type/object.Object for a list of the default methods.
 type BasicObject struct {
-	signals     []signalUser // FIXME: protect with a mutex
-	wrapper     server.Wrapper
-	serviceID   uint32
-	objectID    uint32
-	tracer      chan *net.Message
-	tracerMutex sync.RWMutex
+	signals      map[uint64]signalUser
+	signalsMutex sync.RWMutex
+	wrapper      server.Wrapper
+	serviceID    uint32
+	objectID     uint32
+	tracer       chan *net.Message
+	tracerMutex  sync.RWMutex
 }
 
 type Object interface {
@@ -41,7 +41,7 @@ type Object interface {
 // NewBasicObject construct a BasicObject from a MetaObject.
 func NewBasicObject() *BasicObject {
 	return &BasicObject{
-		signals: make([]signalUser, 0),
+		signals: make(map[uint64]signalUser),
 		wrapper: make(map[uint32]server.ActionWrapper),
 		tracer:  nil,
 	}
@@ -52,6 +52,8 @@ func (o *BasicObject) Wrap(id uint32, fn server.ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
+// addSignalUser register the context as a client of event signalID.
+// TODO: check if the signalID is valid
 func (o *BasicObject) addSignalUser(signalID, messageID uint32,
 	from *server.Context) uint64 {
 
@@ -60,13 +62,25 @@ func (o *BasicObject) addSignalUser(signalID, messageID uint32,
 		signalID,
 		messageID,
 		from,
-		clientID,
 	}
-	o.signals = append(o.signals, newUser)
-	return clientID
+	o.tracerMutex.Lock()
+	_, ok := o.signals[clientID]
+	if !ok {
+		o.signals[clientID] = newUser
+		o.tracerMutex.Unlock()
+		return clientID
+	}
+	o.tracerMutex.Unlock()
+	// pick another random number
+	return o.addSignalUser(signalID, messageID, from)
 }
 
-func (o *BasicObject) removeSignalUser(id uint64) error {
+// removeSignalUser unregister the given contex to events.
+// FIXME: shall all unsubscribe context when the connection is lost
+func (o *BasicObject) removeSignalUser(clientID uint64) error {
+	o.tracerMutex.Lock()
+	delete(o.signals, clientID)
+	defer o.tracerMutex.Unlock()
 	return nil
 }
 
@@ -138,14 +152,22 @@ func (o *BasicObject) handleUnregisterEvent(from *server.Context,
 }
 
 // UpdateSignal informs the registered clients of the new state.
-func (o *BasicObject) UpdateSignal(signal uint32, value []byte) error {
+func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
 	var ret error
+	signals := make([]signalUser, 0)
+
+	o.tracerMutex.RLock()
 	for _, client := range o.signals {
-		if client.signalID == signal {
-			err := o.replyEvent(&client, signal, value)
-			if err != nil {
-				ret = err
-			}
+		if client.signalID == id {
+			signals = append(signals, client)
+		}
+	}
+	o.tracerMutex.RUnlock()
+
+	for _, client := range signals {
+		err := o.replyEvent(&client, id, value)
+		if err != nil {
+			ret = err
 		}
 	}
 	return ret
