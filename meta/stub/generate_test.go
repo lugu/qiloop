@@ -51,8 +51,8 @@ type Spacecraft interface {
 // SpacecraftSignalHelper provided to Spacecraft a companion object
 type SpacecraftSignalHelper interface {
 	SignalBoost(energy int32) error
-	SignalPosition(p Point) error
-	SignalSpeed(value int32) error
+	UpdatePosition(p Point) error
+	UpdateSpeed(value int32) error
 }
 
 // stubSpacecraft implements server.ServerObject.
@@ -91,27 +91,27 @@ func (s *stubSpacecraft) SignalBoost(energy int32) error {
 	}
 	return nil
 }
-func (s *stubSpacecraft) SignalPosition(p Point) error {
+func (s *stubSpacecraft) UpdatePosition(p Point) error {
 	var buf bytes.Buffer
 	if err := WritePoint(p, &buf); err != nil {
 		return fmt.Errorf("failed to serialize p: %s", err)
 	}
-	err := s.obj.UpdateSignal(uint32(0x64), buf.Bytes())
+	err := s.obj.UpdateProperty(uint32(0x64), "((ii)<Point,x,y>)", buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("failed to update SignalPosition: %s", err)
+		return fmt.Errorf("failed to update UpdatePosition: %s", err)
 	}
 	return nil
 }
-func (s *stubSpacecraft) SignalSpeed(value int32) error {
+func (s *stubSpacecraft) UpdateSpeed(value int32) error {
 	var buf bytes.Buffer
 	if err := basic.WriteInt32(value, &buf); err != nil {
 		return fmt.Errorf("failed to serialize value: %s", err)
 	}
-	err := s.obj.UpdateSignal(uint32(0x65), buf.Bytes())
+	err := s.obj.UpdateProperty(uint32(0x65), "(i)", buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("failed to update SignalSpeed: %s", err)
+		return fmt.Errorf("failed to update UpdateSpeed: %s", err)
 	}
 	return nil
 }

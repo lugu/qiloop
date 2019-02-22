@@ -24,6 +24,11 @@ func (s *stubGeneric) UpdateSignal(signal uint32, value []byte) error {
 	return s.obj.UpdateSignal(signal, value)
 }
 
+func (s *stubGeneric) UpdateProperty(id uint32, signature string,
+	value []byte) error {
+	return s.obj.UpdateProperty(id, signature, value)
+}
+
 func (s *stubGeneric) Wrap(id uint32, fn server.ActionWrapper) {
 	s.obj.Wrap(id, fn)
 }

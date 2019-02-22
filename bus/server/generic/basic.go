@@ -36,6 +36,7 @@ type BasicObject struct {
 type Object interface {
 	server.ServerObject
 	UpdateSignal(signal uint32, value []byte) error
+	UpdateProperty(property uint32, signature string, value []byte) error
 	Wrap(id uint32, fn server.ActionWrapper)
 }
 
@@ -175,6 +176,15 @@ func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
 		}
 	}
 	return ret
+}
+
+// UpdateProperty informs the registered clients of the property
+// value.
+func (o *BasicObject) UpdateProperty(id uint32, signature string,
+	value []byte) error {
+
+	// TODO: store the value and make it available via Property().
+	return o.UpdateSignal(id, value)
 }
 
 func (o *BasicObject) trace(msg *net.Message) {

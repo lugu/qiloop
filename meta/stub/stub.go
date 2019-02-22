@@ -205,9 +205,9 @@ func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
 		)
 		writing = append(writing, code)
 	}
-	// if has not return value
-	code = jen.Id("err := s.obj.UpdateSignal").Call(
+	code = jen.Id("err := s.obj.UpdateProperty").Call(
 		jen.Lit(property.ID),
+		jen.Lit(property.Tuple().Signature()),
 		jen.Id("buf.Bytes()"),
 	)
 	writing = append(writing, code)
@@ -308,7 +308,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	property := func(p object.MetaProperty, propertyName string) error {
 		property := itf.Properties[p.Uid]
-		propertyName = "Signal" + propertyName
+		propertyName = "Update" + propertyName
 		err := generatePropertyHelper(file, itf, property,
 			propertyName)
 		if err != nil {
@@ -514,7 +514,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		return nil
 	}
 	property := func(p object.MetaProperty, propertyName string) error {
-		signalName := "Signal" + propertyName
+		signalName := "Update" + propertyName
 		property := itf.Properties[p.Uid]
 		def, err := generateSignalDef(itf, set, property.Tuple(),
 			signalName)
