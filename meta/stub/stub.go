@@ -101,11 +101,9 @@ func generateMethodDef(itf *idl.InterfaceType, set *signature.TypeSet,
 }
 
 func generateSignalDef(itf *idl.InterfaceType, set *signature.TypeSet,
-	signal idl.Signal, signalName string) (jen.Code, error) {
+	tuple *signature.TupleType, signalName string) (jen.Code, error) {
 
-	tuple := signal.Tuple()
 	tuple.RegisterTo(set)
-
 	return jen.Id(signalName).Add(tuple.Params()).Error(), nil
 }
 
@@ -191,6 +189,40 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 	return nil
 }
 
+func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
+	signalName string) (*jen.Statement, error) {
+
+	writing := make([]jen.Code, 0)
+	code := jen.Var().Id("buf").Qual("bytes", "Buffer")
+	writing = append(writing, code)
+
+	for _, param := range property.Params {
+		code = jen.If(jen.Err().Op(":=").Add(
+			param.Type.Marshal(param.Name, "&buf"),
+		).Op(";").Err().Op("!=").Nil()).Block(
+			jen.Id(`return fmt.Errorf("failed to serialize ` +
+				param.Name + `: %s", err)`),
+		)
+		writing = append(writing, code)
+	}
+	// if has not return value
+	code = jen.Id("err := s.obj.UpdateSignal").Call(
+		jen.Lit(property.ID),
+		jen.Id("buf.Bytes()"),
+	)
+	writing = append(writing, code)
+	code = jen.Id(`
+	if err != nil {
+	    return fmt.Errorf("failed to update ` +
+		signalName + `: %s", err)
+	}
+	return nil`)
+	writing = append(writing, code)
+	return jen.Block(
+		writing...,
+	), nil
+}
+
 func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 	signalName string) (*jen.Statement, error) {
 
@@ -239,6 +271,20 @@ func generateSignalHelper(file *jen.File, itf *idl.InterfaceType,
 	return nil
 }
 
+func generatePropertyHelper(file *jen.File, itf *idl.InterfaceType,
+	property idl.Property, propertyName string) error {
+	tuple := property.Tuple()
+
+	body, err := propertyBodyBlock(itf, property, propertyName)
+	if err != nil {
+		return fmt.Errorf("failed to create property helper body: %s", err)
+	}
+	file.Func().Params(
+		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+	).Id(propertyName).Add(tuple.Params()).Error().Add(body)
+	return nil
+}
+
 func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 
 	method := func(m object.MetaMethod, methodName string) error {
@@ -252,7 +298,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
-		signalName = strings.Replace(signalName, "Subscribe", "Signal", 1)
+		signalName = "Signal" + signalName
 		err := generateSignalHelper(file, itf, signal, signalName)
 		if err != nil {
 			return fmt.Errorf("failed to create signal marshall %s of %s: %s",
@@ -260,9 +306,15 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 		}
 		return nil
 	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
-		// TODO: add property methods
+	property := func(p object.MetaProperty, propertyName string) error {
+		property := itf.Properties[p.Uid]
+		propertyName = "Signal" + propertyName
+		err := generatePropertyHelper(file, itf, property,
+			propertyName)
+		if err != nil {
+			return fmt.Errorf("failed to create property marshall %s of %s: %s",
+				property.Name, itf.Name, err)
+		}
 		return nil
 	}
 
@@ -388,8 +440,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 		return nil
 	}
 
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
+	property := func(p object.MetaProperty, propertyName string) error {
 		return nil
 	}
 
@@ -453,19 +504,25 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
-		signalName = strings.Replace(signalName, "Subscribe", "Signal", 1)
-		def, err := generateSignalDef(itf, set, signal, signalName)
+		signalName = "Signal" + signalName
+		def, err := generateSignalDef(itf, set, signal.Tuple(), signalName)
 		if err != nil {
-			return fmt.Errorf("failed to render signal %s of %s: %s", s.Name,
-				itf.Name, err)
+			return fmt.Errorf("failed to render %s of %s: %s",
+				s.Name, itf.Name, err)
 		}
 		signalDefinitions = append(signalDefinitions, def)
 		return nil
 	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
-		// TODO: force an initial value to be passed during object
-		// creation.
+	property := func(p object.MetaProperty, propertyName string) error {
+		signalName := "Signal" + propertyName
+		property := itf.Properties[p.Uid]
+		def, err := generateSignalDef(itf, set, property.Tuple(),
+			signalName)
+		if err != nil {
+			return fmt.Errorf("failed to render %s of %s: %s",
+				p.Name, itf.Name, err)
+		}
+		signalDefinitions = append(signalDefinitions, def)
 		return nil
 	}
 

@@ -106,7 +106,7 @@ func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
-		signalName = util.CleanName(signalName)
+		signalName = util.CleanName("Subscribe" + signalName)
 		if serviceName != "Server" && s.Uid < object.MinUserActionID {
 			return nil
 		}
@@ -119,9 +119,11 @@ func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
 		}
 		return nil
 	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
+	property := func(p object.MetaProperty, propertyName string) error {
 		property := itf.Properties[p.Uid]
+		getMethodName := "Get" + propertyName
+		setMethodName := "Set" + propertyName
+		subscribeMethodName := "Subscribe" + propertyName
 		if serviceName != "Server" && p.Uid < object.MinUserActionID {
 			return nil
 		}
@@ -240,17 +242,20 @@ func generateProxyObject(itf *idl.InterfaceType, serviceName string,
 		}
 		return generateMethod(file, set, proxyName, method, methodName)
 	}
-	signal := func(s object.MetaSignal, methodName string) error {
+	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
+		signalName = util.CleanName("Subscribe" + signalName)
 		if serviceName != "Object" && serviceName != "Server" &&
 			s.Uid < object.MinUserActionID {
 			return nil
 		}
-		return generateSignal(file, set, proxyName, signal, methodName)
+		return generateSignal(file, set, proxyName, signal, signalName)
 	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
+	property := func(p object.MetaProperty, propertyName string) error {
 		property := itf.Properties[p.Uid]
+		getMethodName := "Get" + propertyName
+		setMethodName := "Set" + propertyName
+		subscribeMethodName := "Subscribe" + propertyName
 		if serviceName != "Object" && serviceName != "Server" &&
 			p.Uid < object.MinUserActionID {
 			return nil

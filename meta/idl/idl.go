@@ -98,11 +98,10 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 	method := func(m object.MetaMethod, methodName string) error {
 		return generateMethod(writer, set, m, methodName)
 	}
-	signal := func(s object.MetaSignal, methodName string) error {
-		return generateSignal(writer, set, s, methodName)
+	signal := func(s object.MetaSignal, signalName string) error {
+		return generateSignal(writer, set, s, "Subscribe"+signalName)
 	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
+	property := func(p object.MetaProperty, propertyName string) error {
 		// TODO: write property
 		return nil
 	}

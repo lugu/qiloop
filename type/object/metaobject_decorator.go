@@ -60,9 +60,8 @@ func (m *MetaObject) JSON() string {
 // and unsure the generated method names are unique within the object.
 func (m *MetaObject) ForEachMethodAndSignal(
 	methodCall func(m MetaMethod, methodName string) error,
-	signalCall func(s MetaSignal, subscribeMethodName string) error,
-	propertyCall func(p MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error) error {
+	signalCall func(s MetaSignal, signalName string) error,
+	propertyCall func(p MetaProperty, propertyName string) error) error {
 
 	methodNames := make(map[string]bool)
 	keys := make([]int, 0)
@@ -88,9 +87,9 @@ func (m *MetaObject) ForEachMethodAndSignal(
 	for _, i := range keys {
 		k := uint32(i)
 		s := m.Signals[k]
-		methodName := registerName("Subscribe"+strings.Title(s.Name), methodNames)
+		signalName := registerName(strings.Title(s.Name), methodNames)
 
-		if err := signalCall(s, methodName); err != nil {
+		if err := signalCall(s, signalName); err != nil {
 			return fmt.Errorf("signal callback failed for %s: %s", s.Name, err)
 		}
 	}
@@ -102,15 +101,9 @@ func (m *MetaObject) ForEachMethodAndSignal(
 	for _, i := range keys {
 		k := uint32(i)
 		p := m.Properties[k]
-		getMethodName := registerName("Get"+strings.Title(p.Name),
-			methodNames)
-		setMethodName := registerName("Set"+strings.Title(p.Name),
-			methodNames)
-		subscribeMethodName := registerName("Subscribe"+strings.Title(
-			p.Name), methodNames)
+		propertyName := registerName(strings.Title(p.Name), methodNames)
 
-		if err := propertyCall(p, getMethodName, setMethodName,
-			subscribeMethodName); err != nil {
+		if err := propertyCall(p, propertyName); err != nil {
 			return fmt.Errorf("property callback failed for %s: %s",
 				p.Name, err)
 		}

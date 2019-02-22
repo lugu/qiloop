@@ -14,6 +14,119 @@ import (
 	"io"
 )
 
+// Point is serializable
+type Point struct {
+	X int32
+	Y int32
+}
+
+// ReadPoint unmarshalls Point
+func ReadPoint(r io.Reader) (s Point, err error) {
+	if s.X, err = basic.ReadInt32(r); err != nil {
+		return s, fmt.Errorf("failed to read X field: " + err.Error())
+	}
+	if s.Y, err = basic.ReadInt32(r); err != nil {
+		return s, fmt.Errorf("failed to read Y field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WritePoint marshalls Point
+func WritePoint(s Point, w io.Writer) (err error) {
+	if err := basic.WriteInt32(s.X, w); err != nil {
+		return fmt.Errorf("failed to write X field: " + err.Error())
+	}
+	if err := basic.WriteInt32(s.Y, w); err != nil {
+		return fmt.Errorf("failed to write Y field: " + err.Error())
+	}
+	return nil
+}
+
+// Spacecraft interface of the service implementation
+type Spacecraft interface {
+	Activate(activation server.Activation, helper SpacecraftSignalHelper) error
+	OnTerminate()
+}
+
+// SpacecraftSignalHelper provided to Spacecraft a companion object
+type SpacecraftSignalHelper interface {
+	SignalBoost(energy int32) error
+	SignalPosition(p Point) error
+	SignalSpeed(value int32) error
+}
+
+// stubSpacecraft implements server.ServerObject.
+type stubSpacecraft struct {
+	obj  generic.Object
+	impl Spacecraft
+}
+
+// SpacecraftObject returns an object using Spacecraft
+func SpacecraftObject(impl Spacecraft) server.ServerObject {
+	var stb stubSpacecraft
+	stb.impl = impl
+	stb.obj = generic.NewObject(stb.metaObject())
+	return &stb
+}
+func (s *stubSpacecraft) Activate(activation server.Activation) error {
+	s.obj.Activate(activation)
+	return s.impl.Activate(activation, s)
+}
+func (s *stubSpacecraft) OnTerminate() {
+	s.impl.OnTerminate()
+	s.obj.OnTerminate()
+}
+func (s *stubSpacecraft) Receive(msg *net.Message, from *server.Context) error {
+	return s.obj.Receive(msg, from)
+}
+func (s *stubSpacecraft) SignalBoost(energy int32) error {
+	var buf bytes.Buffer
+	if err := basic.WriteInt32(energy, &buf); err != nil {
+		return fmt.Errorf("failed to serialize energy: %s", err)
+	}
+	err := s.obj.UpdateSignal(uint32(0x66), buf.Bytes())
+
+	if err != nil {
+		return fmt.Errorf("failed to update SignalBoost: %s", err)
+	}
+	return nil
+}
+func (s *stubSpacecraft) SignalPosition(p Point) error {
+	var buf bytes.Buffer
+	if err := WritePoint(p, &buf); err != nil {
+		return fmt.Errorf("failed to serialize p: %s", err)
+	}
+	err := s.obj.UpdateSignal(uint32(0x64), buf.Bytes())
+
+	if err != nil {
+		return fmt.Errorf("failed to update SignalPosition: %s", err)
+	}
+	return nil
+}
+func (s *stubSpacecraft) SignalSpeed(value int32) error {
+	var buf bytes.Buffer
+	if err := basic.WriteInt32(value, &buf); err != nil {
+		return fmt.Errorf("failed to serialize value: %s", err)
+	}
+	err := s.obj.UpdateSignal(uint32(0x65), buf.Bytes())
+
+	if err != nil {
+		return fmt.Errorf("failed to update SignalSpeed: %s", err)
+	}
+	return nil
+}
+func (s *stubSpacecraft) metaObject() object.MetaObject {
+	return object.MetaObject{
+		Description: "Spacecraft",
+		Methods:     map[uint32]object.MetaMethod{},
+		Signals: map[uint32]object.MetaSignal{uint32(0x66): {
+			Name:      "boost",
+			Signature: "(i)",
+			Uid:       uint32(0x66),
+		}},
+	}
+}
+
 // Object interface of the service implementation
 type Object interface {
 	Activate(activation server.Activation, helper ObjectSignalHelper) error

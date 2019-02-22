@@ -40,25 +40,16 @@ func TestMetaObjectDecorator(t *testing.T) {
 		return nil
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
-		if signalName != "Subscribe"+strings.Title(s.Name) {
+		if signalName != strings.Title(s.Name) {
 			t.Errorf("incoherent name: %s and %s", signalName,
 				strings.Title(s.Name))
 		}
 		return nil
 	}
-	property := func(p object.MetaProperty, getMethodName, setMethodName,
-		subscribeMethodName string) error {
-		if getMethodName != strings.Title(p.Name) {
-			t.Errorf("incoherent name: %s and %s", getMethodName,
+	property := func(p object.MetaProperty, propertyName string) error {
+		if propertyName != strings.Title(p.Name) {
+			t.Errorf("incoherent name: %s and %s", propertyName,
 				strings.Title(p.Name))
-		}
-		if setMethodName != "Set"+strings.Title(p.Name) {
-			t.Errorf("incoherent name: %s and %s", setMethodName,
-				"Set"+strings.Title(p.Name))
-		}
-		if subscribeMethodName != "Subscribe"+strings.Title(p.Name) {
-			t.Errorf("incoherent name: %s and %s",
-				subscribeMethodName, "Subscribe"+strings.Title(p.Name))
 		}
 		return nil
 	}
