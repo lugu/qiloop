@@ -15,6 +15,14 @@ import (
 
 // ServiceDirectory interface of the service implementation
 type ServiceDirectory interface {
+	// Activate is called before any other method.
+	// It shall be used to initialize the interface.
+	// activation provides runtime informations.
+	// activation.Terminate() unregisters the object.
+	// activation.Session can access other services.
+	// helper enables signals an properties updates.
+	// Properties must be initialized using helper,
+	// during the Activate call.
 	Activate(activation server.Activation, helper ServiceDirectorySignalHelper) error
 	OnTerminate()
 	Service(name string) (ServiceInfo, error)

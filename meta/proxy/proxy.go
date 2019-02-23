@@ -156,8 +156,11 @@ func generateSignalDef(file *jen.File, set *signature.TypeSet, serviceName strin
 
 	signalType := signal.Type()
 	signalType.RegisterTo(set)
-	retType := jen.Params(jen.Func().Params(),
-		jen.Chan().Add(signalType.TypeName()), jen.Error())
+	retType := jen.Params(
+		jen.Id("unsubscribe").Func().Params(),
+		jen.Id("updates").Chan().Add(signalType.TypeName()),
+		jen.Id("err").Error(),
+	)
 	comment := jen.Comment(signalName + " subscribe to a remote signal")
 	*definitions = append(*definitions, comment)
 	def := jen.Id(signalName).Params().Add(retType)
@@ -173,24 +176,25 @@ func generatePropertyDef(file *jen.File, set *signature.TypeSet, serviceName str
 	propertyType := property.Type()
 	propertyType.RegisterTo(set)
 
-	/* TODO: need to be implemented
 	retType := jen.Params(propertyType.TypeName(), jen.Error())
 	getMethod := jen.Id(getMethodName).Params().Add(retType)
 	comment := jen.Comment(getMethodName + " returns the property value")
 	*definitions = append(*definitions, comment)
 	*definitions = append(*definitions, getMethod)
 
-	paramType := jen.Params(propertyType.TypeName(), jen.Error())
+	paramType := jen.Params(propertyType.TypeName())
 	setMethod := jen.Id(setMethodName).Add(paramType).Error()
 	comment = jen.Comment(setMethodName + " sets the property value")
 	*definitions = append(*definitions, comment)
 	*definitions = append(*definitions, setMethod)
-	*/
 
-	retType := jen.Params(jen.Func().Params(),
-		jen.Chan().Add(propertyType.TypeName()), jen.Error())
+	retType = jen.Params(
+		jen.Id("unsubscribe").Func().Params(),
+		jen.Id("updates").Chan().Add(propertyType.TypeName()),
+		jen.Id("err").Error(),
+	)
 	subscribeMethod := jen.Id(subscribeMethodName).Params().Add(retType)
-	comment := jen.Comment(subscribeMethodName + " regusters to a property")
+	comment = jen.Comment(subscribeMethodName + " regusters to a property")
 	*definitions = append(*definitions, comment)
 	*definitions = append(*definitions, subscribeMethod)
 	return nil
@@ -445,8 +449,82 @@ func generateProperty(file *jen.File, set *signature.TypeSet, serviceName string
 	propertyType := property.Type()
 	propertyType.RegisterTo(set)
 
+	generatePropertyGet(file, serviceName, property, getMethodName)
+	generatePropertySet(file, serviceName, property, setMethodName)
 	generateSubscribe(file, serviceName, property.Name, subscribeMethodName, propertyType, false)
 
+	return nil
+}
+func generatePropertyGet(file *jen.File, serviceName string,
+	property idl.Property, methodName string) error {
+
+	retType := jen.Params(
+		jen.Id("ret").Add(property.Type().TypeName()),
+		jen.Err().Error(),
+	)
+	body := jen.Block(
+		jen.Id("name").Op(":=").Qual(
+			"github.com/lugu/qiloop/type/value",
+			"String",
+		).Params(jen.Lit(property.Name)),
+		jen.Id(`value, err := p.Property(name)`),
+		jen.Id(`if err != nil {
+		    return ret, fmt.Errorf("get property: %s", err)
+		}`),
+		jen.Var().Id("buf").Qual("bytes", "Buffer"),
+		jen.Id(`err = value.Write(&buf)`),
+		jen.Id(`if err != nil {
+		    return ret, fmt.Errorf("read response: %s", err)
+		}`),
+		jen.Id(`// discard the signature`),
+		jen.Id(`_, err = basic.ReadString(&buf)`),
+		jen.Id(`if err != nil {
+		    return ret, fmt.Errorf("read signature: %s", err)
+		}`),
+		jen.Id("ret, err =").Add(property.Type().Unmarshal("&buf")),
+		jen.Id("return ret, err"),
+	)
+
+	file.Comment(methodName + " updates the property value")
+	file.Func().Params(
+		jen.Id("p").Op("*").Id(serviceName),
+	).Id(methodName).Params().Add(retType).Add(body)
+	return nil
+}
+
+func generatePropertySet(file *jen.File, serviceName string,
+	property idl.Property, methodName string) error {
+
+	propertyType := property.Type()
+	paramType := jen.Params(jen.Id("update").Add(propertyType.TypeName()))
+	// 1. serialize property type
+	// 2. make it a value using its signature
+	// 3. name the property with a value
+	// 4. call setProperty
+	body := jen.Block(
+		jen.Id("name").Op(":=").Qual(
+			"github.com/lugu/qiloop/type/value",
+			"String",
+		).Params(jen.Lit(property.Name)),
+		jen.Var().Id("buf").Qual("bytes", "Buffer"),
+		jen.Err().Op(":=").Add(propertyType.Marshal("update", "&buf")),
+		jen.Id(`if err != nil {
+		    return fmt.Errorf("marshall error: %s", err)
+		}`),
+		jen.Id("val").Op(":=").Qual(
+			"github.com/lugu/qiloop/type/value",
+			"Opaque",
+		).Params(
+			jen.Lit(propertyType.Signature()),
+			jen.Id(`buf.Bytes()`),
+		),
+		jen.Id(`return p.SetProperty(name, val)`),
+	)
+
+	file.Comment(methodName + " updates the property value")
+	file.Func().Params(
+		jen.Id("p").Op("*").Id(serviceName),
+	).Id(methodName).Add(paramType).Error().Add(body)
 	return nil
 }
 

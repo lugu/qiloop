@@ -31,7 +31,7 @@ type PingPong interface {
 	// Ping calls the remote procedure
 	Ping(a string) error
 	// SubscribePong subscribe to a remote signal
-	SubscribePong() (func(), chan string, error)
+	SubscribePong() (unsubscribe func(), updates chan string, err error)
 }
 
 // PingPongProxy implements PingPong

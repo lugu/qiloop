@@ -44,9 +44,9 @@ type ServiceDirectory interface {
 	// SocketOfService calls the remote procedure
 	SocketOfService(serviceID uint32) (object.ObjectReference, error)
 	// SubscribeServiceAdded subscribe to a remote signal
-	SubscribeServiceAdded() (func(), chan ServiceAdded, error)
+	SubscribeServiceAdded() (unsubscribe func(), updates chan ServiceAdded, err error)
 	// SubscribeServiceRemoved subscribe to a remote signal
-	SubscribeServiceRemoved() (func(), chan ServiceRemoved, error)
+	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
 }
 
 // ServiceDirectoryProxy implements ServiceDirectory

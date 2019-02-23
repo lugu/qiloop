@@ -16,6 +16,14 @@ import (
 
 // Object interface of the service implementation
 type Object interface {
+	// Activate is called before any other method.
+	// It shall be used to initialize the interface.
+	// activation provides runtime informations.
+	// activation.Terminate() unregisters the object.
+	// activation.Session can access other services.
+	// helper enables signals an properties updates.
+	// Properties must be initialized using helper,
+	// during the Activate call.
 	Activate(activation server.Activation, helper ObjectSignalHelper) error
 	OnTerminate()
 	RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error)

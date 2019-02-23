@@ -9,6 +9,7 @@ import (
 	object1 "github.com/lugu/qiloop/bus/client/object"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
+	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
 )
@@ -30,11 +31,19 @@ type Dummy interface {
 	// Hello calls the remote procedure
 	Hello() error
 	// SubscribePing subscribe to a remote signal
-	SubscribePing() (func(), chan string, error)
+	SubscribePing() (unsubscribe func(), updates chan string, err error)
+	// GetStatus returns the property value
+	GetStatus() (string, error)
+	// SetStatus sets the property value
+	SetStatus(string) error
 	// SubscribeStatus regusters to a property
-	SubscribeStatus() (func(), chan string, error)
+	SubscribeStatus() (unsubscribe func(), updates chan string, err error)
+	// GetCoordinate returns the property value
+	GetCoordinate() (Coordinate, error)
+	// SetCoordinate sets the property value
+	SetCoordinate(Coordinate) error
 	// SubscribeCoordinate regusters to a property
-	SubscribeCoordinate() (func(), chan Coordinate, error)
+	SubscribeCoordinate() (unsubscribe func(), updates chan Coordinate, err error)
 }
 
 // DummyProxy implements Dummy
@@ -106,6 +115,39 @@ func (p *DummyProxy) SubscribePing() (func(), chan string, error) {
 	return cancel, ch, nil
 }
 
+// GetStatus updates the property value
+func (p *DummyProxy) GetStatus() (ret string, err error) {
+	name := value.String("status")
+	value, err := p.Property(name)
+	if err != nil {
+		return ret, fmt.Errorf("get property: %s", err)
+	}
+	var buf bytes.Buffer
+	err = value.Write(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read response: %s", err)
+	}
+	// discard the signature
+	_, err = basic.ReadString(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read signature: %s", err)
+	}
+	ret, err = basic.ReadString(&buf)
+	return ret, err
+}
+
+// SetStatus updates the property value
+func (p *DummyProxy) SetStatus(update string) error {
+	name := value.String("status")
+	var buf bytes.Buffer
+	err := basic.WriteString(update, &buf)
+	if err != nil {
+		return fmt.Errorf("marshall error: %s", err)
+	}
+	val := value.Opaque("s", buf.Bytes())
+	return p.SetProperty(name, val)
+}
+
 // SubscribeStatus subscribe to a remote property
 func (p *DummyProxy) SubscribeStatus() (func(), chan string, error) {
 	propertyID, err := p.PropertyID("status")
@@ -142,6 +184,39 @@ func (p *DummyProxy) SubscribeStatus() (func(), chan string, error) {
 		}
 	}()
 	return cancel, ch, nil
+}
+
+// GetCoordinate updates the property value
+func (p *DummyProxy) GetCoordinate() (ret Coordinate, err error) {
+	name := value.String("coordinate")
+	value, err := p.Property(name)
+	if err != nil {
+		return ret, fmt.Errorf("get property: %s", err)
+	}
+	var buf bytes.Buffer
+	err = value.Write(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read response: %s", err)
+	}
+	// discard the signature
+	_, err = basic.ReadString(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read signature: %s", err)
+	}
+	ret, err = ReadCoordinate(&buf)
+	return ret, err
+}
+
+// SetCoordinate updates the property value
+func (p *DummyProxy) SetCoordinate(update Coordinate) error {
+	name := value.String("coordinate")
+	var buf bytes.Buffer
+	err := WriteCoordinate(update, &buf)
+	if err != nil {
+		return fmt.Errorf("marshall error: %s", err)
+	}
+	val := value.Opaque("(ii)<coordinate,x,y>", buf.Bytes())
+	return p.SetProperty(name, val)
 }
 
 // SubscribeCoordinate subscribe to a remote property
