@@ -46,6 +46,36 @@ func NewValue(r io.Reader) (Value, error) {
 	return f(r)
 }
 
+type OpaqueValue struct {
+	sig  string
+	data []byte
+}
+
+func Opaque(signature string, data []byte) Value {
+	return &OpaqueValue{
+		sig:  signature,
+		data: data,
+	}
+}
+
+func (o *OpaqueValue) signature() string {
+	return o.sig
+}
+
+func (o *OpaqueValue) Write(w io.Writer) error {
+	if err := basic.WriteString(o.sig, w); err != nil {
+		return err
+	}
+	bytes, err := w.Write(o.data)
+	if err != nil {
+		return err
+	} else if bytes != len(o.data) {
+		return fmt.Errorf("failed to write value (%d instead of %d)",
+			bytes, len(o.data))
+	}
+	return nil
+}
+
 // BoolValue represents a Value of a boolean.
 type BoolValue bool
 

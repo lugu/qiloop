@@ -1,0 +1,13 @@
+package generic
+
+struct Point
+	x: int32
+	y: int32
+end
+
+interface Spacecraft
+        prop position(p: Point)
+        prop speed(value: int32)
+	sig boost(energy: int32)
+end
+

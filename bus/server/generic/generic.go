@@ -20,13 +20,15 @@ var ErrWrongObjectID = errors.New("Wrong object ID")
 // implemented.
 var ErrNotYetImplemented = errors.New("Not supported")
 
-func (s *stubGeneric) UpdateSignal(signal uint32, value []byte) error {
-	return s.obj.UpdateSignal(signal, value)
+func (s *stubGeneric) UpdateSignal(signal uint32, data []byte) error {
+	return s.obj.UpdateSignal(signal, data)
 }
 
-func (s *stubGeneric) UpdateProperty(id uint32, signature string,
-	value []byte) error {
-	return s.obj.UpdateProperty(id, signature, value)
+func (s *stubGeneric) UpdateProperty(id uint32, sig string, data []byte) error {
+	idValue := value.Uint(id)
+	newValue := value.Opaque(sig, data)
+	s.impl.SetProperty(idValue, newValue)
+	return s.obj.UpdateProperty(id, sig, data)
 }
 
 func (s *stubGeneric) Wrap(id uint32, fn server.ActionWrapper) {
@@ -36,9 +38,10 @@ func (s *stubGeneric) Wrap(id uint32, fn server.ActionWrapper) {
 type objectImpl struct {
 	obj               *BasicObject
 	meta              object.MetaObject
-	serviceID         uint32
 	objectID          uint32
 	signal            GenericSignalHelper
+	properties        map[string]value.Value
+	propertiesMutex   sync.RWMutex
 	terminate         server.Terminator
 	stats             map[uint32]MethodStatistics
 	statsLock         sync.RWMutex
@@ -73,7 +76,6 @@ func (o *objectImpl) Activate(activation server.Activation,
 	signal GenericSignalHelper) error {
 
 	o.signal = signal
-	o.serviceID = activation.ServiceID
 	o.objectID = activation.ObjectID
 	o.terminate = activation.Terminate
 
@@ -115,15 +117,47 @@ func (o *objectImpl) Terminate(objectID uint32) error {
 }
 
 func (o *objectImpl) Property(name value.Value) (value.Value, error) {
-	return nil, ErrNotYetImplemented
+	stringValue, ok := name.(value.StringValue)
+	if !ok {
+		return nil, fmt.Errorf("property name must be a string value")
+	}
+	o.propertiesMutex.RLock()
+	defer o.propertiesMutex.RUnlock()
+	return o.properties[stringValue.Value()], nil
 }
 
-func (o *objectImpl) SetProperty(name value.Value, value value.Value) error {
-	return ErrNotYetImplemented
+func (o *objectImpl) SetProperty(name value.Value, newValue value.Value) error {
+	var nameStr string
+	stringValue, ok := name.(value.StringValue)
+	if ok {
+		nameStr = stringValue.Value()
+	} else {
+		idValue, ok := name.(value.UintValue)
+		if !ok {
+			return fmt.Errorf("incorrect name type")
+		}
+		property, ok := o.meta.Properties[idValue.Value()]
+		if !ok {
+			return fmt.Errorf(
+				"incorrect property id value, got %d",
+				idValue.Value())
+		}
+		nameStr = property.Name
+	}
+	o.propertiesMutex.Lock()
+	defer o.propertiesMutex.Unlock()
+	o.properties[nameStr] = newValue
+	return nil
 }
 
 func (o *objectImpl) Properties() ([]string, error) {
-	return nil, ErrNotYetImplemented
+	properties := make([]string, 0)
+	o.propertiesMutex.RLock()
+	defer o.propertiesMutex.RUnlock()
+	for property, _ := range o.properties {
+		properties = append(properties, property)
+	}
+	return properties, nil
 }
 
 func (o *objectImpl) RegisterEventWithSignature(objectID uint32,

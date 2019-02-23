@@ -35,8 +35,8 @@ type BasicObject struct {
 
 type Object interface {
 	server.ServerObject
-	UpdateSignal(signal uint32, value []byte) error
-	UpdateProperty(property uint32, signature string, value []byte) error
+	UpdateSignal(signal uint32, data []byte) error
+	UpdateProperty(property uint32, signature string, data []byte) error
 	Wrap(id uint32, fn server.ActionWrapper)
 }
 
@@ -155,7 +155,7 @@ func (o *BasicObject) handleUnregisterEvent(from *server.Context,
 }
 
 // UpdateSignal informs the registered clients of the new state.
-func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
+func (o *BasicObject) UpdateSignal(id uint32, data []byte) error {
 	var ret error
 	signals := make([]signalUser, 0)
 
@@ -168,7 +168,7 @@ func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
 	o.signalsMutex.RUnlock()
 
 	for _, client := range signals {
-		err := o.replyEvent(&client, id, value)
+		err := o.replyEvent(&client, id, data)
 		if err == io.EOF {
 			o.removeSignalUser(client.clientID)
 		} else if err != nil {
@@ -178,13 +178,9 @@ func (o *BasicObject) UpdateSignal(id uint32, value []byte) error {
 	return ret
 }
 
-// UpdateProperty informs the registered clients of the property
-// value.
-func (o *BasicObject) UpdateProperty(id uint32, signature string,
-	value []byte) error {
-
-	// TODO: store the value and make it available via Property().
-	return o.UpdateSignal(id, value)
+// UpdateProperty informs the registered clients of the property change
+func (o *BasicObject) UpdateProperty(id uint32, sig string, data []byte) error {
+	return o.UpdateSignal(id, data)
 }
 
 func (o *BasicObject) trace(msg *net.Message) {
