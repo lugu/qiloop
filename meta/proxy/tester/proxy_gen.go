@@ -127,10 +127,15 @@ func (p *DummyProxy) GetStatus() (ret string, err error) {
 	if err != nil {
 		return ret, fmt.Errorf("read response: %s", err)
 	}
-	// discard the signature
-	_, err = basic.ReadString(&buf)
+	s, err = basic.ReadString(&buf)
 	if err != nil {
 		return ret, fmt.Errorf("read signature: %s", err)
+	}
+	// check the signature
+	sig := "s"
+	if sig != s {
+		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
+			s, sig)
 	}
 	ret, err = basic.ReadString(&buf)
 	return ret, err
@@ -198,10 +203,15 @@ func (p *DummyProxy) GetCoordinate() (ret Coordinate, err error) {
 	if err != nil {
 		return ret, fmt.Errorf("read response: %s", err)
 	}
-	// discard the signature
-	_, err = basic.ReadString(&buf)
+	s, err = basic.ReadString(&buf)
 	if err != nil {
 		return ret, fmt.Errorf("read signature: %s", err)
+	}
+	// check the signature
+	sig := "(ii)<coordinate,x,y>"
+	if sig != s {
+		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
+			s, sig)
 	}
 	ret, err = ReadCoordinate(&buf)
 	return ret, err

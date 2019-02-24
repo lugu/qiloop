@@ -476,10 +476,15 @@ func generatePropertyGet(file *jen.File, serviceName string,
 		jen.Id(`if err != nil {
 		    return ret, fmt.Errorf("read response: %s", err)
 		}`),
-		jen.Id(`// discard the signature`),
-		jen.Id(`_, err = basic.ReadString(&buf)`),
+		jen.Id(`s, err = basic.ReadString(&buf)`),
 		jen.Id(`if err != nil {
 		    return ret, fmt.Errorf("read signature: %s", err)
+		}`),
+		jen.Id(`// check the signature`),
+		jen.Id(`sig := "`+property.Type().Signature()+`"`),
+		jen.Id(`if sig != s {
+		    return ret, fmt.Errorf("unexpected signature: %s instead of %s",
+			s, sig)
 		}`),
 		jen.Id("ret, err =").Add(property.Type().Unmarshal("&buf")),
 		jen.Id("return ret, err"),
