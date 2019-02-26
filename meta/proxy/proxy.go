@@ -41,16 +41,9 @@ func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 func generateType(file *jen.File, set *signature.TypeSet, typ signature.Type) error {
 	itf, ok := typ.(*idl.InterfaceType)
 	if ok {
-		serviceName := util.CleanName(itf.Name)
-		err := generateObjectInterface(itf, serviceName, set, file)
+		err := generateInterface(itf, set, file)
 		if err != nil {
 			return fmt.Errorf("failed to render interface %s: %s",
-				itf.Name, err)
-		}
-
-		err = generateProxyObject(itf, serviceName, set, file)
-		if err != nil {
-			return fmt.Errorf("failed to render proxy %s: %s",
 				itf.Name, err)
 		}
 	} else {
@@ -76,6 +69,23 @@ func generateNewServices(file *jen.File) {
 	).Block(
 		jen.Id(`return Constructor{ session: s, }`),
 	)
+}
+
+func generateInterface(itf *idl.InterfaceType, set *signature.TypeSet,
+	file *jen.File) error {
+	serviceName := util.CleanName(itf.Name)
+	err := generateObjectInterface(itf, serviceName, set, file)
+	if err != nil {
+		return fmt.Errorf("failed to declare interface %s: %s",
+			itf.Name, err)
+	}
+
+	err = generateProxyObject(itf, serviceName, set, file)
+	if err != nil {
+		return fmt.Errorf("failed to declare proxy %s: %s",
+			itf.Name, err)
+	}
+	return nil
 }
 
 func generateObjectInterface(itf *idl.InterfaceType, serviceName string,
