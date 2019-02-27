@@ -120,7 +120,7 @@ func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 	return client.NewProxy(clt, meta, serviceID, objectID), nil
 }
 
-func (s *localSession) Object(ref object.ObjectReference) (object.Object,
+func (s *localSession) Object(ref object.ObjectReference) (bus.Proxy,
 	error) {
 	clt, err := s.Client(ref.ServiceID)
 	if err != nil {

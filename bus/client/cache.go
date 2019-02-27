@@ -28,7 +28,7 @@ func (s *Cache) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 }
 
 // Object creates an object from a reference.
-func (s *Cache) Object(ref object.ObjectReference) (o object.Object, err error) {
+func (s *Cache) Object(ref object.ObjectReference) (o bus.Proxy, err error) {
 	return o, fmt.Errorf("Not yet implemented")
 }
 

@@ -1,7 +1,7 @@
 package idl
 
 import (
-	. "github.com/lugu/qiloop/meta/signature"
+	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	parsec "github.com/prataprc/goparsec"
 	"os"
@@ -55,7 +55,7 @@ func helpParseType(t *testing.T, lang, sign string) {
 	if err, ok := root.(error); ok {
 		t.Fatalf("%s: parsing error: %v", label, err)
 	}
-	if typ, ok := root.(Type); !ok {
+	if typ, ok := root.(signature.Type); !ok {
 		t.Fatalf("%s; type error %+v: %+v", label, reflect.TypeOf(root), root)
 	} else if typ.Signature() != sign {
 		t.Fatalf("%s: expected %#v, got %#v", label, sign, typ.Signature())
@@ -85,7 +85,7 @@ func TestParseMethod0(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     0,
-		Return: NewVoidType(),
+		Return: signature.NewVoidType(),
 		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod0", input, expected)
@@ -96,7 +96,7 @@ func TestParseMethod0bis(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     200,
-		Return: NewVoidType(),
+		Return: signature.NewVoidType(),
 		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod0bis", input, expected)
@@ -107,7 +107,7 @@ func TestParseMethod1(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     0,
-		Return: NewIntType(),
+		Return: signature.NewIntType(),
 		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod1", input, expected)
@@ -118,7 +118,7 @@ func TestParseMethod1ter(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     0,
-		Return: NewDoubleType(),
+		Return: signature.NewDoubleType(),
 		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod1ter", input, expected)
@@ -129,7 +129,7 @@ func TestParseMethod1bis(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     0,
-		Return: NewBoolType(),
+		Return: signature.NewBoolType(),
 		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod1bis", input, expected)
@@ -140,15 +140,15 @@ func TestParseMethod2(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     0,
-		Return: NewVoidType(),
+		Return: signature.NewVoidType(),
 		Params: []Parameter{
 			{
 				"param1",
-				NewIntType(),
+				signature.NewIntType(),
 			},
 			{
 				"param2",
-				NewDoubleType(),
+				signature.NewDoubleType(),
 			},
 		},
 	}
@@ -159,15 +159,15 @@ func TestParseMethod3(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     0,
-		Return: NewBoolType(),
+		Return: signature.NewBoolType(),
 		Params: []Parameter{
 			{
 				"param1",
-				NewIntType(),
+				signature.NewIntType(),
 			},
 			{
 				"param2",
-				NewDoubleType(),
+				signature.NewDoubleType(),
 			},
 		},
 	}
@@ -178,15 +178,15 @@ func TestParseMethod3bis(t *testing.T) {
 	expected := Method{
 		Name:   "methodName",
 		ID:     10,
-		Return: NewBoolType(),
+		Return: signature.NewBoolType(),
 		Params: []Parameter{
 			{
 				"param1",
-				NewIntType(),
+				signature.NewIntType(),
 			},
 			{
 				"param2",
-				NewDoubleType(),
+				signature.NewDoubleType(),
 			},
 		},
 	}
@@ -316,7 +316,7 @@ func TestParseInterfaces(t *testing.T) {
 
 func TestParseReturns(t *testing.T) {
 	input := "-> int32"
-	expected := NewIntType()
+	expected := signature.NewIntType()
 	parser := returns(NewContext())
 	root, _ := parser(parsec.NewScanner([]byte(input)))
 	if root == nil {
@@ -325,7 +325,7 @@ func TestParseReturns(t *testing.T) {
 	if err, ok := root.(error); ok {
 		t.Fatalf("cannot parse returns: %v", err)
 	}
-	if ret, ok := root.(Type); !ok {
+	if ret, ok := root.(signature.Type); !ok {
 		t.Fatalf("return type error: %+v", root)
 	} else if ret.Signature() != expected.Signature() {
 		t.Fatalf("cannot generate signature: %+v", ret)
@@ -342,7 +342,7 @@ func helpParseStruct(t *testing.T, label, input, expected string) {
 		t.Errorf("%s: cannot parse returns: %v", label, err)
 		return
 	}
-	if structType, ok := root.(*StructType); !ok {
+	if structType, ok := root.(*signature.StructType); !ok {
 		t.Errorf("%s: return type error: %+v", label, root)
 		return
 	} else if structType.Signature() != expected {
@@ -365,56 +365,56 @@ func TestStructureParser(t *testing.T) {
 	end`, "(fb)<Test,c,d>")
 }
 
-func newDeclaration(t *testing.T) []*StructType {
+func newDeclaration(t *testing.T) []*signature.StructType {
 	scope := NewScope()
 	basic1 := NewRefType("basic1", scope)
 	basic2 := NewRefType("basic2", scope)
 	complex1 := NewRefType("complex1", scope)
 	complex2 := NewRefType("complex2", scope)
 
-	structs := []*StructType{
+	structs := []*signature.StructType{
 		{
 			Name: "basic1",
-			Members: []MemberType{
+			Members: []signature.MemberType{
 				{
 					Name: "a",
-					Type: NewIntType(),
+					Type: signature.NewIntType(),
 				},
 				{
 					Name: "b",
-					Type: NewIntType(),
+					Type: signature.NewIntType(),
 				},
 			},
 		},
 		{
 			Name: "basic2",
-			Members: []MemberType{
+			Members: []signature.MemberType{
 				{
 					Name: "a",
-					Type: NewIntType(),
+					Type: signature.NewIntType(),
 				},
 				{
 					Name: "b",
-					Type: NewIntType(),
+					Type: signature.NewIntType(),
 				},
 			},
 		},
 		{
 			Name: "complex1",
-			Members: []MemberType{
+			Members: []signature.MemberType{
 				{
 					Name: "simple1",
 					Type: basic1,
 				},
 				{
 					Name: "b",
-					Type: NewIntType(),
+					Type: signature.NewIntType(),
 				},
 			},
 		},
 		{
 			Name: "complex3",
-			Members: []MemberType{
+			Members: []signature.MemberType{
 				{
 					Name: "notSimple2",
 					Type: complex2,
@@ -423,7 +423,7 @@ func newDeclaration(t *testing.T) []*StructType {
 		},
 		{
 			Name: "complex2",
-			Members: []MemberType{
+			Members: []signature.MemberType{
 				{
 					Name: "notSimple1",
 					Type: complex1,
@@ -434,7 +434,7 @@ func newDeclaration(t *testing.T) []*StructType {
 				},
 				{
 					Name: "b",
-					Type: NewIntType(),
+					Type: signature.NewIntType(),
 				},
 			},
 		},
@@ -525,7 +525,7 @@ func TestParseEnum(t *testing.T) {
 	if len(typeList) != 1 {
 		t.Fatalf("missing enum (%d)", len(typeList))
 	}
-	if enum, ok := typeList[0].(*EnumType); ok {
+	if enum, ok := typeList[0].(*signature.EnumType); ok {
 		if enum.Name != "EnumType0" {
 			t.Errorf("invalide name %s", enum.Name)
 		}

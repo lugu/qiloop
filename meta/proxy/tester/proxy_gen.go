@@ -57,15 +57,17 @@ type Dummy interface {
 	object.Object
 	bus.Proxy
 	// Hello calls the remote procedure
-	Hello() error
+	Hello() (Bomb, error)
+	// Attack calls the remote procedure
+	Attack(b Bomb) error
 	// SubscribePing subscribe to a remote signal
 	SubscribePing() (unsubscribe func(), updates chan string, err error)
 	// GetStatus returns the property value
-	GetStatus() (string, error)
+	GetStatus() (map[string]int32, error)
 	// SetStatus sets the property value
-	SetStatus(string) error
+	SetStatus(map[string]int32) error
 	// SubscribeStatus regusters to a property
-	SubscribeStatus() (unsubscribe func(), updates chan string, err error)
+	SubscribeStatus() (unsubscribe func(), updates chan map[string]int32, err error)
 	// GetCoordinate returns the property value
 	GetCoordinate() (Coordinate, error)
 	// SetCoordinate sets the property value
@@ -95,13 +97,61 @@ func (s Constructor) Dummy() (Dummy, error) {
 }
 
 // Hello calls the remote procedure
-func (p *DummyProxy) Hello() error {
+func (p *DummyProxy) Hello() (Bomb, error) {
+	var err error
+	var ret Bomb
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("hello", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call hello failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = func() (Bomb, error) {
+		ref, err := object.ReadObjectReference(buf)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get meta: %s", err)
+		}
+		obj, err := p.session.Object(ref)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get proxy: %s", err)
+		}
+		proxy, ok := obj.(object1.ObjectProxy)
+		if !ok {
+			return nil, fmt.Errorf("wrong proxy type")
+		}
+		return &BombProxy{object1.ObjectProxy{proxy}, p.session}, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse hello response: %s", err)
+	}
+	return ret, nil
+}
+
+// Attack calls the remote procedure
+func (p *DummyProxy) Attack(b Bomb) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	_, err = p.Call("hello", buf.Bytes())
+	if err = func() error {
+		meta, err := b.MetaObject(b.ObjectID())
+		if err != nil {
+			return fmt.Errorf("failed to get meta: %s", err)
+		}
+		ref := object.ObjectReference{
+			true,
+			meta,
+			0,
+			b.ServiceID(),
+			b.ObjectID(),
+		}
+		return object.WriteObjectReference(ref, buf)
+	}(); err != nil {
+		return fmt.Errorf("failed to serialize b: %s", err)
+	}
+	_, err = p.Call("attack", buf.Bytes())
 	if err != nil {
-		return fmt.Errorf("call hello failed: %s", err)
+		return fmt.Errorf("call attack failed: %s", err)
 	}
 	return nil
 }
@@ -145,7 +195,7 @@ func (p *DummyProxy) SubscribePing() (func(), chan string, error) {
 }
 
 // GetStatus updates the property value
-func (p *DummyProxy) GetStatus() (ret string, err error) {
+func (p *DummyProxy) GetStatus() (ret map[string]int32, err error) {
 	name := value.String("status")
 	value, err := p.Property(name)
 	if err != nil {
@@ -161,29 +211,63 @@ func (p *DummyProxy) GetStatus() (ret string, err error) {
 		return ret, fmt.Errorf("read signature: %s", err)
 	}
 	// check the signature
-	sig := "s"
+	sig := "{si}"
 	if sig != s {
 		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
 			s, sig)
 	}
-	ret, err = basic.ReadString(&buf)
+	ret, err = func() (m map[string]int32, err error) {
+		size, err := basic.ReadUint32(&buf)
+		if err != nil {
+			return m, fmt.Errorf("failed to read map size: %s", err)
+		}
+		m = make(map[string]int32, size)
+		for i := 0; i < int(size); i++ {
+			k, err := basic.ReadString(&buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map key: %s", err)
+			}
+			v, err := basic.ReadInt32(&buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map value: %s", err)
+			}
+			m[k] = v
+		}
+		return m, nil
+	}()
 	return ret, err
 }
 
 // SetStatus updates the property value
-func (p *DummyProxy) SetStatus(update string) error {
+func (p *DummyProxy) SetStatus(update map[string]int32) error {
 	name := value.String("status")
 	var buf bytes.Buffer
-	err := basic.WriteString(update, &buf)
+	err := func() error {
+		err := basic.WriteUint32(uint32(len(update)), &buf)
+		if err != nil {
+			return fmt.Errorf("failed to write map size: %s", err)
+		}
+		for k, v := range update {
+			err = basic.WriteString(k, &buf)
+			if err != nil {
+				return fmt.Errorf("failed to write map key: %s", err)
+			}
+			err = basic.WriteInt32(v, &buf)
+			if err != nil {
+				return fmt.Errorf("failed to write map value: %s", err)
+			}
+		}
+		return nil
+	}()
 	if err != nil {
 		return fmt.Errorf("marshall error: %s", err)
 	}
-	val := value.Opaque("s", buf.Bytes())
+	val := value.Opaque("{si}", buf.Bytes())
 	return p.SetProperty(name, val)
 }
 
 // SubscribeStatus subscribe to a remote property
-func (p *DummyProxy) SubscribeStatus() (func(), chan string, error) {
+func (p *DummyProxy) SubscribeStatus() (func(), chan map[string]int32, error) {
 	propertyID, err := p.PropertyID("status")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "status", err)
@@ -193,7 +277,7 @@ func (p *DummyProxy) SubscribeStatus() (func(), chan string, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "status", err)
 	}
-	ch := make(chan string)
+	ch := make(chan map[string]int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to request property: %s", err)
@@ -209,7 +293,25 @@ func (p *DummyProxy) SubscribeStatus() (func(), chan string, error) {
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := basic.ReadString(buf)
+			e, err := func() (m map[string]int32, err error) {
+				size, err := basic.ReadUint32(buf)
+				if err != nil {
+					return m, fmt.Errorf("failed to read map size: %s", err)
+				}
+				m = make(map[string]int32, size)
+				for i := 0; i < int(size); i++ {
+					k, err := basic.ReadString(buf)
+					if err != nil {
+						return m, fmt.Errorf("failed to read map key: %s", err)
+					}
+					v, err := basic.ReadInt32(buf)
+					if err != nil {
+						return m, fmt.Errorf("failed to read map value: %s", err)
+					}
+					m[k] = v
+				}
+				return m, nil
+			}()
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -286,6 +388,72 @@ func (p *DummyProxy) SubscribeCoordinate() (func(), chan Coordinate, error) {
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := ReadCoordinate(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
+}
+
+// Bomb is a proxy object to the remote service
+type Bomb interface {
+	object.Object
+	bus.Proxy
+	// SubscribeBoom subscribe to a remote signal
+	SubscribeBoom() (unsubscribe func(), updates chan int32, err error)
+}
+
+// BombProxy implements Bomb
+type BombProxy struct {
+	object1.ObjectProxy
+	session bus.Session
+}
+
+// NewBomb constructs Bomb
+func NewBomb(ses bus.Session, obj uint32) (Bomb, error) {
+	proxy, err := ses.Proxy("Bomb", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
+	}
+	return &BombProxy{object1.ObjectProxy{proxy}, ses}, nil
+}
+
+// Bomb retruns a proxy to a remote service
+func (s Constructor) Bomb() (Bomb, error) {
+	return NewBomb(s.session, 1)
+}
+
+// SubscribeBoom subscribe to a remote property
+func (p *BombProxy) SubscribeBoom() (func(), chan int32, error) {
+	propertyID, err := p.SignalID("boom")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "boom", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "boom", err)
+	}
+	ch := make(chan int32)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := basic.ReadInt32(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue

@@ -273,32 +273,42 @@ func (itf *InterfaceType) registerMembers(set *signature.TypeSet) error {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
-	// TODO: InterfaceType instanciation are proxy from which one
-	// can construct an ObjectReference. This ObjectReference can
-	// be serialized.
-	//
-	// meta, err := obj.MetaObject(obj.ObjectID())
-	// ref := object.ObjectReference {
-	// 	true,
-	// 	meta,
-	// 	0,
-	// 	obj.ServiceID(),
-	// 	obj.ObjectID(),
-	// }
-	// err := object.WriteObjectReference(ref, writer)
-	panic("not yet implemented")
+	return jen.Id(`func() error {
+	    meta, err := ` + id + `.MetaObject(` + id + `.ObjectID())
+	    if err != nil {
+		return fmt.Errorf("failed to get meta: %s", err)
+	    }
+	    ref := object.ObjectReference {
+		    true,
+		    meta,
+		    0,
+		    ` + id + `.ServiceID(),
+		    ` + id + `.ObjectID(),
+	    }
+	    return object.WriteObjectReference(ref, ` + writer + `)
+	}()`)
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
-	// TODO: see Marshall
 
-	// ref, err := object.ReadObjectReference(reader)
-	// proxy, err := s.session.Object(ref)
-	// return &ServiceDirectoryProxy{proxy}
-	panic("not yet implemented")
+	return jen.Func().Params().Params(s.TypeName(), jen.Error()).Block(
+		jen.Id(`ref, err := object.ReadObjectReference(` + reader + `)
+	    if err != nil {
+		return nil, fmt.Errorf("failed to get meta: %s", err)
+	    }
+	    obj, err := p.session.Object(ref)
+	    if err != nil {
+		    return nil, fmt.Errorf("failed to get proxy: %s", err)
+	    }
+	    proxy, ok := obj.(object1.ObjectProxy)
+	    if !ok {
+		    return nil, fmt.Errorf("wrong proxy type")
+	    }
+	    return &` + s.Name + `Proxy{object1.ObjectProxy{proxy}, p.session}, nil`),
+	).Call()
 }
 
 // MetaObject returs the MetaObject describing the interface.

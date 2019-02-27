@@ -23,7 +23,7 @@ type Session struct {
 	removed          chan services.ServiceRemoved
 }
 
-func newObject(info services.ServiceInfo, ref object.ObjectReference) (object.Object, error) {
+func newObject(info services.ServiceInfo, ref object.ObjectReference) (*objproxy.ObjectProxy, error) {
 	endpoint, err := client.SelectEndPoint(info.Endpoints)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
@@ -79,7 +79,7 @@ func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
 }
 
 // Object returns a reference to ref.
-func (s *Session) Object(ref object.ObjectReference) (o object.Object, err error) {
+func (s *Session) Object(ref object.ObjectReference) (o bus.Proxy, err error) {
 	info, err := s.findServiceID(ref.ServiceID)
 	if err != nil {
 		return o, err

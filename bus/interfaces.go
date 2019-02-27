@@ -41,7 +41,7 @@ type Proxy interface {
 // proxies to services and create new services.
 type Session interface {
 	Proxy(name string, objectID uint32) (Proxy, error)
-	Object(ref object.ObjectReference) (object.Object, error)
+	Object(ref object.ObjectReference) (Proxy, error)
 	Destroy() error
 }
 

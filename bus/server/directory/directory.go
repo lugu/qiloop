@@ -283,7 +283,7 @@ func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
 	return client.NewClient(endpoint), nil
 }
 
-func (s *directorySession) Object(ref object.ObjectReference) (object.Object,
+func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
 	error) {
 
 	info, err := s.namespace.directory.info(ref.ServiceID)
