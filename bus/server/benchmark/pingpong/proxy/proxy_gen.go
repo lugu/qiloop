@@ -37,6 +37,7 @@ type PingPong interface {
 // PingPongProxy implements PingPong
 type PingPongProxy struct {
 	object1.ObjectProxy
+	session bus.Session
 }
 
 // NewPingPong constructs PingPong
@@ -45,7 +46,7 @@ func NewPingPong(ses bus.Session, obj uint32) (PingPong, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &PingPongProxy{object1.ObjectProxy{proxy}}, nil
+	return &PingPongProxy{object1.ObjectProxy{proxy}, ses}, nil
 }
 
 // PingPong retruns a proxy to a remote service

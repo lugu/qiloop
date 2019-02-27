@@ -52,6 +52,7 @@ type ServiceDirectory interface {
 // ServiceDirectoryProxy implements ServiceDirectory
 type ServiceDirectoryProxy struct {
 	object1.ObjectProxy
+	session bus.Session
 }
 
 // NewServiceDirectory constructs ServiceDirectory
@@ -60,7 +61,7 @@ func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &ServiceDirectoryProxy{object1.ObjectProxy{proxy}}, nil
+	return &ServiceDirectoryProxy{object1.ObjectProxy{proxy}, ses}, nil
 }
 
 // ServiceDirectory retruns a proxy to a remote service
@@ -320,6 +321,7 @@ type LogManager interface {
 // LogManagerProxy implements LogManager
 type LogManagerProxy struct {
 	object1.ObjectProxy
+	session bus.Session
 }
 
 // NewLogManager constructs LogManager
@@ -328,7 +330,7 @@ func NewLogManager(ses bus.Session, obj uint32) (LogManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &LogManagerProxy{object1.ObjectProxy{proxy}}, nil
+	return &LogManagerProxy{object1.ObjectProxy{proxy}, ses}, nil
 }
 
 // LogManager retruns a proxy to a remote service

@@ -49,6 +49,7 @@ type Dummy interface {
 // DummyProxy implements Dummy
 type DummyProxy struct {
 	object1.ObjectProxy
+	session bus.Session
 }
 
 // NewDummy constructs Dummy
@@ -57,7 +58,7 @@ func NewDummy(ses bus.Session, obj uint32) (Dummy, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &DummyProxy{object1.ObjectProxy{proxy}}, nil
+	return &DummyProxy{object1.ObjectProxy{proxy}, ses}, nil
 }
 
 // Dummy retruns a proxy to a remote service
@@ -127,7 +128,7 @@ func (p *DummyProxy) GetStatus() (ret string, err error) {
 	if err != nil {
 		return ret, fmt.Errorf("read response: %s", err)
 	}
-	s, err = basic.ReadString(&buf)
+	s, err := basic.ReadString(&buf)
 	if err != nil {
 		return ret, fmt.Errorf("read signature: %s", err)
 	}
@@ -203,7 +204,7 @@ func (p *DummyProxy) GetCoordinate() (ret Coordinate, err error) {
 	if err != nil {
 		return ret, fmt.Errorf("read response: %s", err)
 	}
-	s, err = basic.ReadString(&buf)
+	s, err := basic.ReadString(&buf)
 	if err != nil {
 		return ret, fmt.Errorf("read signature: %s", err)
 	}

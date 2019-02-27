@@ -6,7 +6,6 @@ import (
 	"github.com/lugu/qiloop/bus/client"
 	objproxy "github.com/lugu/qiloop/bus/client/object"
 	"github.com/lugu/qiloop/bus/client/services"
-	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/object"
 	"log"
 	"sync"
@@ -98,15 +97,26 @@ func metaProxy(c bus.Client, serviceID, objectID uint32) (p bus.Proxy, err error
 	return client.NewProxy(c, meta, serviceID, objectID), nil
 }
 
-// BindSession returns a session based on a previously established
-// connection.
-func BindSession(c bus.Client) (*Session, error) {
-	proxy, err := metaProxy(c, 1, 1)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get directory meta object: %s", err)
-	}
+// NewSession connects an address and return a new session.
+func NewSession(addr string) (bus.Session, error) {
+
 	s := new(Session)
-	s.Directory = &services.ServiceDirectoryProxy{objproxy.ObjectProxy{proxy}}
+	// Manually create a serviceList with just the ServiceInfo
+	// needed to contact ServiceDirectory.
+	s.serviceList = []services.ServiceInfo{
+		services.ServiceInfo{
+			Name:      "ServiceDirectory",
+			ServiceId: 1,
+			Endpoints: []string{
+				addr,
+			},
+		},
+	}
+	var err error
+	s.Directory, err = services.NewServiceDirectory(s, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact server: %s", err)
+	}
 
 	s.serviceList, err = s.Directory.Services()
 	if err != nil {
@@ -128,32 +138,8 @@ func BindSession(c bus.Client) (*Session, error) {
 	return s, nil
 }
 
-// NewSession connects an address and return a new session.
-func NewSession(addr string) (bus.Session, error) {
-
-	endpoint, err := net.DialEndPoint(addr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to contact %s: %s", addr, err)
-	}
-	if err = client.Authenticate(endpoint); err != nil {
-		endpoint.Close()
-		return nil, fmt.Errorf("authentication failed: %s", err)
-	}
-	c := client.NewClient(endpoint)
-
-	sess, err := BindSession(c)
-	if err != nil {
-		endpoint.Close()
-		return nil, err
-	}
-	return sess, nil
-}
-
 func (s *Session) updateServiceList() {
-	var err error
-	s.serviceListMutex.Lock()
-	defer s.serviceListMutex.Unlock()
-	s.serviceList, err = s.Directory.Services()
+	services, err := s.Directory.Services()
 	if err != nil {
 		log.Printf("error: failed to update service directory list: %s", err)
 		log.Printf("error: closing session.")
@@ -161,6 +147,9 @@ func (s *Session) updateServiceList() {
 			log.Printf("error: session destruction: %s", err)
 		}
 	}
+	s.serviceListMutex.Lock()
+	s.serviceList = services
+	s.serviceListMutex.Unlock()
 }
 
 // Destroy close the session.

@@ -293,17 +293,25 @@ func generateProxyType(file *jen.File, serviceName, proxyName string,
 	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
 		file.Type().Id(proxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	} else {
-		file.Type().Id(proxyName).Struct(jen.Qual(
-			"github.com/lugu/qiloop/bus/client/object",
-			"ObjectProxy",
-		))
+		file.Type().Id(proxyName).Struct(
+			jen.Qual(
+				"github.com/lugu/qiloop/bus/client/object",
+				"ObjectProxy",
+			),
+			jen.Id("session").Qual(
+				"github.com/lugu/qiloop/bus",
+				"Session",
+			),
+		)
 	}
 	blockContructor := jen.Return(
 
 		jen.Op("&").Id(proxyName).Values(jen.Qual(
 			"github.com/lugu/qiloop/bus/client/object",
 			"ObjectProxy",
-		).Values(jen.Id("proxy"))),
+		).Values(jen.Id("proxy")),
+			jen.Id("ses"),
+		),
 		jen.Nil(),
 	)
 	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
@@ -486,7 +494,7 @@ func generatePropertyGet(file *jen.File, serviceName string,
 		jen.Id(`if err != nil {
 		    return ret, fmt.Errorf("read response: %s", err)
 		}`),
-		jen.Id(`s, err = basic.ReadString(&buf)`),
+		jen.Id(`s, err := basic.ReadString(&buf)`),
 		jen.Id(`if err != nil {
 		    return ret, fmt.Errorf("read signature: %s", err)
 		}`),
