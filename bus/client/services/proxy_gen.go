@@ -23,6 +23,62 @@ func Services(s bus.Session) Constructor {
 	return Constructor{session: s}
 }
 
+// ServiceAdded is serializable
+type ServiceAdded struct {
+	ServiceID uint32
+	Name      string
+}
+
+// ReadServiceAdded unmarshalls ServiceAdded
+func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
+	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
+	}
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteServiceAdded marshalls ServiceAdded
+func WriteServiceAdded(s ServiceAdded, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
+		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
+	}
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
+	}
+	return nil
+}
+
+// ServiceRemoved is serializable
+type ServiceRemoved struct {
+	ServiceID uint32
+	Name      string
+}
+
+// ReadServiceRemoved unmarshalls ServiceRemoved
+func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
+	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
+	}
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteServiceRemoved marshalls ServiceRemoved
+func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
+		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
+	}
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
+	}
+	return nil
+}
+
 // ServiceDirectory is a proxy object to the remote service
 type ServiceDirectory interface {
 	object.Object
@@ -302,6 +358,87 @@ func (p *ServiceDirectoryProxy) SubscribeServiceRemoved() (func(), chan ServiceR
 	return cancel, ch, nil
 }
 
+// ServiceInfo is serializable
+type ServiceInfo struct {
+	Name      string
+	ServiceId uint32
+	MachineId string
+	ProcessId uint32
+	Endpoints []string
+	SessionId string
+}
+
+// ReadServiceInfo unmarshalls ServiceInfo
+func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+	}
+	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
+	}
+	if s.MachineId, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
+	}
+	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
+	}
+	if s.Endpoints, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(r)
+		if err != nil {
+			return b, fmt.Errorf("failed to read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(r)
+			if err != nil {
+				return b, fmt.Errorf("failed to read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}(); err != nil {
+		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
+	}
+	if s.SessionId, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteServiceInfo marshalls ServiceInfo
+func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
+		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
+	}
+	if err := basic.WriteString(s.MachineId, w); err != nil {
+		return fmt.Errorf("failed to write MachineId field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
+		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
+	}
+	if err := func() error {
+		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
+		if err != nil {
+			return fmt.Errorf("failed to write slice size: %s", err)
+		}
+		for _, v := range s.Endpoints {
+			err = basic.WriteString(v, w)
+			if err != nil {
+				return fmt.Errorf("failed to write slice value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
+	}
+	if err := basic.WriteString(s.SessionId, w); err != nil {
+		return fmt.Errorf("failed to write SessionId field: " + err.Error())
+	}
+	return nil
+}
+
 // LogManager is a proxy object to the remote service
 type LogManager interface {
 	object.Object
@@ -433,143 +570,6 @@ func (p *LogManagerProxy) RemoveProvider(P0 int32) error {
 	_, err = p.Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
-	}
-	return nil
-}
-
-// ServiceAdded is serializable
-type ServiceAdded struct {
-	ServiceID uint32
-	Name      string
-}
-
-// ReadServiceAdded unmarshalls ServiceAdded
-func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
-	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
-	}
-	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
-	}
-	return s, nil
-}
-
-// WriteServiceAdded marshalls ServiceAdded
-func WriteServiceAdded(s ServiceAdded, w io.Writer) (err error) {
-	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
-		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
-	}
-	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
-	}
-	return nil
-}
-
-// ServiceRemoved is serializable
-type ServiceRemoved struct {
-	ServiceID uint32
-	Name      string
-}
-
-// ReadServiceRemoved unmarshalls ServiceRemoved
-func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
-	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
-	}
-	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
-	}
-	return s, nil
-}
-
-// WriteServiceRemoved marshalls ServiceRemoved
-func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
-	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
-		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
-	}
-	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
-	}
-	return nil
-}
-
-// ServiceInfo is serializable
-type ServiceInfo struct {
-	Name      string
-	ServiceId uint32
-	MachineId string
-	ProcessId uint32
-	Endpoints []string
-	SessionId string
-}
-
-// ReadServiceInfo unmarshalls ServiceInfo
-func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
-	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
-	}
-	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
-	}
-	if s.MachineId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
-	}
-	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
-	}
-	if s.Endpoints, err = func() (b []string, err error) {
-		size, err := basic.ReadUint32(r)
-		if err != nil {
-			return b, fmt.Errorf("failed to read slice size: %s", err)
-		}
-		b = make([]string, size)
-		for i := 0; i < int(size); i++ {
-			b[i], err = basic.ReadString(r)
-			if err != nil {
-				return b, fmt.Errorf("failed to read slice value: %s", err)
-			}
-		}
-		return b, nil
-	}(); err != nil {
-		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
-	}
-	if s.SessionId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
-	}
-	return s, nil
-}
-
-// WriteServiceInfo marshalls ServiceInfo
-func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
-	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
-		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
-	}
-	if err := basic.WriteString(s.MachineId, w); err != nil {
-		return fmt.Errorf("failed to write MachineId field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
-		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
-	}
-	if err := func() error {
-		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
-		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
-		}
-		for _, v := range s.Endpoints {
-			err = basic.WriteString(v, w)
-			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
-	}
-	if err := basic.WriteString(s.SessionId, w); err != nil {
-		return fmt.Errorf("failed to write SessionId field: " + err.Error())
 	}
 	return nil
 }

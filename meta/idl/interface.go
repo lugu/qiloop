@@ -202,12 +202,15 @@ func (s *InterfaceType) TypeName() *jen.Statement {
 // TypeDeclaration writes the type declaration into file.
 // It generates the proxy for the interface.
 func (s *InterfaceType) TypeDeclaration(f *jen.File) {
-	// proxy.generateInterface(f, s)
-	panic("not yet implemented")
+	err := generateInterface(s, f)
+	if err != nil {
+		panic("failed to render interface " + s.Name + " " + err.Error())
+	}
 }
 
 // RegisterTo adds the type to the type set.
 func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
+	s.registerMembers(set)
 	name := s.Name
 	// loop 100 times to avoid name collision
 	for i := 0; i < 100; i++ {
@@ -233,6 +236,39 @@ func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
 	panic("failed to register " + name)
 }
 
+func (itf *InterfaceType) registerMembers(set *signature.TypeSet) error {
+	metaObj := itf.MetaObject()
+	method := func(m object.MetaMethod, methodName string) error {
+		method := itf.Methods[m.Uid]
+		paramType := method.Tuple()
+		paramType.RegisterTo(set)
+		returnType := method.Return
+		if returnType.Signature() == signature.MetaObjectSignature {
+			returnType = signature.NewMetaObjectType()
+		}
+		returnType.RegisterTo(set)
+		return nil
+	}
+	signal := func(s object.MetaSignal, signalName string) error {
+		signal := itf.Signals[s.Uid]
+		signalType := signal.Type()
+		signalType.RegisterTo(set)
+		return nil
+	}
+	property := func(p object.MetaProperty, propertyName string) error {
+		property := itf.Properties[p.Uid]
+		propertyType := property.Type()
+		propertyType.RegisterTo(set)
+		return nil
+	}
+	err := metaObj.ForEachMethodAndSignal(method, signal, property)
+	if err != nil {
+		return fmt.Errorf("failed to generate interface object %s: %s",
+			itf.Name, err)
+	}
+	return nil
+}
+
 // Marshal returns a statement which represent the code needed to put
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
@@ -241,8 +277,15 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	// can construct an ObjectReference. This ObjectReference can
 	// be serialized.
 	//
-	// return jen.Qual("github.com/lugu/qiloop/type/object",
-	// 	"WriteObjectReference").Call(jen.Id(id), jen.Id(writer))
+	// meta, err := obj.MetaObject(obj.ObjectID())
+	// ref := object.ObjectReference {
+	// 	true,
+	// 	meta,
+	// 	0,
+	// 	obj.ServiceID(),
+	// 	obj.ObjectID(),
+	// }
+	// err := object.WriteObjectReference(ref, writer)
 	panic("not yet implemented")
 }
 
@@ -251,6 +294,10 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 // read and an error.
 func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	// TODO: see Marshall
+
+	// ref, err := object.ReadObjectReference(reader)
+	// proxy, err := s.session.Object(ref)
+	// return &ServiceDirectoryProxy{proxy}
 	panic("not yet implemented")
 }
 

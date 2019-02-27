@@ -24,6 +24,34 @@ func Services(s bus.Session) Constructor {
 	return Constructor{session: s}
 }
 
+// Coordinate is serializable
+type Coordinate struct {
+	X int32
+	Y int32
+}
+
+// ReadCoordinate unmarshalls Coordinate
+func ReadCoordinate(r io.Reader) (s Coordinate, err error) {
+	if s.X, err = basic.ReadInt32(r); err != nil {
+		return s, fmt.Errorf("failed to read X field: " + err.Error())
+	}
+	if s.Y, err = basic.ReadInt32(r); err != nil {
+		return s, fmt.Errorf("failed to read Y field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteCoordinate marshalls Coordinate
+func WriteCoordinate(s Coordinate, w io.Writer) (err error) {
+	if err := basic.WriteInt32(s.X, w); err != nil {
+		return fmt.Errorf("failed to write X field: " + err.Error())
+	}
+	if err := basic.WriteInt32(s.Y, w); err != nil {
+		return fmt.Errorf("failed to write Y field: " + err.Error())
+	}
+	return nil
+}
+
 // Dummy is a proxy object to the remote service
 type Dummy interface {
 	object.Object
@@ -266,32 +294,4 @@ func (p *DummyProxy) SubscribeCoordinate() (func(), chan Coordinate, error) {
 		}
 	}()
 	return cancel, ch, nil
-}
-
-// Coordinate is serializable
-type Coordinate struct {
-	X int32
-	Y int32
-}
-
-// ReadCoordinate unmarshalls Coordinate
-func ReadCoordinate(r io.Reader) (s Coordinate, err error) {
-	if s.X, err = basic.ReadInt32(r); err != nil {
-		return s, fmt.Errorf("failed to read X field: " + err.Error())
-	}
-	if s.Y, err = basic.ReadInt32(r); err != nil {
-		return s, fmt.Errorf("failed to read Y field: " + err.Error())
-	}
-	return s, nil
-}
-
-// WriteCoordinate marshalls Coordinate
-func WriteCoordinate(s Coordinate, w io.Writer) (err error) {
-	if err := basic.WriteInt32(s.X, w); err != nil {
-		return fmt.Errorf("failed to write X field: " + err.Error())
-	}
-	if err := basic.WriteInt32(s.Y, w); err != nil {
-		return fmt.Errorf("failed to write Y field: " + err.Error())
-	}
-	return nil
 }

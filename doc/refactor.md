@@ -40,17 +40,6 @@ Problem statement:
                 [... object.Object methods ...]
         }
 
-unmarshall an interface:
-        // add a session object to the Proxy
-        ref, err := object.ReadObjectReference(reader)
-	proxy, err := s.session.Object(ref)
-	return &ServiceDirectoryProxy{proxy}
-
-- session.Object(object.ObjectReference) object.Object
-
-ObjectRefernece: proxy take it as constructor
-
-
 ### Current status
 - signature:
      - types from signature
