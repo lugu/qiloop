@@ -69,6 +69,7 @@ func (p Proxy) MethodID(name string) (uint32, error) {
 
 // Disconnect closes the connection.
 func (p Proxy) Disconnect() error {
+	// TODO
 	return fmt.Errorf("Proxy.Disconnect not yet implemented")
 }
 
