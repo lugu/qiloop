@@ -11,6 +11,9 @@ import (
 // Magic is a constant to discriminate between message and garbage.
 const Magic = uint32(0x42dead42)
 
+// Filter messages larger than 10 MB
+const MaxPayloadSize = uint32(10 * 1024 * 1024)
+
 // Version is the supported version of the protocol.
 const Version = 0
 
@@ -203,8 +206,7 @@ func (m *Message) Read(r io.Reader) error {
 	if err := m.Header.Read(bytes.NewBuffer(b)); err != nil {
 		return fmt.Errorf("failed to read message header: %s", err)
 	}
-	// Filter messages larger than 10 MB
-	if m.Header.Size > 10*1024*1024 {
+	if m.Header.Size > MaxPayloadSize {
 		return fmt.Errorf("won't process message this large: %d", m.Header.Size)
 	} else if m.Header.Size == 0 {
 		m.Payload = make([]byte, 0)

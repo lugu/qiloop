@@ -361,6 +361,9 @@ Those types are described using a strings characters called
 know what to read and write in the payload of a message. The next
 section explains the signature format.
 
+Default payload size limitation is 50MB in libqi, this is not an hard
+limit and can be configured.
+
 
 ## Signatures
 
