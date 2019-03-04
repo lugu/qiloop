@@ -81,9 +81,9 @@ type DummyObject interface {
 	Dummy
 }
 
-// DummyProxy implements DummyObject
-type DummyProxy struct {
-	object1.ObjectProxy
+// proxyDummy implements DummyObject
+type proxyDummy struct {
+	object1.ObjectObject
 	session bus.Session
 }
 
@@ -93,7 +93,7 @@ func NewDummy(ses bus.Session, obj uint32) (DummyObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &DummyProxy{object1.ObjectProxy{proxy}, ses}, nil
+	return &proxyDummy{object1.MakeObject(proxy), ses}, nil
 }
 
 // Dummy retruns a proxy to a remote service
@@ -102,7 +102,7 @@ func (s Constructor) Dummy() (DummyObject, error) {
 }
 
 // Hello calls the remote procedure
-func (p *DummyProxy) Hello() (BombObject, error) {
+func (p *proxyDummy) Hello() (BombObject, error) {
 	var err error
 	var ret BombObject
 	var buf *bytes.Buffer
@@ -121,12 +121,7 @@ func (p *DummyProxy) Hello() (BombObject, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get proxy: %s", err)
 		}
-		proxy, ok := obj.(object1.ObjectProxy)
-		if !ok {
-			return nil, fmt.Errorf("wrong proxy type")
-		}
-		// FIXME: prefer constructor
-		return &BombProxy{object1.ObjectProxy{proxy}, p.session}, nil
+		return &proxyBomb{object1.MakeObject(obj), p.session}, nil
 	}()
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse hello response: %s", err)
@@ -135,7 +130,7 @@ func (p *DummyProxy) Hello() (BombObject, error) {
 }
 
 // Attack calls the remote procedure
-func (p *DummyProxy) Attack(b BombObject) error {
+func (p *proxyDummy) Attack(b BombObject) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -163,7 +158,7 @@ func (p *DummyProxy) Attack(b BombObject) error {
 }
 
 // SubscribePing subscribe to a remote property
-func (p *DummyProxy) SubscribePing() (func(), chan string, error) {
+func (p *proxyDummy) SubscribePing() (func(), chan string, error) {
 	propertyID, err := p.SignalID("ping")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "ping", err)
@@ -201,7 +196,7 @@ func (p *DummyProxy) SubscribePing() (func(), chan string, error) {
 }
 
 // GetStatus updates the property value
-func (p *DummyProxy) GetStatus() (ret map[string]int32, err error) {
+func (p *proxyDummy) GetStatus() (ret map[string]int32, err error) {
 	name := value.String("status")
 	value, err := p.Property(name)
 	if err != nil {
@@ -245,7 +240,7 @@ func (p *DummyProxy) GetStatus() (ret map[string]int32, err error) {
 }
 
 // SetStatus updates the property value
-func (p *DummyProxy) SetStatus(update map[string]int32) error {
+func (p *proxyDummy) SetStatus(update map[string]int32) error {
 	name := value.String("status")
 	var buf bytes.Buffer
 	err := func() error {
@@ -273,7 +268,7 @@ func (p *DummyProxy) SetStatus(update map[string]int32) error {
 }
 
 // SubscribeStatus subscribe to a remote property
-func (p *DummyProxy) SubscribeStatus() (func(), chan map[string]int32, error) {
+func (p *proxyDummy) SubscribeStatus() (func(), chan map[string]int32, error) {
 	propertyID, err := p.PropertyID("status")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "status", err)
@@ -329,7 +324,7 @@ func (p *DummyProxy) SubscribeStatus() (func(), chan map[string]int32, error) {
 }
 
 // GetCoordinate updates the property value
-func (p *DummyProxy) GetCoordinate() (ret Coordinate, err error) {
+func (p *proxyDummy) GetCoordinate() (ret Coordinate, err error) {
 	name := value.String("coordinate")
 	value, err := p.Property(name)
 	if err != nil {
@@ -355,7 +350,7 @@ func (p *DummyProxy) GetCoordinate() (ret Coordinate, err error) {
 }
 
 // SetCoordinate updates the property value
-func (p *DummyProxy) SetCoordinate(update Coordinate) error {
+func (p *proxyDummy) SetCoordinate(update Coordinate) error {
 	name := value.String("coordinate")
 	var buf bytes.Buffer
 	err := WriteCoordinate(update, &buf)
@@ -367,7 +362,7 @@ func (p *DummyProxy) SetCoordinate(update Coordinate) error {
 }
 
 // SubscribeCoordinate subscribe to a remote property
-func (p *DummyProxy) SubscribeCoordinate() (func(), chan Coordinate, error) {
+func (p *proxyDummy) SubscribeCoordinate() (func(), chan Coordinate, error) {
 	propertyID, err := p.PropertyID("coordinate")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "coordinate", err)
@@ -417,9 +412,9 @@ type BombObject interface {
 	Bomb
 }
 
-// BombProxy implements BombObject
-type BombProxy struct {
-	object1.ObjectProxy
+// proxyBomb implements BombObject
+type proxyBomb struct {
+	object1.ObjectObject
 	session bus.Session
 }
 
@@ -429,7 +424,7 @@ func NewBomb(ses bus.Session, obj uint32) (BombObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &BombProxy{object1.ObjectProxy{proxy}, ses}, nil
+	return &proxyBomb{object1.MakeObject(proxy), ses}, nil
 }
 
 // Bomb retruns a proxy to a remote service
@@ -438,7 +433,7 @@ func (s Constructor) Bomb() (BombObject, error) {
 }
 
 // SubscribeBoom subscribe to a remote property
-func (p *BombProxy) SubscribeBoom() (func(), chan int32, error) {
+func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 	propertyID, err := p.SignalID("boom")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "boom", err)

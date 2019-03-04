@@ -24,7 +24,22 @@ func Services(s bus.Session) Constructor {
 }
 
 // ObjectObject is the abstract interface of the service
-type Object interface{}
+type Object interface {
+	// IsStatsEnabled calls the remote procedure
+	IsStatsEnabled() (bool, error)
+	// EnableStats calls the remote procedure
+	EnableStats(enabled bool) error
+	// Stats calls the remote procedure
+	Stats() (map[uint32]MethodStatistics, error)
+	// ClearStats calls the remote procedure
+	ClearStats() error
+	// IsTraceEnabled calls the remote procedure
+	IsTraceEnabled() (bool, error)
+	// EnableTrace calls the remote procedure
+	EnableTrace(traced bool) error
+	// SubscribeTraceObject subscribe to a remote signal
+	SubscribeTraceObject() (unsubscribe func(), updates chan EventTrace, err error)
+}
 
 // Object represents a proxy object to the service
 type ObjectObject interface {
@@ -33,8 +48,8 @@ type ObjectObject interface {
 	Object
 }
 
-// ObjectProxy implements ObjectObject
-type ObjectProxy struct {
+// proxyObject implements ObjectObject
+type proxyObject struct {
 	bus.Proxy
 }
 
@@ -44,7 +59,7 @@ func NewObject(ses bus.Session, obj uint32) (ObjectObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &ObjectProxy{proxy}, nil
+	return &proxyObject{proxy}, nil
 }
 
 // Object retruns a proxy to a remote service
@@ -53,7 +68,7 @@ func (s Constructor) Object() (ObjectObject, error) {
 }
 
 // RegisterEvent calls the remote procedure
-func (p *ObjectProxy) RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error) {
+func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -80,7 +95,7 @@ func (p *ObjectProxy) RegisterEvent(objectID uint32, actionID uint32, handler ui
 }
 
 // UnregisterEvent calls the remote procedure
-func (p *ObjectProxy) UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error {
+func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -101,7 +116,7 @@ func (p *ObjectProxy) UnregisterEvent(objectID uint32, actionID uint32, handler 
 }
 
 // MetaObject calls the remote procedure
-func (p *ObjectProxy) MetaObject(objectID uint32) (object.MetaObject, error) {
+func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
 	var err error
 	var ret object.MetaObject
 	var buf *bytes.Buffer
@@ -122,7 +137,7 @@ func (p *ObjectProxy) MetaObject(objectID uint32) (object.MetaObject, error) {
 }
 
 // Terminate calls the remote procedure
-func (p *ObjectProxy) Terminate(objectID uint32) error {
+func (p *proxyObject) Terminate(objectID uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -137,7 +152,7 @@ func (p *ObjectProxy) Terminate(objectID uint32) error {
 }
 
 // Property calls the remote procedure
-func (p *ObjectProxy) Property(name value.Value) (value.Value, error) {
+func (p *proxyObject) Property(name value.Value) (value.Value, error) {
 	var err error
 	var ret value.Value
 	var buf *bytes.Buffer
@@ -158,7 +173,7 @@ func (p *ObjectProxy) Property(name value.Value) (value.Value, error) {
 }
 
 // SetProperty calls the remote procedure
-func (p *ObjectProxy) SetProperty(name value.Value, value value.Value) error {
+func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -176,7 +191,7 @@ func (p *ObjectProxy) SetProperty(name value.Value, value value.Value) error {
 }
 
 // Properties calls the remote procedure
-func (p *ObjectProxy) Properties() ([]string, error) {
+func (p *proxyObject) Properties() ([]string, error) {
 	var err error
 	var ret []string
 	var buf *bytes.Buffer
@@ -207,7 +222,7 @@ func (p *ObjectProxy) Properties() ([]string, error) {
 }
 
 // RegisterEventWithSignature calls the remote procedure
-func (p *ObjectProxy) RegisterEventWithSignature(objectID uint32, actionID uint32, handler uint64, P3 string) (uint64, error) {
+func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint32, handler uint64, P3 string) (uint64, error) {
 	var err error
 	var ret uint64
 	var buf *bytes.Buffer
@@ -237,7 +252,7 @@ func (p *ObjectProxy) RegisterEventWithSignature(objectID uint32, actionID uint3
 }
 
 // IsStatsEnabled calls the remote procedure
-func (p *ObjectProxy) IsStatsEnabled() (bool, error) {
+func (p *proxyObject) IsStatsEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf *bytes.Buffer
@@ -255,7 +270,7 @@ func (p *ObjectProxy) IsStatsEnabled() (bool, error) {
 }
 
 // EnableStats calls the remote procedure
-func (p *ObjectProxy) EnableStats(enabled bool) error {
+func (p *proxyObject) EnableStats(enabled bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -270,7 +285,7 @@ func (p *ObjectProxy) EnableStats(enabled bool) error {
 }
 
 // Stats calls the remote procedure
-func (p *ObjectProxy) Stats() (map[uint32]MethodStatistics, error) {
+func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
 	var ret map[uint32]MethodStatistics
 	var buf *bytes.Buffer
@@ -306,7 +321,7 @@ func (p *ObjectProxy) Stats() (map[uint32]MethodStatistics, error) {
 }
 
 // ClearStats calls the remote procedure
-func (p *ObjectProxy) ClearStats() error {
+func (p *proxyObject) ClearStats() error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -318,7 +333,7 @@ func (p *ObjectProxy) ClearStats() error {
 }
 
 // IsTraceEnabled calls the remote procedure
-func (p *ObjectProxy) IsTraceEnabled() (bool, error) {
+func (p *proxyObject) IsTraceEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf *bytes.Buffer
@@ -336,7 +351,7 @@ func (p *ObjectProxy) IsTraceEnabled() (bool, error) {
 }
 
 // EnableTrace calls the remote procedure
-func (p *ObjectProxy) EnableTrace(traced bool) error {
+func (p *proxyObject) EnableTrace(traced bool) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -351,7 +366,7 @@ func (p *ObjectProxy) EnableTrace(traced bool) error {
 }
 
 // SubscribeTraceObject subscribe to a remote property
-func (p *ObjectProxy) SubscribeTraceObject() (func(), chan EventTrace, error) {
+func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 	propertyID, err := p.SignalID("traceObject")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)

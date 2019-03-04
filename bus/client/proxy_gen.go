@@ -32,8 +32,8 @@ type ServerObject interface {
 	Server
 }
 
-// ServerProxy implements ServerObject
-type ServerProxy struct {
+// proxyServer implements ServerObject
+type proxyServer struct {
 	bus.Proxy
 }
 
@@ -43,7 +43,7 @@ func NewServer(ses bus.Session, obj uint32) (ServerObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &ServerProxy{proxy}, nil
+	return &proxyServer{proxy}, nil
 }
 
 // Server retruns a proxy to a remote service
@@ -52,7 +52,7 @@ func (s Constructor) Server() (ServerObject, error) {
 }
 
 // Authenticate calls the remote procedure
-func (p *ServerProxy) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
+func (p *proxyServer) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
 	var buf *bytes.Buffer

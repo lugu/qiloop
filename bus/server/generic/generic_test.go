@@ -85,7 +85,7 @@ func TestMethodStatistics(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := &proxy.ObjectProxy{client}
+	remoteObj := proxy.MakeObject(client)
 	enabled, err := remoteObj.IsStatsEnabled()
 	if err != nil {
 		t.Error(err)
@@ -150,7 +150,7 @@ func TestTraceEvent(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := &proxy.ObjectProxy{client}
+	remoteObj := proxy.MakeObject(client)
 	enabled, err := remoteObj.IsTraceEnabled()
 	if err != nil {
 		t.Fatal(err)

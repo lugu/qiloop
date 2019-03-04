@@ -303,12 +303,7 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	    if err != nil {
 		    return nil, fmt.Errorf("failed to get proxy: %s", err)
 	    }
-	    proxy, ok := obj.(object1.ObjectProxy)
-	    if !ok {
-		    return nil, fmt.Errorf("wrong proxy type")
-	    }
-	    // FIXME: prefer constructor
-	    return &` + s.Name + `Proxy{object1.ObjectProxy{proxy}, p.session}, nil`),
+	    return &` + proxyName(s.Name) + `{object1.MakeObject(obj), p.session}, nil`),
 	).Call()
 }
 

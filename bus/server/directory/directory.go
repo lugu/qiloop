@@ -297,7 +297,7 @@ func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
 	}
 	proxy := client.NewProxy(clt, ref.MetaObject,
 		ref.ServiceID, ref.ObjectID)
-	return &objproxy.ObjectProxy{proxy}, nil
+	return objproxy.MakeObject(proxy), nil
 }
 
 func (s *directorySession) Destroy() error {

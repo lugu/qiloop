@@ -46,7 +46,7 @@ func main() {
 			log.Fatalf("failed to connect service (%s): %s",
 				*serviceName, err)
 		}
-		var obj object.Object = &objproxy.ObjectProxy{proxy}
+		var obj object.Object = objproxy.MakeObject(proxy)
 		meta, err := obj.MetaObject(1)
 		if err != nil {
 			log.Fatalf("failed to get metaobject (%s): %s",

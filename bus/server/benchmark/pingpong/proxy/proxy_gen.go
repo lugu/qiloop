@@ -39,9 +39,9 @@ type PingPongObject interface {
 	PingPong
 }
 
-// PingPongProxy implements PingPongObject
-type PingPongProxy struct {
-	object1.ObjectProxy
+// proxyPingPong implements PingPongObject
+type proxyPingPong struct {
+	object1.ObjectObject
 	session bus.Session
 }
 
@@ -51,7 +51,7 @@ func NewPingPong(ses bus.Session, obj uint32) (PingPongObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &PingPongProxy{object1.ObjectProxy{proxy}, ses}, nil
+	return &proxyPingPong{object1.MakeObject(proxy), ses}, nil
 }
 
 // PingPong retruns a proxy to a remote service
@@ -60,7 +60,7 @@ func (s Constructor) PingPong() (PingPongObject, error) {
 }
 
 // Hello calls the remote procedure
-func (p *PingPongProxy) Hello(a string) (string, error) {
+func (p *proxyPingPong) Hello(a string) (string, error) {
 	var err error
 	var ret string
 	var buf *bytes.Buffer
@@ -81,7 +81,7 @@ func (p *PingPongProxy) Hello(a string) (string, error) {
 }
 
 // Ping calls the remote procedure
-func (p *PingPongProxy) Ping(a string) error {
+func (p *proxyPingPong) Ping(a string) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -96,7 +96,7 @@ func (p *PingPongProxy) Ping(a string) error {
 }
 
 // SubscribePong subscribe to a remote property
-func (p *PingPongProxy) SubscribePong() (func(), chan string, error) {
+func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
 	propertyID, err := p.SignalID("pong")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)

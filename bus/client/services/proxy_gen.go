@@ -110,9 +110,9 @@ type ServiceDirectoryObject interface {
 	ServiceDirectory
 }
 
-// ServiceDirectoryProxy implements ServiceDirectoryObject
-type ServiceDirectoryProxy struct {
-	object1.ObjectProxy
+// proxyServiceDirectory implements ServiceDirectoryObject
+type proxyServiceDirectory struct {
+	object1.ObjectObject
 	session bus.Session
 }
 
@@ -122,7 +122,7 @@ func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectoryObject, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &ServiceDirectoryProxy{object1.ObjectProxy{proxy}, ses}, nil
+	return &proxyServiceDirectory{object1.MakeObject(proxy), ses}, nil
 }
 
 // ServiceDirectory retruns a proxy to a remote service
@@ -131,7 +131,7 @@ func (s Constructor) ServiceDirectory() (ServiceDirectoryObject, error) {
 }
 
 // Service calls the remote procedure
-func (p *ServiceDirectoryProxy) Service(name string) (ServiceInfo, error) {
+func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	var err error
 	var ret ServiceInfo
 	var buf *bytes.Buffer
@@ -152,7 +152,7 @@ func (p *ServiceDirectoryProxy) Service(name string) (ServiceInfo, error) {
 }
 
 // Services calls the remote procedure
-func (p *ServiceDirectoryProxy) Services() ([]ServiceInfo, error) {
+func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf *bytes.Buffer
@@ -183,7 +183,7 @@ func (p *ServiceDirectoryProxy) Services() ([]ServiceInfo, error) {
 }
 
 // RegisterService calls the remote procedure
-func (p *ServiceDirectoryProxy) RegisterService(info ServiceInfo) (uint32, error) {
+func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error) {
 	var err error
 	var ret uint32
 	var buf *bytes.Buffer
@@ -204,7 +204,7 @@ func (p *ServiceDirectoryProxy) RegisterService(info ServiceInfo) (uint32, error
 }
 
 // UnregisterService calls the remote procedure
-func (p *ServiceDirectoryProxy) UnregisterService(serviceID uint32) error {
+func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -219,7 +219,7 @@ func (p *ServiceDirectoryProxy) UnregisterService(serviceID uint32) error {
 }
 
 // ServiceReady calls the remote procedure
-func (p *ServiceDirectoryProxy) ServiceReady(serviceID uint32) error {
+func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -234,7 +234,7 @@ func (p *ServiceDirectoryProxy) ServiceReady(serviceID uint32) error {
 }
 
 // UpdateServiceInfo calls the remote procedure
-func (p *ServiceDirectoryProxy) UpdateServiceInfo(info ServiceInfo) error {
+func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -249,7 +249,7 @@ func (p *ServiceDirectoryProxy) UpdateServiceInfo(info ServiceInfo) error {
 }
 
 // MachineId calls the remote procedure
-func (p *ServiceDirectoryProxy) MachineId() (string, error) {
+func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
 	var buf *bytes.Buffer
@@ -267,7 +267,7 @@ func (p *ServiceDirectoryProxy) MachineId() (string, error) {
 }
 
 // SocketOfService calls the remote procedure
-func (p *ServiceDirectoryProxy) SocketOfService(serviceID uint32) (object.ObjectReference, error) {
+func (p *proxyServiceDirectory) SocketOfService(serviceID uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
@@ -288,7 +288,7 @@ func (p *ServiceDirectoryProxy) SocketOfService(serviceID uint32) (object.Object
 }
 
 // SubscribeServiceAdded subscribe to a remote property
-func (p *ServiceDirectoryProxy) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
+func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
 	propertyID, err := p.SignalID("serviceAdded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
@@ -326,7 +326,7 @@ func (p *ServiceDirectoryProxy) SubscribeServiceAdded() (func(), chan ServiceAdd
 }
 
 // SubscribeServiceRemoved subscribe to a remote property
-func (p *ServiceDirectoryProxy) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
+func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
 	propertyID, err := p.SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
@@ -465,9 +465,9 @@ type LogManagerObject interface {
 	LogManager
 }
 
-// LogManagerProxy implements LogManagerObject
-type LogManagerProxy struct {
-	object1.ObjectProxy
+// proxyLogManager implements LogManagerObject
+type proxyLogManager struct {
+	object1.ObjectObject
 	session bus.Session
 }
 
@@ -477,7 +477,7 @@ func NewLogManager(ses bus.Session, obj uint32) (LogManagerObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &LogManagerProxy{object1.ObjectProxy{proxy}, ses}, nil
+	return &proxyLogManager{object1.MakeObject(proxy), ses}, nil
 }
 
 // LogManager retruns a proxy to a remote service
@@ -486,7 +486,7 @@ func (s Constructor) LogManager() (LogManagerObject, error) {
 }
 
 // Log calls the remote procedure
-func (p *LogManagerProxy) Log(P0 []LogMessage) error {
+func (p *proxyLogManager) Log(P0 []LogMessage) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -513,7 +513,7 @@ func (p *LogManagerProxy) Log(P0 []LogMessage) error {
 }
 
 // CreateListener calls the remote procedure
-func (p *LogManagerProxy) CreateListener() (object.ObjectReference, error) {
+func (p *proxyLogManager) CreateListener() (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
@@ -531,7 +531,7 @@ func (p *LogManagerProxy) CreateListener() (object.ObjectReference, error) {
 }
 
 // GetListener calls the remote procedure
-func (p *LogManagerProxy) GetListener() (object.ObjectReference, error) {
+func (p *proxyLogManager) GetListener() (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf *bytes.Buffer
@@ -549,7 +549,7 @@ func (p *LogManagerProxy) GetListener() (object.ObjectReference, error) {
 }
 
 // AddProvider calls the remote procedure
-func (p *LogManagerProxy) AddProvider(P0 object.ObjectReference) (int32, error) {
+func (p *proxyLogManager) AddProvider(P0 object.ObjectReference) (int32, error) {
 	var err error
 	var ret int32
 	var buf *bytes.Buffer
@@ -570,7 +570,7 @@ func (p *LogManagerProxy) AddProvider(P0 object.ObjectReference) (int32, error) 
 }
 
 // RemoveProvider calls the remote procedure
-func (p *LogManagerProxy) RemoveProvider(P0 int32) error {
+func (p *proxyLogManager) RemoveProvider(P0 int32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
