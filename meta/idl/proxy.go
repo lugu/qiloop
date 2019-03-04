@@ -11,6 +11,14 @@ import (
 // Statement is imported from jennifer code generator.
 type Statement = jen.Statement
 
+func objName(name string) string {
+	return name + "Object"
+}
+
+func proxyName(name string) string {
+	return name + "Proxy"
+}
+
 func generateInterface(itf *InterfaceType, file *jen.File) error {
 	serviceName := util.CleanName(itf.Name)
 	err := generateObjectInterface(itf, serviceName, file)
@@ -31,13 +39,6 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 	file *jen.File) error {
 
 	definitions := make([]jen.Code, 0)
-	if serviceName != "Server" {
-		definitions = append(definitions,
-			jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
-	}
-	definitions = append(definitions,
-		jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
-
 	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
 		methodName = util.CleanName(methodName)
@@ -93,10 +94,26 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 			serviceName, err)
 	}
 
-	file.Comment(serviceName + " is a proxy object to the remote service")
+	file.Comment(objName(serviceName) +
+		" is the abstract interface of the service")
 	file.Type().Id(serviceName).Interface(
 		definitions...,
 	)
+
+	definitions = make([]jen.Code, 0)
+	if serviceName != "Server" {
+		definitions = append(definitions,
+			jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
+	}
+	definitions = append(definitions,
+		jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+	definitions = append(definitions, jen.Id(serviceName))
+
+	file.Comment(serviceName + " represents a proxy object to the service")
+	file.Type().Id(objName(serviceName)).Interface(
+		definitions...,
+	)
+
 	return nil
 }
 
@@ -180,7 +197,7 @@ func generateMethodDef(file *jen.File, serviceName string,
 func generateProxyObject(itf *InterfaceType, serviceName string,
 	file *jen.File) error {
 
-	proxyName := serviceName + "Proxy"
+	proxyName := proxyName(serviceName)
 	generateProxyType(file, serviceName, proxyName, itf)
 
 	method := func(m object.MetaMethod, methodName string) error {
@@ -224,7 +241,7 @@ func generateProxyObject(itf *InterfaceType, serviceName string,
 func generateProxyType(file *jen.File, serviceName, proxyName string,
 	itf *InterfaceType) {
 
-	file.Comment(proxyName + " implements " + serviceName)
+	file.Comment(proxyName + " implements " + objName(serviceName))
 	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
 		file.Type().Id(proxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	} else {
@@ -252,12 +269,12 @@ func generateProxyType(file *jen.File, serviceName, proxyName string,
 	if proxyName == "ObjectProxy" || proxyName == "ServerProxy" {
 		blockContructor = jen.Id(`return &` + proxyName + `{ proxy }, nil`)
 	}
-	file.Comment("New" + serviceName + " constructs " + serviceName)
+	file.Comment("New" + serviceName + " constructs " + objName(serviceName))
 	file.Func().Id("New"+serviceName).Params(
 		jen.Id("ses").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("obj").Uint32(),
 	).Params(
-		jen.Id(serviceName),
+		jen.Id(objName(serviceName)),
 		jen.Error(),
 	).Block(
 		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("ses").Dot("Proxy").Call(
@@ -281,7 +298,7 @@ func generateProxyType(file *jen.File, serviceName, proxyName string,
 	).Id(
 		util.CleanName(serviceName),
 	).Params().Params(
-		jen.Id(serviceName), jen.Error(),
+		jen.Id(objName(serviceName)), jen.Error(),
 	).Block(
 		jen.Id(`return New` + serviceName + `(s.session, 1)`),
 	)

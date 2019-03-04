@@ -196,7 +196,7 @@ func (s *InterfaceType) SignatureIDL() string {
 // TypeName returns a statement to be inserted when the type is to be
 // declared.
 func (s *InterfaceType) TypeName() *jen.Statement {
-	return jen.Qual(s.PackageName, s.Name)
+	return jen.Qual(s.PackageName, objName(s.Name))
 }
 
 // TypeDeclaration writes the type declaration into file.
@@ -307,6 +307,7 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	    if !ok {
 		    return nil, fmt.Errorf("wrong proxy type")
 	    }
+	    // FIXME: prefer constructor
 	    return &` + s.Name + `Proxy{object1.ObjectProxy{proxy}, p.session}, nil`),
 	).Call()
 }
