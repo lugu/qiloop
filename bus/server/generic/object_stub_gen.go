@@ -13,8 +13,8 @@ import (
 	"io"
 )
 
-// Generic interface of the service implementation
-type Generic interface {
+// GenericImplementor interface of the service implementation
+type GenericImplementor interface {
 	// Activate is called before any other method.
 	// It shall be used to initialize the interface.
 	// activation provides runtime informations.
@@ -49,11 +49,11 @@ type GenericSignalHelper interface {
 // stubGeneric implements server.ServerObject.
 type stubGeneric struct {
 	obj  Object
-	impl Generic
+	impl GenericImplementor
 }
 
-// GenericObject returns an object using Generic
-func GenericObject(impl Generic) server.ServerObject {
+// GenericObject returns an object using GenericImplementor
+func GenericObject(impl GenericImplementor) server.ServerObject {
 	var stb stubGeneric
 	stb.impl = impl
 	stb.obj = NewBasicObject()

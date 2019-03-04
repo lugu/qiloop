@@ -13,8 +13,8 @@ import (
 	"io"
 )
 
-// ServiceDirectory interface of the service implementation
-type ServiceDirectory interface {
+// ServiceDirectoryImplementor interface of the service implementation
+type ServiceDirectoryImplementor interface {
 	// Activate is called before any other method.
 	// It shall be used to initialize the interface.
 	// activation provides runtime informations.
@@ -44,11 +44,11 @@ type ServiceDirectorySignalHelper interface {
 // stubServiceDirectory implements server.ServerObject.
 type stubServiceDirectory struct {
 	obj  generic.Object
-	impl ServiceDirectory
+	impl ServiceDirectoryImplementor
 }
 
-// ServiceDirectoryObject returns an object using ServiceDirectory
-func ServiceDirectoryObject(impl ServiceDirectory) server.ServerObject {
+// ServiceDirectoryObject returns an object using ServiceDirectoryImplementor
+func ServiceDirectoryObject(impl ServiceDirectoryImplementor) server.ServerObject {
 	var stb stubServiceDirectory
 	stb.impl = impl
 	stb.obj = generic.NewObject(stb.metaObject())

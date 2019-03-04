@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-// serviceDirectory implements ServiceDirectory
+// serviceDirectory implements ServiceDirectoryImplementor
 type serviceDirectory struct {
 	sync.RWMutex
 	staging  map[uint32]ServiceInfo

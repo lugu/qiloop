@@ -14,8 +14,8 @@ import (
 	"io"
 )
 
-// Object interface of the service implementation
-type Object interface {
+// ObjectImplementor interface of the service implementation
+type ObjectImplementor interface {
 	// Activate is called before any other method.
 	// It shall be used to initialize the interface.
 	// activation provides runtime informations.
@@ -50,11 +50,11 @@ type ObjectSignalHelper interface {
 // stubObject implements server.ServerObject.
 type stubObject struct {
 	obj  generic.Object
-	impl Object
+	impl ObjectImplementor
 }
 
-// ObjectObject returns an object using Object
-func ObjectObject(impl Object) server.ServerObject {
+// ObjectObject returns an object using ObjectImplementor
+func ObjectObject(impl ObjectImplementor) server.ServerObject {
 	var stb stubObject
 	stb.impl = impl
 	stb.obj = generic.NewObject(stb.metaObject())

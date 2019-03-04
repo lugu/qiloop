@@ -8,7 +8,7 @@ type impl struct {
 	signal PingPongSignalHelper
 }
 
-func NewPingPong() PingPong {
+func NewPingPong() PingPongImplementor {
 	return new(impl)
 }
 

@@ -40,8 +40,8 @@ func WritePoint(s Point, w io.Writer) (err error) {
 	return nil
 }
 
-// Spacecraft interface of the service implementation
-type Spacecraft interface {
+// SpacecraftImplementor interface of the service implementation
+type SpacecraftImplementor interface {
 	// Activate is called before any other method.
 	// It shall be used to initialize the interface.
 	// activation provides runtime informations.
@@ -64,11 +64,11 @@ type SpacecraftSignalHelper interface {
 // stubSpacecraft implements server.ServerObject.
 type stubSpacecraft struct {
 	obj  Object
-	impl Spacecraft
+	impl SpacecraftImplementor
 }
 
-// SpacecraftObject returns an object using Spacecraft
-func SpacecraftObject(impl Spacecraft) server.ServerObject {
+// SpacecraftObject returns an object using SpacecraftImplementor
+func SpacecraftObject(impl SpacecraftImplementor) server.ServerObject {
 	var stb stubSpacecraft
 	stb.impl = impl
 	stb.obj = NewObject(stb.metaObject())

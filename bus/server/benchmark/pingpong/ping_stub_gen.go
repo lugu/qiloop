@@ -12,8 +12,8 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 )
 
-// PingPong interface of the service implementation
-type PingPong interface {
+// PingPongImplementor interface of the service implementation
+type PingPongImplementor interface {
 	// Activate is called before any other method.
 	// It shall be used to initialize the interface.
 	// activation provides runtime informations.
@@ -36,11 +36,11 @@ type PingPongSignalHelper interface {
 // stubPingPong implements server.ServerObject.
 type stubPingPong struct {
 	obj  generic.Object
-	impl PingPong
+	impl PingPongImplementor
 }
 
-// PingPongObject returns an object using PingPong
-func PingPongObject(impl PingPong) server.ServerObject {
+// PingPongObject returns an object using PingPongImplementor
+func PingPongObject(impl PingPongImplementor) server.ServerObject {
 	var stb stubPingPong
 	stb.impl = impl
 	stb.obj = generic.NewObject(stb.metaObject())
