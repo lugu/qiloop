@@ -17,7 +17,7 @@ import (
 type Session struct {
 	serviceList      []services.ServiceInfo
 	serviceListMutex sync.Mutex
-	Directory        services.ServiceDirectory
+	Directory        services.ServiceDirectoryObject
 	cancel           func()
 	added            chan services.ServiceAdded
 	removed          chan services.ServiceRemoved

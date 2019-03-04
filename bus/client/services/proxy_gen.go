@@ -79,10 +79,8 @@ func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	return nil
 }
 
-// ServiceDirectory is a proxy object to the remote service
+// ServiceDirectoryObject is the abstract interface of the service
 type ServiceDirectory interface {
-	object.Object
-	bus.Proxy
 	// Service calls the remote procedure
 	Service(name string) (ServiceInfo, error)
 	// Services calls the remote procedure
@@ -105,14 +103,21 @@ type ServiceDirectory interface {
 	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
 }
 
-// ServiceDirectoryProxy implements ServiceDirectory
+// ServiceDirectory represents a proxy object to the service
+type ServiceDirectoryObject interface {
+	object.Object
+	bus.Proxy
+	ServiceDirectory
+}
+
+// ServiceDirectoryProxy implements ServiceDirectoryObject
 type ServiceDirectoryProxy struct {
 	object1.ObjectProxy
 	session bus.Session
 }
 
-// NewServiceDirectory constructs ServiceDirectory
-func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) {
+// NewServiceDirectory constructs ServiceDirectoryObject
+func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectoryObject, error) {
 	proxy, err := ses.Proxy("ServiceDirectory", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
@@ -121,7 +126,7 @@ func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectory, error) 
 }
 
 // ServiceDirectory retruns a proxy to a remote service
-func (s Constructor) ServiceDirectory() (ServiceDirectory, error) {
+func (s Constructor) ServiceDirectory() (ServiceDirectoryObject, error) {
 	return NewServiceDirectory(s.session, 1)
 }
 
@@ -439,10 +444,8 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	return nil
 }
 
-// LogManager is a proxy object to the remote service
+// LogManagerObject is the abstract interface of the service
 type LogManager interface {
-	object.Object
-	bus.Proxy
 	// Log calls the remote procedure
 	Log(P0 []LogMessage) error
 	// CreateListener calls the remote procedure
@@ -455,14 +458,21 @@ type LogManager interface {
 	RemoveProvider(P0 int32) error
 }
 
-// LogManagerProxy implements LogManager
+// LogManager represents a proxy object to the service
+type LogManagerObject interface {
+	object.Object
+	bus.Proxy
+	LogManager
+}
+
+// LogManagerProxy implements LogManagerObject
 type LogManagerProxy struct {
 	object1.ObjectProxy
 	session bus.Session
 }
 
-// NewLogManager constructs LogManager
-func NewLogManager(ses bus.Session, obj uint32) (LogManager, error) {
+// NewLogManager constructs LogManagerObject
+func NewLogManager(ses bus.Session, obj uint32) (LogManagerObject, error) {
 	proxy, err := ses.Proxy("LogManager", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
@@ -471,7 +481,7 @@ func NewLogManager(ses bus.Session, obj uint32) (LogManager, error) {
 }
 
 // LogManager retruns a proxy to a remote service
-func (s Constructor) LogManager() (LogManager, error) {
+func (s Constructor) LogManager() (LogManagerObject, error) {
 	return NewLogManager(s.session, 1)
 }
 

@@ -23,19 +23,23 @@ func Services(s bus.Session) Constructor {
 	return Constructor{session: s}
 }
 
-// Object is a proxy object to the remote service
-type Object interface {
+// ObjectObject is the abstract interface of the service
+type Object interface{}
+
+// Object represents a proxy object to the service
+type ObjectObject interface {
 	object.Object
 	bus.Proxy
+	Object
 }
 
-// ObjectProxy implements Object
+// ObjectProxy implements ObjectObject
 type ObjectProxy struct {
 	bus.Proxy
 }
 
-// NewObject constructs Object
-func NewObject(ses bus.Session, obj uint32) (Object, error) {
+// NewObject constructs ObjectObject
+func NewObject(ses bus.Session, obj uint32) (ObjectObject, error) {
 	proxy, err := ses.Proxy("Object", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
@@ -44,7 +48,7 @@ func NewObject(ses bus.Session, obj uint32) (Object, error) {
 }
 
 // Object retruns a proxy to a remote service
-func (s Constructor) Object() (Object, error) {
+func (s Constructor) Object() (ObjectObject, error) {
 	return NewObject(s.session, 1)
 }
 

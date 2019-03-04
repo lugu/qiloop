@@ -47,7 +47,6 @@ func (m Meta) Mirror() Mirror {
         - TODO: split custom proxy interface from bus.Proxy and object.Object
         - TODO: rename ObjectProxy into ProxyObject
         - TODO: introduce Mirror pattern into the proxy
-        - TODO: rename interface server must implement: FileImplementor
 
         - TODO: activation helper to add objects (ServerObject)
         - TODO: when a impl method needs to create and return an

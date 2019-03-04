@@ -22,10 +22,8 @@ func Services(s bus.Session) Constructor {
 	return Constructor{session: s}
 }
 
-// PingPong is a proxy object to the remote service
+// PingPongObject is the abstract interface of the service
 type PingPong interface {
-	object.Object
-	bus.Proxy
 	// Hello calls the remote procedure
 	Hello(a string) (string, error)
 	// Ping calls the remote procedure
@@ -34,14 +32,21 @@ type PingPong interface {
 	SubscribePong() (unsubscribe func(), updates chan string, err error)
 }
 
-// PingPongProxy implements PingPong
+// PingPong represents a proxy object to the service
+type PingPongObject interface {
+	object.Object
+	bus.Proxy
+	PingPong
+}
+
+// PingPongProxy implements PingPongObject
 type PingPongProxy struct {
 	object1.ObjectProxy
 	session bus.Session
 }
 
-// NewPingPong constructs PingPong
-func NewPingPong(ses bus.Session, obj uint32) (PingPong, error) {
+// NewPingPong constructs PingPongObject
+func NewPingPong(ses bus.Session, obj uint32) (PingPongObject, error) {
 	proxy, err := ses.Proxy("PingPong", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
@@ -50,7 +55,7 @@ func NewPingPong(ses bus.Session, obj uint32) (PingPong, error) {
 }
 
 // PingPong retruns a proxy to a remote service
-func (s Constructor) PingPong() (PingPong, error) {
+func (s Constructor) PingPong() (PingPongObject, error) {
 	return NewPingPong(s.session, 1)
 }
 
