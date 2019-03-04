@@ -51,6 +51,10 @@ func generateInterface(f *jen.File, set *signature.TypeSet, itf *idl.InterfaceTy
 	return nil
 }
 
+func implName(name string) string {
+	return name + "Implementor"
+}
+
 func generateStub(f *jen.File, itf *idl.InterfaceType) error {
 	if err := generateStubType(f, itf); err != nil {
 		return err
@@ -453,9 +457,9 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing = append(writing, code)
 
 	file.Commentf("%s returns an object using %s", itf.Name+"Object",
-		itf.Name)
+		implName(itf.Name))
 	file.Func().Id(itf.Name+"Object").Params(
-		jen.Id("impl").Id(itf.Name),
+		jen.Id("impl").Id(implName(itf.Name)),
 	).Qual(
 		"github.com/lugu/qiloop/bus/server", "ServerObject",
 	).Block(writing...)
@@ -468,7 +472,7 @@ func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("obj").Qual(
 			"github.com/lugu/qiloop/bus/server/generic", "Object",
 		),
-		jen.Id("impl").Id(itf.Name),
+		jen.Id("impl").Id(implName(itf.Name)),
 	)
 	return nil
 }
@@ -548,8 +552,9 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 			itf.Name, err)
 	}
 
-	file.Commentf("%s interface of the service implementation", itf.Name)
-	file.Type().Id(itf.Name).Interface(
+	file.Commentf("%s interface of the service implementation",
+		implName(itf.Name))
+	file.Type().Id(implName(itf.Name)).Interface(
 		definitions...,
 	)
 
