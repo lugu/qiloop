@@ -25,11 +25,6 @@ func main() {
 		log.Fatalf("cannot read %s: %s", *filename, err)
 	}
 
-	pkg, err := idl.ParsePackage([]byte(input))
-	if err != nil {
-		log.Fatalf("failed to parse %s: %s", *filename, err)
-	}
-
 	output := os.Stdout
 	if *out != "-" {
 		output, err = os.Create(*out)
@@ -37,6 +32,11 @@ func main() {
 			log.Fatalf("failed to create %s: %s", *out, err)
 		}
 		defer output.Close()
+	}
+
+	pkg, err := idl.ParsePackage([]byte(input))
+	if err != nil {
+		log.Fatalf("failed to parse %s: %s", *filename, err)
 	}
 
 	if err := proxy.GeneratePackage(output, pkg); err != nil {
