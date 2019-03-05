@@ -299,11 +299,11 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	    if err != nil {
 		return nil, fmt.Errorf("failed to get meta: %s", err)
 	    }
-	    obj, err := p.session.Object(ref)
+	    proxy, err := p.session.Object(ref)
 	    if err != nil {
 		    return nil, fmt.Errorf("failed to get proxy: %s", err)
 	    }
-	    return &` + proxyName(s.Name) + `{object1.MakeObject(obj), p.session}, nil`),
+	    return Make` + s.Name + `(p.session, proxy), nil`),
 	).Call()
 }
 

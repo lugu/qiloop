@@ -122,11 +122,11 @@ func (p *proxyDummy) Hello() (BombProxy, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
 		}
-		obj, err := p.session.Object(ref)
+		proxy, err := p.session.Object(ref)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get proxy: %s", err)
 		}
-		return &proxyBomb{object1.MakeObject(obj), p.session}, nil
+		return MakeBomb(p.session, proxy), nil
 	}()
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse hello response: %s", err)
