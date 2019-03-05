@@ -79,7 +79,7 @@ func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	return nil
 }
 
-// ServiceDirectoryObject is the abstract interface of the service
+// ServiceDirectory is the abstract interface of the service
 type ServiceDirectory interface {
 	// Service calls the remote procedure
 	Service(name string) (ServiceInfo, error)
@@ -104,29 +104,34 @@ type ServiceDirectory interface {
 }
 
 // ServiceDirectory represents a proxy object to the service
-type ServiceDirectoryObject interface {
+type ServiceDirectoryProxy interface {
 	object.Object
 	bus.Proxy
 	ServiceDirectory
 }
 
-// proxyServiceDirectory implements ServiceDirectoryObject
+// proxyServiceDirectory implements ServiceDirectoryProxy
 type proxyServiceDirectory struct {
-	object1.ObjectObject
+	object1.ObjectProxy
 	session bus.Session
 }
 
-// NewServiceDirectory constructs ServiceDirectoryObject
-func NewServiceDirectory(ses bus.Session, obj uint32) (ServiceDirectoryObject, error) {
-	proxy, err := ses.Proxy("ServiceDirectory", obj)
+// MakeServiceDirectory constructs ServiceDirectoryProxy
+func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
+	return &proxyServiceDirectory{object1.MakeObject(proxy), sess}
+}
+
+// NewServiceDirectory constructs ServiceDirectoryProxy
+func NewServiceDirectory(sess bus.Session, obj uint32) (ServiceDirectoryProxy, error) {
+	proxy, err := sess.Proxy("ServiceDirectory", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &proxyServiceDirectory{object1.MakeObject(proxy), ses}, nil
+	return MakeServiceDirectory(sess, proxy), nil
 }
 
 // ServiceDirectory retruns a proxy to a remote service
-func (s Constructor) ServiceDirectory() (ServiceDirectoryObject, error) {
+func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 	return NewServiceDirectory(s.session, 1)
 }
 
@@ -444,7 +449,7 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	return nil
 }
 
-// LogManagerObject is the abstract interface of the service
+// LogManager is the abstract interface of the service
 type LogManager interface {
 	// Log calls the remote procedure
 	Log(P0 []LogMessage) error
@@ -459,29 +464,34 @@ type LogManager interface {
 }
 
 // LogManager represents a proxy object to the service
-type LogManagerObject interface {
+type LogManagerProxy interface {
 	object.Object
 	bus.Proxy
 	LogManager
 }
 
-// proxyLogManager implements LogManagerObject
+// proxyLogManager implements LogManagerProxy
 type proxyLogManager struct {
-	object1.ObjectObject
+	object1.ObjectProxy
 	session bus.Session
 }
 
-// NewLogManager constructs LogManagerObject
-func NewLogManager(ses bus.Session, obj uint32) (LogManagerObject, error) {
-	proxy, err := ses.Proxy("LogManager", obj)
+// MakeLogManager constructs LogManagerProxy
+func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
+	return &proxyLogManager{object1.MakeObject(proxy), sess}
+}
+
+// NewLogManager constructs LogManagerProxy
+func NewLogManager(sess bus.Session, obj uint32) (LogManagerProxy, error) {
+	proxy, err := sess.Proxy("LogManager", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &proxyLogManager{object1.MakeObject(proxy), ses}, nil
+	return MakeLogManager(sess, proxy), nil
 }
 
 // LogManager retruns a proxy to a remote service
-func (s Constructor) LogManager() (LogManagerObject, error) {
+func (s Constructor) LogManager() (LogManagerProxy, error) {
 	return NewLogManager(s.session, 1)
 }
 

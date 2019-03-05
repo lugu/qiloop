@@ -23,7 +23,7 @@ func Services(s bus.Session) Constructor {
 	return Constructor{session: s}
 }
 
-// ObjectObject is the abstract interface of the service
+// Object is the abstract interface of the service
 type Object interface {
 	// IsStatsEnabled calls the remote procedure
 	IsStatsEnabled() (bool, error)
@@ -42,20 +42,20 @@ type Object interface {
 }
 
 // Object represents a proxy object to the service
-type ObjectObject interface {
+type ObjectProxy interface {
 	object.Object
 	bus.Proxy
 	Object
 }
 
-// proxyObject implements ObjectObject
+// proxyObject implements ObjectProxy
 type proxyObject struct {
 	bus.Proxy
 }
 
-// NewObject constructs ObjectObject
-func NewObject(ses bus.Session, obj uint32) (ObjectObject, error) {
-	proxy, err := ses.Proxy("Object", obj)
+// NewObject constructs ObjectProxy
+func NewObject(sess bus.Session, obj uint32) (ObjectProxy, error) {
+	proxy, err := sess.Proxy("Object", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
@@ -63,7 +63,7 @@ func NewObject(ses bus.Session, obj uint32) (ObjectObject, error) {
 }
 
 // Object retruns a proxy to a remote service
-func (s Constructor) Object() (ObjectObject, error) {
+func (s Constructor) Object() (ObjectProxy, error) {
 	return NewObject(s.session, 1)
 }
 

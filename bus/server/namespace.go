@@ -155,7 +155,7 @@ func Namespace(session bus.Session, endpoints []string) (bus.Namespace, error) {
 
 type remoteNamespace struct {
 	session   bus.Session
-	Directory services.ServiceDirectoryObject
+	Directory services.ServiceDirectoryProxy
 	EndPoints []string
 	MachineID string
 	ProcessID uint32

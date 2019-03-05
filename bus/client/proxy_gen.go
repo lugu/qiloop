@@ -20,26 +20,26 @@ func Services(s bus.Session) Constructor {
 	return Constructor{session: s}
 }
 
-// ServerObject is the abstract interface of the service
+// Server is the abstract interface of the service
 type Server interface {
 	// Authenticate calls the remote procedure
 	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
 }
 
 // Server represents a proxy object to the service
-type ServerObject interface {
+type ServerProxy interface {
 	bus.Proxy
 	Server
 }
 
-// proxyServer implements ServerObject
+// proxyServer implements ServerProxy
 type proxyServer struct {
 	bus.Proxy
 }
 
-// NewServer constructs ServerObject
-func NewServer(ses bus.Session, obj uint32) (ServerObject, error) {
-	proxy, err := ses.Proxy("Server", obj)
+// NewServer constructs ServerProxy
+func NewServer(sess bus.Session, obj uint32) (ServerProxy, error) {
+	proxy, err := sess.Proxy("Server", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
@@ -47,7 +47,7 @@ func NewServer(ses bus.Session, obj uint32) (ServerObject, error) {
 }
 
 // Server retruns a proxy to a remote service
-func (s Constructor) Server() (ServerObject, error) {
+func (s Constructor) Server() (ServerProxy, error) {
 	return NewServer(s.session, 1)
 }
 

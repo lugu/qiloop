@@ -17,13 +17,13 @@ import (
 type Session struct {
 	serviceList      []services.ServiceInfo
 	serviceListMutex sync.Mutex
-	Directory        services.ServiceDirectoryObject
+	Directory        services.ServiceDirectoryProxy
 	cancel           func()
 	added            chan services.ServiceAdded
 	removed          chan services.ServiceRemoved
 }
 
-func newObject(info services.ServiceInfo, ref object.ObjectReference) (objproxy.ObjectObject, error) {
+func newObject(info services.ServiceInfo, ref object.ObjectReference) (objproxy.ObjectProxy, error) {
 	endpoint, err := client.SelectEndPoint(info.Endpoints)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",

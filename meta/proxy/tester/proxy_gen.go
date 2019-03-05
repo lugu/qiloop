@@ -52,12 +52,12 @@ func WriteCoordinate(s Coordinate, w io.Writer) (err error) {
 	return nil
 }
 
-// DummyObject is the abstract interface of the service
+// Dummy is the abstract interface of the service
 type Dummy interface {
 	// Hello calls the remote procedure
-	Hello() (BombObject, error)
+	Hello() (BombProxy, error)
 	// Attack calls the remote procedure
-	Attack(b BombObject) error
+	Attack(b BombProxy) error
 	// SubscribePing subscribe to a remote signal
 	SubscribePing() (unsubscribe func(), updates chan string, err error)
 	// GetStatus returns the property value
@@ -75,36 +75,41 @@ type Dummy interface {
 }
 
 // Dummy represents a proxy object to the service
-type DummyObject interface {
+type DummyProxy interface {
 	object.Object
 	bus.Proxy
 	Dummy
 }
 
-// proxyDummy implements DummyObject
+// proxyDummy implements DummyProxy
 type proxyDummy struct {
-	object1.ObjectObject
+	object1.ObjectProxy
 	session bus.Session
 }
 
-// NewDummy constructs DummyObject
-func NewDummy(ses bus.Session, obj uint32) (DummyObject, error) {
-	proxy, err := ses.Proxy("Dummy", obj)
+// MakeDummy constructs DummyProxy
+func MakeDummy(sess bus.Session, proxy bus.Proxy) DummyProxy {
+	return &proxyDummy{object1.MakeObject(proxy), sess}
+}
+
+// NewDummy constructs DummyProxy
+func NewDummy(sess bus.Session, obj uint32) (DummyProxy, error) {
+	proxy, err := sess.Proxy("Dummy", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &proxyDummy{object1.MakeObject(proxy), ses}, nil
+	return MakeDummy(sess, proxy), nil
 }
 
 // Dummy retruns a proxy to a remote service
-func (s Constructor) Dummy() (DummyObject, error) {
+func (s Constructor) Dummy() (DummyProxy, error) {
 	return NewDummy(s.session, 1)
 }
 
 // Hello calls the remote procedure
-func (p *proxyDummy) Hello() (BombObject, error) {
+func (p *proxyDummy) Hello() (BombProxy, error) {
 	var err error
-	var ret BombObject
+	var ret BombProxy
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	response, err := p.Call("hello", buf.Bytes())
@@ -112,7 +117,7 @@ func (p *proxyDummy) Hello() (BombObject, error) {
 		return ret, fmt.Errorf("call hello failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = func() (BombObject, error) {
+	ret, err = func() (BombProxy, error) {
 		ref, err := object.ReadObjectReference(buf)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
@@ -130,7 +135,7 @@ func (p *proxyDummy) Hello() (BombObject, error) {
 }
 
 // Attack calls the remote procedure
-func (p *proxyDummy) Attack(b BombObject) error {
+func (p *proxyDummy) Attack(b BombProxy) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -399,36 +404,41 @@ func (p *proxyDummy) SubscribeCoordinate() (func(), chan Coordinate, error) {
 	return cancel, ch, nil
 }
 
-// BombObject is the abstract interface of the service
+// Bomb is the abstract interface of the service
 type Bomb interface {
 	// SubscribeBoom subscribe to a remote signal
 	SubscribeBoom() (unsubscribe func(), updates chan int32, err error)
 }
 
 // Bomb represents a proxy object to the service
-type BombObject interface {
+type BombProxy interface {
 	object.Object
 	bus.Proxy
 	Bomb
 }
 
-// proxyBomb implements BombObject
+// proxyBomb implements BombProxy
 type proxyBomb struct {
-	object1.ObjectObject
+	object1.ObjectProxy
 	session bus.Session
 }
 
-// NewBomb constructs BombObject
-func NewBomb(ses bus.Session, obj uint32) (BombObject, error) {
-	proxy, err := ses.Proxy("Bomb", obj)
+// MakeBomb constructs BombProxy
+func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
+	return &proxyBomb{object1.MakeObject(proxy), sess}
+}
+
+// NewBomb constructs BombProxy
+func NewBomb(sess bus.Session, obj uint32) (BombProxy, error) {
+	proxy, err := sess.Proxy("Bomb", obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &proxyBomb{object1.MakeObject(proxy), ses}, nil
+	return MakeBomb(sess, proxy), nil
 }
 
 // Bomb retruns a proxy to a remote service
-func (s Constructor) Bomb() (BombObject, error) {
+func (s Constructor) Bomb() (BombProxy, error) {
 	return NewBomb(s.session, 1)
 }
 

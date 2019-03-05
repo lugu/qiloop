@@ -12,7 +12,7 @@ import (
 type Statement = jen.Statement
 
 func objName(name string) string {
-	return name + "Object"
+	return name + "Proxy"
 }
 
 func proxyName(name string) string {
@@ -107,8 +107,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 			serviceName, err)
 	}
 
-	file.Comment(objName(serviceName) +
-		" is the abstract interface of the service")
+	file.Comment(serviceName + " is the abstract interface of the service")
 	file.Type().Id(serviceName).Interface(
 		definitions...,
 	)
@@ -251,17 +250,17 @@ func generateProxyObject(itf *InterfaceType, serviceName string,
 	return nil
 }
 
-func generateProxyType(file *jen.File, serviceName, proxyName string,
+func generateProxyType(file *jen.File, serviceName, ProxyName string,
 	itf *InterfaceType) {
 
-	file.Comment(proxyName + " implements " + objName(serviceName))
-	if proxyName == "proxyObject" || proxyName == "proxyServer" {
-		file.Type().Id(proxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+	file.Comment(ProxyName + " implements " + objName(serviceName))
+	if ProxyName == proxyName("Object") || ProxyName == proxyName("Server") {
+		file.Type().Id(ProxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	} else {
-		file.Type().Id(proxyName).Struct(
+		file.Type().Id(ProxyName).Struct(
 			jen.Qual(
 				"github.com/lugu/qiloop/bus/client/object",
-				"ObjectObject",
+				"ObjectProxy",
 			),
 			jen.Id("session").Qual(
 				"github.com/lugu/qiloop/bus",
@@ -269,28 +268,30 @@ func generateProxyType(file *jen.File, serviceName, proxyName string,
 			),
 		)
 	}
-	blockContructor := jen.Return(
-
-		jen.Op("&").Id(proxyName).Values(jen.Qual(
-			"github.com/lugu/qiloop/bus/client/object",
-			"MakeObject",
-		).Call(jen.Id("proxy")),
-			jen.Id("ses"),
-		),
-		jen.Nil(),
+	if ProxyName != proxyName("Object") && ProxyName != proxyName("Server") {
+		block := jen.Id(`
+	// Make` + serviceName + ` constructs ` + objName(serviceName) + `
+	func Make` + serviceName + `(sess bus.Session, proxy bus.Proxy) ` + objName(serviceName) + ` {
+		return &` + ProxyName + `{object1.MakeObject(proxy), sess}
+	}
+	    `)
+		file.Add(block)
+	}
+	blockContructor := jen.Id(
+		`return Make` + serviceName + `(sess, proxy), nil`,
 	)
-	if proxyName == "proxyObject" || proxyName == "proxyServer" {
-		blockContructor = jen.Id(`return &` + proxyName + `{ proxy }, nil`)
+	if ProxyName == proxyName("Object") || ProxyName == proxyName("Server") {
+		blockContructor = jen.Id(`return &` + ProxyName + `{ proxy }, nil`)
 	}
 	file.Comment("New" + serviceName + " constructs " + objName(serviceName))
 	file.Func().Id("New"+serviceName).Params(
-		jen.Id("ses").Qual("github.com/lugu/qiloop/bus", "Session"),
+		jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("obj").Uint32(),
 	).Params(
 		jen.Id(objName(serviceName)),
 		jen.Error(),
 	).Block(
-		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("ses").Dot("Proxy").Call(
+		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("sess").Dot("Proxy").Call(
 			jen.Lit(serviceName),
 			jen.Id("obj"),
 		),

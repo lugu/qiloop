@@ -2,6 +2,8 @@
 
 ### Goals
     - uniform Type handling of proxy and stub
+        - TODO: proxy marshal/unmarshal uses private code from proxy:
+                - it shall uses a public method
         - TODO: generate both proxy and stub together
         - TODO: activation helper to add objects (ServerObject)
         - TODO: when a impl method needs to create and return an
