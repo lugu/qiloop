@@ -149,9 +149,9 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 
 	// if has not return value
 	if ret.Signature() == "v" {
-		code = jen.Id("callErr := s.impl").Dot(methodName).Call(params...)
+		code = jen.Id("callErr := p.impl").Dot(methodName).Call(params...)
 	} else {
-		code = jen.Id("ret, callErr := s.impl").Dot(methodName).Call(params...)
+		code = jen.Id("ret, callErr := p.impl").Dot(methodName).Call(params...)
 	}
 	writing = append(writing, code)
 	code = jen.Id(`if callErr != nil {
@@ -185,7 +185,7 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 		return fmt.Errorf("failed to create method body: %s", err)
 	}
 
-	file.Func().Params(jen.Id("s").Op("*").Id(stubName(itf.Name))).Id(methodName).Params(
+	file.Func().Params(jen.Id("p").Op("*").Id(stubName(itf.Name))).Id(methodName).Params(
 		jen.Id("payload []byte"),
 	).Params(
 		jen.Id("[]byte, error"),
@@ -209,7 +209,7 @@ func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
 		)
 		writing = append(writing, code)
 	}
-	code = jen.Id("err := s.obj.UpdateProperty").Call(
+	code = jen.Id("err := p.obj.UpdateProperty").Call(
 		jen.Lit(property.ID),
 		jen.Lit(property.Tuple().Signature()),
 		jen.Id("buf.Bytes()"),
@@ -244,7 +244,7 @@ func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 		writing = append(writing, code)
 	}
 	// if has not return value
-	code = jen.Id("err := s.obj.UpdateSignal").Call(
+	code = jen.Id("err := p.obj.UpdateSignal").Call(
 		jen.Lit(signal.ID),
 		jen.Id("buf.Bytes()"),
 	)
@@ -270,7 +270,7 @@ func generateSignalHelper(file *jen.File, itf *idl.InterfaceType,
 		return fmt.Errorf("failed to create signal helper body: %s", err)
 	}
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id(signalName).Add(tuple.Params()).Error().Add(body)
 	return nil
 }
@@ -284,7 +284,7 @@ func generatePropertyHelper(file *jen.File, itf *idl.InterfaceType,
 		return fmt.Errorf("failed to create property helper body: %s", err)
 	}
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id(propertyName).Add(tuple.Params()).Error().Add(body)
 	return nil
 }
@@ -356,7 +356,7 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 		}
 	}
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("metaObject").Params().Params(
 		jen.Qual("github.com/lugu/qiloop/type/object", "MetaObject"),
 	).Block(
@@ -383,7 +383,7 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 
 func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Activate").Params(
 		jen.Id("activation").Qual(
 			"github.com/lugu/qiloop/bus/server",
@@ -392,22 +392,23 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	).Params(
 		jen.Error(),
 	).Block(
-		jen.Id(`s.obj.Activate(activation)`),
-		jen.Id(`return s.impl.Activate(activation, s)`),
+		jen.Id(`p.session = activation.Session`),
+		jen.Id(`p.obj.Activate(activation)`),
+		jen.Id(`return p.impl.Activate(activation, p)`),
 	)
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("OnTerminate").Params().Block(
-		jen.Id(`s.impl.OnTerminate()`),
-		jen.Id(`s.obj.OnTerminate()`),
+		jen.Id(`p.impl.OnTerminate()`),
+		jen.Id(`p.obj.OnTerminate()`),
 	)
 	file.Func().Params(
-		jen.Id("s").Op("*").Id(stubName(itf.Name)),
+		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
 		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus/server", "Context"),
 	).Params(jen.Error()).Block(
-		jen.Id(`return s.obj.Receive(msg, from)`),
+		jen.Id(`return p.obj.Receive(msg, from)`),
 	)
 	return nil
 }
@@ -473,6 +474,9 @@ func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 			"github.com/lugu/qiloop/bus/server/generic", "Object",
 		),
 		jen.Id("impl").Id(implName(itf.Name)),
+		jen.Id("session").Qual(
+			"github.com/lugu/qiloop/bus", "Session",
+		),
 	)
 	return nil
 }
