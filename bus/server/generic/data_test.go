@@ -5,6 +5,7 @@ package generic
 import (
 	"bytes"
 	"fmt"
+	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -57,14 +58,15 @@ type SpacecraftImplementor interface {
 // SpacecraftSignalHelper provided to Spacecraft a companion object
 type SpacecraftSignalHelper interface {
 	SignalBoost(energy int32) error
-	UpdatePosition(p Point) error
+	UpdatePosition(pos Point) error
 	UpdateSpeed(value int32) error
 }
 
 // stubSpacecraft implements server.ServerObject.
 type stubSpacecraft struct {
-	obj  Object
-	impl SpacecraftImplementor
+	obj     Object
+	impl    SpacecraftImplementor
+	session bus.Session
 }
 
 // SpacecraftObject returns an object using SpacecraftImplementor
@@ -74,54 +76,55 @@ func SpacecraftObject(impl SpacecraftImplementor) server.ServerObject {
 	stb.obj = NewObject(stb.metaObject())
 	return &stb
 }
-func (s *stubSpacecraft) Activate(activation server.Activation) error {
-	s.obj.Activate(activation)
-	return s.impl.Activate(activation, s)
+func (p *stubSpacecraft) Activate(activation server.Activation) error {
+	p.session = activation.Session
+	p.obj.Activate(activation)
+	return p.impl.Activate(activation, p)
 }
-func (s *stubSpacecraft) OnTerminate() {
-	s.impl.OnTerminate()
-	s.obj.OnTerminate()
+func (p *stubSpacecraft) OnTerminate() {
+	p.impl.OnTerminate()
+	p.obj.OnTerminate()
 }
-func (s *stubSpacecraft) Receive(msg *net.Message, from *server.Context) error {
-	return s.obj.Receive(msg, from)
+func (p *stubSpacecraft) Receive(msg *net.Message, from *server.Context) error {
+	return p.obj.Receive(msg, from)
 }
-func (s *stubSpacecraft) SignalBoost(energy int32) error {
+func (p *stubSpacecraft) SignalBoost(energy int32) error {
 	var buf bytes.Buffer
 	if err := basic.WriteInt32(energy, &buf); err != nil {
 		return fmt.Errorf("failed to serialize energy: %s", err)
 	}
-	err := s.obj.UpdateSignal(uint32(0x66), buf.Bytes())
+	err := p.obj.UpdateSignal(uint32(0x66), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalBoost: %s", err)
 	}
 	return nil
 }
-func (s *stubSpacecraft) UpdatePosition(p Point) error {
+func (p *stubSpacecraft) UpdatePosition(pos Point) error {
 	var buf bytes.Buffer
-	if err := WritePoint(p, &buf); err != nil {
-		return fmt.Errorf("failed to serialize p: %s", err)
+	if err := WritePoint(pos, &buf); err != nil {
+		return fmt.Errorf("failed to serialize pos: %s", err)
 	}
-	err := s.obj.UpdateProperty(uint32(0x64), "((ii)<Point,x,y>)", buf.Bytes())
+	err := p.obj.UpdateProperty(uint32(0x64), "((ii)<Point,x,y>)", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdatePosition: %s", err)
 	}
 	return nil
 }
-func (s *stubSpacecraft) UpdateSpeed(value int32) error {
+func (p *stubSpacecraft) UpdateSpeed(value int32) error {
 	var buf bytes.Buffer
 	if err := basic.WriteInt32(value, &buf); err != nil {
 		return fmt.Errorf("failed to serialize value: %s", err)
 	}
-	err := s.obj.UpdateProperty(uint32(0x65), "(i)", buf.Bytes())
+	err := p.obj.UpdateProperty(uint32(0x65), "(i)", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateSpeed: %s", err)
 	}
 	return nil
 }
-func (s *stubSpacecraft) metaObject() object.MetaObject {
+func (p *stubSpacecraft) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Spacecraft",
 		Methods:     map[uint32]object.MetaMethod{},

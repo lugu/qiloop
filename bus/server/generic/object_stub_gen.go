@@ -5,6 +5,7 @@ package generic
 import (
 	"bytes"
 	"fmt"
+	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -48,8 +49,9 @@ type GenericSignalHelper interface {
 
 // stubGeneric implements server.ServerObject.
 type stubGeneric struct {
-	obj  Object
-	impl GenericImplementor
+	obj     Object
+	impl    GenericImplementor
+	session bus.Session
 }
 
 // GenericObject returns an object using GenericImplementor
@@ -73,18 +75,19 @@ func GenericObject(impl GenericImplementor) server.ServerObject {
 	stb.obj.Wrap(uint32(0x55), stb.EnableTrace)
 	return &stb
 }
-func (s *stubGeneric) Activate(activation server.Activation) error {
-	s.obj.Activate(activation)
-	return s.impl.Activate(activation, s)
+func (p *stubGeneric) Activate(activation server.Activation) error {
+	p.session = activation.Session
+	p.obj.Activate(activation)
+	return p.impl.Activate(activation, p)
 }
-func (s *stubGeneric) OnTerminate() {
-	s.impl.OnTerminate()
-	s.obj.OnTerminate()
+func (p *stubGeneric) OnTerminate() {
+	p.impl.OnTerminate()
+	p.obj.OnTerminate()
 }
-func (s *stubGeneric) Receive(msg *net.Message, from *server.Context) error {
-	return s.obj.Receive(msg, from)
+func (p *stubGeneric) Receive(msg *net.Message, from *server.Context) error {
+	return p.obj.Receive(msg, from)
 }
-func (s *stubGeneric) RegisterEvent(payload []byte) ([]byte, error) {
+func (p *stubGeneric) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -98,7 +101,7 @@ func (s *stubGeneric) RegisterEvent(payload []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read handler: %s", err)
 	}
-	ret, callErr := s.impl.RegisterEvent(objectID, actionID, handler)
+	ret, callErr := p.impl.RegisterEvent(objectID, actionID, handler)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -109,7 +112,7 @@ func (s *stubGeneric) RegisterEvent(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) UnregisterEvent(payload []byte) ([]byte, error) {
+func (p *stubGeneric) UnregisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -123,20 +126,20 @@ func (s *stubGeneric) UnregisterEvent(payload []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read handler: %s", err)
 	}
-	callErr := s.impl.UnregisterEvent(objectID, actionID, handler)
+	callErr := p.impl.UnregisterEvent(objectID, actionID, handler)
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) MetaObject(payload []byte) ([]byte, error) {
+func (p *stubGeneric) MetaObject(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read objectID: %s", err)
 	}
-	ret, callErr := s.impl.MetaObject(objectID)
+	ret, callErr := p.impl.MetaObject(objectID)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -147,26 +150,26 @@ func (s *stubGeneric) MetaObject(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) Terminate(payload []byte) ([]byte, error) {
+func (p *stubGeneric) Terminate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read objectID: %s", err)
 	}
-	callErr := s.impl.Terminate(objectID)
+	callErr := p.impl.Terminate(objectID)
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) Property(payload []byte) ([]byte, error) {
+func (p *stubGeneric) Property(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read name: %s", err)
 	}
-	ret, callErr := s.impl.Property(name)
+	ret, callErr := p.impl.Property(name)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -177,7 +180,7 @@ func (s *stubGeneric) Property(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) SetProperty(payload []byte) ([]byte, error) {
+func (p *stubGeneric) SetProperty(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
@@ -187,15 +190,15 @@ func (s *stubGeneric) SetProperty(payload []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read value: %s", err)
 	}
-	callErr := s.impl.SetProperty(name, value)
+	callErr := p.impl.SetProperty(name, value)
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) Properties(payload []byte) ([]byte, error) {
-	ret, callErr := s.impl.Properties()
+func (p *stubGeneric) Properties(payload []byte) ([]byte, error) {
+	ret, callErr := p.impl.Properties()
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -218,7 +221,7 @@ func (s *stubGeneric) Properties(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) RegisterEventWithSignature(payload []byte) ([]byte, error) {
+func (p *stubGeneric) RegisterEventWithSignature(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -236,7 +239,7 @@ func (s *stubGeneric) RegisterEventWithSignature(payload []byte) ([]byte, error)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read P3: %s", err)
 	}
-	ret, callErr := s.impl.RegisterEventWithSignature(objectID, actionID, handler, P3)
+	ret, callErr := p.impl.RegisterEventWithSignature(objectID, actionID, handler, P3)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -247,8 +250,8 @@ func (s *stubGeneric) RegisterEventWithSignature(payload []byte) ([]byte, error)
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) IsStatsEnabled(payload []byte) ([]byte, error) {
-	ret, callErr := s.impl.IsStatsEnabled()
+func (p *stubGeneric) IsStatsEnabled(payload []byte) ([]byte, error) {
+	ret, callErr := p.impl.IsStatsEnabled()
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -259,21 +262,21 @@ func (s *stubGeneric) IsStatsEnabled(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) EnableStats(payload []byte) ([]byte, error) {
+func (p *stubGeneric) EnableStats(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	enabled, err := basic.ReadBool(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read enabled: %s", err)
 	}
-	callErr := s.impl.EnableStats(enabled)
+	callErr := p.impl.EnableStats(enabled)
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) Stats(payload []byte) ([]byte, error) {
-	ret, callErr := s.impl.Stats()
+func (p *stubGeneric) Stats(payload []byte) ([]byte, error) {
+	ret, callErr := p.impl.Stats()
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -300,16 +303,16 @@ func (s *stubGeneric) Stats(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) ClearStats(payload []byte) ([]byte, error) {
-	callErr := s.impl.ClearStats()
+func (p *stubGeneric) ClearStats(payload []byte) ([]byte, error) {
+	callErr := p.impl.ClearStats()
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) IsTraceEnabled(payload []byte) ([]byte, error) {
-	ret, callErr := s.impl.IsTraceEnabled()
+func (p *stubGeneric) IsTraceEnabled(payload []byte) ([]byte, error) {
+	ret, callErr := p.impl.IsTraceEnabled()
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -320,32 +323,32 @@ func (s *stubGeneric) IsTraceEnabled(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) EnableTrace(payload []byte) ([]byte, error) {
+func (p *stubGeneric) EnableTrace(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	traced, err := basic.ReadBool(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read traced: %s", err)
 	}
-	callErr := s.impl.EnableTrace(traced)
+	callErr := p.impl.EnableTrace(traced)
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubGeneric) SignalTraceObject(event EventTrace) error {
+func (p *stubGeneric) SignalTraceObject(event EventTrace) error {
 	var buf bytes.Buffer
 	if err := WriteEventTrace(event, &buf); err != nil {
 		return fmt.Errorf("failed to serialize event: %s", err)
 	}
-	err := s.obj.UpdateSignal(uint32(0x56), buf.Bytes())
+	err := p.obj.UpdateSignal(uint32(0x56), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalTraceObject: %s", err)
 	}
 	return nil
 }
-func (s *stubGeneric) metaObject() object.MetaObject {
+func (p *stubGeneric) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Generic",
 		Methods: map[uint32]object.MetaMethod{

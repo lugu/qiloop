@@ -5,6 +5,7 @@ package pingpong
 import (
 	"bytes"
 	"fmt"
+	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	generic "github.com/lugu/qiloop/bus/server/generic"
@@ -35,8 +36,9 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.ServerObject.
 type stubPingPong struct {
-	obj  generic.Object
-	impl PingPongImplementor
+	obj     generic.Object
+	impl    PingPongImplementor
+	session bus.Session
 }
 
 // PingPongObject returns an object using PingPongImplementor
@@ -48,24 +50,25 @@ func PingPongObject(impl PingPongImplementor) server.ServerObject {
 	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb
 }
-func (s *stubPingPong) Activate(activation server.Activation) error {
-	s.obj.Activate(activation)
-	return s.impl.Activate(activation, s)
+func (p *stubPingPong) Activate(activation server.Activation) error {
+	p.session = activation.Session
+	p.obj.Activate(activation)
+	return p.impl.Activate(activation, p)
 }
-func (s *stubPingPong) OnTerminate() {
-	s.impl.OnTerminate()
-	s.obj.OnTerminate()
+func (p *stubPingPong) OnTerminate() {
+	p.impl.OnTerminate()
+	p.obj.OnTerminate()
 }
-func (s *stubPingPong) Receive(msg *net.Message, from *server.Context) error {
-	return s.obj.Receive(msg, from)
+func (p *stubPingPong) Receive(msg *net.Message, from *server.Context) error {
+	return p.obj.Receive(msg, from)
 }
-func (s *stubPingPong) Hello(payload []byte) ([]byte, error) {
+func (p *stubPingPong) Hello(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	a, err := basic.ReadString(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read a: %s", err)
 	}
-	ret, callErr := s.impl.Hello(a)
+	ret, callErr := p.impl.Hello(a)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -76,32 +79,32 @@ func (s *stubPingPong) Hello(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (s *stubPingPong) Ping(payload []byte) ([]byte, error) {
+func (p *stubPingPong) Ping(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	a, err := basic.ReadString(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read a: %s", err)
 	}
-	callErr := s.impl.Ping(a)
+	callErr := p.impl.Ping(a)
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
 	return out.Bytes(), nil
 }
-func (s *stubPingPong) SignalPong(a string) error {
+func (p *stubPingPong) SignalPong(a string) error {
 	var buf bytes.Buffer
 	if err := basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("failed to serialize a: %s", err)
 	}
-	err := s.obj.UpdateSignal(uint32(0x66), buf.Bytes())
+	err := p.obj.UpdateSignal(uint32(0x66), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalPong: %s", err)
 	}
 	return nil
 }
-func (s *stubPingPong) metaObject() object.MetaObject {
+func (p *stubPingPong) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "PingPong",
 		Methods: map[uint32]object.MetaMethod{
