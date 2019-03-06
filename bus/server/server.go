@@ -45,6 +45,7 @@ type Activation struct {
 	ObjectID  uint32
 	Session   bus.Session
 	Terminate Terminator
+	Service   Service
 }
 
 func objectTerminator(service *ServiceImpl, objectID uint32) Terminator {
@@ -66,6 +67,7 @@ func serviceActivation(router *Router, session bus.Session, serviceID uint32) Ac
 		ObjectID:  1,
 		Session:   session,
 		Terminate: serviceTerminator(router, serviceID),
+		Service:   nil,
 	}
 }
 
@@ -75,6 +77,7 @@ func objectActivation(service *ServiceImpl, session bus.Session, serviceID, obje
 		ObjectID:  objectID,
 		Session:   session,
 		Terminate: objectTerminator(service, objectID),
+		Service:   service,
 	}
 }
 
@@ -118,7 +121,7 @@ func (s *ServiceImpl) Add(o ServerObject) (uint32, error) {
 }
 
 // Activate informs the service it will become active and shall be
-// ready to handle requests.
+// ready to handle requests. activation.Service is nil.
 func (s *ServiceImpl) Activate(activation Activation) error {
 	var wait sync.WaitGroup
 	wait.Add(len(s.objects))
@@ -418,6 +421,8 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 
 // Service represents a running service.
 type Service interface {
+	Add(o ServerObject) (uint32, error)
+	Remove(objectID uint32) error
 	Terminate() error
 }
 
