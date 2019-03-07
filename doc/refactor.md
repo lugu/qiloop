@@ -2,11 +2,14 @@
 
 ### Goals
     - uniform Type handling of proxy and stub
-        - TODO: generate both proxy and stub together
-        - TODO: activation helper to add objects (ServerObject)
-        - TODO: when a impl method needs to create and return an
-          object it needs to: (1) create a ServerObject and register
-          it and (2) return a ObjectProxy
+        - TOOD: rename service constructor with explicit name like
+          NewBombService() etc..
+        - TODO: merge proxy and stub together
+        - TODO: new stub object constructor:
+                Create<Name>(Service) ObjectReference
+          get both a ServerObject and a ProxyObject: registering a
+          ServerObject shall return an ObjectReference.
+
 
     - clarify the various Proxy and Object definitions and concepts
     - flatten package hirarchy for a simpler public API

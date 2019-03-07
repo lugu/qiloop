@@ -1,0 +1,10 @@
+package tester
+
+interface Bomb
+        sig boom(energy: int32)
+end
+
+interface Spacecraft
+        fn shoot() -> Bomb
+        fn ammo(ammo: Bomb)
+end

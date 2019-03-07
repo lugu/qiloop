@@ -8,6 +8,7 @@ import (
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
 	"github.com/lugu/qiloop/bus/server/generic"
+	"github.com/lugu/qiloop/bus/server/tester"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -699,4 +700,66 @@ func TestServiceTerminaison(t *testing.T) {
 	if err == nil {
 		t.Error("shall have failed")
 	}
+}
+
+func TestAddRemoveObject(t *testing.T) {
+
+	// requires correct object return handling from the stub.
+	t.Skip()
+
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ns := server.PrivateNamespace()
+	srv, err := server.StandAloneServer(listener, server.Yes{}, ns)
+	if err != nil {
+		t.Error(err)
+	}
+
+	obj := tester.NewSpacecraftObject()
+	service, err := srv.NewService("Spacecraft", obj)
+	if err != nil {
+		t.Error(err)
+	}
+
+	session := srv.Session()
+	proxies := tester.Services(session)
+
+	spacecraft, err := proxies.Spacecraft()
+	if err != nil {
+		t.Error(err)
+	}
+
+	bomb, err := spacecraft.Shoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = spacecraft.Ammo(bomb)
+	if err != nil {
+		t.Error(err)
+	}
+
+	ammo := tester.NewBombObject()
+	id, err := service.Add(ammo)
+	if err != nil {
+		t.Error(err)
+	}
+
+	proxy, err := session.Proxy("Spacecraft", id)
+	if err != nil {
+		t.Error(err)
+	}
+
+	ammoProxy := tester.MakeBomb(session, proxy)
+	err = spacecraft.Ammo(ammoProxy)
+	if err != nil {
+		t.Error(err)
+	}
+
+	service.Terminate()
+	srv.Terminate()
+
 }
