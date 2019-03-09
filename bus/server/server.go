@@ -88,12 +88,27 @@ type ServerObject interface {
 	OnTerminate()
 }
 
+type pendingObject struct{}
+
+func (p pendingObject) Receive(m *net.Message, from *Context) error {
+	return ErrObjectNotFound
+}
+
+func (p pendingObject) Activate(activation Activation) error {
+	panic("can not activate pending object")
+}
+
+func (p pendingObject) OnTerminate() {
+}
+
 // ServiceImpl implements Service. It allows a service to manage the
 // object within its domain.
 type ServiceImpl struct {
 	sync.RWMutex
 	objects   map[uint32]ServerObject
 	terminate Terminator
+	session   bus.Session
+	serviceID uint32
 }
 
 // NewService returns a service with the given object associated with
@@ -107,17 +122,36 @@ func NewService(o ServerObject) *ServiceImpl {
 }
 
 // Add is used to add an object to a service domain.
-func (s *ServiceImpl) Add(o ServerObject) (uint32, error) {
-	var index uint32
+func (s *ServiceImpl) Add(obj ServerObject) (index uint32, err error) {
 	// assign the first object to the index 0. following objects will
 	// be assigned random values.
 	s.Lock()
-	defer s.Unlock()
-	if len(s.objects) != 0 {
+	if _, ok := s.objects[1]; ok {
 		index = rand.Uint32()
+		if _, ok = s.objects[index]; ok {
+			s.Unlock()
+			return s.Add(obj)
+		}
 	}
-	s.objects[index] = o
-	return index, nil
+	if s.session == nil { // service not yet activated
+		s.objects[index] = obj
+		s.Unlock()
+		return
+	}
+	s.objects[index] = pendingObject{}
+	s.Unlock()
+
+	a := objectActivation(s, s.session, s.serviceID, index)
+	err = obj.Activate(a)
+
+	s.Lock()
+	if err != nil {
+		s.objects[index] = nil
+	} else {
+		s.objects[index] = obj
+	}
+	s.Unlock()
+	return
 }
 
 // Activate informs the service it will become active and shall be
@@ -126,6 +160,8 @@ func (s *ServiceImpl) Activate(activation Activation) error {
 	var wait sync.WaitGroup
 	wait.Add(len(s.objects))
 	s.terminate = activation.Terminate
+	s.session = activation.Session
+	s.serviceID = activation.ServiceID
 	ret := make(chan error, len(s.objects))
 	for objectID, obj := range s.objects {
 		go func(obj ServerObject, objectID uint32) {
@@ -156,7 +192,7 @@ func (s *ServiceImpl) Remove(objectID uint32) error {
 		delete(s.objects, objectID)
 		return nil
 	}
-	return fmt.Errorf("Namespace: cannot remove object %d", objectID)
+	return fmt.Errorf("cannot remove object %d", objectID)
 }
 
 // Dispatch forwards the message to the appropriate object.

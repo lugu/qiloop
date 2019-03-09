@@ -31,7 +31,7 @@ func (f *spacecraftImpl) OnTerminate() {
 }
 
 func (f *spacecraftImpl) Shoot() (BombProxy, error) {
-	ref, err := AddBomb(f.service)
+	ref, err := AddBomb(f.service, f.serviceID)
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +39,8 @@ func (f *spacecraftImpl) Shoot() (BombProxy, error) {
 	if err != nil {
 		panic(err)
 	}
-	return MakeBomb(f.session, proxy), nil
+	bomb := MakeBomb(f.session, proxy)
+	return bomb, nil
 }
 
 func (f *spacecraftImpl) Ammo(b BombProxy) error {
@@ -61,7 +62,7 @@ func NewBombObject() server.ServerObject {
 }
 
 // Move into the stub
-func AddBomb(service server.Service) (
+func AddBomb(service server.Service, serviceID uint32) (
 	*object.ObjectReference, error) {
 
 	var stb stubBomb
@@ -75,11 +76,10 @@ func AddBomb(service server.Service) (
 	// FIXME: at this stage, stb has been activated and received
 	// the service and object ids. Update the stub to save those
 	// informations.
-	serviceID := uint32(1)
 
 	return &object.ObjectReference{
 		true, // with meta object
-		stb.metaObject(),
+		object.FullMetaObject(stb.metaObject()),
 		0,
 		serviceID,
 		objectID,

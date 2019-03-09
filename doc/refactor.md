@@ -2,7 +2,7 @@
 
 ### Goals
     - uniform Type handling of proxy and stub
-        - TOOD: rename service constructor with explicit name like
+        - TODO: rename service constructor with explicit name like
           NewBombService() etc..
         - TODO: merge proxy and stub together
         - TODO: new stub object constructor:

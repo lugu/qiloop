@@ -264,12 +264,12 @@ func TestSession(t *testing.T) {
 	sess := srv.Session()
 	proxy, err := sess.Proxy("test", 1)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	metaBytes, err := proxy.Call("metaObject", []byte{1, 0, 0, 0})
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	buf := bytes.NewBuffer(metaBytes)
 	_, err = object.ReadMetaObject(buf)
@@ -477,7 +477,7 @@ func TestServer(t *testing.T) {
 
 	session, err := session.NewSession(addr)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	info := services.ServiceInfo{
 		Name:      "test",
@@ -585,6 +585,10 @@ func TestServiceImpl(t *testing.T) {
 	err = service.Remove(uid)
 	if err != nil {
 		t.Error(err)
+	}
+	err = service.Remove(uid)
+	if err == nil {
+		t.Fatalf("shall fail")
 	}
 	err = service.Remove(uid + 1)
 	if err == nil {
@@ -698,14 +702,11 @@ func TestServiceTerminaison(t *testing.T) {
 	}
 	_, err = ns.Resolve("service1")
 	if err == nil {
-		t.Error("shall have failed")
+		t.Error("shall fail")
 	}
 }
 
 func TestAddRemoveObject(t *testing.T) {
-
-	// requires correct object return handling from the stub.
-	t.Skip()
 
 	addr := util.NewUnixAddr()
 	listener, err := net.Listen(addr)
@@ -729,7 +730,7 @@ func TestAddRemoveObject(t *testing.T) {
 
 	spacecraft, err := proxies.Spacecraft()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	bomb, err := spacecraft.Shoot()

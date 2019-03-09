@@ -139,7 +139,8 @@ func (p *stubSpacecraft) Shoot(payload []byte) ([]byte, error) {
 	errOut := func() error {
 		meta, err := ret.MetaObject(ret.ObjectID())
 		if err != nil {
-			return fmt.Errorf("failed to get meta: %s", err)
+			return fmt.Errorf("failed to get meta: %s (%d)", err,
+				ret.ObjectID())
 		}
 		ref := object.ObjectReference{
 			true,
@@ -179,7 +180,7 @@ func (p *stubSpacecraft) Ammo(payload []byte) ([]byte, error) {
 	return out.Bytes(), nil
 }
 func (p *stubSpacecraft) metaObject() object.MetaObject {
-	return object.MetaObject{
+	meta := object.MetaObject{
 		Description: "Spacecraft",
 		Methods: map[uint32]object.MetaMethod{
 			uint32(0x64): {
@@ -197,4 +198,5 @@ func (p *stubSpacecraft) metaObject() object.MetaObject {
 		},
 		Signals: map[uint32]object.MetaSignal{},
 	}
+	return object.FullMetaObject(meta)
 }
