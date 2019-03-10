@@ -9,6 +9,7 @@ import (
 	object1 "github.com/lugu/qiloop/bus/client/object"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
+	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
 )
@@ -449,18 +450,560 @@ func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	return nil
 }
 
+// LogLevel is serializable
+type LogLevel struct {
+	Level int32
+}
+
+// ReadLogLevel unmarshalls LogLevel
+func ReadLogLevel(r io.Reader) (s LogLevel, err error) {
+	if s.Level, err = basic.ReadInt32(r); err != nil {
+		return s, fmt.Errorf("failed to read Level field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteLogLevel marshalls LogLevel
+func WriteLogLevel(s LogLevel, w io.Writer) (err error) {
+	if err := basic.WriteInt32(s.Level, w); err != nil {
+		return fmt.Errorf("failed to write Level field: " + err.Error())
+	}
+	return nil
+}
+
+// TimePoint is serializable
+type TimePoint struct {
+	Ns uint64
+}
+
+// ReadTimePoint unmarshalls TimePoint
+func ReadTimePoint(r io.Reader) (s TimePoint, err error) {
+	if s.Ns, err = basic.ReadUint64(r); err != nil {
+		return s, fmt.Errorf("failed to read Ns field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteTimePoint marshalls TimePoint
+func WriteTimePoint(s TimePoint, w io.Writer) (err error) {
+	if err := basic.WriteUint64(s.Ns, w); err != nil {
+		return fmt.Errorf("failed to write Ns field: " + err.Error())
+	}
+	return nil
+}
+
+// LogMessage is serializable
+type LogMessage struct {
+	Source     string
+	Level      LogLevel
+	Category   string
+	Location   string
+	Message    string
+	Id         uint32
+	Date       TimePoint
+	SystemDate TimePoint
+}
+
+// ReadLogMessage unmarshalls LogMessage
+func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
+	if s.Source, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Source field: " + err.Error())
+	}
+	if s.Level, err = ReadLogLevel(r); err != nil {
+		return s, fmt.Errorf("failed to read Level field: " + err.Error())
+	}
+	if s.Category, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Category field: " + err.Error())
+	}
+	if s.Location, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Location field: " + err.Error())
+	}
+	if s.Message, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Message field: " + err.Error())
+	}
+	if s.Id, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read Id field: " + err.Error())
+	}
+	if s.Date, err = ReadTimePoint(r); err != nil {
+		return s, fmt.Errorf("failed to read Date field: " + err.Error())
+	}
+	if s.SystemDate, err = ReadTimePoint(r); err != nil {
+		return s, fmt.Errorf("failed to read SystemDate field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteLogMessage marshalls LogMessage
+func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
+	if err := basic.WriteString(s.Source, w); err != nil {
+		return fmt.Errorf("failed to write Source field: " + err.Error())
+	}
+	if err := WriteLogLevel(s.Level, w); err != nil {
+		return fmt.Errorf("failed to write Level field: " + err.Error())
+	}
+	if err := basic.WriteString(s.Category, w); err != nil {
+		return fmt.Errorf("failed to write Category field: " + err.Error())
+	}
+	if err := basic.WriteString(s.Location, w); err != nil {
+		return fmt.Errorf("failed to write Location field: " + err.Error())
+	}
+	if err := basic.WriteString(s.Message, w); err != nil {
+		return fmt.Errorf("failed to write Message field: " + err.Error())
+	}
+	if err := basic.WriteUint32(s.Id, w); err != nil {
+		return fmt.Errorf("failed to write Id field: " + err.Error())
+	}
+	if err := WriteTimePoint(s.Date, w); err != nil {
+		return fmt.Errorf("failed to write Date field: " + err.Error())
+	}
+	if err := WriteTimePoint(s.SystemDate, w); err != nil {
+		return fmt.Errorf("failed to write SystemDate field: " + err.Error())
+	}
+	return nil
+}
+
+// LogProvider is the abstract interface of the service
+type LogProvider interface {
+	// SetVerbosity calls the remote procedure
+	SetVerbosity(level LogLevel) error
+	// SetCategory calls the remote procedure
+	SetCategory(category string, level LogLevel) error
+	// ClearAndSet calls the remote procedure
+	ClearAndSet(filters map[string]int32) error
+}
+
+// LogProvider represents a proxy object to the service
+type LogProviderProxy interface {
+	object.Object
+	bus.Proxy
+	LogProvider
+}
+
+// proxyLogProvider implements LogProviderProxy
+type proxyLogProvider struct {
+	object1.ObjectProxy
+	session bus.Session
+}
+
+// MakeLogProvider constructs LogProviderProxy
+func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
+	return &proxyLogProvider{object1.MakeObject(proxy), sess}
+}
+
+// NewLogProvider constructs LogProviderProxy
+func NewLogProvider(sess bus.Session, obj uint32) (LogProviderProxy, error) {
+	proxy, err := sess.Proxy("LogProvider", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
+	}
+	return MakeLogProvider(sess, proxy), nil
+}
+
+// LogProvider retruns a proxy to a remote service
+func (s Constructor) LogProvider() (LogProviderProxy, error) {
+	return NewLogProvider(s.session, 1)
+}
+
+// SetVerbosity calls the remote procedure
+func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = WriteLogLevel(level, buf); err != nil {
+		return fmt.Errorf("failed to serialize level: %s", err)
+	}
+	_, err = p.Call("setVerbosity", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call setVerbosity failed: %s", err)
+	}
+	return nil
+}
+
+// SetCategory calls the remote procedure
+func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteString(category, buf); err != nil {
+		return fmt.Errorf("failed to serialize category: %s", err)
+	}
+	if err = WriteLogLevel(level, buf); err != nil {
+		return fmt.Errorf("failed to serialize level: %s", err)
+	}
+	_, err = p.Call("setCategory", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call setCategory failed: %s", err)
+	}
+	return nil
+}
+
+// ClearAndSet calls the remote procedure
+func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = func() error {
+		err := basic.WriteUint32(uint32(len(filters)), buf)
+		if err != nil {
+			return fmt.Errorf("failed to write map size: %s", err)
+		}
+		for k, v := range filters {
+			err = basic.WriteString(k, buf)
+			if err != nil {
+				return fmt.Errorf("failed to write map key: %s", err)
+			}
+			err = basic.WriteInt32(v, buf)
+			if err != nil {
+				return fmt.Errorf("failed to write map value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("failed to serialize filters: %s", err)
+	}
+	_, err = p.Call("clearAndSet", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call clearAndSet failed: %s", err)
+	}
+	return nil
+}
+
+// LogListener is the abstract interface of the service
+type LogListener interface {
+	// SetCategory calls the remote procedure
+	SetCategory(category string, level LogLevel) error
+	// ClearFilters calls the remote procedure
+	ClearFilters() error
+	// SubscribeOnLogMessage subscribe to a remote signal
+	SubscribeOnLogMessage() (unsubscribe func(), updates chan LogMessage, err error)
+	// GetVerbosity returns the property value
+	GetVerbosity() (LogLevel, error)
+	// SetVerbosity sets the property value
+	SetVerbosity(LogLevel) error
+	// SubscribeVerbosity regusters to a property
+	SubscribeVerbosity() (unsubscribe func(), updates chan LogLevel, err error)
+	// GetFilters returns the property value
+	GetFilters() (map[string]int32, error)
+	// SetFilters sets the property value
+	SetFilters(map[string]int32) error
+	// SubscribeFilters regusters to a property
+	SubscribeFilters() (unsubscribe func(), updates chan map[string]int32, err error)
+}
+
+// LogListener represents a proxy object to the service
+type LogListenerProxy interface {
+	object.Object
+	bus.Proxy
+	LogListener
+}
+
+// proxyLogListener implements LogListenerProxy
+type proxyLogListener struct {
+	object1.ObjectProxy
+	session bus.Session
+}
+
+// MakeLogListener constructs LogListenerProxy
+func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
+	return &proxyLogListener{object1.MakeObject(proxy), sess}
+}
+
+// NewLogListener constructs LogListenerProxy
+func NewLogListener(sess bus.Session, obj uint32) (LogListenerProxy, error) {
+	proxy, err := sess.Proxy("LogListener", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
+	}
+	return MakeLogListener(sess, proxy), nil
+}
+
+// LogListener retruns a proxy to a remote service
+func (s Constructor) LogListener() (LogListenerProxy, error) {
+	return NewLogListener(s.session, 1)
+}
+
+// SetCategory calls the remote procedure
+func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteString(category, buf); err != nil {
+		return fmt.Errorf("failed to serialize category: %s", err)
+	}
+	if err = WriteLogLevel(level, buf); err != nil {
+		return fmt.Errorf("failed to serialize level: %s", err)
+	}
+	_, err = p.Call("setCategory", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call setCategory failed: %s", err)
+	}
+	return nil
+}
+
+// ClearFilters calls the remote procedure
+func (p *proxyLogListener) ClearFilters() error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	_, err = p.Call("clearFilters", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call clearFilters failed: %s", err)
+	}
+	return nil
+}
+
+// SubscribeOnLogMessage subscribe to a remote property
+func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
+	propertyID, err := p.SignalID("onLogMessage")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "onLogMessage", err)
+	}
+	ch := make(chan LogMessage)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := ReadLogMessage(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
+}
+
+// GetVerbosity updates the property value
+func (p *proxyLogListener) GetVerbosity() (ret LogLevel, err error) {
+	name := value.String("verbosity")
+	value, err := p.Property(name)
+	if err != nil {
+		return ret, fmt.Errorf("get property: %s", err)
+	}
+	var buf bytes.Buffer
+	err = value.Write(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read response: %s", err)
+	}
+	s, err := basic.ReadString(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read signature: %s", err)
+	}
+	// check the signature
+	sig := "(i)<LogLevel,level>"
+	if sig != s {
+		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
+			s, sig)
+	}
+	ret, err = ReadLogLevel(&buf)
+	return ret, err
+}
+
+// SetVerbosity updates the property value
+func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
+	name := value.String("verbosity")
+	var buf bytes.Buffer
+	err := WriteLogLevel(update, &buf)
+	if err != nil {
+		return fmt.Errorf("marshall error: %s", err)
+	}
+	val := value.Opaque("(i)<LogLevel,level>", buf.Bytes())
+	return p.SetProperty(name, val)
+}
+
+// SubscribeVerbosity subscribe to a remote property
+func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
+	propertyID, err := p.PropertyID("verbosity")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "verbosity", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "verbosity", err)
+	}
+	ch := make(chan LogLevel)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := ReadLogLevel(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
+}
+
+// GetFilters updates the property value
+func (p *proxyLogListener) GetFilters() (ret map[string]int32, err error) {
+	name := value.String("filters")
+	value, err := p.Property(name)
+	if err != nil {
+		return ret, fmt.Errorf("get property: %s", err)
+	}
+	var buf bytes.Buffer
+	err = value.Write(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read response: %s", err)
+	}
+	s, err := basic.ReadString(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read signature: %s", err)
+	}
+	// check the signature
+	sig := "{si}"
+	if sig != s {
+		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
+			s, sig)
+	}
+	ret, err = func() (m map[string]int32, err error) {
+		size, err := basic.ReadUint32(&buf)
+		if err != nil {
+			return m, fmt.Errorf("failed to read map size: %s", err)
+		}
+		m = make(map[string]int32, size)
+		for i := 0; i < int(size); i++ {
+			k, err := basic.ReadString(&buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map key: %s", err)
+			}
+			v, err := basic.ReadInt32(&buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map value: %s", err)
+			}
+			m[k] = v
+		}
+		return m, nil
+	}()
+	return ret, err
+}
+
+// SetFilters updates the property value
+func (p *proxyLogListener) SetFilters(update map[string]int32) error {
+	name := value.String("filters")
+	var buf bytes.Buffer
+	err := func() error {
+		err := basic.WriteUint32(uint32(len(update)), &buf)
+		if err != nil {
+			return fmt.Errorf("failed to write map size: %s", err)
+		}
+		for k, v := range update {
+			err = basic.WriteString(k, &buf)
+			if err != nil {
+				return fmt.Errorf("failed to write map key: %s", err)
+			}
+			err = basic.WriteInt32(v, &buf)
+			if err != nil {
+				return fmt.Errorf("failed to write map value: %s", err)
+			}
+		}
+		return nil
+	}()
+	if err != nil {
+		return fmt.Errorf("marshall error: %s", err)
+	}
+	val := value.Opaque("{si}", buf.Bytes())
+	return p.SetProperty(name, val)
+}
+
+// SubscribeFilters subscribe to a remote property
+func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, error) {
+	propertyID, err := p.PropertyID("filters")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "filters", err)
+	}
+	ch := make(chan map[string]int32)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (m map[string]int32, err error) {
+				size, err := basic.ReadUint32(buf)
+				if err != nil {
+					return m, fmt.Errorf("failed to read map size: %s", err)
+				}
+				m = make(map[string]int32, size)
+				for i := 0; i < int(size); i++ {
+					k, err := basic.ReadString(buf)
+					if err != nil {
+						return m, fmt.Errorf("failed to read map key: %s", err)
+					}
+					v, err := basic.ReadInt32(buf)
+					if err != nil {
+						return m, fmt.Errorf("failed to read map value: %s", err)
+					}
+					m[k] = v
+				}
+				return m, nil
+			}()
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
+}
+
 // LogManager is the abstract interface of the service
 type LogManager interface {
 	// Log calls the remote procedure
-	Log(P0 []LogMessage) error
-	// CreateListener calls the remote procedure
-	CreateListener() (object.ObjectReference, error)
+	Log(message LogMessage) error
 	// GetListener calls the remote procedure
-	GetListener() (object.ObjectReference, error)
+	GetListener() (LogListenerProxy, error)
 	// AddProvider calls the remote procedure
-	AddProvider(P0 object.ObjectReference) (int32, error)
+	AddProvider(source LogProviderProxy) (int32, error)
 	// RemoveProvider calls the remote procedure
-	RemoveProvider(P0 int32) error
+	RemoveProvider(providerID int32) error
 }
 
 // LogManager represents a proxy object to the service
@@ -496,24 +1039,12 @@ func (s Constructor) LogManager() (LogManagerProxy, error) {
 }
 
 // Log calls the remote procedure
-func (p *proxyLogManager) Log(P0 []LogMessage) error {
+func (p *proxyLogManager) Log(message LogMessage) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = func() error {
-		err := basic.WriteUint32(uint32(len(P0)), buf)
-		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
-		}
-		for _, v := range P0 {
-			err = WriteLogMessage(v, buf)
-			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = WriteLogMessage(message, buf); err != nil {
+		return fmt.Errorf("failed to serialize message: %s", err)
 	}
 	_, err = p.Call("log", buf.Bytes())
 	if err != nil {
@@ -522,28 +1053,10 @@ func (p *proxyLogManager) Log(P0 []LogMessage) error {
 	return nil
 }
 
-// CreateListener calls the remote procedure
-func (p *proxyLogManager) CreateListener() (object.ObjectReference, error) {
-	var err error
-	var ret object.ObjectReference
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	response, err := p.Call("createListener", buf.Bytes())
-	if err != nil {
-		return ret, fmt.Errorf("call createListener failed: %s", err)
-	}
-	buf = bytes.NewBuffer(response)
-	ret, err = object.ReadObjectReference(buf)
-	if err != nil {
-		return ret, fmt.Errorf("failed to parse createListener response: %s", err)
-	}
-	return ret, nil
-}
-
 // GetListener calls the remote procedure
-func (p *proxyLogManager) GetListener() (object.ObjectReference, error) {
+func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
-	var ret object.ObjectReference
+	var ret LogListenerProxy
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	response, err := p.Call("getListener", buf.Bytes())
@@ -551,7 +1064,17 @@ func (p *proxyLogManager) GetListener() (object.ObjectReference, error) {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
 	buf = bytes.NewBuffer(response)
-	ret, err = object.ReadObjectReference(buf)
+	ret, err = func() (LogListenerProxy, error) {
+		ref, err := object.ReadObjectReference(buf)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get meta: %s", err)
+		}
+		proxy, err := p.session.Object(ref)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get proxy: %s", err)
+		}
+		return MakeLogListener(p.session, proxy), nil
+	}()
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse getListener response: %s", err)
 	}
@@ -559,13 +1082,26 @@ func (p *proxyLogManager) GetListener() (object.ObjectReference, error) {
 }
 
 // AddProvider calls the remote procedure
-func (p *proxyLogManager) AddProvider(P0 object.ObjectReference) (int32, error) {
+func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	var err error
 	var ret int32
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = object.WriteObjectReference(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+	if err = func() error {
+		meta, err := source.MetaObject(source.ObjectID())
+		if err != nil {
+			return fmt.Errorf("failed to get meta: %s", err)
+		}
+		ref := object.ObjectReference{
+			true,
+			meta,
+			0,
+			source.ServiceID(),
+			source.ObjectID(),
+		}
+		return object.WriteObjectReference(ref, buf)
+	}(); err != nil {
+		return ret, fmt.Errorf("failed to serialize source: %s", err)
 	}
 	response, err := p.Call("addProvider", buf.Bytes())
 	if err != nil {
@@ -580,86 +1116,16 @@ func (p *proxyLogManager) AddProvider(P0 object.ObjectReference) (int32, error) 
 }
 
 // RemoveProvider calls the remote procedure
-func (p *proxyLogManager) RemoveProvider(P0 int32) error {
+func (p *proxyLogManager) RemoveProvider(providerID int32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteInt32(P0, buf); err != nil {
-		return fmt.Errorf("failed to serialize P0: %s", err)
+	if err = basic.WriteInt32(providerID, buf); err != nil {
+		return fmt.Errorf("failed to serialize providerID: %s", err)
 	}
 	_, err = p.Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
-	}
-	return nil
-}
-
-// LogMessage is serializable
-type LogMessage struct {
-	Source     string
-	Level      int32
-	Category   string
-	Location   string
-	Message    string
-	Id         uint32
-	Date       uint64
-	SystemDate uint64
-}
-
-// ReadLogMessage unmarshalls LogMessage
-func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
-	if s.Source, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Source field: " + err.Error())
-	}
-	if s.Level, err = basic.ReadInt32(r); err != nil {
-		return s, fmt.Errorf("failed to read Level field: " + err.Error())
-	}
-	if s.Category, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Category field: " + err.Error())
-	}
-	if s.Location, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Location field: " + err.Error())
-	}
-	if s.Message, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Message field: " + err.Error())
-	}
-	if s.Id, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Id field: " + err.Error())
-	}
-	if s.Date, err = basic.ReadUint64(r); err != nil {
-		return s, fmt.Errorf("failed to read Date field: " + err.Error())
-	}
-	if s.SystemDate, err = basic.ReadUint64(r); err != nil {
-		return s, fmt.Errorf("failed to read SystemDate field: " + err.Error())
-	}
-	return s, nil
-}
-
-// WriteLogMessage marshalls LogMessage
-func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
-	if err := basic.WriteString(s.Source, w); err != nil {
-		return fmt.Errorf("failed to write Source field: " + err.Error())
-	}
-	if err := basic.WriteInt32(s.Level, w); err != nil {
-		return fmt.Errorf("failed to write Level field: " + err.Error())
-	}
-	if err := basic.WriteString(s.Category, w); err != nil {
-		return fmt.Errorf("failed to write Category field: " + err.Error())
-	}
-	if err := basic.WriteString(s.Location, w); err != nil {
-		return fmt.Errorf("failed to write Location field: " + err.Error())
-	}
-	if err := basic.WriteString(s.Message, w); err != nil {
-		return fmt.Errorf("failed to write Message field: " + err.Error())
-	}
-	if err := basic.WriteUint32(s.Id, w); err != nil {
-		return fmt.Errorf("failed to write Id field: " + err.Error())
-	}
-	if err := basic.WriteUint64(s.Date, w); err != nil {
-		return fmt.Errorf("failed to write Date field: " + err.Error())
-	}
-	if err := basic.WriteUint64(s.SystemDate, w); err != nil {
-		return fmt.Errorf("failed to write SystemDate field: " + err.Error())
 	}
 	return nil
 }

@@ -22,21 +22,42 @@ struct ServiceInfo
 	sessionId: str
 end
 
-interface LogManager
-	fn log(P0: Vec<LogMessage>) //uid:100
-	fn createListener() -> obj //uid:101
-	fn getListener() -> obj //uid:102
-	fn addProvider(P0: obj) -> int32 //uid:103
-	fn removeProvider(P0: int32) //uid:104
+struct LogLevel
+        level: int32
+end
+
+struct TimePoint
+        ns: uint64
 end
 
 struct LogMessage
 	source: str
-	level: int32
+	level: LogLevel
 	category: str
-	location: str
+	location: str // format: "<machine id>:<process id>"
 	message: str
 	id: uint32
-	date: uint64
-	systemDate: uint64
+	date: TimePoint
+	systemDate: TimePoint
+end
+
+interface LogProvider
+        fn setVerbosity(level: LogLevel) //uid:100
+        fn setCategory(category: str, level: LogLevel) //uid:101
+        fn clearAndSet(filters: Map<str,int32>) //uid:102
+end
+
+interface LogListener
+        fn setCategory(category: str, level: LogLevel) //uid:101
+        fn clearFilters() //uid:102
+        sig onLogMessage(msg: LogMessage) //uid:103
+        prop verbosity(level: LogLevel) //uid:104
+        prop filters(filters: Map<str,int32>) //uid:105
+end
+
+interface LogManager
+	fn log(message: LogMessage) //uid:100
+	fn getListener() -> LogListener //uid:101
+	fn addProvider(source: LogProvider) -> int32 //uid:102
+	fn removeProvider(providerID: int32) //uid:103
 end
