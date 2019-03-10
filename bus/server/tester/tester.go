@@ -39,8 +39,7 @@ func (f *spacecraftImpl) Shoot() (BombProxy, error) {
 	if err != nil {
 		panic(err)
 	}
-	bomb := MakeBomb(f.session, proxy)
-	return bomb, nil
+	return MakeBomb(f.session, proxy), nil
 }
 
 func (f *spacecraftImpl) Ammo(b BombProxy) error {
@@ -73,9 +72,6 @@ func AddBomb(service server.Service, serviceID uint32) (
 	if err != nil {
 		return nil, err
 	}
-	// FIXME: at this stage, stb has been activated and received
-	// the service and object ids. Update the stub to save those
-	// informations.
 
 	return &object.ObjectReference{
 		true, // with meta object

@@ -19,7 +19,7 @@ func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 	file.PackageComment(msg)
 	file.PackageComment("File generated. DO NOT EDIT.")
 
-	generateNewServices(file)
+	GenerateNewServices(file)
 
 	set := signature.NewTypeSet()
 	for _, typ := range pkg.Types {
@@ -30,7 +30,7 @@ func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 	return file.Render(w)
 }
 
-func generateNewServices(file *jen.File) {
+func GenerateNewServices(file *jen.File) {
 	file.Comment("Constructor gives access to remote services")
 	file.Type().Id(
 		"Constructor",

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/idl"
+	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 	"io"
@@ -32,12 +33,20 @@ func GeneratePackage(w io.Writer, packagePath string,
 
 	set := signature.NewTypeSet()
 	for _, typ := range pkg.Types {
-		err := generateType(file, set, typ)
-		if err != nil {
-			return err
+		typ.RegisterTo(set)
+
+		itf, ok := typ.(*idl.InterfaceType)
+		if ok {
+			err := generateInterface(file, set, itf)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
+	proxy.GenerateNewServices(file)
+
+	set.Declare(file)
 	return file.Render(w)
 }
 
@@ -71,16 +80,6 @@ func generateStub(f *jen.File, itf *idl.InterfaceType) error {
 	if err := generateStubMetaObject(f, itf); err != nil {
 		return err
 	}
-	return nil
-}
-
-func generateType(f *jen.File, set *signature.TypeSet, typ signature.Type) error {
-
-	itf, ok := typ.(*idl.InterfaceType)
-	if ok {
-		return generateInterface(f, set, itf)
-	}
-	typ.TypeDeclaration(f)
 	return nil
 }
 
