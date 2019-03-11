@@ -1,0 +1,41 @@
+package logger
+
+struct LogLevel
+        level: int32
+end
+
+struct TimePoint
+        ns: uint64
+end
+
+struct LogMessage
+	source: str
+	level: LogLevel
+	category: str
+	location: str // format: "<machine id>:<process id>"
+	message: str
+	id: uint32
+	date: TimePoint
+	systemDate: TimePoint
+end
+
+interface LogProvider
+        fn setVerbosity(level: LogLevel) //uid:100
+        fn setCategory(category: str, level: LogLevel) //uid:101
+        fn clearAndSet(filters: Map<str,int32>) //uid:102
+end
+
+interface LogListener
+        fn setCategory(category: str, level: LogLevel) //uid:101
+        fn clearFilters() //uid:102
+        sig onLogMessage(msg: LogMessage) //uid:103
+        prop verbosity(level: LogLevel) //uid:104
+        prop filters(filters: Map<str,int32>) //uid:105
+end
+
+interface LogManager
+	fn log(message: LogMessage) //uid:100
+	fn getListener() -> LogListener //uid:101
+	fn addProvider(source: LogProvider) -> int32 //uid:102
+	fn removeProvider(providerID: int32) //uid:103
+end
