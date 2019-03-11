@@ -19,6 +19,25 @@
     - compatible with lugu/audit package
     - reconsilliation: can pass local objects as parameter
 
+### Experience writing qitop
+
+1. Difficult to get an object from a ServiceInfo
+        => implement decorator
+
+2. Too many packages: do not know where to search. TermUI is already a
+
+3. Confusing concepts object.Object, object.ProxyObject, .... Need
+   some documentation
+        => session
+        => proxy
+        => ProxyObject
+        => server
+        => ServerObject
+
+4. missing standalone server ready to use (like audit/honey)
+
+5. better bridge between ServerObject <= ObjectReference <=> ProxyObject
+
 ### New hierarchy
 
     ./meta/type.go // type and typeset definition
