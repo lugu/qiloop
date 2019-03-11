@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/lugu/qiloop/bus/server/benchmark/pingpong"
-	"github.com/lugu/qiloop/bus/server/benchmark/pingpong/proxy"
 	dir "github.com/lugu/qiloop/bus/server/directory"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
@@ -25,7 +24,7 @@ func TestPingPong(t *testing.T) {
 	}
 	defer server.Terminate()
 
-	service := pingpong.PingPongObject(pingpong.NewPingPong())
+	service := pingpong.PingPongObject(PingPongImplementor{})
 	_, err = server.NewService("PingPong", service)
 	if err != nil {
 		panic(err)
@@ -35,7 +34,7 @@ func TestPingPong(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	services := proxy.Services(session)
+	services := pingpong.Services(session)
 	client, err := services.PingPong()
 	if err != nil {
 		panic(err)
@@ -69,7 +68,7 @@ func testRemoteAddr(b *testing.B, addr string) {
 	}
 	defer server.Terminate()
 
-	service := pingpong.PingPongObject(pingpong.NewPingPong())
+	service := pingpong.PingPongObject(PingPongImplementor{})
 	_, err = server.NewService("PingPong", service)
 	if err != nil {
 		panic(err)
@@ -79,7 +78,7 @@ func testRemoteAddr(b *testing.B, addr string) {
 	if err != nil {
 		panic(err)
 	}
-	services := proxy.Services(session)
+	services := pingpong.Services(session)
 	client, err := services.PingPong()
 	if err != nil {
 		panic(err)
@@ -129,7 +128,7 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	filename := strings.TrimPrefix(addr, "unix://")
 	os.Remove(filename)
 
-	service := pingpong.PingPongObject(pingpong.NewPingPong())
+	service := pingpong.PingPongObject(PingPongImplementor{})
 	_, err = server.NewService("PingPong", service)
 	if err != nil {
 		panic(err)
@@ -139,7 +138,7 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
-	services := proxy.Services(session)
+	services := pingpong.Services(session)
 	client, err := services.PingPong()
 	if err != nil {
 		panic(err)

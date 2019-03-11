@@ -6,11 +6,13 @@ import (
 	"bytes"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
+	object1 "github.com/lugu/qiloop/bus/client/object"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
+	"log"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -127,4 +129,130 @@ func (p *stubPingPong) metaObject() object.MetaObject {
 			Uid:       uint32(0x66),
 		}},
 	}
+}
+
+// Constructor gives access to remote services
+type Constructor struct {
+	session bus.Session
+}
+
+// Services gives access to the services constructor
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
+}
+
+// PingPong is the abstract interface of the service
+type PingPong interface {
+	// Hello calls the remote procedure
+	Hello(a string) (string, error)
+	// Ping calls the remote procedure
+	Ping(a string) error
+	// SubscribePong subscribe to a remote signal
+	SubscribePong() (unsubscribe func(), updates chan string, err error)
+}
+
+// PingPong represents a proxy object to the service
+type PingPongProxy interface {
+	object.Object
+	bus.Proxy
+	PingPong
+}
+
+// proxyPingPong implements PingPongProxy
+type proxyPingPong struct {
+	object1.ObjectProxy
+	session bus.Session
+}
+
+// MakePingPong constructs PingPongProxy
+func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
+	return &proxyPingPong{object1.MakeObject(proxy), sess}
+}
+
+// NewPingPong constructs PingPongProxy
+func NewPingPong(sess bus.Session, obj uint32) (PingPongProxy, error) {
+	proxy, err := sess.Proxy("PingPong", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
+	}
+	return MakePingPong(sess, proxy), nil
+}
+
+// PingPong retruns a proxy to a remote service
+func (s Constructor) PingPong() (PingPongProxy, error) {
+	return NewPingPong(s.session, 1)
+}
+
+// Hello calls the remote procedure
+func (p *proxyPingPong) Hello(a string) (string, error) {
+	var err error
+	var ret string
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteString(a, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize a: %s", err)
+	}
+	response, err := p.Call("hello", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call hello failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadString(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse hello response: %s", err)
+	}
+	return ret, nil
+}
+
+// Ping calls the remote procedure
+func (p *proxyPingPong) Ping(a string) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteString(a, buf); err != nil {
+		return fmt.Errorf("failed to serialize a: %s", err)
+	}
+	_, err = p.Call("ping", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call ping failed: %s", err)
+	}
+	return nil
+}
+
+// SubscribePong subscribe to a remote property
+func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
+	propertyID, err := p.SignalID("pong")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
+	}
+	ch := make(chan string)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := basic.ReadString(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
 }

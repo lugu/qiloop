@@ -1,7 +1,0 @@
-package proxy
-
-interface PingPong
-        fn hello(a: str) -> str
-        fn ping(a: str)
-	sig pong(a: str)
-end

@@ -8,10 +8,6 @@ type impl struct {
 	signal PingPongSignalHelper
 }
 
-func NewPingPong() PingPongImplementor {
-	return new(impl)
-}
-
 func (p *impl) Activate(activation server.Activation, helper PingPongSignalHelper) error {
 	p.signal = helper
 	return nil
