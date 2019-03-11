@@ -24,7 +24,7 @@ func TestPingPong(t *testing.T) {
 	}
 	defer server.Terminate()
 
-	service := pingpong.PingPongObject(PingPongImplementor{})
+	service := pingpong.PingPongObject(pingpong.PingPongImpl())
 	_, err = server.NewService("PingPong", service)
 	if err != nil {
 		panic(err)
@@ -68,7 +68,7 @@ func testRemoteAddr(b *testing.B, addr string) {
 	}
 	defer server.Terminate()
 
-	service := pingpong.PingPongObject(PingPongImplementor{})
+	service := pingpong.PingPongObject(pingpong.PingPongImpl())
 	_, err = server.NewService("PingPong", service)
 	if err != nil {
 		panic(err)
@@ -128,7 +128,7 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	filename := strings.TrimPrefix(addr, "unix://")
 	os.Remove(filename)
 
-	service := pingpong.PingPongObject(PingPongImplementor{})
+	service := pingpong.PingPongObject(pingpong.PingPongImpl())
 	_, err = server.NewService("PingPong", service)
 	if err != nil {
 		panic(err)

@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
+	object1 "github.com/lugu/qiloop/bus/client/object"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -443,6 +444,51 @@ func (p *stubGeneric) metaObject() object.MetaObject {
 			Uid:       uint32(0x56),
 		}},
 	}
+}
+
+// Constructor gives access to remote services
+type Constructor struct {
+	session bus.Session
+}
+
+// Services gives access to the services constructor
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
+}
+
+// Generic is the abstract interface of the service
+type Generic interface{}
+
+// Generic represents a proxy object to the service
+type GenericProxy interface {
+	object.Object
+	bus.Proxy
+	Generic
+}
+
+// proxyGeneric implements GenericProxy
+type proxyGeneric struct {
+	object1.ObjectProxy
+	session bus.Session
+}
+
+// MakeGeneric constructs GenericProxy
+func MakeGeneric(sess bus.Session, proxy bus.Proxy) GenericProxy {
+	return &proxyGeneric{object1.MakeObject(proxy), sess}
+}
+
+// NewGeneric constructs GenericProxy
+func NewGeneric(sess bus.Session, obj uint32) (GenericProxy, error) {
+	proxy, err := sess.Proxy("Generic", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
+	}
+	return MakeGeneric(sess, proxy), nil
+}
+
+// Generic retruns a proxy to a remote service
+func (s Constructor) Generic() (GenericProxy, error) {
+	return NewGeneric(s.session, 1)
 }
 
 // MetaMethodParameter is serializable

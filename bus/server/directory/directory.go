@@ -21,8 +21,8 @@ type serviceDirectory struct {
 	signal   ServiceDirectorySignalHelper
 }
 
-// NewServiceDirectory returns an implementation of ServiceDirectory
-func NewServiceDirectory() *serviceDirectory {
+// ServiceDirectoryImpl returns an implementation of ServiceDirectory
+func ServiceDirectoryImpl() *serviceDirectory {
 	return &serviceDirectory{
 		staging:  make(map[uint32]ServiceInfo),
 		services: make(map[uint32]ServiceInfo),

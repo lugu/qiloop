@@ -13,6 +13,7 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"io"
+	"log"
 )
 
 // ObjectImplementor interface of the service implementation
@@ -444,6 +445,396 @@ func (p *stubObject) metaObject() object.MetaObject {
 			Uid:       uint32(0x56),
 		}},
 	}
+}
+
+// Constructor gives access to remote services
+type Constructor struct {
+	session bus.Session
+}
+
+// Services gives access to the services constructor
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
+}
+
+// Object is the abstract interface of the service
+type Object interface {
+	// IsStatsEnabled calls the remote procedure
+	IsStatsEnabled() (bool, error)
+	// EnableStats calls the remote procedure
+	EnableStats(enabled bool) error
+	// Stats calls the remote procedure
+	Stats() (map[uint32]MethodStatistics, error)
+	// ClearStats calls the remote procedure
+	ClearStats() error
+	// IsTraceEnabled calls the remote procedure
+	IsTraceEnabled() (bool, error)
+	// EnableTrace calls the remote procedure
+	EnableTrace(traced bool) error
+	// SubscribeTraceObject subscribe to a remote signal
+	SubscribeTraceObject() (unsubscribe func(), updates chan EventTrace, err error)
+}
+
+// Object represents a proxy object to the service
+type ObjectProxy interface {
+	object.Object
+	bus.Proxy
+	Object
+}
+
+// proxyObject implements ObjectProxy
+type proxyObject struct {
+	bus.Proxy
+}
+
+// NewObject constructs ObjectProxy
+func NewObject(sess bus.Session, obj uint32) (ObjectProxy, error) {
+	proxy, err := sess.Proxy("Object", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
+	}
+	return &proxyObject{proxy}, nil
+}
+
+// Object retruns a proxy to a remote service
+func (s Constructor) Object() (ObjectProxy, error) {
+	return NewObject(s.session, 1)
+}
+
+// RegisterEvent calls the remote procedure
+func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error) {
+	var err error
+	var ret uint64
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
+	}
+	if err = basic.WriteUint32(actionID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize actionID: %s", err)
+	}
+	if err = basic.WriteUint64(handler, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize handler: %s", err)
+	}
+	response, err := p.Call("registerEvent", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call registerEvent failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadUint64(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse registerEvent response: %s", err)
+	}
+	return ret, nil
+}
+
+// UnregisterEvent calls the remote procedure
+func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return fmt.Errorf("failed to serialize objectID: %s", err)
+	}
+	if err = basic.WriteUint32(actionID, buf); err != nil {
+		return fmt.Errorf("failed to serialize actionID: %s", err)
+	}
+	if err = basic.WriteUint64(handler, buf); err != nil {
+		return fmt.Errorf("failed to serialize handler: %s", err)
+	}
+	_, err = p.Call("unregisterEvent", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call unregisterEvent failed: %s", err)
+	}
+	return nil
+}
+
+// MetaObject calls the remote procedure
+func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
+	var err error
+	var ret object.MetaObject
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
+	}
+	response, err := p.Call("metaObject", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call metaObject failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = object.ReadMetaObject(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse metaObject response: %s", err)
+	}
+	return ret, nil
+}
+
+// Terminate calls the remote procedure
+func (p *proxyObject) Terminate(objectID uint32) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return fmt.Errorf("failed to serialize objectID: %s", err)
+	}
+	_, err = p.Call("terminate", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call terminate failed: %s", err)
+	}
+	return nil
+}
+
+// Property calls the remote procedure
+func (p *proxyObject) Property(name value.Value) (value.Value, error) {
+	var err error
+	var ret value.Value
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = name.Write(buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize name: %s", err)
+	}
+	response, err := p.Call("property", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call property failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = value.NewValue(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse property response: %s", err)
+	}
+	return ret, nil
+}
+
+// SetProperty calls the remote procedure
+func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = name.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize name: %s", err)
+	}
+	if err = value.Write(buf); err != nil {
+		return fmt.Errorf("failed to serialize value: %s", err)
+	}
+	_, err = p.Call("setProperty", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call setProperty failed: %s", err)
+	}
+	return nil
+}
+
+// Properties calls the remote procedure
+func (p *proxyObject) Properties() ([]string, error) {
+	var err error
+	var ret []string
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("properties", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call properties failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(buf)
+		if err != nil {
+			return b, fmt.Errorf("failed to read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(buf)
+			if err != nil {
+				return b, fmt.Errorf("failed to read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse properties response: %s", err)
+	}
+	return ret, nil
+}
+
+// RegisterEventWithSignature calls the remote procedure
+func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint32, handler uint64, P3 string) (uint64, error) {
+	var err error
+	var ret uint64
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(objectID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
+	}
+	if err = basic.WriteUint32(actionID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize actionID: %s", err)
+	}
+	if err = basic.WriteUint64(handler, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize handler: %s", err)
+	}
+	if err = basic.WriteString(P3, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize P3: %s", err)
+	}
+	response, err := p.Call("registerEventWithSignature", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call registerEventWithSignature failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadUint64(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse registerEventWithSignature response: %s", err)
+	}
+	return ret, nil
+}
+
+// IsStatsEnabled calls the remote procedure
+func (p *proxyObject) IsStatsEnabled() (bool, error) {
+	var err error
+	var ret bool
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("isStatsEnabled", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isStatsEnabled failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse isStatsEnabled response: %s", err)
+	}
+	return ret, nil
+}
+
+// EnableStats calls the remote procedure
+func (p *proxyObject) EnableStats(enabled bool) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteBool(enabled, buf); err != nil {
+		return fmt.Errorf("failed to serialize enabled: %s", err)
+	}
+	_, err = p.Call("enableStats", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call enableStats failed: %s", err)
+	}
+	return nil
+}
+
+// Stats calls the remote procedure
+func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
+	var err error
+	var ret map[uint32]MethodStatistics
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("stats", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call stats failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = func() (m map[uint32]MethodStatistics, err error) {
+		size, err := basic.ReadUint32(buf)
+		if err != nil {
+			return m, fmt.Errorf("failed to read map size: %s", err)
+		}
+		m = make(map[uint32]MethodStatistics, size)
+		for i := 0; i < int(size); i++ {
+			k, err := basic.ReadUint32(buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map key: %s", err)
+			}
+			v, err := ReadMethodStatistics(buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map value: %s", err)
+			}
+			m[k] = v
+		}
+		return m, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse stats response: %s", err)
+	}
+	return ret, nil
+}
+
+// ClearStats calls the remote procedure
+func (p *proxyObject) ClearStats() error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	_, err = p.Call("clearStats", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call clearStats failed: %s", err)
+	}
+	return nil
+}
+
+// IsTraceEnabled calls the remote procedure
+func (p *proxyObject) IsTraceEnabled() (bool, error) {
+	var err error
+	var ret bool
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("isTraceEnabled", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isTraceEnabled failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse isTraceEnabled response: %s", err)
+	}
+	return ret, nil
+}
+
+// EnableTrace calls the remote procedure
+func (p *proxyObject) EnableTrace(traced bool) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteBool(traced, buf); err != nil {
+		return fmt.Errorf("failed to serialize traced: %s", err)
+	}
+	_, err = p.Call("enableTrace", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call enableTrace failed: %s", err)
+	}
+	return nil
+}
+
+// SubscribeTraceObject subscribe to a remote property
+func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
+	propertyID, err := p.SignalID("traceObject")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
+	}
+	ch := make(chan EventTrace)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := ReadEventTrace(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
 }
 
 // MetaMethodParameter is serializable

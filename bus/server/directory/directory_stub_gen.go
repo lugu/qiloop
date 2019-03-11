@@ -6,12 +6,14 @@ import (
 	"bytes"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
+	object1 "github.com/lugu/qiloop/bus/client/object"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"io"
+	"log"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -298,6 +300,361 @@ func (p *stubServiceDirectory) metaObject() object.MetaObject {
 			},
 		},
 	}
+}
+
+// Constructor gives access to remote services
+type Constructor struct {
+	session bus.Session
+}
+
+// Services gives access to the services constructor
+func Services(s bus.Session) Constructor {
+	return Constructor{session: s}
+}
+
+// ServiceAdded is serializable
+type ServiceAdded struct {
+	ServiceID uint32
+	Name      string
+}
+
+// ReadServiceAdded unmarshalls ServiceAdded
+func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
+	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
+	}
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteServiceAdded marshalls ServiceAdded
+func WriteServiceAdded(s ServiceAdded, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
+		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
+	}
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
+	}
+	return nil
+}
+
+// ServiceRemoved is serializable
+type ServiceRemoved struct {
+	ServiceID uint32
+	Name      string
+}
+
+// ReadServiceRemoved unmarshalls ServiceRemoved
+func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
+	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
+	}
+	if s.Name, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+	}
+	return s, nil
+}
+
+// WriteServiceRemoved marshalls ServiceRemoved
+func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
+	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
+		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
+	}
+	if err := basic.WriteString(s.Name, w); err != nil {
+		return fmt.Errorf("failed to write Name field: " + err.Error())
+	}
+	return nil
+}
+
+// ServiceDirectory is the abstract interface of the service
+type ServiceDirectory interface {
+	// Service calls the remote procedure
+	Service(name string) (ServiceInfo, error)
+	// Services calls the remote procedure
+	Services() ([]ServiceInfo, error)
+	// RegisterService calls the remote procedure
+	RegisterService(info ServiceInfo) (uint32, error)
+	// UnregisterService calls the remote procedure
+	UnregisterService(serviceID uint32) error
+	// ServiceReady calls the remote procedure
+	ServiceReady(serviceID uint32) error
+	// UpdateServiceInfo calls the remote procedure
+	UpdateServiceInfo(info ServiceInfo) error
+	// MachineId calls the remote procedure
+	MachineId() (string, error)
+	// SocketOfService calls the remote procedure
+	SocketOfService(serviceID uint32) (object.ObjectReference, error)
+	// SubscribeServiceAdded subscribe to a remote signal
+	SubscribeServiceAdded() (unsubscribe func(), updates chan ServiceAdded, err error)
+	// SubscribeServiceRemoved subscribe to a remote signal
+	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
+}
+
+// ServiceDirectory represents a proxy object to the service
+type ServiceDirectoryProxy interface {
+	object.Object
+	bus.Proxy
+	ServiceDirectory
+}
+
+// proxyServiceDirectory implements ServiceDirectoryProxy
+type proxyServiceDirectory struct {
+	object1.ObjectProxy
+	session bus.Session
+}
+
+// MakeServiceDirectory constructs ServiceDirectoryProxy
+func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
+	return &proxyServiceDirectory{object1.MakeObject(proxy), sess}
+}
+
+// NewServiceDirectory constructs ServiceDirectoryProxy
+func NewServiceDirectory(sess bus.Session, obj uint32) (ServiceDirectoryProxy, error) {
+	proxy, err := sess.Proxy("ServiceDirectory", obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact service: %s", err)
+	}
+	return MakeServiceDirectory(sess, proxy), nil
+}
+
+// ServiceDirectory retruns a proxy to a remote service
+func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
+	return NewServiceDirectory(s.session, 1)
+}
+
+// Service calls the remote procedure
+func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
+	var err error
+	var ret ServiceInfo
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteString(name, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize name: %s", err)
+	}
+	response, err := p.Call("service", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call service failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = ReadServiceInfo(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse service response: %s", err)
+	}
+	return ret, nil
+}
+
+// Services calls the remote procedure
+func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
+	var err error
+	var ret []ServiceInfo
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("services", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call services failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = func() (b []ServiceInfo, err error) {
+		size, err := basic.ReadUint32(buf)
+		if err != nil {
+			return b, fmt.Errorf("failed to read slice size: %s", err)
+		}
+		b = make([]ServiceInfo, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = ReadServiceInfo(buf)
+			if err != nil {
+				return b, fmt.Errorf("failed to read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse services response: %s", err)
+	}
+	return ret, nil
+}
+
+// RegisterService calls the remote procedure
+func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error) {
+	var err error
+	var ret uint32
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = WriteServiceInfo(info, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize info: %s", err)
+	}
+	response, err := p.Call("registerService", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call registerService failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadUint32(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse registerService response: %s", err)
+	}
+	return ret, nil
+}
+
+// UnregisterService calls the remote procedure
+func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(serviceID, buf); err != nil {
+		return fmt.Errorf("failed to serialize serviceID: %s", err)
+	}
+	_, err = p.Call("unregisterService", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call unregisterService failed: %s", err)
+	}
+	return nil
+}
+
+// ServiceReady calls the remote procedure
+func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(serviceID, buf); err != nil {
+		return fmt.Errorf("failed to serialize serviceID: %s", err)
+	}
+	_, err = p.Call("serviceReady", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call serviceReady failed: %s", err)
+	}
+	return nil
+}
+
+// UpdateServiceInfo calls the remote procedure
+func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
+	var err error
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = WriteServiceInfo(info, buf); err != nil {
+		return fmt.Errorf("failed to serialize info: %s", err)
+	}
+	_, err = p.Call("updateServiceInfo", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call updateServiceInfo failed: %s", err)
+	}
+	return nil
+}
+
+// MachineId calls the remote procedure
+func (p *proxyServiceDirectory) MachineId() (string, error) {
+	var err error
+	var ret string
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("machineId", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call machineId failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = basic.ReadString(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse machineId response: %s", err)
+	}
+	return ret, nil
+}
+
+// SocketOfService calls the remote procedure
+func (p *proxyServiceDirectory) SocketOfService(serviceID uint32) (object.ObjectReference, error) {
+	var err error
+	var ret object.ObjectReference
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	if err = basic.WriteUint32(serviceID, buf); err != nil {
+		return ret, fmt.Errorf("failed to serialize serviceID: %s", err)
+	}
+	response, err := p.Call("_socketOfService", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = object.ReadObjectReference(buf)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse _socketOfService response: %s", err)
+	}
+	return ret, nil
+}
+
+// SubscribeServiceAdded subscribe to a remote property
+func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
+	propertyID, err := p.SignalID("serviceAdded")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceAdded", err)
+	}
+	ch := make(chan ServiceAdded)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := ReadServiceAdded(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
+}
+
+// SubscribeServiceRemoved subscribe to a remote property
+func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
+	propertyID, err := p.SignalID("serviceRemoved")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceRemoved", err)
+	}
+	ch := make(chan ServiceRemoved)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := ReadServiceRemoved(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
 }
 
 // ServiceInfo is serializable

@@ -118,7 +118,7 @@ func compareInfo(t *testing.T, observed, expected dir.ServiceInfo) {
 
 func TestServerDirectory(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
-	impl := dir.NewServiceDirectory()
+	impl := dir.ServiceDirectoryImpl()
 	activation := server.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
@@ -199,7 +199,7 @@ func TestServerDirectory(t *testing.T) {
 
 func TestServiceDirectoryInfo(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
-	impl := dir.NewServiceDirectory()
+	impl := dir.ServiceDirectoryImpl()
 	activation := server.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
@@ -292,7 +292,7 @@ func TestServiceDirectoryInfo(t *testing.T) {
 }
 func TestNamespace(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
-	impl := dir.NewServiceDirectory()
+	impl := dir.ServiceDirectoryImpl()
 	activation := server.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
