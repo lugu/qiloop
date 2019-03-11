@@ -12,6 +12,7 @@ import (
 	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
+	value "github.com/lugu/qiloop/type/value"
 	"log"
 )
 
@@ -32,6 +33,7 @@ type BombImplementor interface {
 // BombSignalHelper provided to Bomb a companion object
 type BombSignalHelper interface {
 	SignalBoom(energy int32) error
+	UpdateDelay(duration int32) error
 }
 
 // stubBomb implements server.ServerObject.
@@ -69,6 +71,18 @@ func (p *stubBomb) SignalBoom(energy int32) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalBoom: %s", err)
+	}
+	return nil
+}
+func (p *stubBomb) UpdateDelay(duration int32) error {
+	var buf bytes.Buffer
+	if err := basic.WriteInt32(duration, &buf); err != nil {
+		return fmt.Errorf("failed to serialize duration: %s", err)
+	}
+	err := p.obj.UpdateProperty(uint32(0x65), "(i)", buf.Bytes())
+
+	if err != nil {
+		return fmt.Errorf("failed to update UpdateDelay: %s", err)
 	}
 	return nil
 }
@@ -214,6 +228,12 @@ func Services(s bus.Session) Constructor {
 type Bomb interface {
 	// SubscribeBoom subscribe to a remote signal
 	SubscribeBoom() (unsubscribe func(), updates chan int32, err error)
+	// GetDelay returns the property value
+	GetDelay() (int32, error)
+	// SetDelay sets the property value
+	SetDelay(int32) error
+	// SubscribeDelay regusters to a property
+	SubscribeDelay() (unsubscribe func(), updates chan int32, err error)
 }
 
 // Bomb represents a proxy object to the service
@@ -258,6 +278,82 @@ func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "boom", err)
+	}
+	ch := make(chan int32)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := basic.ReadInt32(buf)
+			if err != nil {
+				log.Printf("failed to unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+	return cancel, ch, nil
+}
+
+// GetDelay updates the property value
+func (p *proxyBomb) GetDelay() (ret int32, err error) {
+	name := value.String("delay")
+	value, err := p.Property(name)
+	if err != nil {
+		return ret, fmt.Errorf("get property: %s", err)
+	}
+	var buf bytes.Buffer
+	err = value.Write(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read response: %s", err)
+	}
+	s, err := basic.ReadString(&buf)
+	if err != nil {
+		return ret, fmt.Errorf("read signature: %s", err)
+	}
+	// check the signature
+	sig := "i"
+	if sig != s {
+		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
+			s, sig)
+	}
+	ret, err = basic.ReadInt32(&buf)
+	return ret, err
+}
+
+// SetDelay updates the property value
+func (p *proxyBomb) SetDelay(update int32) error {
+	name := value.String("delay")
+	var buf bytes.Buffer
+	err := basic.WriteInt32(update, &buf)
+	if err != nil {
+		return fmt.Errorf("marshall error: %s", err)
+	}
+	val := value.Opaque("i", buf.Bytes())
+	return p.SetProperty(name, val)
+}
+
+// SubscribeDelay subscribe to a remote property
+func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
+	propertyID, err := p.PropertyID("delay")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "delay", err)
+	}
+
+	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "delay", err)
 	}
 	ch := make(chan int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)

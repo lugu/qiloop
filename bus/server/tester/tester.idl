@@ -2,6 +2,7 @@ package tester
 
 interface Bomb
         sig boom(energy: int32)
+        prop delay(duration: int32)
 end
 
 interface Spacecraft

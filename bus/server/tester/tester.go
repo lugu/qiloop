@@ -31,15 +31,7 @@ func (f *spacecraftImpl) OnTerminate() {
 }
 
 func (f *spacecraftImpl) Shoot() (BombProxy, error) {
-	ref, err := AddBomb(f.service, f.serviceID)
-	if err != nil {
-		panic(err)
-	}
-	proxy, err := f.session.Object(*ref)
-	if err != nil {
-		panic(err)
-	}
-	return MakeBomb(f.session, proxy), nil
+	return CreateBomb(f.session, f.service, f.serviceID, &bombImpl{})
 }
 
 func (f *spacecraftImpl) Ammo(b BombProxy) error {
@@ -50,6 +42,8 @@ type bombImpl struct{}
 
 func (f *bombImpl) Activate(activation server.Activation,
 	helper BombSignalHelper) error {
+
+	helper.UpdateDelay(10)
 	return nil
 }
 
@@ -60,12 +54,13 @@ func NewBombObject() server.ServerObject {
 	return BombObject(&bombImpl{})
 }
 
-// Move into the stub
-func AddBomb(service server.Service, serviceID uint32) (
-	*object.ObjectReference, error) {
+// Not entirely satisfying: need to allow for client side object
+// generation... Here comes the ObjectID question..
+func CreateBomb(session bus.Session, service server.Service, serviceID uint32,
+	impl BombImplementor) (BombProxy, error) {
 
 	var stb stubBomb
-	stb.impl = &bombImpl{}
+	stb.impl = impl
 	stb.obj = generic.NewObject(stb.metaObject())
 
 	objectID, err := service.Add(&stb)
@@ -73,11 +68,16 @@ func AddBomb(service server.Service, serviceID uint32) (
 		return nil, err
 	}
 
-	return &object.ObjectReference{
+	ref := object.ObjectReference{
 		true, // with meta object
 		object.FullMetaObject(stb.metaObject()),
 		0,
 		serviceID,
 		objectID,
-	}, nil
+	}
+	proxy, err := session.Object(ref)
+	if err != nil {
+		return nil, err
+	}
+	return MakeBomb(session, proxy), nil
 }

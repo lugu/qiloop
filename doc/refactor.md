@@ -38,6 +38,11 @@
 
 5. better bridge between ServerObject <= ObjectReference <=> ProxyObject
 
+6. New<ServiceName>() is not an object service constructor, should be
+   New<ServiceName>Service() and get ride of the object: since it is
+   looking for a service named "<ServiceName>", no need to give object
+   ID 1.
+
 ### New hierarchy
 
     ./meta/type.go // type and typeset definition
