@@ -477,18 +477,13 @@ func MakeGeneric(sess bus.Session, proxy bus.Proxy) GenericProxy {
 	return &proxyGeneric{object1.MakeObject(proxy), sess}
 }
 
-// NewGeneric constructs GenericProxy
-func NewGeneric(sess bus.Session, obj uint32) (GenericProxy, error) {
-	proxy, err := sess.Proxy("Generic", obj)
+// Generic retruns a proxy to a remote service
+func (s Constructor) Generic() (GenericProxy, error) {
+	proxy, err := s.session.Proxy("Generic", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeGeneric(sess, proxy), nil
-}
-
-// Generic retruns a proxy to a remote service
-func (s Constructor) Generic() (GenericProxy, error) {
-	return NewGeneric(s.session, 1)
+	return MakeGeneric(s.session, proxy), nil
 }
 
 // MetaMethodParameter is serializable

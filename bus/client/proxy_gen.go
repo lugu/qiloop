@@ -37,18 +37,13 @@ type proxyServer struct {
 	bus.Proxy
 }
 
-// NewServer constructs ServerProxy
-func NewServer(sess bus.Session, obj uint32) (ServerProxy, error) {
-	proxy, err := sess.Proxy("Server", obj)
+// Server retruns a proxy to a remote service
+func (s Constructor) Server() (ServerProxy, error) {
+	proxy, err := s.session.Proxy("Server", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
 	return &proxyServer{proxy}, nil
-}
-
-// Server retruns a proxy to a remote service
-func (s Constructor) Server() (ServerProxy, error) {
-	return NewServer(s.session, 1)
 }
 
 // Authenticate calls the remote procedure

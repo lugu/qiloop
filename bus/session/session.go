@@ -113,7 +113,7 @@ func NewSession(addr string) (bus.Session, error) {
 		},
 	}
 	var err error
-	s.Directory, err = services.NewServiceDirectory(s, 1)
+	s.Directory, err = services.Services(s).ServiceDirectory()
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact server: %s", err)
 	}

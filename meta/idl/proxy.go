@@ -278,22 +278,22 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		file.Add(block)
 	}
 	blockContructor := jen.Id(
-		`return Make` + serviceName + `(sess, proxy), nil`,
+		`return Make` + serviceName + `(s.session, proxy), nil`,
 	)
 	if ProxyName == proxyName("Object") || ProxyName == proxyName("Server") {
 		blockContructor = jen.Id(`return &` + ProxyName + `{ proxy }, nil`)
 	}
-	file.Comment("New" + serviceName + " constructs " + objName(serviceName))
-	file.Func().Id("New"+serviceName).Params(
-		jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
-		jen.Id("obj").Uint32(),
-	).Params(
-		jen.Id(objName(serviceName)),
-		jen.Error(),
+	file.Comment(serviceName + " retruns a proxy to a remote service")
+	file.Func().Params(
+		jen.Id("s").Id("Constructor"),
+	).Id(
+		util.CleanName(serviceName),
+	).Params().Params(
+		jen.Id(objName(serviceName)), jen.Error(),
 	).Block(
-		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("sess").Dot("Proxy").Call(
+		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("s.session").Dot("Proxy").Call(
 			jen.Lit(serviceName),
-			jen.Id("obj"),
+			jen.Lit(1),
 		),
 		jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Return().List(
@@ -305,16 +305,6 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 			),
 		),
 		blockContructor,
-	)
-	file.Comment(serviceName + " retruns a proxy to a remote service")
-	file.Func().Params(
-		jen.Id("s").Id("Constructor"),
-	).Id(
-		util.CleanName(serviceName),
-	).Params().Params(
-		jen.Id(objName(serviceName)), jen.Error(),
-	).Block(
-		jen.Id(`return New` + serviceName + `(s.session, 1)`),
 	)
 }
 

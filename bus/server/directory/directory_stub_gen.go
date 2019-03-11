@@ -410,18 +410,13 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 	return &proxyServiceDirectory{object1.MakeObject(proxy), sess}
 }
 
-// NewServiceDirectory constructs ServiceDirectoryProxy
-func NewServiceDirectory(sess bus.Session, obj uint32) (ServiceDirectoryProxy, error) {
-	proxy, err := sess.Proxy("ServiceDirectory", obj)
+// ServiceDirectory retruns a proxy to a remote service
+func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
+	proxy, err := s.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeServiceDirectory(sess, proxy), nil
-}
-
-// ServiceDirectory retruns a proxy to a remote service
-func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
-	return NewServiceDirectory(s.session, 1)
+	return MakeServiceDirectory(s.session, proxy), nil
 }
 
 // Service calls the remote procedure

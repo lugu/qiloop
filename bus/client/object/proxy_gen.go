@@ -53,18 +53,13 @@ type proxyObject struct {
 	bus.Proxy
 }
 
-// NewObject constructs ObjectProxy
-func NewObject(sess bus.Session, obj uint32) (ObjectProxy, error) {
-	proxy, err := sess.Proxy("Object", obj)
+// Object retruns a proxy to a remote service
+func (s Constructor) Object() (ObjectProxy, error) {
+	proxy, err := s.session.Proxy("Object", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
 	return &proxyObject{proxy}, nil
-}
-
-// Object retruns a proxy to a remote service
-func (s Constructor) Object() (ObjectProxy, error) {
-	return NewObject(s.session, 1)
 }
 
 // RegisterEvent calls the remote procedure

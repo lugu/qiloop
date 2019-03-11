@@ -169,18 +169,13 @@ func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 	return &proxyPingPong{object1.MakeObject(proxy), sess}
 }
 
-// NewPingPong constructs PingPongProxy
-func NewPingPong(sess bus.Session, obj uint32) (PingPongProxy, error) {
-	proxy, err := sess.Proxy("PingPong", obj)
+// PingPong retruns a proxy to a remote service
+func (s Constructor) PingPong() (PingPongProxy, error) {
+	proxy, err := s.session.Proxy("PingPong", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakePingPong(sess, proxy), nil
-}
-
-// PingPong retruns a proxy to a remote service
-func (s Constructor) PingPong() (PingPongProxy, error) {
-	return NewPingPong(s.session, 1)
+	return MakePingPong(s.session, proxy), nil
 }
 
 // Hello calls the remote procedure

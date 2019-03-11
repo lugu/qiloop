@@ -2,11 +2,6 @@
 
 ### Goals
     - uniform Type handling of proxy and stub
-        - TODO: rename service constructor with explicit name like
-          NewBombService() etc..
-        - TODO: merge proxy and stub together
-        - TODO: new stub object constructor:
-                Create<Name>(Service) ObjectReference
           get both a ServerObject and a ProxyObject: registering a
           ServerObject shall return an ObjectReference.
 
@@ -37,11 +32,6 @@
 4. missing standalone server ready to use (like audit/honey)
 
 5. better bridge between ServerObject <= ObjectReference <=> ProxyObject
-
-6. New<ServiceName>() is not an object service constructor, should be
-   New<ServiceName>Service() and get ride of the object: since it is
-   looking for a service named "<ServiceName>", no need to give object
-   ID 1.
 
 ### New hierarchy
 

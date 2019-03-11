@@ -122,18 +122,13 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 	return &proxyServiceDirectory{object1.MakeObject(proxy), sess}
 }
 
-// NewServiceDirectory constructs ServiceDirectoryProxy
-func NewServiceDirectory(sess bus.Session, obj uint32) (ServiceDirectoryProxy, error) {
-	proxy, err := sess.Proxy("ServiceDirectory", obj)
+// ServiceDirectory retruns a proxy to a remote service
+func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
+	proxy, err := s.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeServiceDirectory(sess, proxy), nil
-}
-
-// ServiceDirectory retruns a proxy to a remote service
-func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
-	return NewServiceDirectory(s.session, 1)
+	return MakeServiceDirectory(s.session, proxy), nil
 }
 
 // Service calls the remote procedure
@@ -590,18 +585,13 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{object1.MakeObject(proxy), sess}
 }
 
-// NewLogProvider constructs LogProviderProxy
-func NewLogProvider(sess bus.Session, obj uint32) (LogProviderProxy, error) {
-	proxy, err := sess.Proxy("LogProvider", obj)
+// LogProvider retruns a proxy to a remote service
+func (s Constructor) LogProvider() (LogProviderProxy, error) {
+	proxy, err := s.session.Proxy("LogProvider", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeLogProvider(sess, proxy), nil
-}
-
-// LogProvider retruns a proxy to a remote service
-func (s Constructor) LogProvider() (LogProviderProxy, error) {
-	return NewLogProvider(s.session, 1)
+	return MakeLogProvider(s.session, proxy), nil
 }
 
 // SetVerbosity calls the remote procedure
@@ -708,18 +698,13 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{object1.MakeObject(proxy), sess}
 }
 
-// NewLogListener constructs LogListenerProxy
-func NewLogListener(sess bus.Session, obj uint32) (LogListenerProxy, error) {
-	proxy, err := sess.Proxy("LogListener", obj)
+// LogListener retruns a proxy to a remote service
+func (s Constructor) LogListener() (LogListenerProxy, error) {
+	proxy, err := s.session.Proxy("LogListener", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeLogListener(sess, proxy), nil
-}
-
-// LogListener retruns a proxy to a remote service
-func (s Constructor) LogListener() (LogListenerProxy, error) {
-	return NewLogListener(s.session, 1)
+	return MakeLogListener(s.session, proxy), nil
 }
 
 // SetCategory calls the remote procedure
@@ -1024,18 +1009,13 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{object1.MakeObject(proxy), sess}
 }
 
-// NewLogManager constructs LogManagerProxy
-func NewLogManager(sess bus.Session, obj uint32) (LogManagerProxy, error) {
-	proxy, err := sess.Proxy("LogManager", obj)
+// LogManager retruns a proxy to a remote service
+func (s Constructor) LogManager() (LogManagerProxy, error) {
+	proxy, err := s.session.Proxy("LogManager", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeLogManager(sess, proxy), nil
-}
-
-// LogManager retruns a proxy to a remote service
-func (s Constructor) LogManager() (LogManagerProxy, error) {
-	return NewLogManager(s.session, 1)
+	return MakeLogManager(s.session, proxy), nil
 }
 
 // Log calls the remote procedure

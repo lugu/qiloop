@@ -53,14 +53,14 @@ func TestServerProxy(t *testing.T) {
 	cache := client.NewCache(endpoint)
 	defer cache.Destroy()
 
-	_, err = client.NewServer(cache, 0)
+	_, err = client.Services(cache).ServiceServer()
 	if err == nil {
 		panic("shall not create service not in the cache")
 	}
 
 	cache.AddService("Server", 0, object.MetaService0)
 
-	_, err = client.NewServer(cache, 0)
+	_, err = client.Services(cache).ServiceServer()
 	if err != nil {
 		panic("expecting an authentication error")
 	}

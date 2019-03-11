@@ -254,18 +254,13 @@ func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 	return &proxyBomb{object1.MakeObject(proxy), sess}
 }
 
-// NewBomb constructs BombProxy
-func NewBomb(sess bus.Session, obj uint32) (BombProxy, error) {
-	proxy, err := sess.Proxy("Bomb", obj)
+// Bomb retruns a proxy to a remote service
+func (s Constructor) Bomb() (BombProxy, error) {
+	proxy, err := s.session.Proxy("Bomb", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeBomb(sess, proxy), nil
-}
-
-// Bomb retruns a proxy to a remote service
-func (s Constructor) Bomb() (BombProxy, error) {
-	return NewBomb(s.session, 1)
+	return MakeBomb(s.session, proxy), nil
 }
 
 // SubscribeBoom subscribe to a remote property
@@ -408,18 +403,13 @@ func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 	return &proxySpacecraft{object1.MakeObject(proxy), sess}
 }
 
-// NewSpacecraft constructs SpacecraftProxy
-func NewSpacecraft(sess bus.Session, obj uint32) (SpacecraftProxy, error) {
-	proxy, err := sess.Proxy("Spacecraft", obj)
+// Spacecraft retruns a proxy to a remote service
+func (s Constructor) Spacecraft() (SpacecraftProxy, error) {
+	proxy, err := s.session.Proxy("Spacecraft", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeSpacecraft(sess, proxy), nil
-}
-
-// Spacecraft retruns a proxy to a remote service
-func (s Constructor) Spacecraft() (SpacecraftProxy, error) {
-	return NewSpacecraft(s.session, 1)
+	return MakeSpacecraft(s.session, proxy), nil
 }
 
 // Shoot calls the remote procedure

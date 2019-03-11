@@ -48,7 +48,7 @@ func main() {
 	}
 
 	// service direction id = 1
-	dir, err := services.NewServiceDirectory(sess, 1)
+	dir, err := services.Services(sess).ServiceDirectory()
 	if err != nil {
 		log.Fatalf("failed to create proxy: %s", err)
 	}
