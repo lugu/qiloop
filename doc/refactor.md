@@ -5,10 +5,9 @@
           get both a ServerObject and a ProxyObject: registering a
           ServerObject shall return an ObjectReference.
 
-    - clarify the various Proxy and Object definitions and concepts
-    - flatten package hirarchy for a simpler public API
     - unique qiloop command (scan, proxy, stub, info)
-    - standalone server (log and directory)
+    - get ride of implicit tokens when creating a session
+    - remove bus/client/object.MetaObject: duplicated!!
 
 ### Experience writing qitop
 
@@ -23,13 +22,3 @@
         => ServerObject
 
 5. better bridge between ServerObject <= ObjectReference <=> ProxyObject
-
-### New hierarchy
-
-    ./meta/type.go // type and typeset definition
-    ./meta/signature.go // parser
-    ./meta/basic.go // basic types and composites
-    ./meta/interface.go // object type
-    ./meta/ref.go // scope and references
-    ./meta/proxy.go: create proxy
-    ./meta/stub.go: create stub
