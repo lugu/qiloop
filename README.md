@@ -30,28 +30,38 @@ Here is how to connect to a server and list the running services:
 package main
 
 import (
+	"github.com/lugu/qiloop"
 	"github.com/lugu/qiloop/bus/client/services"
-	"github.com/lugu/qiloop/bus/session"
 )
 
 func main() {
-	sess, err := session.NewSession("tcp://localhost:9559")
+	// Create a new session.
+	session, err := qiloop.NewSession(
+		"tcp://localhost:9559", // service directory URL
+		"",                     // user
+		"",                     // token
+	)
 	if err != nil {
 		panic(err)
 	}
 
-	proxies := services.Services(sess)
+	// Access the specialized proxy generated.
+	proxies := services.Services(session)
 
+	// Access a proxy object of the service directory.
 	directory, err := proxies.ServiceDirectory()
 	if err != nil {
 		panic(err)
 	}
 
+	// Remote procedure call: call the method "services" of the
+	// service directory.
 	serviceList, err := directory.Services()
 	if err != nil {
 		panic(err)
 	}
 
+	// Iterate over the list of services.
 	for _, info := range serviceList {
 		println("service " + info.Name)
 	}

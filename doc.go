@@ -11,8 +11,9 @@
 // a connecction to the service directory. Several transport protocol
 // are supported (currently TCP, TLS and UNIX socket).
 //
-// In order to interract with a service, a proxy of this service is
-// needed: it provides helper methods needed to serialize the data.
+// In order for a client to interract with a service, a proxy of this
+// service is needed: it provides helper methods needed to serialize
+// the data.
 //
 // The methods, signal and properties of a service are described using
 // an IDL file. The go code of a proxy is generated using this IDL
@@ -39,7 +40,7 @@
 // The file proxy_gen.go contains a method called Services which gives
 // access to the MyRobot service. The example bellow illustrate this.
 //
-// In order to communiacte with an existing service for which the IDL
+// In order to communicate with an existing service for which the IDL
 // file is unknown, the command scan can be use to introspect a
 // running instance of the service and generate its IDL description.
 //
