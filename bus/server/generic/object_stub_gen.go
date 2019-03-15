@@ -1,5 +1,6 @@
 // Package generic contains a generated stub
 // File generated. DO NOT EDIT.
+
 package generic
 
 import (

@@ -16,8 +16,8 @@ func GeneratePackage(w io.Writer, pkg *idl.PackageDeclaration) error {
 	}
 	file := jen.NewFile(pkg.Name)
 	msg := "Package " + pkg.Name + " contains a generated proxy"
-	file.PackageComment(msg)
-	file.PackageComment("File generated. DO NOT EDIT.")
+	file.HeaderComment(msg)
+	file.HeaderComment("File generated. DO NOT EDIT.")
 
 	GenerateNewServices(file)
 

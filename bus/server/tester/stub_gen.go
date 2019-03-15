@@ -1,5 +1,6 @@
 // Package tester contains a generated stub
 // File generated. DO NOT EDIT.
+
 package tester
 
 import (

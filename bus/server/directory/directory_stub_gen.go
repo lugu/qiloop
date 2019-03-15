@@ -1,5 +1,6 @@
 // Package directory contains a generated stub
 // File generated. DO NOT EDIT.
+
 package directory
 
 import (

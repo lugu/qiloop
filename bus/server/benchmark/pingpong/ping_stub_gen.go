@@ -1,5 +1,6 @@
 // Package pingpong contains a generated stub
 // File generated. DO NOT EDIT.
+
 package pingpong
 
 import (

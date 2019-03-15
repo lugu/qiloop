@@ -1,5 +1,6 @@
 // Package logger contains a generated stub
 // File generated. DO NOT EDIT.
+
 package logger
 
 import (

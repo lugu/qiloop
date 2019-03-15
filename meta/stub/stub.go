@@ -28,8 +28,8 @@ func GeneratePackage(w io.Writer, packagePath string,
 	}
 	file := jen.NewFilePathName(packagePath, pkg.Name)
 	msg := "Package " + pkg.Name + " contains a generated stub"
-	file.PackageComment(msg)
-	file.PackageComment("File generated. DO NOT EDIT.")
+	file.HeaderComment(msg)
+	file.HeaderComment("File generated. DO NOT EDIT.")
 
 	set := signature.NewTypeSet()
 	for _, typ := range pkg.Types {

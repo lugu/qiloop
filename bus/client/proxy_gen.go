@@ -1,5 +1,6 @@
 // Package client contains a generated proxy
 // File generated. DO NOT EDIT.
+
 package client
 
 import (

@@ -1,5 +1,6 @@
 // Package object contains a generated proxy
 // File generated. DO NOT EDIT.
+
 package object
 
 import (

@@ -1,5 +1,6 @@
 // Package stub_test contains a generated stub
 // File generated. DO NOT EDIT.
+
 package stub_test
 
 import (
