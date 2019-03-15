@@ -1,4 +1,4 @@
-//go:generate go get github.com/lugu/qiloop/cmd/proxygen
-//go:generate $GOPATH/bin/proxygen -idl services.idl -output proxy_gen.go
+//go:generate go get github.com/lugu/qiloop/cmd/qiloop
+//go:generate $GOPATH/bin/qiloop proxy --idl services.idl --output proxy_gen.go
 
 package services

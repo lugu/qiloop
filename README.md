@@ -94,7 +94,7 @@ What is working:
 
 -   TCP and TLS connections
 -   client proxy generation
--   service stub generation
+-   server stub generation
 -   method, signals and properties
 -   Authentication
 -   IDL parsing and generation

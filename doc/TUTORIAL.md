@@ -32,15 +32,15 @@ cd $GOPATH/src/demo
 
 Two steps:
 - contact the running instance of ALVideoDevice to generate an IDL
-  file. This is done using the `rscan` command.
+  file. This is done using the `qiloop scan` command.
 
 - generate the specialized proxy of ALVideoDevice from the IDL file.
-  This is done using the `proxygen` command.
+  This is done using the `qiloop proxy` command.
 
 The following example generates a proxy for ALVideoDevice (`demo/video_proxy.go`):
 
 ```
-$GOPATH/bin/rscan -qi-url tcp://127.0.0.1:9559 -idl demo/video_device.idl -service ALVideoDevice
+$GOPATH/bin/qiloop scan --qi-url tcp://127.0.0.1:9559 --idl demo/video_device.idl --service ALVideoDevice
 ```
 
 Add one line at the top of the IDL file video_device.idl to specify a
@@ -49,7 +49,7 @@ package name:
 
 Then generate the proxy with:
 ```
-$GOPATH/bin/proxygen -idl demo/video_device.idl -output video_proxy.go
+$GOPATH/bin/qiloop proxy --idl demo/video_device.idl --output video_proxy.go
 ```
 
 

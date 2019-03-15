@@ -30,28 +30,26 @@
 // 		prop battery(level: int)
 // 	end
 //
-// Use the proxygen commmand to generate the go code which gives
+// Use 'qiloop proxy' commmand to generate the go code which gives
 // access to the service:
 //
-// 	$ go get github.com/lugu/qiloop/cmd/proxygen
-// 	$ proxygen -i some_service.idl.qi -output proxy_gen.go
+// 	$ go get github.com/lugu/qiloop/cmd/qiloop
+// 	$ qiloop proxy --idl some_service.idl.qi --output proxy_gen.go
 //
 // The file proxy_gen.go contains a method called Services which gives
 // access to the MyRobot service. The example bellow illustrate this.
 //
 // In order to communiacte with an existing service for which the IDL
-// file is unknown, the command rscan can be use to introspect a
+// file is unknown, the command scan can be use to introspect a
 // running instance of the service and generate its IDL description.
 //
-// 	$ go get github.com/lugu/qiloop/cmd/rscan
-// 	$ rscan -qi-url "tcp://localhost:9559" -service LogManager -idl log_manager.idl.qi
+// 	$ qiloop scan --qi-url "tcp://localhost:9559" --service LogManager --idl log_manager.idl.qi
 //
 // In order to implement a new service, create an IDL file and run
 // the stub command to generate the helper method to register the
 // service:
 //
-// 	$ go get github.com/lugu/qiloop/cmd/stub
-// 	$ stub -idl my_service.idl.qi -output stub_gen.go
+// 	$ qiloop stub --idl my_service.idl.qi --output stub_gen.go
 //
 // The file stub_gen.go the interface to implement as well as the
 // helper methods to register the services.
