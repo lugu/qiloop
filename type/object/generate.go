@@ -1,4 +1,3 @@
-//go:generate go get github.com/lugu/qiloop/meta/stage1/cmd/stage1
-//go:generate $GOPATH/bin/stage1 object metaobject_gen.go
+//go:generate go run github.com/lugu/qiloop/meta/stage1/cmd/stage1 object metaobject_gen.go
 
 package object
