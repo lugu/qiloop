@@ -320,7 +320,8 @@ type LogManagerImplementor interface {
 	// during the Activate call.
 	Activate(activation server.Activation, helper LogManagerSignalHelper) error
 	OnTerminate()
-	Log(message LogMessage) error
+	Log(messages []LogMessage) error
+	CreateListener() (LogListenerProxy, error)
 	GetListener() (LogListenerProxy, error)
 	AddProvider(source LogProviderProxy) (int32, error)
 	RemoveProvider(providerID int32) error
@@ -342,9 +343,10 @@ func LogManagerObject(impl LogManagerImplementor) server.ServerObject {
 	stb.impl = impl
 	stb.obj = generic.NewObject(stb.metaObject())
 	stb.obj.Wrap(uint32(0x64), stb.Log)
-	stb.obj.Wrap(uint32(0x65), stb.GetListener)
-	stb.obj.Wrap(uint32(0x66), stb.AddProvider)
-	stb.obj.Wrap(uint32(0x67), stb.RemoveProvider)
+	stb.obj.Wrap(uint32(0x65), stb.CreateListener)
+	stb.obj.Wrap(uint32(0x66), stb.GetListener)
+	stb.obj.Wrap(uint32(0x67), stb.AddProvider)
+	stb.obj.Wrap(uint32(0x68), stb.RemoveProvider)
 	return &stb
 }
 func (p *stubLogManager) Activate(activation server.Activation) error {
@@ -361,15 +363,53 @@ func (p *stubLogManager) Receive(msg *net.Message, from *server.Context) error {
 }
 func (p *stubLogManager) Log(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	message, err := ReadLogMessage(buf)
+	messages, err := func() (b []LogMessage, err error) {
+		size, err := basic.ReadUint32(buf)
+		if err != nil {
+			return b, fmt.Errorf("failed to read slice size: %s", err)
+		}
+		b = make([]LogMessage, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = ReadLogMessage(buf)
+			if err != nil {
+				return b, fmt.Errorf("failed to read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read message: %s", err)
+		return nil, fmt.Errorf("cannot read messages: %s", err)
 	}
-	callErr := p.impl.Log(message)
+	callErr := p.impl.Log(messages)
 	if callErr != nil {
 		return nil, callErr
 	}
 	var out bytes.Buffer
+	return out.Bytes(), nil
+}
+func (p *stubLogManager) CreateListener(payload []byte) ([]byte, error) {
+	ret, callErr := p.impl.CreateListener()
+	if callErr != nil {
+		return nil, callErr
+	}
+	var out bytes.Buffer
+	errOut := func() error {
+		meta, err := ret.MetaObject(ret.ObjectID())
+		if err != nil {
+			return fmt.Errorf("failed to get meta: %s", err)
+		}
+		ref := object.ObjectReference{
+			true,
+			meta,
+			0,
+			ret.ServiceID(),
+			ret.ObjectID(),
+		}
+		return object.WriteObjectReference(ref, &out)
+	}()
+	if errOut != nil {
+		return nil, fmt.Errorf("cannot write response: %s", errOut)
+	}
 	return out.Bytes(), nil
 }
 func (p *stubLogManager) GetListener(payload []byte) ([]byte, error) {
@@ -443,27 +483,33 @@ func (p *stubLogManager) metaObject() object.MetaObject {
 		Methods: map[uint32]object.MetaMethod{
 			uint32(0x64): {
 				Name:                "log",
-				ParametersSignature: "((s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>)",
+				ParametersSignature: "([(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>])",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x64),
 			},
 			uint32(0x65): {
-				Name:                "getListener",
+				Name:                "createListener",
 				ParametersSignature: "()",
 				ReturnSignature:     "o",
 				Uid:                 uint32(0x65),
 			},
 			uint32(0x66): {
-				Name:                "addProvider",
-				ParametersSignature: "(o)",
-				ReturnSignature:     "i",
+				Name:                "getListener",
+				ParametersSignature: "()",
+				ReturnSignature:     "o",
 				Uid:                 uint32(0x66),
 			},
 			uint32(0x67): {
+				Name:                "addProvider",
+				ParametersSignature: "(o)",
+				ReturnSignature:     "i",
+				Uid:                 uint32(0x67),
+			},
+			uint32(0x68): {
 				Name:                "removeProvider",
 				ParametersSignature: "(i)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x67),
+				Uid:                 uint32(0x68),
 			},
 		},
 		Signals: map[uint32]object.MetaSignal{},
@@ -1017,7 +1063,9 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 // LogManager is the abstract interface of the service
 type LogManager interface {
 	// Log calls the remote procedure
-	Log(message LogMessage) error
+	Log(messages []LogMessage) error
+	// CreateListener calls the remote procedure
+	CreateListener() (LogListenerProxy, error)
 	// GetListener calls the remote procedure
 	GetListener() (LogListenerProxy, error)
 	// AddProvider calls the remote procedure
@@ -1054,18 +1102,58 @@ func (s Constructor) LogManager() (LogManagerProxy, error) {
 }
 
 // Log calls the remote procedure
-func (p *proxyLogManager) Log(message LogMessage) error {
+func (p *proxyLogManager) Log(messages []LogMessage) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteLogMessage(message, buf); err != nil {
-		return fmt.Errorf("failed to serialize message: %s", err)
+	if err = func() error {
+		err := basic.WriteUint32(uint32(len(messages)), buf)
+		if err != nil {
+			return fmt.Errorf("failed to write slice size: %s", err)
+		}
+		for _, v := range messages {
+			err = WriteLogMessage(v, buf)
+			if err != nil {
+				return fmt.Errorf("failed to write slice value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("failed to serialize messages: %s", err)
 	}
 	_, err = p.Call("log", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
 	return nil
+}
+
+// CreateListener calls the remote procedure
+func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
+	var err error
+	var ret LogListenerProxy
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("createListener", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call createListener failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = func() (LogListenerProxy, error) {
+		ref, err := object.ReadObjectReference(buf)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get meta: %s", err)
+		}
+		proxy, err := p.session.Object(ref)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get proxy: %s", err)
+		}
+		return MakeLogListener(p.session, proxy), nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse createListener response: %s", err)
+	}
+	return ret, nil
 }
 
 // GetListener calls the remote procedure

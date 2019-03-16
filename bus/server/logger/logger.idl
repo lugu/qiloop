@@ -34,8 +34,9 @@ interface LogListener
 end
 
 interface LogManager
-	fn log(message: LogMessage) //uid:100
-	fn getListener() -> LogListener //uid:101
-	fn addProvider(source: LogProvider) -> int32 //uid:102
-	fn removeProvider(providerID: int32) //uid:103
+	fn log(messages: Vec<LogMessage>) //uid:100
+	fn createListener() -> LogListener //uid:101
+	fn getListener() -> LogListener //uid:102
+	fn addProvider(source: LogProvider) -> int32 //uid:103
+	fn removeProvider(providerID: int32) //uid:104
 end

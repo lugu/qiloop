@@ -983,7 +983,9 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 // LogManager is the abstract interface of the service
 type LogManager interface {
 	// Log calls the remote procedure
-	Log(message LogMessage) error
+	Log(messages []LogMessage) error
+	// CreateListener calls the remote procedure
+	CreateListener() (LogListenerProxy, error)
 	// GetListener calls the remote procedure
 	GetListener() (LogListenerProxy, error)
 	// AddProvider calls the remote procedure
@@ -1020,18 +1022,58 @@ func (s Constructor) LogManager() (LogManagerProxy, error) {
 }
 
 // Log calls the remote procedure
-func (p *proxyLogManager) Log(message LogMessage) error {
+func (p *proxyLogManager) Log(messages []LogMessage) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteLogMessage(message, buf); err != nil {
-		return fmt.Errorf("failed to serialize message: %s", err)
+	if err = func() error {
+		err := basic.WriteUint32(uint32(len(messages)), buf)
+		if err != nil {
+			return fmt.Errorf("failed to write slice size: %s", err)
+		}
+		for _, v := range messages {
+			err = WriteLogMessage(v, buf)
+			if err != nil {
+				return fmt.Errorf("failed to write slice value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("failed to serialize messages: %s", err)
 	}
 	_, err = p.Call("log", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
 	return nil
+}
+
+// CreateListener calls the remote procedure
+func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
+	var err error
+	var ret LogListenerProxy
+	var buf *bytes.Buffer
+	buf = bytes.NewBuffer(make([]byte, 0))
+	response, err := p.Call("createListener", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call createListener failed: %s", err)
+	}
+	buf = bytes.NewBuffer(response)
+	ret, err = func() (LogListenerProxy, error) {
+		ref, err := object.ReadObjectReference(buf)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get meta: %s", err)
+		}
+		proxy, err := p.session.Object(ref)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get proxy: %s", err)
+		}
+		return MakeLogListener(p.session, proxy), nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse createListener response: %s", err)
+	}
+	return ret, nil
 }
 
 // GetListener calls the remote procedure
