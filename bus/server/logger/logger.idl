@@ -22,7 +22,7 @@ end
 interface LogProvider
         fn setVerbosity(level: LogLevel) //uid:100
         fn setCategory(category: str, level: LogLevel) //uid:101
-        fn clearAndSet(filters: Map<str,int32>) //uid:102
+        fn clearAndSet(filters: Map<str,LogLevel>) //uid:102
 end
 
 interface LogListener
@@ -38,5 +38,5 @@ interface LogManager
 	fn createListener() -> LogListener //uid:101
 	fn getListener() -> LogListener //uid:102
 	fn addProvider(source: LogProvider) -> int32 //uid:103
-	fn removeProvider(providerID: int32) //uid:104
+	fn removeProvider(sourceID: int32) //uid:104
 end

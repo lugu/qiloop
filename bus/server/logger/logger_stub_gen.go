@@ -32,7 +32,7 @@ type LogProviderImplementor interface {
 	OnTerminate()
 	SetVerbosity(level LogLevel) error
 	SetCategory(category string, level LogLevel) error
-	ClearAndSet(filters map[string]int32) error
+	ClearAndSet(filters map[string]LogLevel) error
 }
 
 // LogProviderSignalHelper provided to LogProvider a companion object
@@ -99,18 +99,18 @@ func (p *stubLogProvider) SetCategory(payload []byte) ([]byte, error) {
 }
 func (p *stubLogProvider) ClearAndSet(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	filters, err := func() (m map[string]int32, err error) {
+	filters, err := func() (m map[string]LogLevel, err error) {
 		size, err := basic.ReadUint32(buf)
 		if err != nil {
 			return m, fmt.Errorf("failed to read map size: %s", err)
 		}
-		m = make(map[string]int32, size)
+		m = make(map[string]LogLevel, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := basic.ReadInt32(buf)
+			v, err := ReadLogLevel(buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -146,7 +146,7 @@ func (p *stubLogProvider) metaObject() object.MetaObject {
 			},
 			uint32(0x66): {
 				Name:                "clearAndSet",
-				ParametersSignature: "({si})",
+				ParametersSignature: "({s(i)<LogLevel,level>})",
 				ReturnSignature:     "v",
 				Uid:                 uint32(0x66),
 			},
@@ -324,7 +324,7 @@ type LogManagerImplementor interface {
 	CreateListener() (LogListenerProxy, error)
 	GetListener() (LogListenerProxy, error)
 	AddProvider(source LogProviderProxy) (int32, error)
-	RemoveProvider(providerID int32) error
+	RemoveProvider(sourceID int32) error
 }
 
 // LogManagerSignalHelper provided to LogManager a companion object
@@ -466,11 +466,11 @@ func (p *stubLogManager) AddProvider(payload []byte) ([]byte, error) {
 }
 func (p *stubLogManager) RemoveProvider(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	providerID, err := basic.ReadInt32(buf)
+	sourceID, err := basic.ReadInt32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read providerID: %s", err)
+		return nil, fmt.Errorf("cannot read sourceID: %s", err)
 	}
-	callErr := p.impl.RemoveProvider(providerID)
+	callErr := p.impl.RemoveProvider(sourceID)
 	if callErr != nil {
 		return nil, callErr
 	}
@@ -645,7 +645,7 @@ type LogProvider interface {
 	// SetCategory calls the remote procedure
 	SetCategory(category string, level LogLevel) error
 	// ClearAndSet calls the remote procedure
-	ClearAndSet(filters map[string]int32) error
+	ClearAndSet(filters map[string]LogLevel) error
 }
 
 // LogProvider represents a proxy object to the service
@@ -709,7 +709,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 }
 
 // ClearAndSet calls the remote procedure
-func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
+func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
@@ -723,7 +723,7 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = basic.WriteInt32(v, buf)
+			err = WriteLogLevel(v, buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -1071,7 +1071,7 @@ type LogManager interface {
 	// AddProvider calls the remote procedure
 	AddProvider(source LogProviderProxy) (int32, error)
 	// RemoveProvider calls the remote procedure
-	RemoveProvider(providerID int32) error
+	RemoveProvider(sourceID int32) error
 }
 
 // LogManager represents a proxy object to the service
@@ -1219,12 +1219,12 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 }
 
 // RemoveProvider calls the remote procedure
-func (p *proxyLogManager) RemoveProvider(providerID int32) error {
+func (p *proxyLogManager) RemoveProvider(sourceID int32) error {
 	var err error
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteInt32(providerID, buf); err != nil {
-		return fmt.Errorf("failed to serialize providerID: %s", err)
+	if err = basic.WriteInt32(sourceID, buf); err != nil {
+		return fmt.Errorf("failed to serialize sourceID: %s", err)
 	}
 	_, err = p.Call("removeProvider", buf.Bytes())
 	if err != nil {
