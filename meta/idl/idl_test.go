@@ -40,6 +40,27 @@ func TestObject(t *testing.T) {
 	helpTestGenerate(t, "object.idl", "Object", object.ObjectMetaObject)
 }
 
+func TestProperties(t *testing.T) {
+	helpTestGenerate(t, "property.idl", "Test",
+		object.MetaObject{
+			Description: "Test",
+			Methods:     map[uint32]object.MetaMethod{},
+			Signals:     map[uint32]object.MetaSignal{},
+			Properties: map[uint32]object.MetaProperty{
+				0x64: {
+					Uid:       0x64,
+					Signature: "I",
+					Name:      "a",
+				},
+				0x65: {
+					Uid:       0x65,
+					Signature: "s",
+					Name:      "b",
+				},
+			},
+		})
+}
+
 func TestServiceDirectory(t *testing.T) {
 	path := filepath.Join("testdata", "meta-object.bin")
 	file, err := os.Open(path)

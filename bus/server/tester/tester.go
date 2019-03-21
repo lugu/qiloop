@@ -1,6 +1,7 @@
 package tester
 
 import (
+	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/generic"
@@ -43,7 +44,10 @@ type bombImpl struct{}
 func (f *bombImpl) Activate(activation server.Activation,
 	helper BombSignalHelper) error {
 
-	helper.UpdateDelay(10)
+	err := helper.UpdateDelay(10)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -51,6 +55,9 @@ func (f *bombImpl) OnTerminate() {
 }
 
 func (f *bombImpl) OnDelayChange(duration int32) error {
+	if duration < 0 {
+		return fmt.Errorf("duration cannot be negative (%d)", duration)
+	}
 	return nil
 }
 

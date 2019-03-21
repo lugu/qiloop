@@ -15,7 +15,6 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
-	"strings"
 )
 
 // ObjectImplementor interface of the service implementation
@@ -92,11 +91,10 @@ func (p *stubObject) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubObject) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
+	switch name {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -448,9 +446,10 @@ func (p *stubObject) metaObject() object.MetaObject {
 				Uid:                 uint32(0x8),
 			},
 		},
+		Properties: map[uint32]object.MetaProperty{},
 		Signals: map[uint32]object.MetaSignal{uint32(0x56): {
 			Name:      "traceObject",
-			Signature: "((IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>)",
+			Signature: "(IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>",
 			Uid:       uint32(0x56),
 		}},
 	}

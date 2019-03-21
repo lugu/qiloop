@@ -14,7 +14,6 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"log"
-	"strings"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -67,11 +66,10 @@ func (p *stubPingPong) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubPingPong) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
+	switch name {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubPingPong) Hello(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -132,9 +130,10 @@ func (p *stubPingPong) metaObject() object.MetaObject {
 				Uid:                 uint32(0x65),
 			},
 		},
+		Properties: map[uint32]object.MetaProperty{},
 		Signals: map[uint32]object.MetaSignal{uint32(0x66): {
 			Name:      "pong",
-			Signature: "(s)",
+			Signature: "s",
 			Uid:       uint32(0x66),
 		}},
 	}

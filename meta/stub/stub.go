@@ -210,7 +210,7 @@ func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
 	}
 	code = jen.Id("err := p.obj.UpdateProperty").Call(
 		jen.Lit(property.ID),
-		jen.Lit(property.Tuple().Signature()),
+		jen.Lit(property.Type().Signature()),
 		jen.Id("buf.Bytes()"),
 	)
 	writing = append(writing, code)
@@ -349,7 +349,18 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 				jen.Id("Uid"):  jen.Lit(signal.ID),
 				jen.Id("Name"): jen.Lit(signal.Name),
 				jen.Id("Signature"): jen.Lit(
-					signal.Tuple().Signature(),
+					signal.Type().Signature(),
+				),
+			})
+		}
+	}
+	metaProperties := func(d jen.Dict) {
+		for _, property := range itf.Properties {
+			d[jen.Lit(property.ID)] = jen.Values(jen.Dict{
+				jen.Id("Uid"):  jen.Lit(property.ID),
+				jen.Id("Name"): jen.Lit(property.Name),
+				jen.Id("Signature"): jen.Lit(
+					property.Type().Signature(),
 				),
 			})
 		}
@@ -365,14 +376,22 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 			jen.Dict{
 				jen.Id("Description"): jen.Lit(itf.Name),
 				jen.Id("Methods"): jen.Map(jen.Uint32()).Qual(
-					"github.com/lugu/qiloop/type/object", "MetaMethod",
+					"github.com/lugu/qiloop/type/object",
+					"MetaMethod",
 				).Values(
 					jen.DictFunc(metaMethods),
 				),
 				jen.Id("Signals"): jen.Map(jen.Uint32()).Qual(
-					"github.com/lugu/qiloop/type/object", "MetaSignal",
+					"github.com/lugu/qiloop/type/object",
+					"MetaSignal",
 				).Values(
 					jen.DictFunc(metaSignals),
+				),
+				jen.Id("Properties"): jen.Map(jen.Uint32()).Qual(
+					"github.com/lugu/qiloop/type/object",
+					"MetaProperty",
+				).Values(
+					jen.DictFunc(metaProperties),
 				),
 			},
 		),
@@ -426,7 +445,7 @@ func generateStubPropertyCallback(file *jen.File, itf *idl.InterfaceType) error 
 
 	property := func(p object.MetaProperty, propertyName string) error {
 		property := itf.Properties[p.Uid]
-		code := jen.Case(jen.Lit(propertyName))
+		code := jen.Case(jen.Lit(p.Name))
 		writing = append(writing, code)
 		code = jen.Id("buf").Op(":=").Qual(
 			"bytes", "NewBuffer",
@@ -468,10 +487,7 @@ func generateStubPropertyCallback(file *jen.File, itf *idl.InterfaceType) error 
 	).Params(
 		jen.Error(),
 	).Block(
-		jen.Switch().Qual(
-			"strings", "Title",
-		).Call(jen.Id("name")).Block(writing...),
-		jen.Id("return nil"),
+		jen.Switch().Id("name").Block(writing...),
 	)
 	return nil
 }

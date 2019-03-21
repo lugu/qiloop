@@ -16,7 +16,6 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
-	"strings"
 )
 
 // LogProviderImplementor interface of the service implementation
@@ -69,11 +68,10 @@ func (p *stubLogProvider) Receive(msg *net.Message, from *server.Context) error 
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
+	switch name {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubLogProvider) SetVerbosity(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -159,7 +157,8 @@ func (p *stubLogProvider) metaObject() object.MetaObject {
 				Uid:                 uint32(0x66),
 			},
 		},
-		Signals: map[uint32]object.MetaSignal{},
+		Properties: map[uint32]object.MetaProperty{},
+		Signals:    map[uint32]object.MetaSignal{},
 	}
 }
 
@@ -221,15 +220,15 @@ func (p *stubLogListener) Receive(msg *net.Message, from *server.Context) error 
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
-	case "Verbosity":
+	switch name {
+	case "verbosity":
 		buf := bytes.NewBuffer(data)
 		prop, err := ReadLogLevel(buf)
 		if err != nil {
 			return fmt.Errorf("cannot read Verbosity: %s", err)
 		}
 		return p.impl.OnVerbosityChange(prop)
-	case "Filters":
+	case "filters":
 		buf := bytes.NewBuffer(data)
 		prop, err := func() (m map[string]int32, err error) {
 			size, err := basic.ReadUint32(buf)
@@ -257,7 +256,6 @@ func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubLogListener) SetCategory(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -301,7 +299,7 @@ func (p *stubLogListener) UpdateVerbosity(level LogLevel) error {
 	if err := WriteLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
-	err := p.obj.UpdateProperty(uint32(0x68), "((i)<LogLevel,level>)", buf.Bytes())
+	err := p.obj.UpdateProperty(uint32(0x68), "(i)<LogLevel,level>", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateVerbosity: %s", err)
@@ -329,7 +327,7 @@ func (p *stubLogListener) UpdateFilters(filters map[string]int32) error {
 	}(); err != nil {
 		return fmt.Errorf("failed to serialize filters: %s", err)
 	}
-	err := p.obj.UpdateProperty(uint32(0x69), "({si})", buf.Bytes())
+	err := p.obj.UpdateProperty(uint32(0x69), "{si}", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateFilters: %s", err)
@@ -353,9 +351,21 @@ func (p *stubLogListener) metaObject() object.MetaObject {
 				Uid:                 uint32(0x66),
 			},
 		},
+		Properties: map[uint32]object.MetaProperty{
+			uint32(0x68): {
+				Name:      "verbosity",
+				Signature: "(i)<LogLevel,level>",
+				Uid:       uint32(0x68),
+			},
+			uint32(0x69): {
+				Name:      "filters",
+				Signature: "{si}",
+				Uid:       uint32(0x69),
+			},
+		},
 		Signals: map[uint32]object.MetaSignal{uint32(0x67): {
 			Name:      "onLogMessage",
-			Signature: "((s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>)",
+			Signature: "(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>",
 			Uid:       uint32(0x67),
 		}},
 	}
@@ -415,11 +425,10 @@ func (p *stubLogManager) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogManager) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
+	switch name {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubLogManager) Log(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -572,7 +581,8 @@ func (p *stubLogManager) metaObject() object.MetaObject {
 				Uid:                 uint32(0x68),
 			},
 		},
-		Signals: map[uint32]object.MetaSignal{},
+		Properties: map[uint32]object.MetaProperty{},
+		Signals:    map[uint32]object.MetaSignal{},
 	}
 }
 

@@ -40,6 +40,38 @@ func TestAddRemoveObject(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// initial delay is 10 seconds
+	delay, err := bomb.GetDelay()
+	if err != nil {
+		t.Error(err)
+	} else if delay != 10 {
+		t.Errorf("unexpected delay: %d", delay)
+	}
+
+	err = bomb.SetDelay(12)
+	if err != nil {
+		t.Error(err)
+	}
+
+	delay, err = bomb.GetDelay()
+	if err != nil {
+		t.Error(err)
+	} else if delay != 12 {
+		t.Errorf("unexpected delay: %d", delay)
+	}
+
+	err = bomb.SetDelay(-1)
+	if err == nil {
+		t.Error("error expected")
+	}
+
+	delay, err = bomb.GetDelay()
+	if err != nil {
+		t.Error(err)
+	} else if delay != 12 {
+		t.Errorf("unexpected delay: %d", delay)
+	}
+
 	err = spacecraft.Ammo(bomb)
 	if err != nil {
 		t.Error(err)

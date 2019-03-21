@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
+	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 	"log"
@@ -30,9 +31,10 @@ func (s *stubGeneric) UpdateProperty(id uint32, sig string, data []byte) error {
 	if !ok {
 		return fmt.Errorf("unexpected implementation")
 	}
-	prop, ok := s.metaObject().Properties[id]
+	prop, ok := objImpl.meta.Properties[id]
 	if !ok {
-		return fmt.Errorf("missing property %d", id)
+		return fmt.Errorf("missing property (%d), %#v", id,
+			objImpl.meta)
 	}
 	err := objImpl.onPropertyChange(prop.Name, data)
 	if err != nil {
@@ -79,6 +81,7 @@ func NewObject(meta object.MetaObject,
 		meta:              object.FullMetaObject(meta),
 		onPropertyChange:  onPropertyChange,
 		stats:             nil,
+		properties:        make(map[string]value.Value),
 		observableWrapper: make(map[uint32]server.ActionWrapper),
 	}
 	obj := GenericObject(impl)
@@ -141,9 +144,15 @@ func (o *objectImpl) Property(name value.Value) (value.Value, error) {
 	if !ok {
 		return nil, fmt.Errorf("property name must be a string value")
 	}
+	nameStr := stringValue.Value()
 	o.propertiesMutex.RLock()
 	defer o.propertiesMutex.RUnlock()
-	return o.properties[stringValue.Value()], nil
+	val, ok := o.properties[nameStr]
+	if !ok {
+		return nil, fmt.Errorf("property unknown: %s, %#v", nameStr,
+			o.properties)
+	}
+	return val, nil
 }
 
 func (o *objectImpl) SetProperty(name value.Value, newValue value.Value) error {
@@ -169,6 +178,10 @@ func (o *objectImpl) SetProperty(name value.Value, newValue value.Value) error {
 	if err != nil {
 		return fmt.Errorf("cannot write value: %s", err)
 	}
+	sig, err := basic.ReadString(&buf)
+	if err != nil {
+		return fmt.Errorf("invalid signature: %s", err)
+	}
 	data := buf.Bytes()
 	err = o.onPropertyChange(nameStr, data)
 	if err != nil {
@@ -182,7 +195,7 @@ func (o *objectImpl) SetProperty(name value.Value, newValue value.Value) error {
 	if err != nil {
 		return fmt.Errorf("cannot set property: %s", err)
 	}
-	return o.obj.UpdateProperty(id, "", data)
+	return o.obj.UpdateProperty(id, sig, data)
 }
 
 func (o *objectImpl) saveProperty(name string, newValue value.Value) error {

@@ -55,6 +55,23 @@ func generateMethod(writer io.Writer, set *signature.TypeSet,
 	return nil
 }
 
+// generateProperties writes the signal declaration. Does not use
+// methodName, because is the Go method name generated to avoid
+// conflicts. QiMessage do not have such constraint and thus we don't
+// use this name when creating IDL files.
+func generateProperty(writer io.Writer, set *signature.TypeSet,
+	p object.MetaProperty, propertyName string) error {
+
+	propertyType, err := signature.Parse(p.Signature)
+	if err != nil {
+		return fmt.Errorf("failed to parse property of %s: %s", p.Name, err)
+	}
+	propertyType.RegisterTo(set)
+	fmt.Fprintf(writer, "\tprop %s(param: %s) //uid:%d\n", p.Name,
+		propertyType.SignatureIDL(), p.Uid)
+	return nil
+}
+
 // generateSignal writes the signal declaration. Does not use
 // methodName, because is the Go method name generated to avoid
 // conflicts. QiMessage do not have such constraint and thus we don't
@@ -102,8 +119,7 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 		return generateSignal(writer, set, s, "Subscribe"+signalName)
 	}
 	property := func(p object.MetaProperty, propertyName string) error {
-		// TODO: write property
-		return nil
+		return generateProperty(writer, set, p, propertyName)
 	}
 
 	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {

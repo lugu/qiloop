@@ -15,7 +15,6 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"log"
-	"strings"
 )
 
 // BombImplementor interface of the service implementation
@@ -68,8 +67,8 @@ func (p *stubBomb) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubBomb) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
-	case "Delay":
+	switch name {
+	case "delay":
 		buf := bytes.NewBuffer(data)
 		prop, err := basic.ReadInt32(buf)
 		if err != nil {
@@ -79,7 +78,6 @@ func (p *stubBomb) onPropertyChange(name string, data []byte) error {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubBomb) SignalBoom(energy int32) error {
 	var buf bytes.Buffer
@@ -98,7 +96,7 @@ func (p *stubBomb) UpdateDelay(duration int32) error {
 	if err := basic.WriteInt32(duration, &buf); err != nil {
 		return fmt.Errorf("failed to serialize duration: %s", err)
 	}
-	err := p.obj.UpdateProperty(uint32(0x65), "(i)", buf.Bytes())
+	err := p.obj.UpdateProperty(uint32(0x65), "i", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateDelay: %s", err)
@@ -109,9 +107,14 @@ func (p *stubBomb) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Bomb",
 		Methods:     map[uint32]object.MetaMethod{},
+		Properties: map[uint32]object.MetaProperty{uint32(0x65): {
+			Name:      "delay",
+			Signature: "i",
+			Uid:       uint32(0x65),
+		}},
 		Signals: map[uint32]object.MetaSignal{uint32(0x64): {
 			Name:      "boom",
-			Signature: "(i)",
+			Signature: "i",
 			Uid:       uint32(0x64),
 		}},
 	}
@@ -165,11 +168,10 @@ func (p *stubSpacecraft) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
+	switch name {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubSpacecraft) Shoot(payload []byte) ([]byte, error) {
 	ret, callErr := p.impl.Shoot()
@@ -236,7 +238,8 @@ func (p *stubSpacecraft) metaObject() object.MetaObject {
 				Uid:                 uint32(0x65),
 			},
 		},
-		Signals: map[uint32]object.MetaSignal{},
+		Properties: map[uint32]object.MetaProperty{},
+		Signals:    map[uint32]object.MetaSignal{},
 	}
 }
 

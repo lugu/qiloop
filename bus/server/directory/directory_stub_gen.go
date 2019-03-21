@@ -15,7 +15,6 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
-	"strings"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -81,11 +80,10 @@ func (p *stubServiceDirectory) Receive(msg *net.Message, from *server.Context) e
 	return p.obj.Receive(msg, from)
 }
 func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error {
-	switch strings.Title(name) {
+	switch name {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
-	return nil
 }
 func (p *stubServiceDirectory) Service(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -296,15 +294,16 @@ func (p *stubServiceDirectory) metaObject() object.MetaObject {
 				Uid:                 uint32(0x6d),
 			},
 		},
+		Properties: map[uint32]object.MetaProperty{},
 		Signals: map[uint32]object.MetaSignal{
 			uint32(0x6a): {
 				Name:      "serviceAdded",
-				Signature: "(Is)",
+				Signature: "(Is)<serviceAdded,serviceID,name>",
 				Uid:       uint32(0x6a),
 			},
 			uint32(0x6b): {
 				Name:      "serviceRemoved",
-				Signature: "(Is)",
+				Signature: "(Is)<serviceRemoved,serviceID,name>",
 				Uid:       uint32(0x6b),
 			},
 		},
