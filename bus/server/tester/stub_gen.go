@@ -15,6 +15,7 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"log"
+	"strings"
 )
 
 // BombImplementor interface of the service implementation
@@ -29,6 +30,9 @@ type BombImplementor interface {
 	// during the Activate call.
 	Activate(activation server.Activation, helper BombSignalHelper) error
 	OnTerminate()
+	// OnDelayChange is called when the property is updated.
+	// Returns an error if the property value is not allowed
+	OnDelayChange(duration int32) error
 }
 
 // BombSignalHelper provided to Bomb a companion object
@@ -48,7 +52,7 @@ type stubBomb struct {
 func BombObject(impl BombImplementor) server.ServerObject {
 	var stb stubBomb
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubBomb) Activate(activation server.Activation) error {
@@ -62,6 +66,20 @@ func (p *stubBomb) OnTerminate() {
 }
 func (p *stubBomb) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubBomb) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	case "Delay":
+		buf := bytes.NewBuffer(data)
+		prop, err := basic.ReadInt32(buf)
+		if err != nil {
+			return fmt.Errorf("cannot read Delay: %s", err)
+		}
+		return p.impl.OnDelayChange(prop)
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubBomb) SignalBoom(energy int32) error {
 	var buf bytes.Buffer
@@ -129,7 +147,7 @@ type stubSpacecraft struct {
 func SpacecraftObject(impl SpacecraftImplementor) server.ServerObject {
 	var stb stubSpacecraft
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Shoot)
 	stb.obj.Wrap(uint32(0x65), stb.Ammo)
 	return &stb
@@ -145,6 +163,13 @@ func (p *stubSpacecraft) OnTerminate() {
 }
 func (p *stubSpacecraft) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubSpacecraft) Shoot(payload []byte) ([]byte, error) {
 	ret, callErr := p.impl.Shoot()

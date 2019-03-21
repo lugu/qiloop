@@ -15,6 +15,7 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
+	"strings"
 )
 
 // ObjectImplementor interface of the service implementation
@@ -61,7 +62,7 @@ type stubObject struct {
 func ObjectObject(impl ObjectImplementor) server.ServerObject {
 	var stb stubObject
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
 	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
 	stb.obj.Wrap(uint32(0x2), stb.MetaObject)
@@ -89,6 +90,13 @@ func (p *stubObject) OnTerminate() {
 }
 func (p *stubObject) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubObject) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)

@@ -26,7 +26,7 @@ func CreateLogListener(session bus.Session, service server.Service,
 	}
 	var stb stubLogListener
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {
@@ -86,5 +86,13 @@ func (l *logListenerImpl) SetCategory(category string, level LogLevel) error {
 }
 
 func (l *logListenerImpl) ClearFilters() error {
+	panic("not yet implemented")
+}
+
+func (l *logListenerImpl) OnVerbosityChange(level LogLevel) error {
+	panic("not yet implemented")
+}
+
+func (l *logListenerImpl) OnFiltersChange(filters map[string]int32) error {
 	panic("not yet implemented")
 }

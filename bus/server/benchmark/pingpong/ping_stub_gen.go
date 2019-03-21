@@ -14,6 +14,7 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"log"
+	"strings"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -48,7 +49,7 @@ type stubPingPong struct {
 func PingPongObject(impl PingPongImplementor) server.ServerObject {
 	var stb stubPingPong
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Hello)
 	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb
@@ -64,6 +65,13 @@ func (p *stubPingPong) OnTerminate() {
 }
 func (p *stubPingPong) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubPingPong) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubPingPong) Hello(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)

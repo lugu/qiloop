@@ -72,7 +72,7 @@ func NewObject(name string) generic.Object {
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
 		Properties:  make(map[uint32]object.MetaProperty),
-	})
+	}, func(string, []byte) error { return nil })
 }
 
 func TestNewServer(t *testing.T) {

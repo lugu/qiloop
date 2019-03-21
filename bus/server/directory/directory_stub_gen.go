@@ -15,6 +15,7 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
+	"strings"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -56,7 +57,7 @@ type stubServiceDirectory struct {
 func ServiceDirectoryObject(impl ServiceDirectoryImplementor) server.ServerObject {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Service)
 	stb.obj.Wrap(uint32(0x65), stb.Services)
 	stb.obj.Wrap(uint32(0x66), stb.RegisterService)
@@ -78,6 +79,13 @@ func (p *stubServiceDirectory) OnTerminate() {
 }
 func (p *stubServiceDirectory) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubServiceDirectory) Service(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)

@@ -1,6 +1,7 @@
 package generic
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/lugu/qiloop/bus/net"
@@ -25,9 +26,23 @@ func (s *stubGeneric) UpdateSignal(signal uint32, data []byte) error {
 }
 
 func (s *stubGeneric) UpdateProperty(id uint32, sig string, data []byte) error {
-	idValue := value.Uint(id)
+	objImpl, ok := (s.impl).(*objectImpl)
+	if !ok {
+		return fmt.Errorf("unexpected implementation")
+	}
+	prop, ok := s.metaObject().Properties[id]
+	if !ok {
+		return fmt.Errorf("missing property %d", id)
+	}
+	err := objImpl.onPropertyChange(prop.Name, data)
+	if err != nil {
+		return err
+	}
 	newValue := value.Opaque(sig, data)
-	s.impl.SetProperty(idValue, newValue)
+	err = objImpl.saveProperty(prop.Name, newValue)
+	if err != nil {
+		return err
+	}
 	return s.obj.UpdateProperty(id, sig, data)
 }
 
@@ -38,6 +53,7 @@ func (s *stubGeneric) Wrap(id uint32, fn server.ActionWrapper) {
 type objectImpl struct {
 	obj               *BasicObject
 	meta              object.MetaObject
+	onPropertyChange  func(string, []byte) error
 	objectID          uint32
 	signal            GenericSignalHelper
 	properties        map[string]value.Value
@@ -55,9 +71,13 @@ type objectImpl struct {
 // Services implementation user this Object and fill it with the
 // extra actions they wish to handle using the Wrap method. See
 // type/object.Object for a list of the default methods.
-func NewObject(meta object.MetaObject) Object {
+// onPropertyChange is called each time a property is udpated.
+func NewObject(meta object.MetaObject,
+	onPropertyChange func(string, []byte) error) Object {
+
 	impl := &objectImpl{
 		meta:              object.FullMetaObject(meta),
+		onPropertyChange:  onPropertyChange,
 		stats:             nil,
 		observableWrapper: make(map[uint32]server.ActionWrapper),
 	}
@@ -144,9 +164,31 @@ func (o *objectImpl) SetProperty(name value.Value, newValue value.Value) error {
 		}
 		nameStr = property.Name
 	}
+	var buf bytes.Buffer
+	err := newValue.Write(&buf)
+	if err != nil {
+		return fmt.Errorf("cannot write value: %s", err)
+	}
+	data := buf.Bytes()
+	err = o.onPropertyChange(nameStr, data)
+	if err != nil {
+		return err
+	}
+	err = o.saveProperty(nameStr, newValue)
+	if err != nil {
+		return err
+	}
+	id, err := o.meta.PropertyID(nameStr)
+	if err != nil {
+		return fmt.Errorf("cannot set property: %s", err)
+	}
+	return o.obj.UpdateProperty(id, "", data)
+}
+
+func (o *objectImpl) saveProperty(name string, newValue value.Value) error {
 	o.propertiesMutex.Lock()
 	defer o.propertiesMutex.Unlock()
-	o.properties[nameStr] = newValue
+	o.properties[name] = newValue
 	return nil
 }
 

@@ -14,6 +14,7 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"io"
+	"strings"
 )
 
 // GenericImplementor interface of the service implementation
@@ -88,6 +89,13 @@ func (p *stubGeneric) OnTerminate() {
 }
 func (p *stubGeneric) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubGeneric) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubGeneric) RegisterEvent(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)

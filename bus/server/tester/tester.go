@@ -50,6 +50,10 @@ func (f *bombImpl) Activate(activation server.Activation,
 func (f *bombImpl) OnTerminate() {
 }
 
+func (f *bombImpl) OnDelayChange(duration int32) error {
+	return nil
+}
+
 func NewBombObject() server.ServerObject {
 	return BombObject(&bombImpl{})
 }
@@ -61,7 +65,7 @@ func CreateBomb(session bus.Session, service server.Service, serviceID uint32,
 
 	var stb stubBomb
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {

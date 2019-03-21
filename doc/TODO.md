@@ -13,6 +13,9 @@ Unsorted TODO list
 - interface object constructor
 - implement log manager
 - stub: property: add notification callback for implementor (OnMyPropertyChange())
+        - update implementor interface
+        - add stub.onPropertyChange callback which unserialize
+        - update NewObject constructor
 - service tutorial
 - log viewer utility: select by pattern
 - clarify if implementor are actors and document it in the tutorial

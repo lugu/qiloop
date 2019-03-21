@@ -37,6 +37,14 @@ func (m *MetaObject) PropertyID(name string) (uint32, error) {
 	return 0, fmt.Errorf("failed to find property %s", name)
 }
 
+func (m *MetaObject) PropertyName(id uint32) (string, error) {
+	prop, ok := m.Properties[id]
+	if !ok {
+		return "", fmt.Errorf("missing property %d", id)
+	}
+	return prop.Name, nil
+}
+
 func registerName(name string, names map[string]bool) string {
 	newName := name
 	for i := 0; i < 100; i++ {

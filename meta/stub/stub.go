@@ -409,8 +409,73 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	).Params(jen.Error()).Block(
 		jen.Id(`return p.obj.Receive(msg, from)`),
 	)
+	return generateStubPropertyCallback(file, itf)
+}
+
+func generateStubPropertyCallback(file *jen.File, itf *idl.InterfaceType) error {
+
+	writing := make([]jen.Code, 0)
+
+	method := func(m object.MetaMethod, methodName string) error {
+		return nil
+	}
+
+	signal := func(m object.MetaSignal, signalName string) error {
+		return nil
+	}
+
+	property := func(p object.MetaProperty, propertyName string) error {
+		property := itf.Properties[p.Uid]
+		code := jen.Case(jen.Lit(propertyName))
+		writing = append(writing, code)
+		code = jen.Id("buf").Op(":=").Qual(
+			"bytes", "NewBuffer",
+		).Call(jen.Id("data"))
+		writing = append(writing, code)
+		code = jen.List(jen.Id("prop"), jen.Err()).Op(":=").Add(
+			property.Type().Unmarshal("buf"),
+		)
+		writing = append(writing, code)
+		code = jen.If(jen.Err().Op("!=").Nil()).Block(
+			jen.Return().Qual("fmt", "Errorf").Call(
+				jen.Lit("cannot read "+propertyName+": %s"),
+				jen.Err(),
+			),
+		)
+		writing = append(writing, code)
+		code = jen.Id(`return p.impl.On` + propertyName + `Change(prop)`)
+		writing = append(writing, code)
+		return nil
+	}
+
+	meta := itf.MetaObject()
+	err := meta.ForEachMethodAndSignal(method, signal, property)
+	if err != nil {
+		return fmt.Errorf("failed at onPropertyChange for %s: %s",
+			itf.Name, err)
+	}
+	code := jen.Id(`default:`).Return().Qual("fmt", "Errorf").Call(
+		jen.Lit("unknown property %s"),
+		jen.Id("name"),
+	)
+	writing = append(writing, code)
+
+	file.Func().Params(
+		jen.Id("p").Op("*").Id(stubName(itf.Name)),
+	).Id("onPropertyChange").Params(
+		jen.Id("name").String(),
+		jen.Id("data []byte"),
+	).Params(
+		jen.Error(),
+	).Block(
+		jen.Switch().Qual(
+			"strings", "Title",
+		).Call(jen.Id("name")).Block(writing...),
+		jen.Id("return nil"),
+	)
 	return nil
 }
+
 func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing := make([]jen.Code, 0)
 	code := jen.Var().Id("stb").Id(stubName(itf.Name))
@@ -426,7 +491,10 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 		code = jen.Id("stb.obj").Op("=").Qual(
 			"github.com/lugu/qiloop/bus/server/generic",
 			"NewObject",
-		).Call(jen.Id("stb.metaObject()"))
+		).Call(
+			jen.Id("stb.metaObject()"),
+			jen.Id("stb.onPropertyChange"),
+		)
 	}
 	writing = append(writing, code)
 
@@ -537,14 +605,26 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		return nil
 	}
 	property := func(p object.MetaProperty, propertyName string) error {
-		signalName := "Update" + propertyName
 		property := itf.Properties[p.Uid]
-		def, err := generateSignalDef(itf, set, property.Tuple(),
-			signalName)
+
+		comment := "On" + propertyName +
+			`Change is called when the property is updated.`
+		definitions = append(definitions, jen.Comment(comment))
+		comment = `Returns an error if the property value is not allowed`
+		definitions = append(definitions, jen.Comment(comment))
+
+		callback := jen.Id("On" + propertyName + "Change").Add(
+			property.Tuple().Params(),
+		).Error()
+		definitions = append(definitions, callback)
+
+		signalName := "Update" + propertyName
+		def, err := generateSignalDef(itf, set, property.Tuple(), signalName)
 		if err != nil {
 			return fmt.Errorf("failed to render %s of %s: %s",
 				p.Name, itf.Name, err)
 		}
+
 		signalDefinitions = append(signalDefinitions, def)
 		return nil
 	}

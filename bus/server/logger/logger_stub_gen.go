@@ -16,6 +16,7 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
+	"strings"
 )
 
 // LogProviderImplementor interface of the service implementation
@@ -49,7 +50,7 @@ type stubLogProvider struct {
 func LogProviderObject(impl LogProviderImplementor) server.ServerObject {
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.SetVerbosity)
 	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
 	stb.obj.Wrap(uint32(0x66), stb.ClearAndSet)
@@ -66,6 +67,13 @@ func (p *stubLogProvider) OnTerminate() {
 }
 func (p *stubLogProvider) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubLogProvider) SetVerbosity(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -169,6 +177,12 @@ type LogListenerImplementor interface {
 	OnTerminate()
 	SetCategory(category string, level LogLevel) error
 	ClearFilters() error
+	// OnVerbosityChange is called when the property is updated.
+	// Returns an error if the property value is not allowed
+	OnVerbosityChange(level LogLevel) error
+	// OnFiltersChange is called when the property is updated.
+	// Returns an error if the property value is not allowed
+	OnFiltersChange(filters map[string]int32) error
 }
 
 // LogListenerSignalHelper provided to LogListener a companion object
@@ -189,7 +203,7 @@ type stubLogListener struct {
 func LogListenerObject(impl LogListenerImplementor) server.ServerObject {
 	var stb stubLogListener
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
 	stb.obj.Wrap(uint32(0x66), stb.ClearFilters)
 	return &stb
@@ -205,6 +219,45 @@ func (p *stubLogListener) OnTerminate() {
 }
 func (p *stubLogListener) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	case "Verbosity":
+		buf := bytes.NewBuffer(data)
+		prop, err := ReadLogLevel(buf)
+		if err != nil {
+			return fmt.Errorf("cannot read Verbosity: %s", err)
+		}
+		return p.impl.OnVerbosityChange(prop)
+	case "Filters":
+		buf := bytes.NewBuffer(data)
+		prop, err := func() (m map[string]int32, err error) {
+			size, err := basic.ReadUint32(buf)
+			if err != nil {
+				return m, fmt.Errorf("failed to read map size: %s", err)
+			}
+			m = make(map[string]int32, size)
+			for i := 0; i < int(size); i++ {
+				k, err := basic.ReadString(buf)
+				if err != nil {
+					return m, fmt.Errorf("failed to read map key: %s", err)
+				}
+				v, err := basic.ReadInt32(buf)
+				if err != nil {
+					return m, fmt.Errorf("failed to read map value: %s", err)
+				}
+				m[k] = v
+			}
+			return m, nil
+		}()
+		if err != nil {
+			return fmt.Errorf("cannot read Filters: %s", err)
+		}
+		return p.impl.OnFiltersChange(prop)
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubLogListener) SetCategory(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
@@ -341,7 +394,7 @@ type stubLogManager struct {
 func LogManagerObject(impl LogManagerImplementor) server.ServerObject {
 	var stb stubLogManager
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject())
+	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Log)
 	stb.obj.Wrap(uint32(0x65), stb.CreateListener)
 	stb.obj.Wrap(uint32(0x66), stb.GetListener)
@@ -360,6 +413,13 @@ func (p *stubLogManager) OnTerminate() {
 }
 func (p *stubLogManager) Receive(msg *net.Message, from *server.Context) error {
 	return p.obj.Receive(msg, from)
+}
+func (p *stubLogManager) onPropertyChange(name string, data []byte) error {
+	switch strings.Title(name) {
+	default:
+		return fmt.Errorf("unknown property %s", name)
+	}
+	return nil
 }
 func (p *stubLogManager) Log(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
