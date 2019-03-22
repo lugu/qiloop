@@ -27,6 +27,12 @@ type logManager struct {
 	activation   server.Activation
 }
 
+func NewLogManager() server.ServerObject {
+	return LogManagerObject(&logManager{
+		clients: make(map[uint32]logClient),
+	})
+}
+
 func (l *logManager) Activate(activation server.Activation,
 	helper LogManagerSignalHelper) error {
 	l.activation = activation
