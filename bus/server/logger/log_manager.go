@@ -16,7 +16,7 @@ var (
 )
 
 type logClient struct {
-	send chan *LogMessage
+	send chan []LogMessage
 	dest LogListenerProxy
 }
 
@@ -50,9 +50,7 @@ func (l *logManager) Log(messages []LogMessage) error {
 	l.clientsMutex.RLock()
 	defer l.clientsMutex.RUnlock()
 	for _, client := range l.clients {
-		for _, msg := range messages {
-			client.send <- &msg
-		}
+		client.send <- messages
 	}
 	return nil
 }
@@ -69,7 +67,7 @@ func (l *logManager) CreateListener() (LogListenerProxy, error) {
 		l.clientsMutex.Unlock()
 	}
 
-	send := make(chan *LogMessage)
+	send := make(chan []LogMessage)
 	proxy, err := CreateLogListener(l.activation.Session,
 		l.activation.Service, send, onTerminate)
 

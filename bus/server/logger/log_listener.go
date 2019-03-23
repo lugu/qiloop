@@ -17,14 +17,14 @@ type logListenerImpl struct {
 	filtersMutex sync.RWMutex
 
 	cancel      chan struct{}
-	logs        chan *LogMessage
+	logs        chan []LogMessage
 	activation  server.Activation
 	helper      LogListenerSignalHelper
 	onTerminate func()
 }
 
 func CreateLogListener(session bus.Session, service server.Service,
-	producer chan *LogMessage, onTerminate func()) (
+	producer chan []LogMessage, onTerminate func()) (
 	LogListenerProxy, error) {
 
 	impl := &logListenerImpl{
@@ -96,13 +96,15 @@ func (l *logListenerImpl) Activate(activation server.Activation,
 			select {
 			case <-l.cancel:
 				return
-			case msg, ok := <-l.logs:
+			case messages, ok := <-l.logs:
 				if !ok {
 					l.activation.Terminate()
 					return
 				}
-				if l.filter(msg) {
-					l.helper.SignalOnLogMessage(*msg)
+				for _, msg := range messages {
+					if l.filter(&msg) {
+						l.helper.SignalOnLogMessage(msg)
+					}
 				}
 			}
 		}

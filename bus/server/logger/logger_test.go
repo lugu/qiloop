@@ -120,8 +120,8 @@ func TestLogListener(t *testing.T) {
 	// when Terminate is called.
 
 	// FIXME: does terminate informs the signal subscribers ?
-	// logListener.Terminate(logListener.ObjectID())
-	// logManager.Terminate(logManager.ObjectID())
+	logListener.Terminate(logListener.ObjectID())
+	logManager.Terminate(logManager.ObjectID())
 	srv.Terminate()
 	wait.Wait()
 
