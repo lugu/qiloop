@@ -121,6 +121,10 @@ func NewService(o ServerObject) *ServiceImpl {
 	}
 }
 
+func (s *ServiceImpl) ServiceID() uint32 {
+	return s.serviceID
+}
+
 // Add is used to add an object to a service domain.
 func (s *ServiceImpl) Add(obj ServerObject) (index uint32, err error) {
 	// assign the first object to the index 0. following objects will
@@ -457,6 +461,7 @@ func StandAloneServer(listener gonet.Listener, auth Authenticator,
 
 // Service represents a running service.
 type Service interface {
+	ServiceID() uint32
 	Add(o ServerObject) (uint32, error)
 	Remove(objectID uint32) error
 	Terminate() error

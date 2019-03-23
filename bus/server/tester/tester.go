@@ -16,7 +16,6 @@ type spacecraftImpl struct {
 	session   bus.Session
 	terminate server.Terminator
 	service   server.Service
-	serviceID uint32
 }
 
 func (f *spacecraftImpl) Activate(activation server.Activation,
@@ -24,7 +23,6 @@ func (f *spacecraftImpl) Activate(activation server.Activation,
 	f.session = activation.Session
 	f.terminate = activation.Terminate
 	f.service = activation.Service
-	f.serviceID = activation.ServiceID
 	return nil
 }
 
@@ -32,7 +30,7 @@ func (f *spacecraftImpl) OnTerminate() {
 }
 
 func (f *spacecraftImpl) Shoot() (BombProxy, error) {
-	return CreateBomb(f.session, f.service, f.serviceID, &bombImpl{})
+	return CreateBomb(f.session, f.service, &bombImpl{})
 }
 
 func (f *spacecraftImpl) Ammo(b BombProxy) error {
@@ -67,7 +65,7 @@ func NewBombObject() server.ServerObject {
 
 // Not entirely satisfying: need to allow for client side object
 // generation... Here comes the ObjectID question..
-func CreateBomb(session bus.Session, service server.Service, serviceID uint32,
+func CreateBomb(session bus.Session, service server.Service,
 	impl BombImplementor) (BombProxy, error) {
 
 	var stb stubBomb
@@ -83,7 +81,7 @@ func CreateBomb(session bus.Session, service server.Service, serviceID uint32,
 		true, // with meta object
 		object.FullMetaObject(stb.metaObject()),
 		0,
-		serviceID,
+		service.ServiceID(),
 		objectID,
 	}
 	proxy, err := session.Object(ref)

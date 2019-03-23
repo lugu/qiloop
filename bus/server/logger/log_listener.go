@@ -24,7 +24,7 @@ type logListenerImpl struct {
 }
 
 func CreateLogListener(session bus.Session, service server.Service,
-	serviceID uint32, producer chan *LogMessage, onTerminate func()) (
+	producer chan *LogMessage, onTerminate func()) (
 	LogListenerProxy, error) {
 
 	impl := &logListenerImpl{
@@ -48,7 +48,7 @@ func CreateLogListener(session bus.Session, service server.Service,
 		true, // with meta object
 		object.FullMetaObject(stb.metaObject()),
 		0,
-		serviceID,
+		service.ServiceID(),
 		objectID,
 	}
 	proxy, err := session.Object(ref)

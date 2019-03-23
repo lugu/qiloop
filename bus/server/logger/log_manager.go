@@ -70,8 +70,8 @@ func (l *logManager) CreateListener() (LogListenerProxy, error) {
 	}
 
 	send := make(chan *LogMessage)
-	proxy, err := CreateLogListener(l.activation.Session, l.activation.Service,
-		l.activation.ServiceID, send, onTerminate)
+	proxy, err := CreateLogListener(l.activation.Session,
+		l.activation.Service, send, onTerminate)
 
 	if err != nil {
 		return nil, err
