@@ -51,19 +51,18 @@ func (s Constructor) Server() (ServerProxy, error) {
 func (p *proxyServer) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(capability)), buf)
+		err := basic.WriteUint32(uint32(len(capability)), &buf)
 		if err != nil {
 			return fmt.Errorf("failed to write map size: %s", err)
 		}
 		for k, v := range capability {
-			err = basic.WriteString(k, buf)
+			err = basic.WriteString(k, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = v.Write(buf)
+			err = v.Write(&buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -76,19 +75,19 @@ func (p *proxyServer) Authenticate(capability map[string]value.Value) (map[strin
 	if err != nil {
 		return ret, fmt.Errorf("call authenticate failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (m map[string]value.Value, err error) {
-		size, err := basic.ReadUint32(buf)
+		size, err := basic.ReadUint32(resp)
 		if err != nil {
 			return m, fmt.Errorf("failed to read map size: %s", err)
 		}
 		m = make(map[string]value.Value, size)
 		for i := 0; i < int(size); i++ {
-			k, err := basic.ReadString(buf)
+			k, err := basic.ReadString(resp)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := value.NewValue(buf)
+			v, err := value.NewValue(resp)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}

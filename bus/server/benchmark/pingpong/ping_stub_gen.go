@@ -190,17 +190,16 @@ func (s Constructor) PingPong() (PingPongProxy, error) {
 func (p *proxyPingPong) Hello(a string) (string, error) {
 	var err error
 	var ret string
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(a, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(a, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize a: %s", err)
 	}
 	response, err := p.Call("hello", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call hello failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadString(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadString(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse hello response: %s", err)
 	}
@@ -210,9 +209,8 @@ func (p *proxyPingPong) Hello(a string) (string, error) {
 // Ping calls the remote procedure
 func (p *proxyPingPong) Ping(a string) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(a, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("failed to serialize a: %s", err)
 	}
 	_, err = p.Call("ping", buf.Bytes())

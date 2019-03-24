@@ -748,9 +748,8 @@ func (s Constructor) LogProvider() (LogProviderProxy, error) {
 // SetVerbosity calls the remote procedure
 func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteLogLevel(level, buf); err != nil {
+	var buf bytes.Buffer
+	if err = WriteLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setVerbosity", buf.Bytes())
@@ -763,12 +762,11 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 // SetCategory calls the remote procedure
 func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(category, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, buf); err != nil {
+	if err = WriteLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -781,19 +779,18 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 // ClearAndSet calls the remote procedure
 func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(filters)), buf)
+		err := basic.WriteUint32(uint32(len(filters)), &buf)
 		if err != nil {
 			return fmt.Errorf("failed to write map size: %s", err)
 		}
 		for k, v := range filters {
-			err = basic.WriteString(k, buf)
+			err = basic.WriteString(k, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = WriteLogLevel(v, buf)
+			err = WriteLogLevel(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -861,12 +858,11 @@ func (s Constructor) LogListener() (LogListenerProxy, error) {
 // SetCategory calls the remote procedure
 func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(category, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, buf); err != nil {
+	if err = WriteLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -879,8 +875,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 // ClearFilters calls the remote procedure
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	_, err = p.Call("clearFilters", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
@@ -1174,15 +1169,14 @@ func (s Constructor) LogManager() (LogManagerProxy, error) {
 // Log calls the remote procedure
 func (p *proxyLogManager) Log(messages []LogMessage) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(messages)), buf)
+		err := basic.WriteUint32(uint32(len(messages)), &buf)
 		if err != nil {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
 		for _, v := range messages {
-			err = WriteLogMessage(v, buf)
+			err = WriteLogMessage(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
 			}
@@ -1202,15 +1196,14 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("createListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (LogListenerProxy, error) {
-		ref, err := object.ReadObjectReference(buf)
+		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
 		}
@@ -1230,15 +1223,14 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("getListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (LogListenerProxy, error) {
-		ref, err := object.ReadObjectReference(buf)
+		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
 		}
@@ -1258,8 +1250,7 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	var err error
 	var ret int32
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
 		meta, err := source.MetaObject(source.ObjectID())
 		if err != nil {
@@ -1272,7 +1263,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 			source.ServiceID(),
 			source.ObjectID(),
 		}
-		return object.WriteObjectReference(ref, buf)
+		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
 		return ret, fmt.Errorf("failed to serialize source: %s", err)
 	}
@@ -1280,8 +1271,8 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadInt32(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadInt32(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse addProvider response: %s", err)
 	}
@@ -1291,9 +1282,8 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 // RemoveProvider calls the remote procedure
 func (p *proxyLogManager) RemoveProvider(sourceID int32) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteInt32(sourceID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteInt32(sourceID, &buf); err != nil {
 		return fmt.Errorf("failed to serialize sourceID: %s", err)
 	}
 	_, err = p.Call("removeProvider", buf.Bytes())

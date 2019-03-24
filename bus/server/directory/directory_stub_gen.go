@@ -431,17 +431,16 @@ func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	var err error
 	var ret ServiceInfo
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(name, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize name: %s", err)
 	}
 	response, err := p.Call("service", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = ReadServiceInfo(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = ReadServiceInfo(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse service response: %s", err)
 	}
@@ -452,21 +451,20 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("services", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call services failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (b []ServiceInfo, err error) {
-		size, err := basic.ReadUint32(buf)
+		size, err := basic.ReadUint32(resp)
 		if err != nil {
 			return b, fmt.Errorf("failed to read slice size: %s", err)
 		}
 		b = make([]ServiceInfo, size)
 		for i := 0; i < int(size); i++ {
-			b[i], err = ReadServiceInfo(buf)
+			b[i], err = ReadServiceInfo(resp)
 			if err != nil {
 				return b, fmt.Errorf("failed to read slice value: %s", err)
 			}
@@ -483,17 +481,16 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error) {
 	var err error
 	var ret uint32
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(info, buf); err != nil {
+	var buf bytes.Buffer
+	if err = WriteServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize info: %s", err)
 	}
 	response, err := p.Call("registerService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerService failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadUint32(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadUint32(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse registerService response: %s", err)
 	}
@@ -503,9 +500,8 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 // UnregisterService calls the remote procedure
 func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(serviceID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	_, err = p.Call("unregisterService", buf.Bytes())
@@ -518,9 +514,8 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 // ServiceReady calls the remote procedure
 func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(serviceID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	_, err = p.Call("serviceReady", buf.Bytes())
@@ -533,9 +528,8 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 // UpdateServiceInfo calls the remote procedure
 func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(info, buf); err != nil {
+	var buf bytes.Buffer
+	if err = WriteServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("failed to serialize info: %s", err)
 	}
 	_, err = p.Call("updateServiceInfo", buf.Bytes())
@@ -549,14 +543,13 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("machineId", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call machineId failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadString(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadString(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse machineId response: %s", err)
 	}
@@ -567,17 +560,16 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 func (p *proxyServiceDirectory) SocketOfService(serviceID uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(serviceID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	response, err := p.Call("_socketOfService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = object.ReadObjectReference(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = object.ReadObjectReference(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse _socketOfService response: %s", err)
 	}

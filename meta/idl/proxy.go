@@ -510,15 +510,14 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 	if ret.Signature() != "v" {
 		writing = append(writing, jen.Var().Id("ret").Add(ret.TypeName()))
 	}
-	writing = append(writing, jen.Var().Id("buf").Op("*").Qual("bytes", "Buffer"))
-	writing = append(writing, jen.Id("buf = bytes.NewBuffer(make([]byte, 0))"))
+	writing = append(writing, jen.Var().Id("buf").Qual("bytes", "Buffer"))
 	for _, v := range params.Members {
 		if ret.Signature() != "v" {
-			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Type.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
+			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Type.Marshal(v.Name, "&buf")).Op(";").Err().Op("!=").Nil()).Block(
 				jen.Id(`return ret, fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
 			))
 		} else {
-			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Type.Marshal(v.Name, "buf")).Op(";").Err().Op("!=").Nil()).Block(
+			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Type.Marshal(v.Name, "&buf")).Op(";").Err().Op("!=").Nil()).Block(
 				jen.Id(`return fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
 			))
 		}
@@ -538,8 +537,8 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 		))
 	}
 	if ret.Signature() != "v" {
-		writing = append(writing, jen.Id("buf = bytes.NewBuffer(response)"))
-		writing = append(writing, jen.Id("ret, err =").Add(ret.Unmarshal("buf")))
+		writing = append(writing, jen.Id("resp := bytes.NewBuffer(response)"))
+		writing = append(writing, jen.Id("ret, err =").Add(ret.Unmarshal("resp")))
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("failed to parse %s response: %s", err)`, method.Name, "%s")),
 		))

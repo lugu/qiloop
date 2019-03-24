@@ -116,12 +116,12 @@ func TestMessageConstructor(t *testing.T) {
 func TestWriteReadMessage(t *testing.T) {
 	h := net.NewHeader(net.Call, 1, 2, 3, 4)
 	input := net.NewMessage(h, make([]byte, 99))
-	buf := bytes.NewBuffer(make([]byte, 0))
-	if err := input.Write(buf); err != nil {
+	var buf bytes.Buffer
+	if err := input.Write(&buf); err != nil {
 		t.Errorf("failed to write net. %s", err)
 	}
 	var output net.Message
-	if err := output.Read(buf); err != nil {
+	if err := output.Read(&buf); err != nil {
 		t.Errorf("failed to read net. %s", err)
 	}
 	if input.Header != output.Header {

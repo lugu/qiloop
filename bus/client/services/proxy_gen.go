@@ -136,17 +136,16 @@ func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	var err error
 	var ret ServiceInfo
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(name, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize name: %s", err)
 	}
 	response, err := p.Call("service", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = ReadServiceInfo(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = ReadServiceInfo(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse service response: %s", err)
 	}
@@ -157,21 +156,20 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("services", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call services failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (b []ServiceInfo, err error) {
-		size, err := basic.ReadUint32(buf)
+		size, err := basic.ReadUint32(resp)
 		if err != nil {
 			return b, fmt.Errorf("failed to read slice size: %s", err)
 		}
 		b = make([]ServiceInfo, size)
 		for i := 0; i < int(size); i++ {
-			b[i], err = ReadServiceInfo(buf)
+			b[i], err = ReadServiceInfo(resp)
 			if err != nil {
 				return b, fmt.Errorf("failed to read slice value: %s", err)
 			}
@@ -188,17 +186,16 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error) {
 	var err error
 	var ret uint32
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(info, buf); err != nil {
+	var buf bytes.Buffer
+	if err = WriteServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize info: %s", err)
 	}
 	response, err := p.Call("registerService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerService failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadUint32(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadUint32(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse registerService response: %s", err)
 	}
@@ -208,9 +205,8 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 // UnregisterService calls the remote procedure
 func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(serviceID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	_, err = p.Call("unregisterService", buf.Bytes())
@@ -223,9 +219,8 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 // ServiceReady calls the remote procedure
 func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(serviceID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	_, err = p.Call("serviceReady", buf.Bytes())
@@ -238,9 +233,8 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 // UpdateServiceInfo calls the remote procedure
 func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteServiceInfo(info, buf); err != nil {
+	var buf bytes.Buffer
+	if err = WriteServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("failed to serialize info: %s", err)
 	}
 	_, err = p.Call("updateServiceInfo", buf.Bytes())
@@ -254,14 +248,13 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("machineId", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call machineId failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadString(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadString(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse machineId response: %s", err)
 	}
@@ -272,17 +265,16 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 func (p *proxyServiceDirectory) SocketOfService(serviceID uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteUint32(serviceID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize serviceID: %s", err)
 	}
 	response, err := p.Call("_socketOfService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = object.ReadObjectReference(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = object.ReadObjectReference(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse _socketOfService response: %s", err)
 	}
@@ -598,9 +590,8 @@ func (s Constructor) LogProvider() (LogProviderProxy, error) {
 // SetVerbosity calls the remote procedure
 func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = WriteLogLevel(level, buf); err != nil {
+	var buf bytes.Buffer
+	if err = WriteLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setVerbosity", buf.Bytes())
@@ -613,12 +604,11 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 // SetCategory calls the remote procedure
 func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(category, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, buf); err != nil {
+	if err = WriteLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -631,19 +621,18 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 // ClearAndSet calls the remote procedure
 func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(filters)), buf)
+		err := basic.WriteUint32(uint32(len(filters)), &buf)
 		if err != nil {
 			return fmt.Errorf("failed to write map size: %s", err)
 		}
 		for k, v := range filters {
-			err = basic.WriteString(k, buf)
+			err = basic.WriteString(k, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = basic.WriteInt32(v, buf)
+			err = basic.WriteInt32(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -711,12 +700,11 @@ func (s Constructor) LogListener() (LogListenerProxy, error) {
 // SetCategory calls the remote procedure
 func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteString(category, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, buf); err != nil {
+	if err = WriteLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -729,8 +717,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 // ClearFilters calls the remote procedure
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	_, err = p.Call("clearFilters", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
@@ -1024,15 +1011,14 @@ func (s Constructor) LogManager() (LogManagerProxy, error) {
 // Log calls the remote procedure
 func (p *proxyLogManager) Log(messages []LogMessage) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
-		err := basic.WriteUint32(uint32(len(messages)), buf)
+		err := basic.WriteUint32(uint32(len(messages)), &buf)
 		if err != nil {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
 		for _, v := range messages {
-			err = WriteLogMessage(v, buf)
+			err = WriteLogMessage(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
 			}
@@ -1052,15 +1038,14 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("createListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (LogListenerProxy, error) {
-		ref, err := object.ReadObjectReference(buf)
+		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
 		}
@@ -1080,15 +1065,14 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("getListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (LogListenerProxy, error) {
-		ref, err := object.ReadObjectReference(buf)
+		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
 		}
@@ -1108,8 +1092,7 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	var err error
 	var ret int32
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
 		meta, err := source.MetaObject(source.ObjectID())
 		if err != nil {
@@ -1122,7 +1105,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 			source.ServiceID(),
 			source.ObjectID(),
 		}
-		return object.WriteObjectReference(ref, buf)
+		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
 		return ret, fmt.Errorf("failed to serialize source: %s", err)
 	}
@@ -1130,8 +1113,8 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
-	ret, err = basic.ReadInt32(buf)
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadInt32(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse addProvider response: %s", err)
 	}
@@ -1141,9 +1124,8 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 // RemoveProvider calls the remote procedure
 func (p *proxyLogManager) RemoveProvider(providerID int32) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
-	if err = basic.WriteInt32(providerID, buf); err != nil {
+	var buf bytes.Buffer
+	if err = basic.WriteInt32(providerID, &buf); err != nil {
 		return fmt.Errorf("failed to serialize providerID: %s", err)
 	}
 	_, err = p.Call("removeProvider", buf.Bytes())

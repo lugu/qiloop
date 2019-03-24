@@ -445,15 +445,14 @@ func (s Constructor) Spacecraft() (SpacecraftProxy, error) {
 func (p *proxySpacecraft) Shoot() (BombProxy, error) {
 	var err error
 	var ret BombProxy
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	response, err := p.Call("shoot", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call shoot failed: %s", err)
 	}
-	buf = bytes.NewBuffer(response)
+	resp := bytes.NewBuffer(response)
 	ret, err = func() (BombProxy, error) {
-		ref, err := object.ReadObjectReference(buf)
+		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
 		}
@@ -472,8 +471,7 @@ func (p *proxySpacecraft) Shoot() (BombProxy, error) {
 // Ammo calls the remote procedure
 func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 	var err error
-	var buf *bytes.Buffer
-	buf = bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	if err = func() error {
 		meta, err := ammo.MetaObject(ammo.ObjectID())
 		if err != nil {
@@ -486,7 +484,7 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 			ammo.ServiceID(),
 			ammo.ObjectID(),
 		}
-		return object.WriteObjectReference(ref, buf)
+		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
 		return fmt.Errorf("failed to serialize ammo: %s", err)
 	}
