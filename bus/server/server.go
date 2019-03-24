@@ -191,11 +191,13 @@ func (s *ServiceImpl) Activate(activation Activation) error {
 // Remove removes an object from the service domain.
 func (s *ServiceImpl) Remove(objectID uint32) error {
 	s.Lock()
-	defer s.Unlock()
-	if _, ok := s.objects[objectID]; ok {
+	if obj, ok := s.objects[objectID]; ok {
 		delete(s.objects, objectID)
+		s.Unlock()
+		obj.OnTerminate()
 		return nil
 	}
+	s.Unlock()
 	return fmt.Errorf("cannot remove object %d", objectID)
 }
 

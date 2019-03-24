@@ -5,6 +5,7 @@ import (
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/tester"
 	"github.com/lugu/qiloop/bus/util"
+	"sync"
 	"testing"
 )
 
@@ -97,4 +98,52 @@ func TestAddRemoveObject(t *testing.T) {
 	service.Terminate()
 	srv.Terminate()
 
+}
+
+func TestOnTerminate(t *testing.T) {
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ns := server.PrivateNamespace()
+	srv, err := server.StandAloneServer(listener, server.Yes{}, ns)
+	if err != nil {
+		t.Error(err)
+	}
+
+	obj := tester.NewSpacecraftObject()
+	service, err := srv.NewService("Spacecraft", obj)
+	if err != nil {
+		t.Error(err)
+	}
+	defer service.Terminate()
+
+	session := srv.Session()
+	proxies := tester.Services(session)
+
+	spacecraft, err := proxies.Spacecraft()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bomb, err := spacecraft.Shoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var wait sync.WaitGroup
+	wait.Add(1)
+	tester.Hook = func(event string) {
+		if event == "Bomb.OnTerminate()" {
+			wait.Done()
+		}
+	}
+
+	err = bomb.Terminate(bomb.ObjectID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	wait.Wait()
+	tester.Hook = func(event string) {}
 }

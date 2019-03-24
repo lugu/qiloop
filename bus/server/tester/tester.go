@@ -8,6 +8,10 @@ import (
 	"github.com/lugu/qiloop/type/object"
 )
 
+var (
+	Hook = func(event string) {}
+)
+
 func NewSpacecraftObject() server.ServerObject {
 	return SpacecraftObject(&spacecraftImpl{})
 }
@@ -27,6 +31,7 @@ func (f *spacecraftImpl) Activate(activation server.Activation,
 }
 
 func (f *spacecraftImpl) OnTerminate() {
+	Hook("SpaceCraft.OnTerminate()")
 }
 
 func (f *spacecraftImpl) Shoot() (BombProxy, error) {
@@ -50,6 +55,8 @@ func (f *bombImpl) Activate(activation server.Activation,
 }
 
 func (f *bombImpl) OnTerminate() {
+	Hook("Bomb.OnTerminate()")
+
 }
 
 func (f *bombImpl) OnDelayChange(duration int32) error {
