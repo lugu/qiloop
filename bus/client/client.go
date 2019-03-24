@@ -113,6 +113,10 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Service == serviceID && hdr.Object == objectID &&
 			hdr.Action == actionID {
+			if hdr.Type == net.Error {
+				// unsubscribe on error
+				return false, false
+			}
 			return true, true
 		}
 		return false, true

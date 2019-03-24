@@ -117,9 +117,6 @@ func TestLogListener(t *testing.T) {
 		}
 		wait.Done()
 	}()
-	// FIXME: does terminate informs the signal subscribers ?
 	logListener.Terminate(logListener.ObjectID())
-	t.Skip("terminate does not unsubscribe clients")
 	wait.Wait()
-
 }

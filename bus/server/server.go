@@ -29,6 +29,10 @@ var ErrActionNotFound = errors.New("Action not found")
 // service without prior authentication.
 var ErrNotAuthenticated = errors.New("Not authenticated")
 
+// ErrTerminate is returned with an object lifetime ends while
+// clients subscribes to its signals.
+var ErrTerminate = errors.New("Object terminated")
+
 // ActionWrapper handles messages for an action.
 type ActionWrapper func(payload []byte) ([]byte, error)
 

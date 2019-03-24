@@ -7,6 +7,7 @@ import (
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
+	"github.com/lugu/qiloop/type/value"
 	"io"
 	"math/rand"
 	"sync"
@@ -79,7 +80,6 @@ func (o *BasicObject) addSignalUser(signalID, messageID uint32,
 }
 
 // removeSignalUser unregister the given contex to events.
-// FIXME: shall all unsubscribe context when the connection is lost
 func (o *BasicObject) removeSignalUser(clientID uint64) error {
 	o.signalsMutex.Lock()
 	delete(o.signals, clientID)
@@ -198,6 +198,17 @@ func (o *BasicObject) replyEvent(client *signalUser, signal uint32,
 	return client.context.EndPoint.Send(msg)
 }
 
+func (o *BasicObject) sendTerminate(client *signalUser, signal uint32) error {
+	var buf bytes.Buffer
+	val := value.String(server.ErrTerminate.Error())
+	val.Write(&buf)
+	hdr := o.newHeader(net.Error, client.signalID, client.messageID)
+	msg := net.NewMessage(hdr, buf.Bytes())
+
+	o.trace(&msg)
+	return client.context.EndPoint.Send(msg)
+}
+
 func (o *BasicObject) replyError(from *server.Context, msg *net.Message,
 	err error) error {
 
@@ -250,6 +261,13 @@ func (o *BasicObject) Receive(msg *net.Message, from *server.Context) error {
 }
 
 func (o *BasicObject) OnTerminate() {
+	// close all subscribers
+	o.signalsMutex.Lock()
+	for _, client := range o.signals {
+		o.sendTerminate(&client, client.signalID)
+		delete(o.signals, client.clientID)
+	}
+	o.signalsMutex.Unlock()
 }
 
 func (o *BasicObject) newHeader(typ uint8, action, id uint32) net.Header {

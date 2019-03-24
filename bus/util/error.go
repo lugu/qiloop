@@ -7,9 +7,9 @@ import (
 )
 
 func errorPaylad(err error) []byte {
-	buf := bytes.NewBuffer(make([]byte, 0))
+	var buf bytes.Buffer
 	val := value.String(err.Error())
-	val.Write(buf)
+	val.Write(&buf)
 	return buf.Bytes()
 }
 
