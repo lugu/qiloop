@@ -60,7 +60,7 @@ type objectImpl struct {
 	signal            GenericSignalHelper
 	properties        map[string]value.Value
 	propertiesMutex   sync.RWMutex
-	terminate         server.Terminator
+	terminate         func()
 	stats             map[uint32]MethodStatistics
 	statsLock         sync.RWMutex
 	observableWrapper server.Wrapper

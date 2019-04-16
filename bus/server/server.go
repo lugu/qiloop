@@ -39,26 +39,23 @@ type ActionWrapper func(payload []byte) ([]byte, error)
 // Wrapper is used to dispatch messages to ActionWrapper.
 type Wrapper map[uint32]ActionWrapper
 
-// Terminator is to be called when an object whish to disapear.
-type Terminator func()
-
 // Activation is sent during activation: it informs the object of the
 // context in which the object is being used.
 type Activation struct {
 	ServiceID uint32
 	ObjectID  uint32
 	Session   bus.Session
-	Terminate Terminator
+	Terminate func()
 	Service   Service
 }
 
-func objectTerminator(service *ServiceImpl, objectID uint32) Terminator {
+func objectTerminator(service *ServiceImpl, objectID uint32) func() {
 	return func() {
 		service.Remove(objectID)
 	}
 }
 
-func serviceTerminator(router *Router, serviceID uint32) Terminator {
+func serviceTerminator(router *Router, serviceID uint32) func() {
 	return func() {
 		router.Remove(serviceID)
 		router.namespace.Remove(serviceID)
@@ -110,7 +107,7 @@ func (p pendingObject) OnTerminate() {
 type ServiceImpl struct {
 	sync.RWMutex
 	objects   map[uint32]ServerObject
-	terminate Terminator
+	terminate func()
 	session   bus.Session
 	serviceID uint32
 }

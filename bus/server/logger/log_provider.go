@@ -89,7 +89,7 @@ func (l *logProvider) ClearAndSet(filters map[string]LogLevel) error {
 }
 
 func CreateLogProvider(session bus.Session, service server.Service,
-	serviceID uint32, impl LogProviderImplementor) (
+	impl LogProviderImplementor) (
 	LogProviderProxy, error) {
 
 	var stb stubLogProvider
@@ -105,7 +105,7 @@ func CreateLogProvider(session bus.Session, service server.Service,
 		true, // with meta object
 		object.FullMetaObject(stb.metaObject()),
 		0,
-		serviceID,
+		service.ServiceID(),
 		objectID,
 	}
 	proxy, err := session.Object(ref)

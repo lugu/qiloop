@@ -18,7 +18,7 @@ func NewSpacecraftObject() server.ServerObject {
 
 type spacecraftImpl struct {
 	session   bus.Session
-	terminate server.Terminator
+	terminate func()
 	service   server.Service
 }
 

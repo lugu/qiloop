@@ -15,3 +15,6 @@ Unsorted TODO list
 - interface object constructor
 - service tutorial
 - implement log manager
+- client side object creation: implement a ServiceReference which let
+  clients create object in a borrowed namespace (2^31-1).
+- server side client object: ...
