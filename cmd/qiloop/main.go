@@ -8,6 +8,7 @@ var version = "unknown"
 
 var (
 	infoCommand  *flaggy.Subcommand
+	logCommand   *flaggy.Subcommand
 	scanCommand  *flaggy.Subcommand
 	proxyCommand *flaggy.Subcommand
 	stubCommand  *flaggy.Subcommand
@@ -28,6 +29,11 @@ func init() {
 	infoCommand.String(&serverURL, "r", "qi-url",
 		"server URL (default: tcp://localhost:9559)")
 	infoCommand.String(&serviceName, "s", "service", "optional service name")
+
+	logCommand = flaggy.NewSubcommand("log")
+	logCommand.Description = "Connect a server and prints logs"
+	logCommand.String(&serverURL, "r", "qi-url",
+		"server URL (default: tcp://localhost:9559)")
 
 	scanCommand = flaggy.NewSubcommand("scan")
 	scanCommand.Description =
@@ -51,6 +57,7 @@ func init() {
 	stubCommand.String(&packageName, "p", "path", "optional package name")
 
 	flaggy.AttachSubcommand(infoCommand, 1)
+	flaggy.AttachSubcommand(logCommand, 1)
 	flaggy.AttachSubcommand(scanCommand, 1)
 	flaggy.AttachSubcommand(proxyCommand, 1)
 	flaggy.AttachSubcommand(stubCommand, 1)
@@ -69,6 +76,8 @@ func main() {
 		proxy(inputFile, outputFile)
 	} else if stubCommand.Used {
 		stub(inputFile, outputFile, packageName)
+	} else if logCommand.Used {
+		logger(serverURL)
 	} else {
 		flaggy.DefaultParser.ShowHelpAndExit("missing command")
 	}
