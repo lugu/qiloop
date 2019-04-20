@@ -110,8 +110,8 @@ func NewServiceDirectory(addr string, auth Authenticator) (Server, error) {
 	return directory.NewServer(addr, auth)
 }
 
-// NewServiceDirectory starts an empty server listening at address
-// addr. Refer to qiloop/net for more details on address formatting.
+// NewServer starts an empty server listening at address addr. Refer
+// to qiloop/net for more details on address formatting.
 func NewServer(sess bus.Session, addr string, auth Authenticator) (Server, error) {
 	return server.NewServer(sess, addr, auth)
 }
