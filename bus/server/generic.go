@@ -1,11 +1,10 @@
-package generic
+package server
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
@@ -48,7 +47,7 @@ func (s *stubGeneric) UpdateProperty(id uint32, sig string, data []byte) error {
 	return s.obj.UpdateProperty(id, sig, data)
 }
 
-func (s *stubGeneric) Wrap(id uint32, fn server.ActionWrapper) {
+func (s *stubGeneric) Wrap(id uint32, fn ActionWrapper) {
 	s.obj.Wrap(id, fn)
 }
 
@@ -63,7 +62,7 @@ type objectImpl struct {
 	terminate         func()
 	stats             map[uint32]MethodStatistics
 	statsLock         sync.RWMutex
-	observableWrapper server.Wrapper
+	observableWrapper Wrapper
 	traceEnabled      bool
 	traceMutex        sync.RWMutex
 }
@@ -82,7 +81,7 @@ func NewObject(meta object.MetaObject,
 		onPropertyChange:  onPropertyChange,
 		stats:             nil,
 		properties:        make(map[string]value.Value),
-		observableWrapper: make(map[uint32]server.ActionWrapper),
+		observableWrapper: make(map[uint32]ActionWrapper),
 	}
 	obj := GenericObject(impl)
 	stub := obj.(*stubGeneric)
@@ -95,7 +94,7 @@ func (o *objectImpl) basicObject(obj *BasicObject) {
 	obj.tracer = o.tracer()
 }
 
-func (o *objectImpl) Activate(activation server.Activation,
+func (o *objectImpl) Activate(activation Activation,
 	signal GenericSignalHelper) error {
 
 	o.signal = signal
@@ -240,7 +239,7 @@ func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 }
 
 // observer returns an ActionWrapper based on fn which records statistics
-func (o *objectImpl) observer(id uint32, fn server.ActionWrapper) server.ActionWrapper {
+func (o *objectImpl) observer(id uint32, fn ActionWrapper) ActionWrapper {
 	return func(payload []byte) ([]byte, error) {
 		start := time.Now()
 		ret, err := fn(payload)

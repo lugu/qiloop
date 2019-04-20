@@ -10,7 +10,6 @@ import (
 	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
-	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	io "io"
@@ -47,7 +46,7 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.ServerObject.
 type stubServiceDirectory struct {
-	obj     generic.Object
+	obj     server.Object
 	impl    ServiceDirectoryImplementor
 	session bus.Session
 }
@@ -56,7 +55,7 @@ type stubServiceDirectory struct {
 func ServiceDirectoryObject(impl ServiceDirectoryImplementor) server.ServerObject {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Service)
 	stb.obj.Wrap(uint32(0x65), stb.Services)
 	stb.obj.Wrap(uint32(0x66), stb.RegisterService)

@@ -10,7 +10,6 @@ import (
 	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
-	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
@@ -42,7 +41,7 @@ type BombSignalHelper interface {
 
 // stubBomb implements server.ServerObject.
 type stubBomb struct {
-	obj     generic.Object
+	obj     server.Object
 	impl    BombImplementor
 	session bus.Session
 }
@@ -51,7 +50,7 @@ type stubBomb struct {
 func BombObject(impl BombImplementor) server.ServerObject {
 	var stb stubBomb
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubBomb) Activate(activation server.Activation) error {
@@ -141,7 +140,7 @@ type SpacecraftSignalHelper interface{}
 
 // stubSpacecraft implements server.ServerObject.
 type stubSpacecraft struct {
-	obj     generic.Object
+	obj     server.Object
 	impl    SpacecraftImplementor
 	session bus.Session
 }
@@ -150,7 +149,7 @@ type stubSpacecraft struct {
 func SpacecraftObject(impl SpacecraftImplementor) server.ServerObject {
 	var stb stubSpacecraft
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Shoot)
 	stb.obj.Wrap(uint32(0x65), stb.Ammo)
 	return &stb

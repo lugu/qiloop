@@ -7,7 +7,6 @@ import (
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
-	"github.com/lugu/qiloop/bus/server/generic"
 	"github.com/lugu/qiloop/bus/server/tester"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
@@ -66,8 +65,8 @@ func newObject() server.ServerObject {
 	return &object
 }
 
-func NewObject(name string) generic.Object {
-	return generic.NewObject(object.MetaObject{
+func NewObject(name string) server.Object {
+	return server.NewObject(object.MetaObject{
 		Description: name,
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),
@@ -636,7 +635,7 @@ func TestNewContext(t *testing.T) {
 }
 
 type ObjectTerminaison struct {
-	generic.Object
+	server.Object
 	Terminated bool
 }
 

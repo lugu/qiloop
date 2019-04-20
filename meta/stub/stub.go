@@ -500,12 +500,12 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing = append(writing, code)
 	if itf.Name == "Generic" {
 		code = jen.Id("stb.obj").Op("=").Qual(
-			"github.com/lugu/qiloop/bus/server/generic",
+			"github.com/lugu/qiloop/bus/server",
 			"NewBasicObject",
 		).Call()
 	} else {
 		code = jen.Id("stb.obj").Op("=").Qual(
-			"github.com/lugu/qiloop/bus/server/generic",
+			"github.com/lugu/qiloop/bus/server",
 			"NewObject",
 		).Call(
 			jen.Id("stb.metaObject()"),
@@ -554,7 +554,7 @@ func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Commentf("%s implements server.ServerObject.", stubName(itf.Name))
 	file.Type().Id(stubName(itf.Name)).Struct(
 		jen.Id("obj").Qual(
-			"github.com/lugu/qiloop/bus/server/generic", "Object",
+			"github.com/lugu/qiloop/bus/server", "Object",
 		),
 		jen.Id("impl").Id(implName(itf.Name)),
 		jen.Id("session").Qual(

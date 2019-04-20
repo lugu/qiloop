@@ -1,10 +1,9 @@
-package generic
+package server
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/value"
@@ -17,7 +16,7 @@ type signalUser struct {
 	signalID  uint32
 	messageID uint32
 	clientID  uint64
-	context   *server.Context
+	context   *Context
 }
 
 // BasicObject implements the ServerObject interface. It handles the
@@ -28,37 +27,37 @@ type signalUser struct {
 type BasicObject struct {
 	signals      map[uint64]signalUser
 	signalsMutex sync.RWMutex
-	wrapper      server.Wrapper
+	wrapper      Wrapper
 	serviceID    uint32
 	objectID     uint32
 	tracer       func(*net.Message)
 }
 
 type Object interface {
-	server.ServerObject
+	ServerObject
 	UpdateSignal(signal uint32, data []byte) error
 	UpdateProperty(property uint32, signature string, data []byte) error
-	Wrap(id uint32, fn server.ActionWrapper)
+	Wrap(id uint32, fn ActionWrapper)
 }
 
 // NewBasicObject construct a BasicObject from a MetaObject.
 func NewBasicObject() *BasicObject {
 	return &BasicObject{
 		signals: make(map[uint64]signalUser),
-		wrapper: make(map[uint32]server.ActionWrapper),
+		wrapper: make(map[uint32]ActionWrapper),
 		tracer:  nil,
 	}
 }
 
 // Wrap let a BasicObject owner extend it with custom actions.
-func (o *BasicObject) Wrap(id uint32, fn server.ActionWrapper) {
+func (o *BasicObject) Wrap(id uint32, fn ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
 // addSignalUser register the context as a client of event signalID.
 // TODO: check if the signalID is valid
 func (o *BasicObject) addSignalUser(signalID, messageID uint32,
-	from *server.Context) uint64 {
+	from *Context) uint64 {
 
 	clientID := rand.Uint64()
 	newUser := signalUser{
@@ -87,7 +86,7 @@ func (o *BasicObject) removeSignalUser(clientID uint64) error {
 	return nil
 }
 
-func (o *BasicObject) handleRegisterEvent(from *server.Context,
+func (o *BasicObject) handleRegisterEvent(from *Context,
 	msg *net.Message) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
@@ -122,7 +121,7 @@ func (o *BasicObject) handleRegisterEvent(from *server.Context,
 	return o.reply(from, msg, out.Bytes())
 }
 
-func (o *BasicObject) handleUnregisterEvent(from *server.Context,
+func (o *BasicObject) handleUnregisterEvent(from *Context,
 	msg *net.Message) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
@@ -200,7 +199,7 @@ func (o *BasicObject) replyEvent(client *signalUser, signal uint32,
 
 func (o *BasicObject) sendTerminate(client *signalUser, signal uint32) error {
 	var buf bytes.Buffer
-	val := value.String(server.ErrTerminate.Error())
+	val := value.String(ErrTerminate.Error())
 	val.Write(&buf)
 	hdr := o.newHeader(net.Error, client.signalID, client.messageID)
 	msg := net.NewMessage(hdr, buf.Bytes())
@@ -209,14 +208,14 @@ func (o *BasicObject) sendTerminate(client *signalUser, signal uint32) error {
 	return client.context.EndPoint.Send(msg)
 }
 
-func (o *BasicObject) replyError(from *server.Context, msg *net.Message,
+func (o *BasicObject) replyError(from *Context, msg *net.Message,
 	err error) error {
 
 	o.trace(msg)
 	return util.ReplyError(from.EndPoint, msg, err)
 }
 
-func (o *BasicObject) reply(from *server.Context, msg *net.Message,
+func (o *BasicObject) reply(from *Context, msg *net.Message,
 	response []byte) error {
 
 	hdr := o.newHeader(net.Reply, msg.Header.Action, msg.Header.ID)
@@ -225,12 +224,12 @@ func (o *BasicObject) reply(from *server.Context, msg *net.Message,
 	return from.EndPoint.Send(reply)
 }
 
-func (o *BasicObject) handleDefault(from *server.Context,
+func (o *BasicObject) handleDefault(from *Context,
 	msg *net.Message) error {
 
 	fn, ok := o.wrapper[msg.Header.Action]
 	if !ok {
-		return o.replyError(from, msg, server.ErrActionNotFound)
+		return o.replyError(from, msg, ErrActionNotFound)
 	}
 	response, err := fn(msg.Payload)
 	if err != nil {
@@ -242,7 +241,7 @@ func (o *BasicObject) handleDefault(from *server.Context,
 // Receive processes the incoming message and responds to the client.
 // The returned error is not destinated to the client which have
 // already be replied.
-func (o *BasicObject) Receive(msg *net.Message, from *server.Context) error {
+func (o *BasicObject) Receive(msg *net.Message, from *Context) error {
 	o.trace(msg)
 
 	if msg.Header.Type != net.Call {
@@ -276,7 +275,7 @@ func (o *BasicObject) newHeader(typ uint8, action, id uint32) net.Header {
 
 // Activate informs the object when it becomes online. After this
 // method returns, the object will start receiving incomming messages.
-func (o *BasicObject) Activate(activation server.Activation) error {
+func (o *BasicObject) Activate(activation Activation) error {
 	o.serviceID = activation.ServiceID
 	o.objectID = activation.ObjectID
 	return nil

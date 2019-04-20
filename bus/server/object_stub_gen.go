@@ -1,7 +1,7 @@
-// Package generic contains a generated stub
+// Package server contains a generated stub
 // File generated. DO NOT EDIT.
 
-package generic
+package server
 
 import (
 	bytes "bytes"
@@ -9,7 +9,6 @@ import (
 	bus "github.com/lugu/qiloop/bus"
 	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
-	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
@@ -26,7 +25,7 @@ type GenericImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper GenericSignalHelper) error
+	Activate(activation Activation, helper GenericSignalHelper) error
 	OnTerminate()
 	RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error)
 	UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error
@@ -57,7 +56,7 @@ type stubGeneric struct {
 }
 
 // GenericObject returns an object using GenericImplementor
-func GenericObject(impl GenericImplementor) server.ServerObject {
+func GenericObject(impl GenericImplementor) ServerObject {
 	var stb stubGeneric
 	stb.impl = impl
 	stb.obj = NewBasicObject()
@@ -77,7 +76,7 @@ func GenericObject(impl GenericImplementor) server.ServerObject {
 	stb.obj.Wrap(uint32(0x55), stb.EnableTrace)
 	return &stb
 }
-func (p *stubGeneric) Activate(activation server.Activation) error {
+func (p *stubGeneric) Activate(activation Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -86,7 +85,7 @@ func (p *stubGeneric) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubGeneric) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubGeneric) Receive(msg *net.Message, from *Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubGeneric) onPropertyChange(name string, data []byte) error {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/server"
-	"github.com/lugu/qiloop/bus/server/generic"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sync"
@@ -94,7 +93,7 @@ func CreateLogProvider(session bus.Session, service server.Service,
 
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {

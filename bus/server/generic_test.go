@@ -1,9 +1,8 @@
-package generic
+package server
 
 import (
 	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"testing"
@@ -24,7 +23,7 @@ func TestBasicObjectWrap(t *testing.T) {
 		t.Error(err)
 	}
 
-	ctx := server.NewContext(in)
+	ctx := NewContext(in)
 	hdr := net.NewHeader(net.Call, 0, 0, 123, 0)
 	msg := net.NewMessage(hdr, nil)
 
@@ -73,19 +72,19 @@ func TestMethodStatistics(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv, err := server.StandAloneServer(listener, server.Yes{},
-		server.PrivateNamespace())
+	srv, err := StandAloneServer(listener, Yes{},
+		PrivateNamespace())
 	if err != nil {
 		t.Error(err)
 	}
 	srv.NewService("serviceA", newObject())
 
 	sess := srv.Session()
-	client, err := sess.Proxy("serviceA", 1)
+	proxy, err := sess.Proxy("serviceA", 1)
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := client.MakeObject(client)
+	remoteObj := client.MakeObject(proxy)
 	enabled, err := remoteObj.IsStatsEnabled()
 	if err != nil {
 		t.Error(err)
@@ -138,19 +137,19 @@ func TestTraceEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv, err := server.StandAloneServer(listener, server.Yes{},
-		server.PrivateNamespace())
+	srv, err := StandAloneServer(listener, Yes{},
+		PrivateNamespace())
 	if err != nil {
 		t.Error(err)
 	}
 	srv.NewService("serviceA", newObject())
 
 	sess := srv.Session()
-	client, err := sess.Proxy("serviceA", 1)
+	proxy, err := sess.Proxy("serviceA", 1)
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := client.MakeObject(client)
+	remoteObj := client.MakeObject(proxy)
 	enabled, err := remoteObj.IsTraceEnabled()
 	if err != nil {
 		t.Fatal(err)

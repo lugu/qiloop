@@ -10,7 +10,6 @@ import (
 	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
-	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
@@ -40,7 +39,7 @@ type LogProviderSignalHelper interface{}
 
 // stubLogProvider implements server.ServerObject.
 type stubLogProvider struct {
-	obj     generic.Object
+	obj     server.Object
 	impl    LogProviderImplementor
 	session bus.Session
 }
@@ -49,7 +48,7 @@ type stubLogProvider struct {
 func LogProviderObject(impl LogProviderImplementor) server.ServerObject {
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.SetVerbosity)
 	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
 	stb.obj.Wrap(uint32(0x66), stb.ClearAndSet)
@@ -193,7 +192,7 @@ type LogListenerSignalHelper interface {
 
 // stubLogListener implements server.ServerObject.
 type stubLogListener struct {
-	obj     generic.Object
+	obj     server.Object
 	impl    LogListenerImplementor
 	session bus.Session
 }
@@ -202,7 +201,7 @@ type stubLogListener struct {
 func LogListenerObject(impl LogListenerImplementor) server.ServerObject {
 	var stb stubLogListener
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
 	stb.obj.Wrap(uint32(0x66), stb.ClearFilters)
 	return &stb
@@ -395,7 +394,7 @@ type LogManagerSignalHelper interface{}
 
 // stubLogManager implements server.ServerObject.
 type stubLogManager struct {
-	obj     generic.Object
+	obj     server.Object
 	impl    LogManagerImplementor
 	session bus.Session
 }
@@ -404,7 +403,7 @@ type stubLogManager struct {
 func LogManagerObject(impl LogManagerImplementor) server.ServerObject {
 	var stb stubLogManager
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Log)
 	stb.obj.Wrap(uint32(0x65), stb.CreateListener)
 	stb.obj.Wrap(uint32(0x66), stb.GetListener)

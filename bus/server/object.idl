@@ -1,4 +1,4 @@
-package generic
+package server
 
 interface Generic
 	fn registerEvent(objectID: uint32, actionID: uint32, handler: uint64) -> uint64 //uid:0

@@ -10,7 +10,6 @@ import (
 	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
-	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	log "log"
@@ -39,7 +38,7 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.ServerObject.
 type stubPingPong struct {
-	obj     generic.Object
+	obj     server.Object
 	impl    PingPongImplementor
 	session bus.Session
 }
@@ -48,7 +47,7 @@ type stubPingPong struct {
 func PingPongObject(impl PingPongImplementor) server.ServerObject {
 	var stb stubPingPong
 	stb.impl = impl
-	stb.obj = generic.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Hello)
 	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb
