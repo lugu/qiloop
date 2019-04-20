@@ -259,7 +259,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 	} else {
 		file.Type().Id(ProxyName).Struct(
 			jen.Qual(
-				"github.com/lugu/qiloop/bus/client/object",
+				"github.com/lugu/qiloop/bus/client",
 				"ObjectProxy",
 			),
 			jen.Id("session").Qual(
@@ -272,7 +272,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		block := jen.Id(`
 	// Make` + serviceName + ` constructs ` + objName(serviceName) + `
 	func Make` + serviceName + `(sess bus.Session, proxy bus.Proxy) ` + objName(serviceName) + ` {
-		return &` + ProxyName + `{object1.MakeObject(proxy), sess}
+		return &` + ProxyName + `{client.MakeObject(proxy), sess}
 	}
 	    `)
 		file.Add(block)

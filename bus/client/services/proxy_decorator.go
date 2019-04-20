@@ -3,17 +3,17 @@ package services
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/client/object"
+	"github.com/lugu/qiloop/bus/client"
 	"time"
 )
 
 // Proxy returns a proxy to the service described by info.
-func (info ServiceInfo) Proxy(sess bus.Session) (object.ObjectProxy, error) {
+func (info ServiceInfo) Proxy(sess bus.Session) (client.ObjectProxy, error) {
 	proxy, err := sess.Proxy(info.Name, 1)
 	if err != nil {
 		return nil, fmt.Errorf("cannot connect %s: %s", info.Name, err)
 	}
-	return object.MakeObject(proxy), nil
+	return client.MakeObject(proxy), nil
 }
 
 var (

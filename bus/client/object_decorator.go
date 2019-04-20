@@ -1,4 +1,4 @@
-package object
+package client
 
 import (
 	"github.com/lugu/qiloop/bus"

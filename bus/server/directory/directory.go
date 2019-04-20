@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/client"
-	objproxy "github.com/lugu/qiloop/bus/client/object"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -297,7 +296,7 @@ func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
 	}
 	proxy := client.NewProxy(clt, ref.MetaObject,
 		ref.ServiceID, ref.ObjectID)
-	return objproxy.MakeObject(proxy), nil
+	return client.MakeObject(proxy), nil
 }
 
 func (s *directorySession) Destroy() error {

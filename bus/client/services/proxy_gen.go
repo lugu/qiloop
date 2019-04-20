@@ -4,15 +4,15 @@
 package services
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	object1 "github.com/lugu/qiloop/bus/client/object"
+	client "github.com/lugu/qiloop/bus/client"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
-	"log"
+	io "io"
+	log "log"
 )
 
 // Constructor gives access to remote services
@@ -114,13 +114,13 @@ type ServiceDirectoryProxy interface {
 
 // proxyServiceDirectory implements ServiceDirectoryProxy
 type proxyServiceDirectory struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeServiceDirectory constructs ServiceDirectoryProxy
 func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
-	return &proxyServiceDirectory{object1.MakeObject(proxy), sess}
+	return &proxyServiceDirectory{client.MakeObject(proxy), sess}
 }
 
 // ServiceDirectory retruns a proxy to a remote service
@@ -569,13 +569,13 @@ type LogProviderProxy interface {
 
 // proxyLogProvider implements LogProviderProxy
 type proxyLogProvider struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeLogProvider constructs LogProviderProxy
 func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
-	return &proxyLogProvider{object1.MakeObject(proxy), sess}
+	return &proxyLogProvider{client.MakeObject(proxy), sess}
 }
 
 // LogProvider retruns a proxy to a remote service
@@ -679,13 +679,13 @@ type LogListenerProxy interface {
 
 // proxyLogListener implements LogListenerProxy
 type proxyLogListener struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeLogListener constructs LogListenerProxy
 func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
-	return &proxyLogListener{object1.MakeObject(proxy), sess}
+	return &proxyLogListener{client.MakeObject(proxy), sess}
 }
 
 // LogListener retruns a proxy to a remote service
@@ -990,13 +990,13 @@ type LogManagerProxy interface {
 
 // proxyLogManager implements LogManagerProxy
 type proxyLogManager struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeLogManager constructs LogManagerProxy
 func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
-	return &proxyLogManager{object1.MakeObject(proxy), sess}
+	return &proxyLogManager{client.MakeObject(proxy), sess}
 }
 
 // LogManager retruns a proxy to a remote service

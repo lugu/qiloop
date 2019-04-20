@@ -4,17 +4,17 @@
 package tester
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	object1 "github.com/lugu/qiloop/bus/client/object"
+	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"log"
+	log "log"
 )
 
 // BombImplementor interface of the service implementation
@@ -274,13 +274,13 @@ type BombProxy interface {
 
 // proxyBomb implements BombProxy
 type proxyBomb struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeBomb constructs BombProxy
 func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
-	return &proxyBomb{object1.MakeObject(proxy), sess}
+	return &proxyBomb{client.MakeObject(proxy), sess}
 }
 
 // Bomb retruns a proxy to a remote service
@@ -423,13 +423,13 @@ type SpacecraftProxy interface {
 
 // proxySpacecraft implements SpacecraftProxy
 type proxySpacecraft struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeSpacecraft constructs SpacecraftProxy
 func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
-	return &proxySpacecraft{object1.MakeObject(proxy), sess}
+	return &proxySpacecraft{client.MakeObject(proxy), sess}
 }
 
 // Spacecraft retruns a proxy to a remote service

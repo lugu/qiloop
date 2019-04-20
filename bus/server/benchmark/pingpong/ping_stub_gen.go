@@ -4,16 +4,16 @@
 package pingpong
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	object1 "github.com/lugu/qiloop/bus/client/object"
+	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	"log"
+	log "log"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -168,13 +168,13 @@ type PingPongProxy interface {
 
 // proxyPingPong implements PingPongProxy
 type proxyPingPong struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakePingPong constructs PingPongProxy
 func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
-	return &proxyPingPong{object1.MakeObject(proxy), sess}
+	return &proxyPingPong{client.MakeObject(proxy), sess}
 }
 
 // PingPong retruns a proxy to a remote service

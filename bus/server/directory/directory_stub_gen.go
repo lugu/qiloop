@@ -4,17 +4,17 @@
 package directory
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	object1 "github.com/lugu/qiloop/bus/client/object"
+	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	generic "github.com/lugu/qiloop/bus/server/generic"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	"io"
-	"log"
+	io "io"
+	log "log"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -409,13 +409,13 @@ type ServiceDirectoryProxy interface {
 
 // proxyServiceDirectory implements ServiceDirectoryProxy
 type proxyServiceDirectory struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeServiceDirectory constructs ServiceDirectoryProxy
 func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
-	return &proxyServiceDirectory{object1.MakeObject(proxy), sess}
+	return &proxyServiceDirectory{client.MakeObject(proxy), sess}
 }
 
 // ServiceDirectory retruns a proxy to a remote service

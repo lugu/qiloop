@@ -4,8 +4,8 @@
 package stub_test
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
@@ -13,8 +13,8 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
-	"log"
+	io "io"
+	log "log"
 )
 
 // ObjectImplementor interface of the service implementation

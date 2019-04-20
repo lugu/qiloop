@@ -1,3 +1,3 @@
-//go:generate qiloop proxy --idl server.idl --output proxy_gen.go
+//go:generate qiloop proxy --idl client.idl --output proxy_gen.go
 
 package client

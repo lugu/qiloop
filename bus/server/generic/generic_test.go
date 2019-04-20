@@ -1,7 +1,7 @@
 package generic
 
 import (
-	proxy "github.com/lugu/qiloop/bus/client/object"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
@@ -85,7 +85,7 @@ func TestMethodStatistics(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := proxy.MakeObject(client)
+	remoteObj := client.MakeObject(client)
 	enabled, err := remoteObj.IsStatsEnabled()
 	if err != nil {
 		t.Error(err)
@@ -150,7 +150,7 @@ func TestTraceEvent(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := proxy.MakeObject(client)
+	remoteObj := client.MakeObject(client)
 	enabled, err := remoteObj.IsTraceEnabled()
 	if err != nil {
 		t.Fatal(err)

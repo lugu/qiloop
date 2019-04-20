@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	objproxy "github.com/lugu/qiloop/bus/client/object"
+	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/type/object"
@@ -42,7 +42,7 @@ func info(serverURL, serviceName string) {
 			log.Fatalf("failed to connect service (%s): %s",
 				serviceName, err)
 		}
-		var obj object.Object = objproxy.MakeObject(proxy)
+		var obj object.Object = client.MakeObject(proxy)
 		meta, err := obj.MetaObject(1)
 		if err != nil {
 			log.Fatalf("failed to get metaobject (%s): %s",

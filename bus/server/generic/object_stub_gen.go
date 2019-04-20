@@ -4,16 +4,16 @@
 package generic
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	object1 "github.com/lugu/qiloop/bus/client/object"
+	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
+	io "io"
 )
 
 // GenericImplementor interface of the service implementation
@@ -476,13 +476,13 @@ type GenericProxy interface {
 
 // proxyGeneric implements GenericProxy
 type proxyGeneric struct {
-	object1.ObjectProxy
+	client.ObjectProxy
 	session bus.Session
 }
 
 // MakeGeneric constructs GenericProxy
 func MakeGeneric(sess bus.Session, proxy bus.Proxy) GenericProxy {
-	return &proxyGeneric{object1.MakeObject(proxy), sess}
+	return &proxyGeneric{client.MakeObject(proxy), sess}
 }
 
 // Generic retruns a proxy to a remote service
