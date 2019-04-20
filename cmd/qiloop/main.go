@@ -48,6 +48,7 @@ func init() {
 		"Parse an IDL file and generate the specialized proxy code"
 	proxyCommand.String(&inputFile, "i", "idl", "IDL file (input)")
 	proxyCommand.String(&outputFile, "o", "output", "proxy file (output)")
+	proxyCommand.String(&packageName, "p", "path", "optional package name")
 
 	stubCommand = flaggy.NewSubcommand("stub")
 	stubCommand.Description =
@@ -73,7 +74,7 @@ func main() {
 	} else if scanCommand.Used {
 		scan(serverURL, serviceName, outputFile)
 	} else if proxyCommand.Used {
-		proxy(inputFile, outputFile)
+		proxy(inputFile, outputFile, packageName)
 	} else if stubCommand.Used {
 		stub(inputFile, outputFile, packageName)
 	} else if logCommand.Used {

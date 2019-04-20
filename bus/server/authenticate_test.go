@@ -3,7 +3,7 @@ package server_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus/client"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
@@ -30,7 +30,7 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 	if err != nil {
 		panic(err)
 	}
-	err = client.AuthenticateUser(ep, user, token)
+	err = bus.AuthenticateUser(ep, user, token)
 	if ok && err != nil {
 		t.Errorf("user: %s, token: %s, error: %s", user, token, err)
 	}
@@ -57,7 +57,7 @@ func TestNewServiceAuthenticate(t *testing.T) {
 	helpAuth(t, credentials, "bazz", "bozz", true)
 }
 
-func LimitedReader(c client.CapabilityMap, size int) io.Reader {
+func LimitedReader(c bus.CapabilityMap, size int) io.Reader {
 	var buf bytes.Buffer
 	server.WriteCapabilityMap(c, &buf)
 	return &io.LimitedReader{
@@ -87,8 +87,8 @@ func NewLimitedWriter(size int) io.Writer {
 }
 
 func TestWriterCapabilityMapError(t *testing.T) {
-	c := client.CapabilityMap{
-		client.KeyState: value.Uint(client.StateDone),
+	c := bus.CapabilityMap{
+		bus.KeyState: value.Uint(bus.StateDone),
 	}
 	var buf bytes.Buffer
 	err := server.WriteCapabilityMap(c, &buf)
@@ -112,8 +112,8 @@ func TestWriterCapabilityMapError(t *testing.T) {
 }
 
 func TestReadHeaderError(t *testing.T) {
-	c := client.CapabilityMap{
-		client.KeyState: value.Uint(client.StateDone),
+	c := bus.CapabilityMap{
+		bus.KeyState: value.Uint(bus.StateDone),
 	}
 	var buf bytes.Buffer
 	err := server.WriteCapabilityMap(c, &buf)

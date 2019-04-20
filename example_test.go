@@ -2,7 +2,7 @@ package qiloop_test
 
 import (
 	"github.com/lugu/qiloop"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/services"
 )
 
 // This example shows how to create a session which connect a server

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"log"
@@ -577,7 +576,7 @@ func (s *Server) Terminate() error {
 func (s *Server) Client() bus.Client {
 	ctl, srv := gonet.Pipe()
 	s.handle(srv, true)
-	return client.NewClient(net.NewEndPoint(ctl))
+	return bus.NewClient(net.NewEndPoint(ctl))
 }
 
 // Session returns a local session able to contact local services

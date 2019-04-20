@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func proxy(idlFileName, proxyFileName string) {
+func proxy(idlFileName, proxyFileName, packageName string) {
 
 	file, err := os.Open(idlFileName)
 	if err != nil {
@@ -35,7 +35,7 @@ func proxy(idlFileName, proxyFileName string) {
 		log.Fatalf("failed to parse %s: %s", idlFileName, err)
 	}
 
-	if err := p.GeneratePackage(output, pkg); err != nil {
+	if err := p.GeneratePackage(output, packageName, pkg); err != nil {
 		log.Fatalf("failed to generate output: %s", err)
 	}
 }

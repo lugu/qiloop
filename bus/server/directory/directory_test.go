@@ -2,9 +2,9 @@ package directory_test
 
 import (
 	"bytes"
-	proxy "github.com/lugu/qiloop/bus/client/services"
 	"github.com/lugu/qiloop/bus/server"
 	dir "github.com/lugu/qiloop/bus/server/directory"
+	proxy "github.com/lugu/qiloop/bus/services"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"

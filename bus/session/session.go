@@ -3,8 +3,7 @@ package session
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
 	"log"
 	"sync"
@@ -22,23 +21,23 @@ type Session struct {
 	removed          chan services.ServiceRemoved
 }
 
-func newObject(info services.ServiceInfo, ref object.ObjectReference) (client.ObjectProxy, error) {
-	endpoint, err := client.SelectEndPoint(info.Endpoints)
+func newObject(info services.ServiceInfo, ref object.ObjectReference) (bus.ObjectProxy, error) {
+	endpoint, err := bus.SelectEndPoint(info.Endpoints)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)
 	}
-	proxy := client.NewProxy(client.NewClient(endpoint), ref.MetaObject,
+	proxy := bus.NewProxy(bus.NewClient(endpoint), ref.MetaObject,
 		ref.ServiceID, ref.ObjectID)
-	return client.MakeObject(proxy), nil
+	return bus.MakeObject(proxy), nil
 }
 
 func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
-	endpoint, err := client.SelectEndPoint(info.Endpoints)
+	endpoint, err := bus.SelectEndPoint(info.Endpoints)
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
 	}
-	c := client.NewClient(endpoint)
+	c := bus.NewClient(endpoint)
 	proxy, err := metaProxy(c, info.ServiceId, objectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service meta object (%s): %s", info.Name, err)
@@ -89,11 +88,11 @@ func (s *Session) Object(ref object.ObjectReference) (o bus.Proxy, err error) {
 // metaProxy is to create proxies to the directory and server
 // services needed for a session.
 func metaProxy(c bus.Client, serviceID, objectID uint32) (p bus.Proxy, err error) {
-	meta, err := bus.MetaObject(c, serviceID, objectID)
+	meta, err := bus.GetMetaObject(c, serviceID, objectID)
 	if err != nil {
 		return p, fmt.Errorf("Can not reach metaObject: %s", err)
 	}
-	return client.NewProxy(c, meta, serviceID, objectID), nil
+	return bus.NewProxy(c, meta, serviceID, objectID), nil
 }
 
 // NewSession connects an address and return a new session.

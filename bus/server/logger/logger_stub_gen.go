@@ -7,7 +7,6 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -726,13 +725,13 @@ type LogProviderProxy interface {
 
 // proxyLogProvider implements LogProviderProxy
 type proxyLogProvider struct {
-	client.ObjectProxy
+	bus.ObjectProxy
 	session bus.Session
 }
 
 // MakeLogProvider constructs LogProviderProxy
 func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
-	return &proxyLogProvider{client.MakeObject(proxy), sess}
+	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
 
 // LogProvider retruns a proxy to a remote service
@@ -836,13 +835,13 @@ type LogListenerProxy interface {
 
 // proxyLogListener implements LogListenerProxy
 type proxyLogListener struct {
-	client.ObjectProxy
+	bus.ObjectProxy
 	session bus.Session
 }
 
 // MakeLogListener constructs LogListenerProxy
 func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
-	return &proxyLogListener{client.MakeObject(proxy), sess}
+	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
 
 // LogListener retruns a proxy to a remote service
@@ -1147,13 +1146,13 @@ type LogManagerProxy interface {
 
 // proxyLogManager implements LogManagerProxy
 type proxyLogManager struct {
-	client.ObjectProxy
+	bus.ObjectProxy
 	session bus.Session
 }
 
 // MakeLogManager constructs LogManagerProxy
 func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
-	return &proxyLogManager{client.MakeObject(proxy), sess}
+	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }
 
 // LogManager retruns a proxy to a remote service

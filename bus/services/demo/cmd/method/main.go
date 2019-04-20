@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
 )
 

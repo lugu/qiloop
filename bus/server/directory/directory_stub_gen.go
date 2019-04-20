@@ -7,7 +7,6 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -408,13 +407,13 @@ type ServiceDirectoryProxy interface {
 
 // proxyServiceDirectory implements ServiceDirectoryProxy
 type proxyServiceDirectory struct {
-	client.ObjectProxy
+	bus.ObjectProxy
 	session bus.Session
 }
 
 // MakeServiceDirectory constructs ServiceDirectoryProxy
 func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
-	return &proxyServiceDirectory{client.MakeObject(proxy), sess}
+	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }
 
 // ServiceDirectory retruns a proxy to a remote service

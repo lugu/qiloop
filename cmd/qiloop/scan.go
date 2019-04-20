@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/type/object"
@@ -68,7 +68,7 @@ func scan(serverURL, serviceName, idlFile string) {
 			if strings.Contains(addr, "198.18.0") {
 				continue
 			}
-			cache, err := client.NewCachedSession(addr)
+			cache, err := bus.NewCachedSession(addr)
 			if err != nil {
 				continue
 			}

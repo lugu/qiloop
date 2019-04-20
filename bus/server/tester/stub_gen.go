@@ -7,7 +7,6 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -273,13 +272,13 @@ type BombProxy interface {
 
 // proxyBomb implements BombProxy
 type proxyBomb struct {
-	client.ObjectProxy
+	bus.ObjectProxy
 	session bus.Session
 }
 
 // MakeBomb constructs BombProxy
 func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
-	return &proxyBomb{client.MakeObject(proxy), sess}
+	return &proxyBomb{bus.MakeObject(proxy), sess}
 }
 
 // Bomb retruns a proxy to a remote service
@@ -422,13 +421,13 @@ type SpacecraftProxy interface {
 
 // proxySpacecraft implements SpacecraftProxy
 type proxySpacecraft struct {
-	client.ObjectProxy
+	bus.ObjectProxy
 	session bus.Session
 }
 
 // MakeSpacecraft constructs SpacecraftProxy
 func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
-	return &proxySpacecraft{client.MakeObject(proxy), sess}
+	return &proxySpacecraft{bus.MakeObject(proxy), sess}
 }
 
 // Spacecraft retruns a proxy to a remote service

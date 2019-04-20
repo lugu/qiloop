@@ -1,9 +1,9 @@
-package client_test
+package bus_test
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus/client"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
@@ -39,7 +39,7 @@ func TestAuth(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = client.Authenticate(endpoint)
+	err = bus.Authenticate(endpoint)
 	if err == nil {
 		panic("must fail")
 	}
@@ -47,7 +47,7 @@ func TestAuth(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = client.AuthenticateUser(endpoint, "user1", "bbb")
+	err = bus.AuthenticateUser(endpoint, "user1", "bbb")
 	if err == nil {
 		panic("must fail")
 	}
@@ -55,11 +55,11 @@ func TestAuth(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = client.AuthenticateUser(endpoint, "user1", "aaa")
+	err = bus.AuthenticateUser(endpoint, "user1", "aaa")
 	if err != nil {
 		panic(err)
 	}
-	err = client.AuthenticateUser(endpoint, "user1", "aaa")
+	err = bus.AuthenticateUser(endpoint, "user1", "aaa")
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +68,7 @@ func TestAuth(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = client.AuthenticateUser(endpoint, "user2", "aaa")
+	err = bus.AuthenticateUser(endpoint, "user2", "aaa")
 	if err == nil {
 		panic("must fail")
 	}
@@ -76,11 +76,11 @@ func TestAuth(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = client.AuthenticateUser(endpoint, "user2", "bbb")
+	err = bus.AuthenticateUser(endpoint, "user2", "bbb")
 	if err != nil {
 		panic(err)
 	}
-	err = client.AuthenticateUser(endpoint, "user3", "")
+	err = bus.AuthenticateUser(endpoint, "user3", "")
 	if err == nil {
 		panic(err)
 	}
@@ -91,10 +91,10 @@ type ServerMock struct {
 	EndPoint      net.EndPoint
 	ExpectedUser  string
 	ExpectedToken string
-	Response      func(user, token string) client.CapabilityMap
+	Response      func(user, token string) bus.CapabilityMap
 }
 
-func NewServer(response func(user, token string) client.CapabilityMap) net.EndPoint {
+func NewServer(response func(user, token string) bus.CapabilityMap) net.EndPoint {
 	client, server := net.Pipe()
 	s := &ServerMock{
 		EndPoint: server,
@@ -150,22 +150,22 @@ func (s *ServerMock) wrapAuthenticate(payload []byte) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func (s *ServerMock) capError() client.CapabilityMap {
-	return client.CapabilityMap{
-		client.KeyState: value.Uint(client.StateError),
+func (s *ServerMock) capError() bus.CapabilityMap {
+	return bus.CapabilityMap{
+		bus.KeyState: value.Uint(bus.StateError),
 	}
 }
 
-func (s *ServerMock) Authenticate(cap client.CapabilityMap) client.CapabilityMap {
+func (s *ServerMock) Authenticate(cap bus.CapabilityMap) bus.CapabilityMap {
 	var user, token string
-	if userValue, ok := cap[client.KeyUser]; ok {
+	if userValue, ok := cap[bus.KeyUser]; ok {
 		if userStr, ok := userValue.(value.StringValue); ok {
 			user = userStr.Value()
 		} else {
 			return s.capError()
 		}
 	}
-	if tokenValue, ok := cap[client.KeyToken]; ok {
+	if tokenValue, ok := cap[bus.KeyToken]; ok {
 		if tokenStr, ok := tokenValue.(value.StringValue); ok {
 			token = tokenStr.Value()
 		} else {
@@ -176,37 +176,37 @@ func (s *ServerMock) Authenticate(cap client.CapabilityMap) client.CapabilityMap
 }
 
 func helpTest(t *testing.T, user, token string, status uint32) {
-	response := func(gotUser, gotToken string) client.CapabilityMap {
+	response := func(gotUser, gotToken string) bus.CapabilityMap {
 		if user != gotUser {
 			panic("not expecting user " + gotUser)
 		}
 		if token != gotToken {
 			panic("not expecting token " + gotToken)
 		}
-		if status == client.StateContinue {
-			status = client.StateDone
-			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
-				client.KeyNewToken: value.String(token),
+		if status == bus.StateContinue {
+			status = bus.StateDone
+			return bus.CapabilityMap{
+				bus.KeyState:    value.Uint(bus.StateContinue),
+				bus.KeyNewToken: value.String(token),
 			}
 		}
-		return client.CapabilityMap{
-			client.KeyState: value.Uint(status),
+		return bus.CapabilityMap{
+			bus.KeyState: value.Uint(status),
 		}
 	}
 	endpoint := NewServer(response)
 	defer endpoint.Close()
-	err := client.AuthenticateUser(endpoint, user, token)
+	err := bus.AuthenticateUser(endpoint, user, token)
 	switch status {
-	case client.StateDone:
+	case bus.StateDone:
 		if err != nil {
 			panic("expecting a success, got " + err.Error())
 		}
-	case client.StateError:
+	case bus.StateError:
 		if err == nil {
 			panic("expecting an error")
 		}
-	case client.StateContinue:
+	case bus.StateContinue:
 		if err != nil {
 			panic("expecting a success, got " + err.Error())
 		}
@@ -218,17 +218,17 @@ func helpTest(t *testing.T, user, token string, status uint32) {
 }
 
 func TestAuthContinue(t *testing.T) {
-	helpTest(t, "userA", "correct passwd", client.StateDone)
-	helpTest(t, "userA", "incorrect passwd", client.StateError)
-	helpTest(t, "userA", "negotiation", client.StateContinue)
+	helpTest(t, "userA", "correct passwd", bus.StateDone)
+	helpTest(t, "userA", "incorrect passwd", bus.StateError)
+	helpTest(t, "userA", "negotiation", bus.StateContinue)
 	helpTest(t, "userA", "invalid state", uint32(0xdead))
 }
 
 func helpAuthError(t *testing.T, user, token string,
-	response func(user, token string) client.CapabilityMap) {
+	response func(user, token string) bus.CapabilityMap) {
 
 	endpoint := NewServer(response)
-	err := client.AuthenticateUser(endpoint, user, token)
+	err := bus.AuthenticateUser(endpoint, user, token)
 	if err == nil {
 		panic("must fail")
 	}
@@ -237,49 +237,49 @@ func helpAuthError(t *testing.T, user, token string,
 
 func TestAuthError(t *testing.T) {
 	// missing state
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
 		if user != "a" {
 			panic("unexpected user " + user)
 		}
 		if token != "b" {
 			panic("unexpected token " + token)
 		}
-		return client.CapabilityMap{}
+		return bus.CapabilityMap{}
 	})
 
 	// service not available
 	helpAuthError(t, "a", "b", nil)
 
 	// wrong state type
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
-		return client.CapabilityMap{
-			client.KeyState: value.String("not correct"),
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
+		return bus.CapabilityMap{
+			bus.KeyState: value.String("not correct"),
 		}
 	})
 
 	// missing new token
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
-		return client.CapabilityMap{
-			client.KeyState: value.Uint(client.StateContinue),
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
+		return bus.CapabilityMap{
+			bus.KeyState: value.Uint(bus.StateContinue),
 		}
 	})
 
 	// wrong new token type
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
-		return client.CapabilityMap{
-			client.KeyState:    value.Uint(client.StateContinue),
-			client.KeyNewToken: value.Uint(12),
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
+		return bus.CapabilityMap{
+			bus.KeyState:    value.Uint(bus.StateContinue),
+			bus.KeyNewToken: value.Uint(12),
 		}
 	})
 
 	// continue reply missing state
 	state := 1
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
 		if state == 1 {
 			state = 2
-			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
-				client.KeyNewToken: value.String("bb"),
+			return bus.CapabilityMap{
+				bus.KeyState:    value.Uint(bus.StateContinue),
+				bus.KeyNewToken: value.String("bb"),
 			}
 		}
 		if user != "a" {
@@ -288,89 +288,89 @@ func TestAuthError(t *testing.T) {
 		if token != "bb" {
 			panic("unexpected token " + token)
 		}
-		return client.CapabilityMap{}
+		return bus.CapabilityMap{}
 	})
 
 	// continue reply wrong state type
 	state = 1
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
 		if state == 1 {
 			state = 2
-			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
-				client.KeyNewToken: value.String("bb"),
+			return bus.CapabilityMap{
+				bus.KeyState:    value.Uint(bus.StateContinue),
+				bus.KeyNewToken: value.String("bb"),
 			}
 		}
-		return client.CapabilityMap{
-			client.KeyState: value.String("bb"),
+		return bus.CapabilityMap{
+			bus.KeyState: value.String("bb"),
 		}
 	})
 
 	// continue reply wrong state value
 	state = 1
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
 		if state == 1 {
 			state = 2
-			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
-				client.KeyNewToken: value.String("bb"),
+			return bus.CapabilityMap{
+				bus.KeyState:    value.Uint(bus.StateContinue),
+				bus.KeyNewToken: value.String("bb"),
 			}
 		}
-		return client.CapabilityMap{
-			client.KeyState: value.Uint(1234),
+		return bus.CapabilityMap{
+			bus.KeyState: value.Uint(1234),
 		}
 	})
 
 	// continue reply state continue
 	state = 1
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
 		if state == 1 {
 			state = 2
-			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
-				client.KeyNewToken: value.String("bb"),
+			return bus.CapabilityMap{
+				bus.KeyState:    value.Uint(bus.StateContinue),
+				bus.KeyNewToken: value.String("bb"),
 			}
 		}
-		return client.CapabilityMap{
-			client.KeyState: value.Uint(client.StateContinue),
+		return bus.CapabilityMap{
+			bus.KeyState: value.Uint(bus.StateContinue),
 		}
 	})
 
 	// continue reply state error
 	state = 1
-	helpAuthError(t, "a", "b", func(user, token string) client.CapabilityMap {
+	helpAuthError(t, "a", "b", func(user, token string) bus.CapabilityMap {
 		if state == 1 {
 			state = 2
-			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
-				client.KeyNewToken: value.String("bb"),
+			return bus.CapabilityMap{
+				bus.KeyState:    value.Uint(bus.StateContinue),
+				bus.KeyNewToken: value.String("bb"),
 			}
 		}
-		return client.CapabilityMap{
-			client.KeyState: value.Uint(client.StateError),
+		return bus.CapabilityMap{
+			bus.KeyState: value.Uint(bus.StateError),
 		}
 	})
 
 	// continue with call error
 	state = 1
 	var endpoint net.EndPoint
-	response := func(user, token string) client.CapabilityMap {
+	response := func(user, token string) bus.CapabilityMap {
 		if state == 1 {
 			state = 2
-			return client.CapabilityMap{
-				client.KeyState:    value.Uint(client.StateContinue),
-				client.KeyNewToken: value.String("bb"),
+			return bus.CapabilityMap{
+				bus.KeyState:    value.Uint(bus.StateContinue),
+				bus.KeyNewToken: value.String("bb"),
 			}
 		}
 		if token != "bb" {
 			panic("expecting token bb")
 		}
 		endpoint.Close()
-		return client.CapabilityMap{}
+		return bus.CapabilityMap{}
 	}
 
 	endpoint = NewServer(response)
-	err := client.AuthenticateUser(endpoint, "a", "b")
+	err := bus.AuthenticateUser(endpoint, "a", "b")
 	if err == nil {
 		panic("must fail")
 	}

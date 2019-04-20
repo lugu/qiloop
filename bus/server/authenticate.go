@@ -3,7 +3,7 @@ package server
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus/client"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
@@ -48,7 +48,7 @@ func (d dictionary) Authenticate(user, token string) bool {
 }
 
 // WriteCapabilityMap marshals the capability map.
-func WriteCapabilityMap(m client.CapabilityMap, out io.Writer) error {
+func WriteCapabilityMap(m bus.CapabilityMap, out io.Writer) error {
 	err := basic.WriteUint32(uint32(len(m)), out)
 	if err != nil {
 		return fmt.Errorf("failed to write map size: %s", err)
@@ -67,7 +67,7 @@ func WriteCapabilityMap(m client.CapabilityMap, out io.Writer) error {
 }
 
 // ReadCapabilityMap unmarshals the capability map.
-func ReadCapabilityMap(in io.Reader) (m client.CapabilityMap, err error) {
+func ReadCapabilityMap(in io.Reader) (m bus.CapabilityMap, err error) {
 
 	size, err := basic.ReadUint32(in)
 	if err != nil {
@@ -129,22 +129,22 @@ func (s *serviceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([
 	return out.Bytes(), nil
 }
 
-func (s *serviceAuthenticate) capError() client.CapabilityMap {
-	return client.CapabilityMap{
-		client.KeyState: value.Uint(client.StateError),
+func (s *serviceAuthenticate) capError() bus.CapabilityMap {
+	return bus.CapabilityMap{
+		bus.KeyState: value.Uint(bus.StateError),
 	}
 }
 
-func (s *serviceAuthenticate) Authenticate(from *Context, cap client.CapabilityMap) client.CapabilityMap {
+func (s *serviceAuthenticate) Authenticate(from *Context, cap bus.CapabilityMap) bus.CapabilityMap {
 	var user, token string
-	if userValue, ok := cap[client.KeyUser]; ok {
+	if userValue, ok := cap[bus.KeyUser]; ok {
 		if userStr, ok := userValue.(value.StringValue); ok {
 			user = userStr.Value()
 		} else {
 			return s.capError()
 		}
 	}
-	if tokenValue, ok := cap[client.KeyToken]; ok {
+	if tokenValue, ok := cap[bus.KeyToken]; ok {
 		if tokenStr, ok := tokenValue.(value.StringValue); ok {
 			token = tokenStr.Value()
 		} else {
@@ -153,8 +153,8 @@ func (s *serviceAuthenticate) Authenticate(from *Context, cap client.CapabilityM
 	}
 	if s.auth.Authenticate(user, token) {
 		from.Authenticated = true
-		return client.CapabilityMap{
-			client.KeyState: value.Uint(client.StateDone),
+		return bus.CapabilityMap{
+			bus.KeyState: value.Uint(bus.StateDone),
 		}
 	}
 	return s.capError()

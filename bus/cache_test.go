@@ -1,11 +1,11 @@
-package client_test
+package bus_test
 
 import (
-	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
@@ -27,7 +27,7 @@ func TestCache(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	cache := client.NewCache(endpoint)
+	cache := bus.NewCache(endpoint)
 	defer cache.Destroy()
 	cache.AddService("Server", 0, object.MetaService0)
 
@@ -50,23 +50,23 @@ func TestServerProxy(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	cache := client.NewCache(endpoint)
+	cache := bus.NewCache(endpoint)
 	defer cache.Destroy()
 
-	_, err = client.Services(cache).ServiceServer()
+	_, err = bus.Services(cache).ServiceServer()
 	if err == nil {
 		panic("shall not create service not in the cache")
 	}
 
-	cache.AddService("Server", 0, object.MetaService0)
+	cache.AddService("Server0", 0, object.MetaService0)
 
-	_, err = client.Services(cache).ServiceServer()
+	_, err = bus.Services(cache).ServiceServer()
 	if err != nil {
 		panic("expecting an authentication error")
 	}
 
-	services := client.Services(cache)
-	_, err = services.Server()
+	services := bus.Services(cache)
+	_, err = services.Server0()
 	if err != nil {
 		panic("expecting an authentication error")
 	}
@@ -80,7 +80,7 @@ func TestLookup(t *testing.T) {
 	}
 	defer server.Terminate()
 
-	cache, err := client.NewCachedSession(addr)
+	cache, err := bus.NewCachedSession(addr)
 	if err != nil {
 		panic(err)
 	}
@@ -112,7 +112,7 @@ func TestLookup(t *testing.T) {
 }
 
 func TestDialError(t *testing.T) {
-	_, err := client.NewCachedSession("nope://")
+	_, err := bus.NewCachedSession("nope://")
 	if err == nil {
 		panic("expecting an error")
 	}
@@ -132,7 +132,7 @@ func TestCacheAuthError(t *testing.T) {
 		panic(err)
 	}
 	defer server.Terminate()
-	_, err = client.NewCachedSession(addr)
+	_, err = bus.NewCachedSession(addr)
 	if err == nil {
 		panic("expecting an error")
 	}
@@ -151,19 +151,19 @@ func TestServerError(t *testing.T) {
 		srv.Close()
 	}()
 
-	cache := client.NewCache(net.NewEndPoint(clt))
+	cache := bus.NewCache(net.NewEndPoint(clt))
 	defer cache.Destroy()
-	cache.AddService("Server", 0, object.MetaService0)
+	cache.AddService("Server0", 0, object.MetaService0)
 
-	services := client.Services(cache)
-	server0, err := services.Server()
+	services := bus.Services(cache)
+	server0, err := services.Server0()
 	if err != nil {
 		panic("expecting an authentication error")
 	}
 
 	capabilityMap := map[string]value.Value{
-		client.KeyUser:  value.String("a"),
-		client.KeyToken: value.String("b"),
+		bus.KeyUser:  value.String("a"),
+		bus.KeyToken: value.String("b"),
 	}
 	_, err = server0.Authenticate(capabilityMap)
 	if err == nil {

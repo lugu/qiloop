@@ -7,7 +7,6 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
-	client "github.com/lugu/qiloop/bus/client"
 	net "github.com/lugu/qiloop/bus/net"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
@@ -475,13 +474,13 @@ type GenericProxy interface {
 
 // proxyGeneric implements GenericProxy
 type proxyGeneric struct {
-	client.ObjectProxy
+	bus.ObjectProxy
 	session bus.Session
 }
 
 // MakeGeneric constructs GenericProxy
 func MakeGeneric(sess bus.Session, proxy bus.Proxy) GenericProxy {
-	return &proxyGeneric{client.MakeObject(proxy), sess}
+	return &proxyGeneric{bus.MakeObject(proxy), sess}
 }
 
 // Generic retruns a proxy to a remote service

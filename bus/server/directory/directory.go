@@ -3,7 +3,6 @@ package directory
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/client"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -252,12 +251,12 @@ func (s *directorySession) Proxy(name string, objectID uint32) (bus.Proxy, error
 	if err != nil {
 		return nil, err
 	}
-	meta, err := bus.MetaObject(clt, info.ServiceId, objectID)
+	meta, err := bus.GetMetaObject(clt, info.ServiceId, objectID)
 	if err != nil {
 		return nil, fmt.Errorf("call metaObject (service %d, object %d): %s",
 			info.ServiceId, objectID, err)
 	}
-	return client.NewProxy(clt, meta, info.ServiceId, objectID), nil
+	return bus.NewProxy(clt, meta, info.ServiceId, objectID), nil
 
 }
 func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
@@ -274,12 +273,12 @@ func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
 			}
 		}
 	}
-	endpoint, err := client.SelectEndPoint(info.Endpoints)
+	endpoint, err := bus.SelectEndPoint(info.Endpoints)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)
 	}
-	return client.NewClient(endpoint), nil
+	return bus.NewClient(endpoint), nil
 }
 
 func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
@@ -294,9 +293,9 @@ func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
 	if err != nil {
 		return nil, err
 	}
-	proxy := client.NewProxy(clt, ref.MetaObject,
+	proxy := bus.NewProxy(clt, ref.MetaObject,
 		ref.ServiceID, ref.ObjectID)
-	return client.MakeObject(proxy), nil
+	return bus.MakeObject(proxy), nil
 }
 
 func (s *directorySession) Destroy() error {

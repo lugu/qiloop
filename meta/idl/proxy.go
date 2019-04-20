@@ -36,7 +36,7 @@ func generateInterface(itf *InterfaceType, file *jen.File) error {
 }
 
 func skipActionInterface(serviceName string, action uint32) bool {
-	if serviceName == "Server" {
+	if serviceName == "Server0" {
 		return false
 	}
 	if serviceName == "Object" && action > uint32(10) {
@@ -113,7 +113,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 	)
 
 	definitions = make([]jen.Code, 0)
-	if serviceName != "Server" {
+	if serviceName != "Server0" {
 		definitions = append(definitions,
 			jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
 	}
@@ -214,7 +214,7 @@ func generateProxyObject(itf *InterfaceType, serviceName string,
 
 	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
-		if serviceName != "Object" && serviceName != "Server" &&
+		if serviceName != "Object" && serviceName != "Server0" &&
 			m.Uid < object.MinUserActionID {
 			return nil
 		}
@@ -223,7 +223,7 @@ func generateProxyObject(itf *InterfaceType, serviceName string,
 	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
 		signalName = util.CleanName("Subscribe" + signalName)
-		if serviceName != "Object" && serviceName != "Server" &&
+		if serviceName != "Object" && serviceName != "Server0" &&
 			s.Uid < object.MinUserActionID {
 			return nil
 		}
@@ -234,7 +234,7 @@ func generateProxyObject(itf *InterfaceType, serviceName string,
 		getMethodName := "Get" + propertyName
 		setMethodName := "Set" + propertyName
 		subscribeMethodName := "Subscribe" + propertyName
-		if serviceName != "Object" && serviceName != "Server" &&
+		if serviceName != "Object" && serviceName != "Server0" &&
 			p.Uid < object.MinUserActionID {
 			return nil
 		}
@@ -254,12 +254,12 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 	itf *InterfaceType) {
 
 	file.Comment(ProxyName + " implements " + objName(serviceName))
-	if ProxyName == proxyName("Object") || ProxyName == proxyName("Server") {
+	if ProxyName == proxyName("Object") || ProxyName == proxyName("Server0") {
 		file.Type().Id(ProxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	} else {
 		file.Type().Id(ProxyName).Struct(
 			jen.Qual(
-				"github.com/lugu/qiloop/bus/client",
+				"github.com/lugu/qiloop/bus",
 				"ObjectProxy",
 			),
 			jen.Id("session").Qual(
@@ -268,11 +268,11 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 			),
 		)
 	}
-	if ProxyName != proxyName("Object") && ProxyName != proxyName("Server") {
+	if ProxyName != proxyName("Object") && ProxyName != proxyName("Server0") {
 		block := jen.Id(`
 	// Make` + serviceName + ` constructs ` + objName(serviceName) + `
 	func Make` + serviceName + `(sess bus.Session, proxy bus.Proxy) ` + objName(serviceName) + ` {
-		return &` + ProxyName + `{client.MakeObject(proxy), sess}
+		return &` + ProxyName + `{bus.MakeObject(proxy), sess}
 	}
 	    `)
 		file.Add(block)
@@ -280,10 +280,10 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 	blockContructor := jen.Id(
 		`return Make` + serviceName + `(s.session, proxy), nil`,
 	)
-	if ProxyName == proxyName("Object") || ProxyName == proxyName("Server") {
+	if ProxyName == proxyName("Object") || ProxyName == proxyName("Server0") {
 		blockContructor = jen.Id(`return &` + ProxyName + `{ proxy }, nil`)
 	}
-	file.Comment(serviceName + " retruns a proxy to a remote service")
+	file.Comment(serviceName + " returns a proxy to a remote service")
 	file.Func().Params(
 		jen.Id("s").Id("Constructor"),
 	).Id(

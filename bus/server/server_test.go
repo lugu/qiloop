@@ -2,12 +2,12 @@ package server_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
 	"github.com/lugu/qiloop/bus/server/tester"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -92,7 +92,7 @@ func TestNewServer(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = client.Authenticate(clt)
+	err = bus.Authenticate(clt)
 	if err != nil {
 		t.Error(err)
 	}
@@ -169,12 +169,12 @@ func TestServerReturnError(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = client.Authenticate(cltNet)
+	err = bus.Authenticate(cltNet)
 	if err != nil {
 		t.Error(err)
 	}
 
-	clt := client.NewClient(cltNet)
+	clt := bus.NewClient(cltNet)
 
 	serviceID := uint32(0x1)
 	objectID := uint32(0x1)
@@ -231,7 +231,7 @@ func TestStandAloneInit(t *testing.T) {
 	// construct a proxy object
 	serviceID := uint32(0x1)
 	objectID := uint32(0x1)
-	proxy := client.NewProxy(client.NewClient(clt),
+	proxy := bus.NewProxy(bus.NewClient(clt),
 		object.ObjectMetaObject, serviceID, objectID)
 
 	// register to signal

@@ -1,11 +1,11 @@
-package client_test
+package bus_test
 
 import (
-	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"testing"
@@ -36,10 +36,10 @@ func TestProxyCall(t *testing.T) {
 	}()
 
 	// client connection
-	c := client.NewClient(clientEndpoint)
+	c := bus.NewClient(clientEndpoint)
 
 	// 4. send a message
-	proxy := client.NewProxy(c, object.MetaService0, 1, 2)
+	proxy := bus.NewProxy(c, object.MetaService0, 1, 2)
 	_, err = proxy.CallID(3, []byte{0xab, 0xcd})
 	if err != nil {
 		t.Errorf("proxy failed to call service: %s", err)
@@ -127,7 +127,7 @@ func TestSelectEndPoint(t *testing.T) {
 	defer server.Terminate()
 
 	// shall connect to unix socket
-	endpoint, err := client.SelectEndPoint([]string{
+	endpoint, err := bus.SelectEndPoint([]string{
 		"tcp://198.18.0.1:12",
 		addr,
 		"tcps://192.168.0.1:12",
@@ -137,7 +137,7 @@ func TestSelectEndPoint(t *testing.T) {
 	}
 	defer endpoint.Close()
 	// shall refuse to connect
-	_, err = client.SelectEndPoint([]string{
+	_, err = bus.SelectEndPoint([]string{
 		"tcp://198.18.1.0",
 		"tcps://192.168.0.0",
 	})
@@ -162,7 +162,7 @@ func TestSelectError(t *testing.T) {
 	defer server.Terminate()
 
 	// shall fail to authenticate
-	endpoint, err := client.SelectEndPoint([]string{
+	endpoint, err := bus.SelectEndPoint([]string{
 		"tcp://198.18.0.1:12",
 		addr,
 		"tcps://192.168.0.1:12",
@@ -172,7 +172,7 @@ func TestSelectError(t *testing.T) {
 		t.Fatalf("shall fail to authenticate")
 	}
 	// shall refuse to connect to empty list
-	_, err = client.SelectEndPoint(make([]string, 0))
+	_, err = bus.SelectEndPoint(make([]string, 0))
 	if err == nil {
 		t.Fatalf("empty list")
 	}

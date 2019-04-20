@@ -1,12 +1,11 @@
-// Package client contains a generated proxy
+// Package bus contains a generated proxy
 // File generated. DO NOT EDIT.
 
-package client
+package bus
 
 import (
 	bytes "bytes"
 	fmt "fmt"
-	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
@@ -16,42 +15,42 @@ import (
 
 // Constructor gives access to remote services
 type Constructor struct {
-	session bus.Session
+	session Session
 }
 
 // Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
+func Services(s Session) Constructor {
 	return Constructor{session: s}
 }
 
-// Server is the abstract interface of the service
-type Server interface {
+// Server0 is the abstract interface of the service
+type Server0 interface {
 	// Authenticate calls the remote procedure
 	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
 }
 
-// Server represents a proxy object to the service
-type ServerProxy interface {
-	bus.Proxy
-	Server
+// Server0 represents a proxy object to the service
+type Server0Proxy interface {
+	Proxy
+	Server0
 }
 
-// proxyServer implements ServerProxy
-type proxyServer struct {
-	bus.Proxy
+// proxyServer0 implements Server0Proxy
+type proxyServer0 struct {
+	Proxy
 }
 
-// Server retruns a proxy to a remote service
-func (s Constructor) Server() (ServerProxy, error) {
-	proxy, err := s.session.Proxy("Server", 1)
+// Server0 returns a proxy to a remote service
+func (s Constructor) Server0() (Server0Proxy, error) {
+	proxy, err := s.session.Proxy("Server0", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &proxyServer{proxy}, nil
+	return &proxyServer0{proxy}, nil
 }
 
 // Authenticate calls the remote procedure
-func (p *proxyServer) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
+func (p *proxyServer0) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
 	var buf bytes.Buffer
@@ -125,16 +124,16 @@ type Object interface {
 // Object represents a proxy object to the service
 type ObjectProxy interface {
 	object.Object
-	bus.Proxy
+	Proxy
 	Object
 }
 
 // proxyObject implements ObjectProxy
 type proxyObject struct {
-	bus.Proxy
+	Proxy
 }
 
-// Object retruns a proxy to a remote service
+// Object returns a proxy to a remote service
 func (s Constructor) Object() (ObjectProxy, error) {
 	proxy, err := s.session.Proxy("Object", 1)
 	if err != nil {

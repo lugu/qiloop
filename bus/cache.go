@@ -1,13 +1,12 @@
-package client
+package bus
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/object"
 )
 
-// Cache implements bus.Session interface without connecting to a
+// Cache implements Session interface without connecting to a
 // service directory.
 type Cache struct {
 	Names    map[string]uint32
@@ -16,7 +15,7 @@ type Cache struct {
 }
 
 // Proxy returns a proxy object to the desired service.
-func (s *Cache) Proxy(name string, objectID uint32) (bus.Proxy, error) {
+func (s *Cache) Proxy(name string, objectID uint32) (Proxy, error) {
 	serviceID, ok := s.Names[name]
 	if !ok {
 		return nil, fmt.Errorf("service not cached: %s", name)
@@ -28,7 +27,7 @@ func (s *Cache) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 }
 
 // Object creates an object from a reference.
-func (s *Cache) Object(ref object.ObjectReference) (o bus.Proxy, err error) {
+func (s *Cache) Object(ref object.ObjectReference) (o Proxy, err error) {
 	return o, fmt.Errorf("Not yet implemented")
 }
 
@@ -50,7 +49,7 @@ func (s *Cache) AddService(name string, serviceID uint32,
 // the cache.
 func (s *Cache) Lookup(name string, serviceID uint32) error {
 	objectID := uint32(1)
-	meta, err := bus.MetaObject(NewClient(s.Endpoint),
+	meta, err := GetMetaObject(NewClient(s.Endpoint),
 		serviceID, objectID)
 	if err != nil {
 		return fmt.Errorf("Can not reach metaObject: %s", err)

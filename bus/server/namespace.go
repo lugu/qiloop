@@ -3,8 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/client"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sync"
@@ -111,12 +110,12 @@ func (s *localSession) Proxy(name string, objectID uint32) (bus.Proxy, error) {
 	if err != nil {
 		return nil, err
 	}
-	meta, err := bus.MetaObject(clt, serviceID, objectID)
+	meta, err := bus.GetMetaObject(clt, serviceID, objectID)
 	if err != nil {
 		return nil, fmt.Errorf("metaObject (service %d, object %d): %s",
 			serviceID, objectID, err)
 	}
-	return client.NewProxy(clt, meta, serviceID, objectID), nil
+	return bus.NewProxy(clt, meta, serviceID, objectID), nil
 }
 
 func (s *localSession) Object(ref object.ObjectReference) (bus.Proxy,
@@ -125,9 +124,9 @@ func (s *localSession) Object(ref object.ObjectReference) (bus.Proxy,
 	if err != nil {
 		return nil, err
 	}
-	proxy := client.NewProxy(clt, ref.MetaObject, ref.ServiceID,
+	proxy := bus.NewProxy(clt, ref.MetaObject, ref.ServiceID,
 		ref.ObjectID)
-	return client.MakeObject(proxy), nil
+	return bus.MakeObject(proxy), nil
 }
 func (s *localSession) Destroy() error {
 	return nil

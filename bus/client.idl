@@ -1,6 +1,6 @@
-package client
+package bus
 
-interface Server
+interface Server0
 	fn authenticate(capability: Map<str,any>) -> Map<str,any> //uid:8
 end
 

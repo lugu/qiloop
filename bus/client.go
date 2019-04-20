@@ -1,9 +1,8 @@
-package client
+package bus
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/value"
 	"strings"
@@ -142,7 +141,7 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 }
 
 // NewClient returns a new client.
-func NewClient(endpoint net.EndPoint) bus.Client {
+func NewClient(endpoint net.EndPoint) Client {
 	return &client{
 		endpoint:  endpoint,
 		messageID: 1,
