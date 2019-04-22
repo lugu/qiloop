@@ -2,7 +2,6 @@ package directory_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/bus/server"
 	dir "github.com/lugu/qiloop/bus/server/directory"
 	proxy "github.com/lugu/qiloop/bus/services"
 	sess "github.com/lugu/qiloop/bus/session"
@@ -19,7 +18,7 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer server.Terminate()
+	defer bus.Terminate()
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
@@ -119,7 +118,7 @@ func compareInfo(t *testing.T, observed, expected dir.ServiceInfo) {
 func TestServerDirectory(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
 	impl := dir.ServiceDirectoryImpl()
-	activation := server.Activation{
+	activation := bus.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
 		Session:   nil,
@@ -200,7 +199,7 @@ func TestServerDirectory(t *testing.T) {
 func TestServiceDirectoryInfo(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
 	impl := dir.ServiceDirectoryImpl()
-	activation := server.Activation{
+	activation := bus.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
 		Session:   nil,
@@ -293,7 +292,7 @@ func TestServiceDirectoryInfo(t *testing.T) {
 func TestNamespace(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
 	impl := dir.ServiceDirectoryImpl()
-	activation := server.Activation{
+	activation := bus.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
 		Session:   nil,
@@ -350,7 +349,7 @@ func TestStub(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer server.Terminate()
+	defer bus.Terminate()
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
@@ -443,9 +442,9 @@ func TestSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer server.Terminate()
+	defer bus.Terminate()
 
-	session := server.Session()
+	session := bus.Session()
 	if err != nil {
 		t.Error(err)
 	}

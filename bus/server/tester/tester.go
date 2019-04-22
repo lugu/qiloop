@@ -3,7 +3,6 @@ package tester
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/type/object"
 )
 
@@ -11,17 +10,17 @@ var (
 	Hook = func(event string) {}
 )
 
-func NewSpacecraftObject() server.ServerObject {
+func NewSpacecraftObject() bus.ServerObject {
 	return SpacecraftObject(&spacecraftImpl{})
 }
 
 type spacecraftImpl struct {
 	session   bus.Session
 	terminate func()
-	service   server.Service
+	service   bus.Service
 }
 
-func (f *spacecraftImpl) Activate(activation server.Activation,
+func (f *spacecraftImpl) Activate(activation bus.Activation,
 	helper SpacecraftSignalHelper) error {
 	f.session = activation.Session
 	f.terminate = activation.Terminate
@@ -43,7 +42,7 @@ func (f *spacecraftImpl) Ammo(b BombProxy) error {
 
 type bombImpl struct{}
 
-func (f *bombImpl) Activate(activation server.Activation,
+func (f *bombImpl) Activate(activation bus.Activation,
 	helper BombSignalHelper) error {
 
 	err := helper.UpdateDelay(10)
@@ -65,18 +64,18 @@ func (f *bombImpl) OnDelayChange(duration int32) error {
 	return nil
 }
 
-func NewBombObject() server.ServerObject {
+func NewBombObject() bus.ServerObject {
 	return BombObject(&bombImpl{})
 }
 
 // Not entirely satisfying: need to allow for client side object
 // generation... Here comes the ObjectID question..
-func CreateBomb(session bus.Session, service server.Service,
+func CreateBomb(session bus.Session, service bus.Service,
 	impl BombImplementor) (BombProxy, error) {
 
 	var stb stubBomb
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {

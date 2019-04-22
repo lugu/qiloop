@@ -1,11 +1,10 @@
-package server_test
+package bus_test
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/value"
 	"io"
@@ -20,8 +19,8 @@ func helpAuth(t *testing.T, creds map[string]string, user, token string, ok bool
 		t.Fatal(err)
 	}
 
-	auth := server.Dictionary(creds)
-	srv, err := server.StandAloneServer(listener, auth, server.PrivateNamespace())
+	auth := bus.Dictionary(creds)
+	srv, err := bus.StandAloneServer(listener, auth, bus.PrivateNamespace())
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +58,7 @@ func TestNewServiceAuthenticate(t *testing.T) {
 
 func LimitedReader(c bus.CapabilityMap, size int) io.Reader {
 	var buf bytes.Buffer
-	server.WriteCapabilityMap(c, &buf)
+	bus.WriteCapabilityMap(c, &buf)
 	return &io.LimitedReader{
 		R: &buf,
 		N: int64(size),
@@ -91,7 +90,7 @@ func TestWriterCapabilityMapError(t *testing.T) {
 		bus.KeyState: value.Uint(bus.StateDone),
 	}
 	var buf bytes.Buffer
-	err := server.WriteCapabilityMap(c, &buf)
+	err := bus.WriteCapabilityMap(c, &buf)
 	if err != nil {
 		panic(err)
 	}
@@ -99,13 +98,13 @@ func TestWriterCapabilityMapError(t *testing.T) {
 
 	for i := 0; i < max-1; i++ {
 		w := NewLimitedWriter(i)
-		err := server.WriteCapabilityMap(c, w)
+		err := bus.WriteCapabilityMap(c, w)
 		if err == nil {
 			panic(fmt.Errorf("not expecting a success at %d", i))
 		}
 	}
 	w := NewLimitedWriter(max)
-	err = server.WriteCapabilityMap(c, w)
+	err = bus.WriteCapabilityMap(c, w)
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +115,7 @@ func TestReadHeaderError(t *testing.T) {
 		bus.KeyState: value.Uint(bus.StateDone),
 	}
 	var buf bytes.Buffer
-	err := server.WriteCapabilityMap(c, &buf)
+	err := bus.WriteCapabilityMap(c, &buf)
 	if err != nil {
 		panic(err)
 	}
@@ -124,25 +123,25 @@ func TestReadHeaderError(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		r := LimitedReader(c, i)
-		_, err := server.ReadCapabilityMap(r)
+		_, err := bus.ReadCapabilityMap(r)
 		if err == nil {
 			panic(fmt.Errorf("not expecting a success at %d", i))
 		}
 	}
 	r := LimitedReader(c, max)
-	_, err = server.ReadCapabilityMap(r)
+	_, err = bus.ReadCapabilityMap(r)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func TestAuthenticateYesNo(t *testing.T) {
-	var auth server.Authenticator
-	auth = server.No{}
+	var auth bus.Authenticator
+	auth = bus.No{}
 	if auth.Authenticate("", "") {
 		panic("error")
 	}
-	auth = server.Yes{}
+	auth = bus.Yes{}
 	if !auth.Authenticate("", "") {
 		panic("error")
 	}

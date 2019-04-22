@@ -4,15 +4,14 @@
 package directory
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
-	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	"io"
-	"log"
+	io "io"
+	log "log"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -25,7 +24,7 @@ type ServiceDirectoryImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper ServiceDirectorySignalHelper) error
+	Activate(activation bus.Activation, helper ServiceDirectorySignalHelper) error
 	OnTerminate()
 	Service(name string) (ServiceInfo, error)
 	Services() ([]ServiceInfo, error)
@@ -45,16 +44,16 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.ServerObject.
 type stubServiceDirectory struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    ServiceDirectoryImplementor
 	session bus.Session
 }
 
 // ServiceDirectoryObject returns an object using ServiceDirectoryImplementor
-func ServiceDirectoryObject(impl ServiceDirectoryImplementor) server.ServerObject {
+func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.ServerObject {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Service)
 	stb.obj.Wrap(uint32(0x65), stb.Services)
 	stb.obj.Wrap(uint32(0x66), stb.RegisterService)
@@ -65,7 +64,7 @@ func ServiceDirectoryObject(impl ServiceDirectoryImplementor) server.ServerObjec
 	stb.obj.Wrap(uint32(0x6d), stb._socketOfService)
 	return &stb
 }
-func (p *stubServiceDirectory) Activate(activation server.Activation) error {
+func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -74,7 +73,7 @@ func (p *stubServiceDirectory) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubServiceDirectory) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error {
@@ -411,7 +410,6 @@ type proxyServiceDirectory struct {
 	session bus.Session
 }
 
-// MakeServiceDirectory constructs ServiceDirectoryProxy
 func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
 	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }

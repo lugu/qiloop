@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/lugu/qiloop/bus/server"
+	"github.com/lugu/qiloop/bus"
 	"sync"
 )
 
@@ -24,16 +24,16 @@ type logManager struct {
 	clientsMutex sync.RWMutex
 	clients      map[uint32]logClient
 	clientsNext  uint32
-	activation   server.Activation
+	activation   bus.Activation
 }
 
-func NewLogManager() server.ServerObject {
+func NewLogManager() bus.ServerObject {
 	return LogManagerObject(&logManager{
 		clients: make(map[uint32]logClient),
 	})
 }
 
-func (l *logManager) Activate(activation server.Activation,
+func (l *logManager) Activate(activation bus.Activation,
 	helper LogManagerSignalHelper) error {
 	l.activation = activation
 	return nil

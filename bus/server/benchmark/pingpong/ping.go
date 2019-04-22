@@ -1,7 +1,7 @@
 package pingpong
 
 import (
-	"github.com/lugu/qiloop/bus/server"
+	"github.com/lugu/qiloop/bus"
 )
 
 type impl struct {
@@ -12,7 +12,7 @@ func PingPongImpl() PingPongImplementor {
 	return new(impl)
 }
 
-func (p *impl) Activate(activation server.Activation, helper PingPongSignalHelper) error {
+func (p *impl) Activate(activation bus.Activation, helper PingPongSignalHelper) error {
 	p.signal = helper
 	return nil
 }

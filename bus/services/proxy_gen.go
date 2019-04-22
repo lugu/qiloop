@@ -4,14 +4,14 @@
 package services
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
-	"log"
+	io "io"
+	log "log"
 )
 
 // Constructor gives access to remote services
@@ -117,7 +117,6 @@ type proxyServiceDirectory struct {
 	session bus.Session
 }
 
-// MakeServiceDirectory constructs ServiceDirectoryProxy
 func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
 	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }
@@ -572,7 +571,6 @@ type proxyLogProvider struct {
 	session bus.Session
 }
 
-// MakeLogProvider constructs LogProviderProxy
 func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
@@ -682,7 +680,6 @@ type proxyLogListener struct {
 	session bus.Session
 }
 
-// MakeLogListener constructs LogListenerProxy
 func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
@@ -993,7 +990,6 @@ type proxyLogManager struct {
 	session bus.Session
 }
 
-// MakeLogManager constructs LogManagerProxy
 func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }

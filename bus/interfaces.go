@@ -48,6 +48,17 @@ type Session interface {
 // Server represents a local server. A server can provide with clients
 // already connected.
 type Server interface {
+	// NewService register a new service to the service directory.
+	NewService(name string, object ServerObject) (Service, error)
+	// Session returns a local session object which can be used to
+	// access the server without authentication.
+	Session() Session
+	// Terminate stops the server.
+	Terminate() error
+	// Returns a channel to wait for the server terminaison.
+	WaitTerminate() chan error
+
+	// FIXME: can we get ride of Client?
 	Client() Client
 }
 

@@ -1,7 +1,6 @@
-package server
+package bus
 
 import (
-	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -84,7 +83,7 @@ func TestMethodStatistics(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := bus.MakeObject(proxy)
+	remoteObj := MakeObject(proxy)
 	enabled, err := remoteObj.IsStatsEnabled()
 	if err != nil {
 		t.Error(err)
@@ -149,7 +148,7 @@ func TestTraceEvent(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	remoteObj := bus.MakeObject(proxy)
+	remoteObj := MakeObject(proxy)
 	enabled, err := remoteObj.IsTraceEnabled()
 	if err != nil {
 		t.Fatal(err)

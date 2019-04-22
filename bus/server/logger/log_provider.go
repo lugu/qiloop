@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sync"
@@ -66,7 +65,7 @@ func (l *logProvider) Log(level LogLevel, msg string) {
 	l.manager.Log([]LogMessage{logMsg})
 }
 
-func (l *logProvider) Activate(activation server.Activation,
+func (l *logProvider) Activate(activation bus.Activation,
 	helper LogProviderSignalHelper) (err error) {
 	services := Services(activation.Session)
 	l.manager, err = services.LogManager()
@@ -87,13 +86,13 @@ func (l *logProvider) ClearAndSet(filters map[string]LogLevel) error {
 	panic("not yet implemented")
 }
 
-func CreateLogProvider(session bus.Session, service server.Service,
+func CreateLogProvider(session bus.Session, service bus.Service,
 	impl LogProviderImplementor) (
 	LogProviderProxy, error) {
 
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {

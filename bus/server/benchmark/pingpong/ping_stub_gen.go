@@ -4,14 +4,13 @@
 package pingpong
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
-	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	"log"
+	log "log"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -24,7 +23,7 @@ type PingPongImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper PingPongSignalHelper) error
+	Activate(activation bus.Activation, helper PingPongSignalHelper) error
 	OnTerminate()
 	Hello(a string) (string, error)
 	Ping(a string) error
@@ -37,21 +36,21 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.ServerObject.
 type stubPingPong struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    PingPongImplementor
 	session bus.Session
 }
 
 // PingPongObject returns an object using PingPongImplementor
-func PingPongObject(impl PingPongImplementor) server.ServerObject {
+func PingPongObject(impl PingPongImplementor) bus.ServerObject {
 	var stb stubPingPong
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Hello)
 	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb
 }
-func (p *stubPingPong) Activate(activation server.Activation) error {
+func (p *stubPingPong) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -60,7 +59,7 @@ func (p *stubPingPong) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubPingPong) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubPingPong) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubPingPong) onPropertyChange(name string, data []byte) error {
@@ -170,7 +169,6 @@ type proxyPingPong struct {
 	session bus.Session
 }
 
-// MakePingPong constructs PingPongProxy
 func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 	return &proxyPingPong{bus.MakeObject(proxy), sess}
 }

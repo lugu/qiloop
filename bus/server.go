@@ -1,9 +1,8 @@
-package server
+package bus
 
 import (
 	"errors"
 	"fmt"
-	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"log"
@@ -43,7 +42,7 @@ type Wrapper map[uint32]ActionWrapper
 type Activation struct {
 	ServiceID uint32
 	ObjectID  uint32
-	Session   bus.Session
+	Session   Session
 	Terminate func()
 	Service   Service
 }
@@ -61,7 +60,7 @@ func serviceTerminator(router *Router, serviceID uint32) func() {
 	}
 }
 
-func serviceActivation(router *Router, session bus.Session, serviceID uint32) Activation {
+func serviceActivation(router *Router, session Session, serviceID uint32) Activation {
 	return Activation{
 		ServiceID: serviceID,
 		ObjectID:  1,
@@ -71,7 +70,7 @@ func serviceActivation(router *Router, session bus.Session, serviceID uint32) Ac
 	}
 }
 
-func objectActivation(service *ServiceImpl, session bus.Session, serviceID, objectID uint32) Activation {
+func objectActivation(service *ServiceImpl, session Session, serviceID, objectID uint32) Activation {
 	return Activation{
 		ServiceID: serviceID,
 		ObjectID:  objectID,
@@ -107,7 +106,7 @@ type ServiceImpl struct {
 	sync.RWMutex
 	objects   map[uint32]ServerObject
 	terminate func()
-	session   bus.Session
+	session   Session
 	serviceID uint32
 }
 
@@ -232,12 +231,12 @@ func (s *ServiceImpl) Terminate() error {
 type Router struct {
 	sync.RWMutex
 	services  map[uint32]*ServiceImpl
-	namespace bus.Namespace
-	session   bus.Session // nil until activation
+	namespace Namespace
+	session   Session // nil until activation
 }
 
 // NewRouter construct a router with the service zero passed.
-func NewRouter(authenticator ServerObject, namespace bus.Namespace) *Router {
+func NewRouter(authenticator ServerObject, namespace Namespace) *Router {
 	return &Router{
 		services: map[uint32]*ServiceImpl{
 			0: {
@@ -253,7 +252,7 @@ func NewRouter(authenticator ServerObject, namespace bus.Namespace) *Router {
 
 // Activate calls the Activate method on all the services. Only after
 // the router can process messages.
-func (r *Router) Activate(session bus.Session) error {
+func (r *Router) Activate(session Session) error {
 	r.Lock()
 	if r.session != nil {
 		r.Unlock()
@@ -390,12 +389,12 @@ func Firewall(m *net.Message, from *Context) error {
 	return nil
 }
 
-// Server listen from incomming connections, set-up the end points and
+// server listen from incomming connections, set-up the end points and
 // forward the EndPoint to the dispatcher.
-type Server struct {
+type server struct {
 	listen        gonet.Listener
 	addrs         []string
-	namespace     bus.Namespace
+	namespace     Namespace
 	Router        *Router
 	contexts      map[*Context]bool
 	contextsMutex sync.Mutex
@@ -403,24 +402,15 @@ type Server struct {
 	waitChan      chan error
 }
 
-// NewServer starts a new server which listen to addr and serve
-// incomming requests. It uses the given session to register and
-// activate the new services.
-func NewServer(sess bus.Session, addr string, auth Authenticator) (*Server, error) {
-	l, err := net.Listen(addr)
-	if err != nil {
-		return nil, err
-	}
+func NewServer(listener gonet.Listener, auth Authenticator,
+	namespace Namespace, service1 ServerObject) (Server, error) {
 
-	addrs := []string{addr}
-	namespace, err := Namespace(sess, addrs)
-	if err != nil {
-		return nil, err
-	}
-	router := NewRouter(ServiceAuthenticate(auth), namespace)
-	s := &Server{
-		listen:        l,
-		addrs:         addrs,
+	service0 := ServiceAuthenticate(auth)
+
+	router := NewRouter(service0, namespace)
+
+	s := &server{
+		listen:        listener,
 		namespace:     namespace,
 		Router:        router,
 		contexts:      make(map[*Context]bool),
@@ -428,23 +418,30 @@ func NewServer(sess bus.Session, addr string, auth Authenticator) (*Server, erro
 		closeChan:     make(chan int, 1),
 		waitChan:      make(chan error, 1),
 	}
-	err = s.activate()
+	err := s.activate()
 	if err != nil {
 		return nil, err
 	}
+
+	_, err = s.NewService("ServiceDirectory", service1)
+	if err != nil {
+		s.Terminate()
+		return nil, err
+	}
+
 	go s.run()
 	return s, nil
 }
 
 // StandAloneServer starts a new server
 func StandAloneServer(listener gonet.Listener, auth Authenticator,
-	namespace bus.Namespace) (*Server, error) {
+	namespace Namespace) (Server, error) {
 
 	service0 := ServiceAuthenticate(auth)
 
 	router := NewRouter(service0, namespace)
 
-	s := &Server{
+	s := &server{
 		listen:        listener,
 		namespace:     namespace,
 		Router:        router,
@@ -471,11 +468,11 @@ type Service interface {
 
 // NewService returns a new service. The service is activated as part
 // of the creation.
-func (s *Server) NewService(name string, object ServerObject) (Service, error) {
+func (s *server) NewService(name string, object ServerObject) (Service, error) {
 	return s.Router.NewService(name, object)
 }
 
-func (s *Server) handle(c gonet.Conn, authenticated bool) {
+func (s *server) handle(c gonet.Conn, authenticated bool) {
 
 	context := &Context{
 		Authenticated: authenticated,
@@ -510,7 +507,7 @@ func (s *Server) handle(c gonet.Conn, authenticated bool) {
 	net.EndPointFinalizer(c, finalize)
 }
 
-func (s *Server) activate() error {
+func (s *server) activate() error {
 	err := s.Router.Activate(s.Session())
 	if err != nil {
 		return err
@@ -518,7 +515,7 @@ func (s *Server) activate() error {
 	return nil
 }
 
-func (s *Server) run() {
+func (s *server) run() {
 	for {
 		c, err := s.listen.Accept()
 		if err != nil {
@@ -534,7 +531,7 @@ func (s *Server) run() {
 	}
 }
 
-func (s *Server) stoppedWith(err error) {
+func (s *server) stoppedWith(err error) {
 	// 1. informs all services
 	s.Router.Terminate()
 	// 2. close all connections
@@ -545,7 +542,7 @@ func (s *Server) stoppedWith(err error) {
 }
 
 // CloseAll close the connecction. Return the first error if any.
-func (s *Server) closeAll() error {
+func (s *server) closeAll() error {
 	var ret error
 	s.contextsMutex.Lock()
 	defer s.contextsMutex.Unlock()
@@ -559,12 +556,12 @@ func (s *Server) closeAll() error {
 }
 
 // WaitTerminate blocks until the server has terminated.
-func (s *Server) WaitTerminate() chan error {
+func (s *server) WaitTerminate() chan error {
 	return s.waitChan
 }
 
 // Terminate stops a server.
-func (s *Server) Terminate() error {
+func (s *server) Terminate() error {
 	close(s.closeChan)
 	err := s.listen.Close()
 	s.stoppedWith(err)
@@ -573,14 +570,14 @@ func (s *Server) Terminate() error {
 
 // Client returns a local client able to contact services without
 // creating a new connection.
-func (s *Server) Client() bus.Client {
+func (s *server) Client() Client {
 	ctl, srv := gonet.Pipe()
 	s.handle(srv, true)
-	return bus.NewClient(net.NewEndPoint(ctl))
+	return NewClient(net.NewEndPoint(ctl))
 }
 
 // Session returns a local session able to contact local services
 // without creating a new connection to the server.
-func (s *Server) Session() bus.Session {
+func (s *server) Session() Session {
 	return s.namespace.Session(s)
 }

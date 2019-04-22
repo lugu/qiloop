@@ -21,6 +21,25 @@ interface Object
 	fn enableTrace(traced: bool) //uid:85
 	sig traceObject(event: EventTrace) //uid:86
 end
+
+interface Generic
+	fn registerEvent(objectID: uint32, actionID: uint32, handler: uint64) -> uint64 //uid:0
+	fn unregisterEvent(objectID: uint32, actionID: uint32, handler: uint64) //uid:1
+	fn metaObject(objectID: uint32) -> MetaObject //uid:2
+	fn terminate(objectID: uint32) //uid:3
+	fn property(name: any) -> any //uid:5
+	fn setProperty(name: any, value: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(objectID: uint32, actionID: uint32, handler: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(enabled: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(traced: bool) //uid:85
+	sig traceObject(event: EventTrace) //uid:86
+end
+
 struct MetaMethodParameter
 	name: str
 	description: str

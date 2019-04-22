@@ -3,7 +3,6 @@ package directory
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"sort"
@@ -28,7 +27,7 @@ func ServiceDirectoryImpl() *serviceDirectory {
 	}
 }
 
-func (s *serviceDirectory) Activate(activation server.Activation,
+func (s *serviceDirectory) Activate(activation bus.Activation,
 	helper ServiceDirectorySignalHelper) error {
 	s.Lock()
 	defer s.Unlock()

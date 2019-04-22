@@ -404,7 +404,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Activate").Params(
 		jen.Id("activation").Qual(
-			"github.com/lugu/qiloop/bus/server",
+			"github.com/lugu/qiloop/bus",
 			"Activation",
 		),
 	).Params(
@@ -424,7 +424,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
-		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus/server", "Context"),
+		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus", "Context"),
 	).Params(jen.Error()).Block(
 		jen.Id(`return p.obj.Receive(msg, from)`),
 	)
@@ -500,12 +500,12 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing = append(writing, code)
 	if itf.Name == "Generic" {
 		code = jen.Id("stb.obj").Op("=").Qual(
-			"github.com/lugu/qiloop/bus/server",
+			"github.com/lugu/qiloop/bus",
 			"NewBasicObject",
 		).Call()
 	} else {
 		code = jen.Id("stb.obj").Op("=").Qual(
-			"github.com/lugu/qiloop/bus/server",
+			"github.com/lugu/qiloop/bus",
 			"NewObject",
 		).Call(
 			jen.Id("stb.metaObject()"),
@@ -545,7 +545,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	file.Func().Id(itf.Name+"Object").Params(
 		jen.Id("impl").Id(implName(itf.Name)),
 	).Qual(
-		"github.com/lugu/qiloop/bus/server", "ServerObject",
+		"github.com/lugu/qiloop/bus", "ServerObject",
 	).Block(writing...)
 	return nil
 }
@@ -554,7 +554,7 @@ func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Commentf("%s implements server.ServerObject.", stubName(itf.Name))
 	file.Type().Id(stubName(itf.Name)).Struct(
 		jen.Id("obj").Qual(
-			"github.com/lugu/qiloop/bus/server", "BasicObject",
+			"github.com/lugu/qiloop/bus", "BasicObject",
 		),
 		jen.Id("impl").Id(implName(itf.Name)),
 		jen.Id("session").Qual(
@@ -573,7 +573,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	definitions := make([]jen.Code, 0)
 	signalDefinitions := make([]jen.Code, 0)
 	activate := jen.Id("Activate").Params(
-		jen.Id("activation").Qual("github.com/lugu/qiloop/bus/server",
+		jen.Id("activation").Qual("github.com/lugu/qiloop/bus",
 			"Activation"),
 		jen.Id("helper").Id(itf.Name+"SignalHelper"),
 	).Params(

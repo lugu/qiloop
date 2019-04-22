@@ -269,13 +269,17 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		)
 	}
 	if ProxyName != proxyName("Object") && ProxyName != proxyName("Server0") {
-		block := jen.Id(`
-	// Make` + serviceName + ` constructs ` + objName(serviceName) + `
-	func Make` + serviceName + `(sess bus.Session, proxy bus.Proxy) ` + objName(serviceName) + ` {
-		return &` + ProxyName + `{bus.MakeObject(proxy), sess}
-	}
-	    `)
-		file.Add(block)
+		file.Func().Id("Make"+serviceName).Params(
+			jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
+			jen.Id("proxy").Qual("github.com/lugu/qiloop/bus", "Proxy"),
+		).Id(objName(serviceName)).Block(
+			jen.Return(
+				jen.Op("&").Id(ProxyName).Values(
+					jen.Qual("github.com/lugu/qiloop/bus", "MakeObject").Call(jen.Id("proxy")),
+					jen.Id("sess"),
+				),
+			),
+		)
 	}
 	blockContructor := jen.Id(
 		`return Make` + serviceName + `(s.session, proxy), nil`,

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
@@ -24,12 +23,12 @@ func TestAuth(t *testing.T) {
 		panic(err)
 	}
 
-	auth := server.Dictionary(map[string]string{
+	auth := bus.Dictionary(map[string]string{
 		"user1": "aaa",
 		"user2": "bbb",
 	})
-	server, err := server.StandAloneServer(listener, auth,
-		server.PrivateNamespace())
+	server, err := bus.StandAloneServer(listener, auth,
+		bus.PrivateNamespace())
 	defer server.Terminate()
 	if err != nil {
 		panic(err)
@@ -117,7 +116,7 @@ func NewServer(response func(user, token string) bus.CapabilityMap) net.EndPoint
 
 func (s *ServerMock) Receive(m *net.Message) error {
 	if m.Header.Action != object.AuthenticateActionID {
-		return util.ReplyError(s.EndPoint, m, server.ErrActionNotFound)
+		return util.ReplyError(s.EndPoint, m, bus.ErrActionNotFound)
 	}
 
 	if s.Response == nil {
@@ -137,13 +136,13 @@ func (s *ServerMock) Receive(m *net.Message) error {
 
 func (s *ServerMock) wrapAuthenticate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	m, err := server.ReadCapabilityMap(buf)
+	m, err := bus.ReadCapabilityMap(buf)
 	if err != nil {
 		return nil, err
 	}
 	ret := s.Authenticate(m)
 	var out bytes.Buffer
-	err = server.WriteCapabilityMap(ret, &out)
+	err = bus.WriteCapabilityMap(ret, &out)
 	if err != nil {
 		return nil, err
 	}

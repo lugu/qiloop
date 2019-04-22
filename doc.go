@@ -67,7 +67,6 @@ package qiloop
 
 import (
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
 	"github.com/lugu/qiloop/bus/session"
 )
@@ -92,7 +91,7 @@ type Authenticator interface {
 // dispatches the message to the services and objects.
 type Server interface {
 	// NewService register a new service to the service directory.
-	NewService(name string, object server.ServerObject) (server.Service, error)
+	NewService(name string, object bus.ServerObject) (bus.Service, error)
 	// Session returns a local session object which can be used to
 	// access the server without authentication.
 	Session() bus.Session
@@ -108,10 +107,4 @@ type Server interface {
 // for more details.
 func NewServiceDirectory(addr string, auth Authenticator) (Server, error) {
 	return directory.NewServer(addr, auth)
-}
-
-// NewServer starts an empty server listening at address addr. Refer
-// to qiloop/net for more details on address formatting.
-func NewServer(sess bus.Session, addr string, auth Authenticator) (Server, error) {
-	return server.NewServer(sess, addr, auth)
 }

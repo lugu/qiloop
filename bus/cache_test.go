@@ -3,7 +3,6 @@ package bus_test
 import (
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/bus/server/directory"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/util"
@@ -126,8 +125,8 @@ func TestCacheAuthError(t *testing.T) {
 		panic(err)
 	}
 
-	server, err := server.StandAloneServer(listener, server.No{},
-		server.PrivateNamespace())
+	server, err := bus.StandAloneServer(listener, bus.No{},
+		bus.PrivateNamespace())
 	if err != nil {
 		panic(err)
 	}

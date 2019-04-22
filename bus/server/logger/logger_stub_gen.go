@@ -4,16 +4,15 @@
 package logger
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
-	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
-	"log"
+	io "io"
+	log "log"
 )
 
 // LogProviderImplementor interface of the service implementation
@@ -26,7 +25,7 @@ type LogProviderImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper LogProviderSignalHelper) error
+	Activate(activation bus.Activation, helper LogProviderSignalHelper) error
 	OnTerminate()
 	SetVerbosity(level LogLevel) error
 	SetCategory(category string, level LogLevel) error
@@ -38,22 +37,22 @@ type LogProviderSignalHelper interface{}
 
 // stubLogProvider implements server.ServerObject.
 type stubLogProvider struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    LogProviderImplementor
 	session bus.Session
 }
 
 // LogProviderObject returns an object using LogProviderImplementor
-func LogProviderObject(impl LogProviderImplementor) server.ServerObject {
+func LogProviderObject(impl LogProviderImplementor) bus.ServerObject {
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.SetVerbosity)
 	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
 	stb.obj.Wrap(uint32(0x66), stb.ClearAndSet)
 	return &stb
 }
-func (p *stubLogProvider) Activate(activation server.Activation) error {
+func (p *stubLogProvider) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -62,7 +61,7 @@ func (p *stubLogProvider) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubLogProvider) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
@@ -170,7 +169,7 @@ type LogListenerImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper LogListenerSignalHelper) error
+	Activate(activation bus.Activation, helper LogListenerSignalHelper) error
 	OnTerminate()
 	SetCategory(category string, level LogLevel) error
 	ClearFilters() error
@@ -191,21 +190,21 @@ type LogListenerSignalHelper interface {
 
 // stubLogListener implements server.ServerObject.
 type stubLogListener struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    LogListenerImplementor
 	session bus.Session
 }
 
 // LogListenerObject returns an object using LogListenerImplementor
-func LogListenerObject(impl LogListenerImplementor) server.ServerObject {
+func LogListenerObject(impl LogListenerImplementor) bus.ServerObject {
 	var stb stubLogListener
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
 	stb.obj.Wrap(uint32(0x66), stb.ClearFilters)
 	return &stb
 }
-func (p *stubLogListener) Activate(activation server.Activation) error {
+func (p *stubLogListener) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -214,7 +213,7 @@ func (p *stubLogListener) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubLogListener) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubLogListener) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
@@ -379,7 +378,7 @@ type LogManagerImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper LogManagerSignalHelper) error
+	Activate(activation bus.Activation, helper LogManagerSignalHelper) error
 	OnTerminate()
 	Log(messages []LogMessage) error
 	CreateListener() (LogListenerProxy, error)
@@ -393,16 +392,16 @@ type LogManagerSignalHelper interface{}
 
 // stubLogManager implements server.ServerObject.
 type stubLogManager struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    LogManagerImplementor
 	session bus.Session
 }
 
 // LogManagerObject returns an object using LogManagerImplementor
-func LogManagerObject(impl LogManagerImplementor) server.ServerObject {
+func LogManagerObject(impl LogManagerImplementor) bus.ServerObject {
 	var stb stubLogManager
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Log)
 	stb.obj.Wrap(uint32(0x65), stb.CreateListener)
 	stb.obj.Wrap(uint32(0x66), stb.GetListener)
@@ -410,7 +409,7 @@ func LogManagerObject(impl LogManagerImplementor) server.ServerObject {
 	stb.obj.Wrap(uint32(0x68), stb.RemoveProvider)
 	return &stb
 }
-func (p *stubLogManager) Activate(activation server.Activation) error {
+func (p *stubLogManager) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -419,7 +418,7 @@ func (p *stubLogManager) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubLogManager) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubLogManager) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogManager) onPropertyChange(name string, data []byte) error {
@@ -729,7 +728,6 @@ type proxyLogProvider struct {
 	session bus.Session
 }
 
-// MakeLogProvider constructs LogProviderProxy
 func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
@@ -839,7 +837,6 @@ type proxyLogListener struct {
 	session bus.Session
 }
 
-// MakeLogListener constructs LogListenerProxy
 func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
@@ -1150,7 +1147,6 @@ type proxyLogManager struct {
 	session bus.Session
 }
 
-// MakeLogManager constructs LogManagerProxy
 func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }

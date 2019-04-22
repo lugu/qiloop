@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/server"
 	"github.com/lugu/qiloop/type/object"
 	"regexp"
 	"sync"
@@ -17,12 +16,12 @@ type logListenerImpl struct {
 
 	cancel      chan struct{}
 	logs        chan []LogMessage
-	activation  server.Activation
+	activation  bus.Activation
 	helper      LogListenerSignalHelper
 	onTerminate func()
 }
 
-func CreateLogListener(session bus.Session, service server.Service,
+func CreateLogListener(session bus.Session, service bus.Service,
 	producer chan []LogMessage, onTerminate func()) (
 	LogListenerProxy, error) {
 
@@ -36,7 +35,7 @@ func CreateLogListener(session bus.Session, service server.Service,
 	}
 	var stb stubLogListener
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {
@@ -77,7 +76,7 @@ func (l *logListenerImpl) filter(msg *LogMessage) bool {
 	return false
 }
 
-func (l *logListenerImpl) Activate(activation server.Activation,
+func (l *logListenerImpl) Activate(activation bus.Activation,
 	helper LogListenerSignalHelper) error {
 
 	l.helper = helper

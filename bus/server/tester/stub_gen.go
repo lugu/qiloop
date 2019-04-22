@@ -4,15 +4,14 @@
 package tester
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
-	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"log"
+	log "log"
 )
 
 // BombImplementor interface of the service implementation
@@ -25,7 +24,7 @@ type BombImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper BombSignalHelper) error
+	Activate(activation bus.Activation, helper BombSignalHelper) error
 	OnTerminate()
 	// OnDelayChange is called when the property is updated.
 	// Returns an error if the property value is not allowed
@@ -40,19 +39,19 @@ type BombSignalHelper interface {
 
 // stubBomb implements server.ServerObject.
 type stubBomb struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    BombImplementor
 	session bus.Session
 }
 
 // BombObject returns an object using BombImplementor
-func BombObject(impl BombImplementor) server.ServerObject {
+func BombObject(impl BombImplementor) bus.ServerObject {
 	var stb stubBomb
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
-func (p *stubBomb) Activate(activation server.Activation) error {
+func (p *stubBomb) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -61,7 +60,7 @@ func (p *stubBomb) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubBomb) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubBomb) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubBomb) onPropertyChange(name string, data []byte) error {
@@ -128,7 +127,7 @@ type SpacecraftImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper SpacecraftSignalHelper) error
+	Activate(activation bus.Activation, helper SpacecraftSignalHelper) error
 	OnTerminate()
 	Shoot() (BombProxy, error)
 	Ammo(ammo BombProxy) error
@@ -139,21 +138,21 @@ type SpacecraftSignalHelper interface{}
 
 // stubSpacecraft implements server.ServerObject.
 type stubSpacecraft struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    SpacecraftImplementor
 	session bus.Session
 }
 
 // SpacecraftObject returns an object using SpacecraftImplementor
-func SpacecraftObject(impl SpacecraftImplementor) server.ServerObject {
+func SpacecraftObject(impl SpacecraftImplementor) bus.ServerObject {
 	var stb stubSpacecraft
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x64), stb.Shoot)
 	stb.obj.Wrap(uint32(0x65), stb.Ammo)
 	return &stb
 }
-func (p *stubSpacecraft) Activate(activation server.Activation) error {
+func (p *stubSpacecraft) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -162,7 +161,7 @@ func (p *stubSpacecraft) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubSpacecraft) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
@@ -276,7 +275,6 @@ type proxyBomb struct {
 	session bus.Session
 }
 
-// MakeBomb constructs BombProxy
 func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 	return &proxyBomb{bus.MakeObject(proxy), sess}
 }
@@ -425,7 +423,6 @@ type proxySpacecraft struct {
 	session bus.Session
 }
 
-// MakeSpacecraft constructs SpacecraftProxy
 func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 	return &proxySpacecraft{bus.MakeObject(proxy), sess}
 }

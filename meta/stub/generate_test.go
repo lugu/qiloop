@@ -4,16 +4,15 @@
 package stub_test
 
 import (
-	"bytes"
-	"fmt"
+	bytes "bytes"
+	fmt "fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
-	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
-	"log"
+	io "io"
+	log "log"
 )
 
 // ObjectImplementor interface of the service implementation
@@ -26,7 +25,7 @@ type ObjectImplementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation server.Activation, helper ObjectSignalHelper) error
+	Activate(activation bus.Activation, helper ObjectSignalHelper) error
 	OnTerminate()
 	RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error)
 	UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error
@@ -51,16 +50,16 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.ServerObject.
 type stubObject struct {
-	obj     server.BasicObject
+	obj     bus.BasicObject
 	impl    ObjectImplementor
 	session bus.Session
 }
 
 // ObjectObject returns an object using ObjectImplementor
-func ObjectObject(impl ObjectImplementor) server.ServerObject {
+func ObjectObject(impl ObjectImplementor) bus.ServerObject {
 	var stb stubObject
 	stb.impl = impl
-	stb.obj = server.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
 	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
 	stb.obj.Wrap(uint32(0x2), stb.MetaObject)
@@ -77,7 +76,7 @@ func ObjectObject(impl ObjectImplementor) server.ServerObject {
 	stb.obj.Wrap(uint32(0x55), stb.EnableTrace)
 	return &stb
 }
-func (p *stubObject) Activate(activation server.Activation) error {
+func (p *stubObject) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
@@ -86,7 +85,7 @@ func (p *stubObject) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubObject) Receive(msg *net.Message, from *server.Context) error {
+func (p *stubObject) Receive(msg *net.Message, from *bus.Context) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubObject) onPropertyChange(name string, data []byte) error {

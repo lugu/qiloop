@@ -2,16 +2,16 @@ package directory
 
 import (
 	"fmt"
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
 )
 
 // NewServer starts a server listening on addr. If parameter auth is
 // nil, the Yes authenticator is used.
-func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
+func NewServer(addr string, auth bus.Authenticator) (bus.Server, error) {
 
 	if auth == nil {
-		auth = server.Yes{}
+		auth = bus.Yes{}
 	}
 
 	listener, err := net.Listen(addr)
@@ -20,16 +20,11 @@ func NewServer(addr string, auth server.Authenticator) (*server.Server, error) {
 	}
 
 	sd := ServiceDirectoryImpl()
-	s, err := server.StandAloneServer(listener, auth, sd.Namespace(addr))
-	if err != nil {
-		listener.Close()
-		return nil, err
-	}
-
+	namespace := sd.Namespace(addr)
 	service1 := ServiceDirectoryObject(sd)
-	_, err = s.NewService("ServiceDirectory", service1)
+
+	s, err := bus.NewServer(listener, auth, namespace, service1)
 	if err != nil {
-		s.Terminate()
 		listener.Close()
 		return nil, err
 	}
