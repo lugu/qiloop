@@ -1,18 +1,18 @@
 // Package directory contains a generated stub
-// File generated. DO NOT EDIT.
+// .
 
 package directory
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	io "io"
-	log "log"
+	"io"
+	"log"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -45,7 +45,7 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.ServerObject.
 type stubServiceDirectory struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    ServiceDirectoryImplementor
 	session bus.Session
 }
@@ -416,7 +416,7 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }
 
-// ServiceDirectory retruns a proxy to a remote service
+// ServiceDirectory returns a proxy to a remote service
 func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 	proxy, err := s.session.Proxy("ServiceDirectory", 1)
 	if err != nil {

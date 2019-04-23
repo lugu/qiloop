@@ -1,18 +1,18 @@
 // Package tester contains a generated stub
-// File generated. DO NOT EDIT.
+// .
 
 package tester
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	log "log"
+	"log"
 )
 
 // BombImplementor interface of the service implementation
@@ -40,7 +40,7 @@ type BombSignalHelper interface {
 
 // stubBomb implements server.ServerObject.
 type stubBomb struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    BombImplementor
 	session bus.Session
 }
@@ -139,7 +139,7 @@ type SpacecraftSignalHelper interface{}
 
 // stubSpacecraft implements server.ServerObject.
 type stubSpacecraft struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    SpacecraftImplementor
 	session bus.Session
 }
@@ -281,7 +281,7 @@ func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 	return &proxyBomb{bus.MakeObject(proxy), sess}
 }
 
-// Bomb retruns a proxy to a remote service
+// Bomb returns a proxy to a remote service
 func (s Constructor) Bomb() (BombProxy, error) {
 	proxy, err := s.session.Proxy("Bomb", 1)
 	if err != nil {
@@ -430,7 +430,7 @@ func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 	return &proxySpacecraft{bus.MakeObject(proxy), sess}
 }
 
-// Spacecraft retruns a proxy to a remote service
+// Spacecraft returns a proxy to a remote service
 func (s Constructor) Spacecraft() (SpacecraftProxy, error) {
 	proxy, err := s.session.Proxy("Spacecraft", 1)
 	if err != nil {

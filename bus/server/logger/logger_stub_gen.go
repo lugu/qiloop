@@ -1,19 +1,19 @@
 // Package logger contains a generated stub
-// File generated. DO NOT EDIT.
+// .
 
 package logger
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
-	log "log"
+	"io"
+	"log"
 )
 
 // LogProviderImplementor interface of the service implementation
@@ -38,7 +38,7 @@ type LogProviderSignalHelper interface{}
 
 // stubLogProvider implements server.ServerObject.
 type stubLogProvider struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    LogProviderImplementor
 	session bus.Session
 }
@@ -191,7 +191,7 @@ type LogListenerSignalHelper interface {
 
 // stubLogListener implements server.ServerObject.
 type stubLogListener struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    LogListenerImplementor
 	session bus.Session
 }
@@ -393,7 +393,7 @@ type LogManagerSignalHelper interface{}
 
 // stubLogManager implements server.ServerObject.
 type stubLogManager struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    LogManagerImplementor
 	session bus.Session
 }
@@ -734,7 +734,7 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
 
-// LogProvider retruns a proxy to a remote service
+// LogProvider returns a proxy to a remote service
 func (s Constructor) LogProvider() (LogProviderProxy, error) {
 	proxy, err := s.session.Proxy("LogProvider", 1)
 	if err != nil {
@@ -844,7 +844,7 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
 
-// LogListener retruns a proxy to a remote service
+// LogListener returns a proxy to a remote service
 func (s Constructor) LogListener() (LogListenerProxy, error) {
 	proxy, err := s.session.Proxy("LogListener", 1)
 	if err != nil {
@@ -1155,7 +1155,7 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }
 
-// LogManager retruns a proxy to a remote service
+// LogManager returns a proxy to a remote service
 func (s Constructor) LogManager() (LogManagerProxy, error) {
 	proxy, err := s.session.Proxy("LogManager", 1)
 	if err != nil {

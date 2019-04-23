@@ -65,7 +65,7 @@ func newObject() server.ServerObject {
 	return &object
 }
 
-func NewObject(name string) server.Object {
+func NewObject(name string) server.BasicObject {
 	return server.NewObject(object.MetaObject{
 		Description: name,
 		Methods:     make(map[uint32]object.MetaMethod),
@@ -635,7 +635,7 @@ func TestNewContext(t *testing.T) {
 }
 
 type ObjectTerminaison struct {
-	server.Object
+	server.BasicObject
 	Terminated bool
 }
 

@@ -1,17 +1,17 @@
 // Package services contains a generated proxy
-// File generated. DO NOT EDIT.
+// .
 
 package services
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
-	log "log"
+	"io"
+	"log"
 )
 
 // Constructor gives access to remote services
@@ -122,7 +122,7 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }
 
-// ServiceDirectory retruns a proxy to a remote service
+// ServiceDirectory returns a proxy to a remote service
 func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 	proxy, err := s.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
@@ -577,7 +577,7 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
 
-// LogProvider retruns a proxy to a remote service
+// LogProvider returns a proxy to a remote service
 func (s Constructor) LogProvider() (LogProviderProxy, error) {
 	proxy, err := s.session.Proxy("LogProvider", 1)
 	if err != nil {
@@ -687,7 +687,7 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
 
-// LogListener retruns a proxy to a remote service
+// LogListener returns a proxy to a remote service
 func (s Constructor) LogListener() (LogListenerProxy, error) {
 	proxy, err := s.session.Proxy("LogListener", 1)
 	if err != nil {
@@ -998,7 +998,7 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }
 
-// LogManager retruns a proxy to a remote service
+// LogManager returns a proxy to a remote service
 func (s Constructor) LogManager() (LogManagerProxy, error) {
 	proxy, err := s.session.Proxy("LogManager", 1)
 	if err != nil {

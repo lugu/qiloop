@@ -1,17 +1,17 @@
 // Package pingpong contains a generated stub
-// File generated. DO NOT EDIT.
+// .
 
 package pingpong
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	log "log"
+	"log"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -37,7 +37,7 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.ServerObject.
 type stubPingPong struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    PingPongImplementor
 	session bus.Session
 }
@@ -175,7 +175,7 @@ func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 	return &proxyPingPong{bus.MakeObject(proxy), sess}
 }
 
-// PingPong retruns a proxy to a remote service
+// PingPong returns a proxy to a remote service
 func (s Constructor) PingPong() (PingPongProxy, error) {
 	proxy, err := s.session.Proxy("PingPong", 1)
 	if err != nil {

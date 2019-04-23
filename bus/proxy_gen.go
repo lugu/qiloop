@@ -1,16 +1,16 @@
 // Package bus contains a generated proxy
-// File generated. DO NOT EDIT.
+// .
 
 package bus
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
-	log "log"
+	"io"
+	"log"
 )
 
 // Constructor gives access to remote services

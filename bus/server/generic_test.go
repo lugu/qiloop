@@ -57,7 +57,7 @@ func TestBasicObjectWrap(t *testing.T) {
 	}
 }
 
-func newObject() Object {
+func newObject() BasicObject {
 	return NewObject(object.MetaObject{
 		Description: "",
 		Methods:     make(map[uint32]object.MetaMethod),

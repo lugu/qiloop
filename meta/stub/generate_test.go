@@ -1,19 +1,19 @@
 // Package stub_test contains a generated stub
-// File generated. DO NOT EDIT.
+// .
 
 package stub_test
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	server "github.com/lugu/qiloop/bus/server"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
-	log "log"
+	"io"
+	"log"
 )
 
 // ObjectImplementor interface of the service implementation
@@ -51,7 +51,7 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.ServerObject.
 type stubObject struct {
-	obj     server.Object
+	obj     server.BasicObject
 	impl    ObjectImplementor
 	session bus.Session
 }
@@ -494,7 +494,7 @@ type proxyObject struct {
 	bus.Proxy
 }
 
-// Object retruns a proxy to a remote service
+// Object returns a proxy to a remote service
 func (s Constructor) Object() (ObjectProxy, error) {
 	proxy, err := s.session.Proxy("Object", 1)
 	if err != nil {

@@ -29,7 +29,7 @@ func GeneratePackage(w io.Writer, packagePath string,
 	file := jen.NewFilePathName(packagePath, pkg.Name)
 	msg := "Package " + pkg.Name + " contains a generated stub"
 	file.HeaderComment(msg)
-	file.HeaderComment("File generated. DO NOT EDIT.")
+	file.HeaderComment(".")
 
 	set := signature.NewTypeSet()
 	for _, typ := range pkg.Types {
@@ -554,7 +554,7 @@ func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Commentf("%s implements server.ServerObject.", stubName(itf.Name))
 	file.Type().Id(stubName(itf.Name)).Struct(
 		jen.Id("obj").Qual(
-			"github.com/lugu/qiloop/bus/server", "Object",
+			"github.com/lugu/qiloop/bus/server", "BasicObject",
 		),
 		jen.Id("impl").Id(implName(itf.Name)),
 		jen.Id("session").Qual(

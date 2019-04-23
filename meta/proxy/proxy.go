@@ -23,7 +23,7 @@ func GeneratePackage(w io.Writer, packagePath string,
 	file := jen.NewFilePathName(packagePath, pkg.Name)
 	msg := "Package " + pkg.Name + " contains a generated proxy"
 	file.HeaderComment(msg)
-	file.HeaderComment("File generated. DO NOT EDIT.")
+	file.HeaderComment(".")
 
 	GenerateNewServices(file)
 

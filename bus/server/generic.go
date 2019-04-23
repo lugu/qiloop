@@ -52,7 +52,7 @@ func (s *stubGeneric) Wrap(id uint32, fn ActionWrapper) {
 }
 
 type objectImpl struct {
-	obj               *BasicObject
+	obj               *basicObject
 	meta              object.MetaObject
 	onPropertyChange  func(string, []byte) error
 	objectID          uint32
@@ -74,7 +74,7 @@ type objectImpl struct {
 // type/object.Object for a list of the default methods.
 // onPropertyChange is called each time a property is udpated.
 func NewObject(meta object.MetaObject,
-	onPropertyChange func(string, []byte) error) Object {
+	onPropertyChange func(string, []byte) error) BasicObject {
 
 	impl := &objectImpl{
 		meta:              object.FullMetaObject(meta),
@@ -85,11 +85,11 @@ func NewObject(meta object.MetaObject,
 	}
 	obj := GenericObject(impl)
 	stub := obj.(*stubGeneric)
-	impl.basicObject(stub.obj.(*BasicObject))
+	impl.basicObject(stub.obj.(*basicObject))
 	return stub
 }
 
-func (o *objectImpl) basicObject(obj *BasicObject) {
+func (o *objectImpl) basicObject(obj *basicObject) {
 	o.obj = obj
 	obj.tracer = o.tracer()
 }

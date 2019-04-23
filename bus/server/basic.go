@@ -19,12 +19,12 @@ type signalUser struct {
 	context   *Context
 }
 
-// BasicObject implements the ServerObject interface. It handles the
+// basicObject implements the ServerObject interface. It handles the
 // generic methods and signals common to all objects. Services
-// implementation embedded a BasicObject and fill it with the extra
+// implementation embedded a basicObject and fill it with the extra
 // actions they wish to handle using the Wrap method. See
 // type/object.Object for a list of the default methods.
-type BasicObject struct {
+type basicObject struct {
 	signals      map[uint64]signalUser
 	signalsMutex sync.RWMutex
 	wrapper      Wrapper
@@ -33,7 +33,7 @@ type BasicObject struct {
 	tracer       func(*net.Message)
 }
 
-type Object interface {
+type BasicObject interface {
 	ServerObject
 	UpdateSignal(signal uint32, data []byte) error
 	UpdateProperty(property uint32, signature string, data []byte) error
@@ -41,8 +41,8 @@ type Object interface {
 }
 
 // NewBasicObject construct a BasicObject from a MetaObject.
-func NewBasicObject() *BasicObject {
-	return &BasicObject{
+func NewBasicObject() *basicObject {
+	return &basicObject{
 		signals: make(map[uint64]signalUser),
 		wrapper: make(map[uint32]ActionWrapper),
 		tracer:  nil,
@@ -50,13 +50,13 @@ func NewBasicObject() *BasicObject {
 }
 
 // Wrap let a BasicObject owner extend it with custom actions.
-func (o *BasicObject) Wrap(id uint32, fn ActionWrapper) {
+func (o *basicObject) Wrap(id uint32, fn ActionWrapper) {
 	o.wrapper[id] = fn
 }
 
 // addSignalUser register the context as a client of event signalID.
 // TODO: check if the signalID is valid
-func (o *BasicObject) addSignalUser(signalID, messageID uint32,
+func (o *basicObject) addSignalUser(signalID, messageID uint32,
 	from *Context) uint64 {
 
 	clientID := rand.Uint64()
@@ -79,14 +79,14 @@ func (o *BasicObject) addSignalUser(signalID, messageID uint32,
 }
 
 // removeSignalUser unregister the given contex to events.
-func (o *BasicObject) removeSignalUser(clientID uint64) error {
+func (o *basicObject) removeSignalUser(clientID uint64) error {
 	o.signalsMutex.Lock()
 	delete(o.signals, clientID)
 	defer o.signalsMutex.Unlock()
 	return nil
 }
 
-func (o *BasicObject) handleRegisterEvent(from *Context,
+func (o *basicObject) handleRegisterEvent(from *Context,
 	msg *net.Message) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
@@ -121,7 +121,7 @@ func (o *BasicObject) handleRegisterEvent(from *Context,
 	return o.reply(from, msg, out.Bytes())
 }
 
-func (o *BasicObject) handleUnregisterEvent(from *Context,
+func (o *basicObject) handleUnregisterEvent(from *Context,
 	msg *net.Message) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
@@ -154,7 +154,7 @@ func (o *BasicObject) handleUnregisterEvent(from *Context,
 }
 
 // UpdateSignal informs the registered clients of the new state.
-func (o *BasicObject) UpdateSignal(id uint32, data []byte) error {
+func (o *basicObject) UpdateSignal(id uint32, data []byte) error {
 	var ret error
 	signals := make([]signalUser, 0)
 
@@ -178,17 +178,17 @@ func (o *BasicObject) UpdateSignal(id uint32, data []byte) error {
 }
 
 // UpdateProperty informs the registered clients of the property change
-func (o *BasicObject) UpdateProperty(id uint32, sig string, data []byte) error {
+func (o *basicObject) UpdateProperty(id uint32, sig string, data []byte) error {
 	return o.UpdateSignal(id, data)
 }
 
-func (o *BasicObject) trace(msg *net.Message) {
+func (o *basicObject) trace(msg *net.Message) {
 	if o.tracer != nil {
 		o.tracer(msg)
 	}
 }
 
-func (o *BasicObject) replyEvent(client *signalUser, signal uint32,
+func (o *basicObject) replyEvent(client *signalUser, signal uint32,
 	value []byte) error {
 
 	hdr := o.newHeader(net.Event, signal, client.messageID)
@@ -197,7 +197,7 @@ func (o *BasicObject) replyEvent(client *signalUser, signal uint32,
 	return client.context.EndPoint.Send(msg)
 }
 
-func (o *BasicObject) sendTerminate(client *signalUser, signal uint32) error {
+func (o *basicObject) sendTerminate(client *signalUser, signal uint32) error {
 	var buf bytes.Buffer
 	val := value.String(ErrTerminate.Error())
 	val.Write(&buf)
@@ -208,14 +208,14 @@ func (o *BasicObject) sendTerminate(client *signalUser, signal uint32) error {
 	return client.context.EndPoint.Send(msg)
 }
 
-func (o *BasicObject) replyError(from *Context, msg *net.Message,
+func (o *basicObject) replyError(from *Context, msg *net.Message,
 	err error) error {
 
 	o.trace(msg)
 	return util.ReplyError(from.EndPoint, msg, err)
 }
 
-func (o *BasicObject) reply(from *Context, msg *net.Message,
+func (o *basicObject) reply(from *Context, msg *net.Message,
 	response []byte) error {
 
 	hdr := o.newHeader(net.Reply, msg.Header.Action, msg.Header.ID)
@@ -224,7 +224,7 @@ func (o *BasicObject) reply(from *Context, msg *net.Message,
 	return from.EndPoint.Send(reply)
 }
 
-func (o *BasicObject) handleDefault(from *Context,
+func (o *basicObject) handleDefault(from *Context,
 	msg *net.Message) error {
 
 	fn, ok := o.wrapper[msg.Header.Action]
@@ -241,7 +241,7 @@ func (o *BasicObject) handleDefault(from *Context,
 // Receive processes the incoming message and responds to the client.
 // The returned error is not destinated to the client which have
 // already be replied.
-func (o *BasicObject) Receive(msg *net.Message, from *Context) error {
+func (o *basicObject) Receive(msg *net.Message, from *Context) error {
 	o.trace(msg)
 
 	if msg.Header.Type != net.Call {
@@ -259,7 +259,7 @@ func (o *BasicObject) Receive(msg *net.Message, from *Context) error {
 	}
 }
 
-func (o *BasicObject) OnTerminate() {
+func (o *basicObject) OnTerminate() {
 	// close all subscribers
 	o.signalsMutex.Lock()
 	for _, client := range o.signals {
@@ -269,13 +269,13 @@ func (o *BasicObject) OnTerminate() {
 	o.signalsMutex.Unlock()
 }
 
-func (o *BasicObject) newHeader(typ uint8, action, id uint32) net.Header {
+func (o *basicObject) newHeader(typ uint8, action, id uint32) net.Header {
 	return net.NewHeader(typ, o.serviceID, o.objectID, action, id)
 }
 
 // Activate informs the object when it becomes online. After this
 // method returns, the object will start receiving incomming messages.
-func (o *BasicObject) Activate(activation Activation) error {
+func (o *basicObject) Activate(activation Activation) error {
 	o.serviceID = activation.ServiceID
 	o.objectID = activation.ObjectID
 	return nil

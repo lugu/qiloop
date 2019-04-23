@@ -1,17 +1,17 @@
 // Package server contains a generated stub
-// File generated. DO NOT EDIT.
+// .
 
 package server
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	io "io"
+	"io"
 )
 
 // GenericImplementor interface of the service implementation
@@ -49,7 +49,7 @@ type GenericSignalHelper interface {
 
 // stubGeneric implements server.ServerObject.
 type stubGeneric struct {
-	obj     Object
+	obj     BasicObject
 	impl    GenericImplementor
 	session bus.Session
 }
@@ -483,7 +483,7 @@ func MakeGeneric(sess bus.Session, proxy bus.Proxy) GenericProxy {
 	return &proxyGeneric{bus.MakeObject(proxy), sess}
 }
 
-// Generic retruns a proxy to a remote service
+// Generic returns a proxy to a remote service
 func (s Constructor) Generic() (GenericProxy, error) {
 	proxy, err := s.session.Proxy("Generic", 1)
 	if err != nil {
