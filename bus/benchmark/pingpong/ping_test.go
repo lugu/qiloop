@@ -3,8 +3,8 @@ package pingpong_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus/server/benchmark/pingpong"
-	dir "github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus/benchmark/pingpong"
+	dir "github.com/lugu/qiloop/bus/directory"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"

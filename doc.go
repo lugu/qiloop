@@ -67,7 +67,7 @@ package qiloop
 
 import (
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus/directory"
 	"github.com/lugu/qiloop/bus/session"
 )
 

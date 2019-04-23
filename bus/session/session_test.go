@@ -1,15 +1,15 @@
 package session
 
 import (
-	"github.com/lugu/qiloop/bus/server"
-	dir "github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus"
+	dir "github.com/lugu/qiloop/bus/directory"
 	"github.com/lugu/qiloop/bus/util"
 	"testing"
 )
 
 func TestNewSession(t *testing.T) {
 	addr := util.NewUnixAddr()
-	server, err := dir.NewServer(addr, server.Yes{})
+	server, err := dir.NewServer(addr, bus.Yes{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestNewSession(t *testing.T) {
 
 func TestNewSessionError(t *testing.T) {
 	addr := util.NewUnixAddr()
-	server, err := dir.NewServer(addr, server.No{})
+	server, err := dir.NewServer(addr, bus.No{})
 	if err != nil {
 		t.Fatal(err)
 	}

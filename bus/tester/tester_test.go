@@ -1,9 +1,9 @@
 package tester_test
 
 import (
+	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server"
-	"github.com/lugu/qiloop/bus/server/tester"
+	"github.com/lugu/qiloop/bus/tester"
 	"github.com/lugu/qiloop/bus/util"
 	"sync"
 	"testing"
@@ -16,8 +16,8 @@ func TestAddRemoveObject(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ns := server.PrivateNamespace()
-	srv, err := server.StandAloneServer(listener, server.Yes{}, ns)
+	ns := bus.PrivateNamespace()
+	srv, err := bus.StandAloneServer(listener, bus.Yes{}, ns)
 	if err != nil {
 		t.Error(err)
 	}
@@ -106,8 +106,8 @@ func TestOnTerminate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ns := server.PrivateNamespace()
-	srv, err := server.StandAloneServer(listener, server.Yes{}, ns)
+	ns := bus.PrivateNamespace()
+	srv, err := bus.StandAloneServer(listener, bus.Yes{}, ns)
 	if err != nil {
 		t.Error(err)
 	}

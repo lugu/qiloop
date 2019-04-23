@@ -2,7 +2,8 @@ package directory_test
 
 import (
 	"bytes"
-	dir "github.com/lugu/qiloop/bus/server/directory"
+	"github.com/lugu/qiloop/bus"
+	dir "github.com/lugu/qiloop/bus/directory"
 	proxy "github.com/lugu/qiloop/bus/services"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
@@ -18,7 +19,7 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer bus.Terminate()
+	defer server.Terminate()
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
@@ -349,7 +350,7 @@ func TestStub(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer bus.Terminate()
+	defer server.Terminate()
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
@@ -442,9 +443,9 @@ func TestSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer bus.Terminate()
+	defer server.Terminate()
 
-	session := bus.Session()
+	session := server.Session()
 	if err != nil {
 		t.Error(err)
 	}

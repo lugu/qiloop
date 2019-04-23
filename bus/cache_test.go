@@ -2,8 +2,8 @@ package bus_test
 
 import (
 	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/directory"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/server/directory"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
