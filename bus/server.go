@@ -47,7 +47,7 @@ type Activation struct {
 	Service   Service
 }
 
-func objectTerminator(service *ServiceImpl, objectID uint32) func() {
+func objectTerminator(service Service, objectID uint32) func() {
 	return func() {
 		service.Remove(objectID)
 	}
@@ -70,7 +70,7 @@ func serviceActivation(router *Router, session Session, serviceID uint32) Activa
 	}
 }
 
-func objectActivation(service *ServiceImpl, session Session, serviceID, objectID uint32) Activation {
+func objectActivation(service *serviceImpl, session Session, serviceID, objectID uint32) Activation {
 	return Activation{
 		ServiceID: serviceID,
 		ObjectID:  objectID,
@@ -100,9 +100,9 @@ func (p pendingObject) Activate(activation Activation) error {
 func (p pendingObject) OnTerminate() {
 }
 
-// ServiceImpl implements Service. It allows a service to manage the
+// serviceImpl implements Service. It allows a service to manage the
 // object within its domain.
-type ServiceImpl struct {
+type serviceImpl struct {
 	sync.RWMutex
 	objects   map[uint32]ServerObject
 	terminate func()
@@ -112,20 +112,20 @@ type ServiceImpl struct {
 
 // NewService returns a service with the given object associated with
 // object id 1.
-func NewService(o ServerObject) *ServiceImpl {
-	return &ServiceImpl{
+func NewService(o ServerObject) *serviceImpl {
+	return &serviceImpl{
 		objects: map[uint32]ServerObject{
 			1: o,
 		},
 	}
 }
 
-func (s *ServiceImpl) ServiceID() uint32 {
+func (s *serviceImpl) ServiceID() uint32 {
 	return s.serviceID
 }
 
 // Add is used to add an object to a service domain.
-func (s *ServiceImpl) Add(obj ServerObject) (index uint32, err error) {
+func (s *serviceImpl) Add(obj ServerObject) (index uint32, err error) {
 	// assign the first object to the index 0. following objects will
 	// be assigned random values.
 	s.Lock()
@@ -159,7 +159,7 @@ func (s *ServiceImpl) Add(obj ServerObject) (index uint32, err error) {
 
 // Activate informs the service it will become active and shall be
 // ready to handle requests. activation.Service is nil.
-func (s *ServiceImpl) Activate(activation Activation) error {
+func (s *serviceImpl) Activate(activation Activation) error {
 	var wait sync.WaitGroup
 	wait.Add(len(s.objects))
 	s.terminate = activation.Terminate
@@ -188,7 +188,7 @@ func (s *ServiceImpl) Activate(activation Activation) error {
 }
 
 // Remove removes an object from the service domain.
-func (s *ServiceImpl) Remove(objectID uint32) error {
+func (s *serviceImpl) Remove(objectID uint32) error {
 	s.Lock()
 	if obj, ok := s.objects[objectID]; ok {
 		delete(s.objects, objectID)
@@ -201,7 +201,7 @@ func (s *ServiceImpl) Remove(objectID uint32) error {
 }
 
 // Dispatch forwards the message to the appropriate object.
-func (s *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
+func (s *serviceImpl) Dispatch(m *net.Message, from *Context) error {
 	s.RLock()
 	o, ok := s.objects[m.Header.Object]
 	s.RUnlock()
@@ -213,7 +213,7 @@ func (s *ServiceImpl) Dispatch(m *net.Message, from *Context) error {
 }
 
 // Terminate calls OnTerminate on all its objects.
-func (s *ServiceImpl) Terminate() error {
+func (s *serviceImpl) Terminate() error {
 	s.RLock()
 	defer s.RUnlock()
 
@@ -230,7 +230,7 @@ func (s *ServiceImpl) Terminate() error {
 // before calling NewService.
 type Router struct {
 	sync.RWMutex
-	services  map[uint32]*ServiceImpl
+	services  map[uint32]*serviceImpl
 	namespace Namespace
 	session   Session // nil until activation
 }
@@ -238,7 +238,7 @@ type Router struct {
 // NewRouter construct a router with the service zero passed.
 func NewRouter(authenticator ServerObject, namespace Namespace) *Router {
 	return &Router{
-		services: map[uint32]*ServiceImpl{
+		services: map[uint32]*serviceImpl{
 			0: {
 				objects: map[uint32]ServerObject{
 					0: authenticator,
@@ -274,7 +274,7 @@ func (r *Router) Activate(session Session) error {
 func (r *Router) Terminate() error {
 	r.Lock()
 	services := r.services
-	r.services = make(map[uint32]*ServiceImpl)
+	r.services = make(map[uint32]*serviceImpl)
 	r.Unlock()
 
 	var ret error
@@ -333,7 +333,7 @@ func (r *Router) NewService(name string, object ServerObject) (Service, error) {
 
 // Add Add a service ot a router. This does not call the Activate()
 // method on the service.
-func (r *Router) Add(serviceID uint32, s *ServiceImpl) error {
+func (r *Router) Add(serviceID uint32, s *serviceImpl) error {
 	r.Lock()
 	_, ok := r.services[serviceID]
 	if ok {
