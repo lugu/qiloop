@@ -1,23 +1,26 @@
-// Package qiloop is an implementation the QiMessaging protocol used
-// to interract with the NAO and Pepper robots.
+// Package qiloop is an implementation of the protocol QiMessaging
+// used to interract with the NAO and Pepper robots.
 //
 // Introduction
 //
-// QiMessaging is a software bus on which services expose methods,
-// signals or properties. A naming service is used to discover and
-// register services: it is called the service directory.
+// QiMessaging is a software bus which exposes services. Services have
+// methods (to be called), signals (to be watched). A naming service (the
+// service directory) is used to discover and register services. For
+// a detailed description of the protocol, please visit
+// https://github.com/lugu/qiloop/blob/master/doc/NOTES.md
 //
-// To locate the services, a Session object is required: it represents
-// a connecction to the service directory. Several transport protocol
-// are supported (currently TCP, TLS and UNIX socket).
+// To connect to a service, a Session object is required: it represents
+// the connection to the service directory. Several transport
+// protocols are supported (currently TCP, TLS and UNIX socket).
 //
-// In order for a client to interract with a service, a proxy of this
-// service is needed: it provides helper methods needed to serialize
-// the data.
+// With a session, on can request a proxy object representing a remote
+// service. The proxy object contains the helper methods needed to make
+// the remote calls and to handle the incomming signal notifications.
 //
-// The methods, signal and properties of a service are described using
-// an IDL file. The go code of a proxy is generated using this IDL
-// file.
+// Services have methods, signals and properties which are described
+// in an IDL (Interface Description Language) format. This IDL file is
+// process by the `qiloop` command to generate the go code which allow
+// remote access to the service (i.e. the proxy object).
 //
 // For example, here is the IDL file which describes a service which
 // have two methods, one signal and one property:
