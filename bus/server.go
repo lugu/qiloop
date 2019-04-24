@@ -31,11 +31,11 @@ var ErrNotAuthenticated = errors.New("Not authenticated")
 // clients subscribes to its signals.
 var ErrTerminate = errors.New("Object terminated")
 
-// ActionWrapper handles messages for an action.
-type ActionWrapper func(payload []byte) ([]byte, error)
+// actionWrapper handles messages for an action.
+type actionWrapper func(payload []byte) ([]byte, error)
 
-// Wrapper is used to dispatch messages to ActionWrapper.
-type Wrapper map[uint32]ActionWrapper
+// wrapper is used to dispatch messages to actionWrapper.
+type wrapper map[uint32]actionWrapper
 
 // Activation is sent during activation: it informs the object of the
 // context in which the object is being used.

@@ -47,7 +47,7 @@ func (s *stubObject) UpdateProperty(id uint32, sig string, data []byte) error {
 	return s.obj.UpdateProperty(id, sig, data)
 }
 
-func (s *stubObject) Wrap(id uint32, fn ActionWrapper) {
+func (s *stubObject) Wrap(id uint32, fn actionWrapper) {
 	s.obj.Wrap(id, fn)
 }
 
@@ -62,7 +62,7 @@ type objectImpl struct {
 	terminate         func()
 	stats             map[uint32]MethodStatistics
 	statsLock         sync.RWMutex
-	observableWrapper Wrapper
+	observableWrapper wrapper
 	traceEnabled      bool
 	traceMutex        sync.RWMutex
 }
@@ -81,7 +81,7 @@ func NewObject(meta object.MetaObject,
 		onPropertyChange:  onPropertyChange,
 		stats:             nil,
 		properties:        make(map[string]value.Value),
-		observableWrapper: make(map[uint32]ActionWrapper),
+		observableWrapper: make(map[uint32]actionWrapper),
 	}
 	obj := ObjectObject(impl)
 	stub := obj.(*stubObject)
@@ -238,8 +238,8 @@ func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 	return m
 }
 
-// observer returns an ActionWrapper based on fn which records statistics
-func (o *objectImpl) observer(id uint32, fn ActionWrapper) ActionWrapper {
+// observer returns an actionWrapper based on fn which records statistics
+func (o *objectImpl) observer(id uint32, fn actionWrapper) actionWrapper {
 	return func(payload []byte) ([]byte, error) {
 		start := time.Now()
 		ret, err := fn(payload)

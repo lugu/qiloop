@@ -27,7 +27,7 @@ type signalUser struct {
 type basicObject struct {
 	signals      map[uint64]signalUser
 	signalsMutex sync.RWMutex
-	wrapper      Wrapper
+	wrapper      wrapper
 	serviceID    uint32
 	objectID     uint32
 	tracer       func(*net.Message)
@@ -37,20 +37,20 @@ type BasicObject interface {
 	ServerObject
 	UpdateSignal(signal uint32, data []byte) error
 	UpdateProperty(property uint32, signature string, data []byte) error
-	Wrap(id uint32, fn ActionWrapper)
+	Wrap(id uint32, fn actionWrapper)
 }
 
 // NewBasicObject construct a BasicObject from a MetaObject.
 func NewBasicObject() *basicObject {
 	return &basicObject{
 		signals: make(map[uint64]signalUser),
-		wrapper: make(map[uint32]ActionWrapper),
+		wrapper: make(map[uint32]actionWrapper),
 		tracer:  nil,
 	}
 }
 
 // Wrap let a BasicObject owner extend it with custom actions.
-func (o *basicObject) Wrap(id uint32, fn ActionWrapper) {
+func (o *basicObject) Wrap(id uint32, fn actionWrapper) {
 	o.wrapper[id] = fn
 }
 
