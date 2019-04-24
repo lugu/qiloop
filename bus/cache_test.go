@@ -57,7 +57,7 @@ func TestServerProxy(t *testing.T) {
 		panic("shall not create service not in the cache")
 	}
 
-	cache.AddService("Server0", 0, object.MetaService0)
+	cache.AddService("ServiceZero", 0, object.MetaService0)
 
 	_, err = bus.Services(cache).ServiceServer()
 	if err != nil {
@@ -65,7 +65,7 @@ func TestServerProxy(t *testing.T) {
 	}
 
 	services := bus.Services(cache)
-	_, err = services.Server0()
+	_, err = services.ServiceZero()
 	if err != nil {
 		panic("expecting an authentication error")
 	}
@@ -152,10 +152,10 @@ func TestServerError(t *testing.T) {
 
 	cache := bus.NewCache(net.NewEndPoint(clt))
 	defer cache.Destroy()
-	cache.AddService("Server0", 0, object.MetaService0)
+	cache.AddService("ServiceZero", 0, object.MetaService0)
 
 	services := bus.Services(cache)
-	server0, err := services.Server0()
+	server0, err := services.ServiceZero()
 	if err != nil {
 		panic("expecting an authentication error")
 	}

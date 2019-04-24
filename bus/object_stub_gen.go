@@ -14,8 +14,8 @@ import (
 	log "log"
 )
 
-// Server0Implementor interface of the service implementation
-type Server0Implementor interface {
+// ServiceZeroImplementor interface of the service implementation
+type ServiceZeroImplementor interface {
 	// Activate is called before any other method.
 	// It shall be used to initialize the interface.
 	// activation provides runtime informations.
@@ -24,48 +24,48 @@ type Server0Implementor interface {
 	// helper enables signals an properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
-	Activate(activation Activation, helper Server0SignalHelper) error
+	Activate(activation Activation, helper ServiceZeroSignalHelper) error
 	OnTerminate()
 	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
 }
 
-// Server0SignalHelper provided to Server0 a companion object
-type Server0SignalHelper interface{}
+// ServiceZeroSignalHelper provided to ServiceZero a companion object
+type ServiceZeroSignalHelper interface{}
 
-// stubServer0 implements server.ServerObject.
-type stubServer0 struct {
+// stubServiceZero implements server.ServerObject.
+type stubServiceZero struct {
 	obj     BasicObject
-	impl    Server0Implementor
+	impl    ServiceZeroImplementor
 	session Session
 }
 
-// Server0Object returns an object using Server0Implementor
-func Server0Object(impl Server0Implementor) ServerObject {
-	var stb stubServer0
+// ServiceZeroObject returns an object using ServiceZeroImplementor
+func ServiceZeroObject(impl ServiceZeroImplementor) ServerObject {
+	var stb stubServiceZero
 	stb.impl = impl
 	stb.obj = NewObject(stb.metaObject(), stb.onPropertyChange)
 	stb.obj.Wrap(uint32(0x8), stb.Authenticate)
 	return &stb
 }
-func (p *stubServer0) Activate(activation Activation) error {
+func (p *stubServiceZero) Activate(activation Activation) error {
 	p.session = activation.Session
 	p.obj.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
-func (p *stubServer0) OnTerminate() {
+func (p *stubServiceZero) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubServer0) Receive(msg *net.Message, from *Context) error {
+func (p *stubServiceZero) Receive(msg *net.Message, from *Context) error {
 	return p.obj.Receive(msg, from)
 }
-func (p *stubServer0) onPropertyChange(name string, data []byte) error {
+func (p *stubServiceZero) onPropertyChange(name string, data []byte) error {
 	switch name {
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubServer0) Authenticate(payload []byte) ([]byte, error) {
+func (p *stubServiceZero) Authenticate(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	capability, err := func() (m map[string]value.Value, err error) {
 		size, err := basic.ReadUint32(buf)
@@ -116,9 +116,9 @@ func (p *stubServer0) Authenticate(payload []byte) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-func (p *stubServer0) metaObject() object.MetaObject {
+func (p *stubServiceZero) metaObject() object.MetaObject {
 	return object.MetaObject{
-		Description: "Server0",
+		Description: "ServiceZero",
 		Methods: map[uint32]object.MetaMethod{uint32(0x8): {
 			Name:                "authenticate",
 			ParametersSignature: "({sm})",
@@ -578,34 +578,34 @@ func Services(s Session) Constructor {
 	return Constructor{session: s}
 }
 
-// Server0 is the abstract interface of the service
-type Server0 interface {
+// ServiceZero is the abstract interface of the service
+type ServiceZero interface {
 	// Authenticate calls the remote procedure
 	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
 }
 
-// Server0 represents a proxy object to the service
-type Server0Proxy interface {
+// ServiceZero represents a proxy object to the service
+type ServiceZeroProxy interface {
 	Proxy
-	Server0
+	ServiceZero
 }
 
-// proxyServer0 implements Server0Proxy
-type proxyServer0 struct {
+// proxyServiceZero implements ServiceZeroProxy
+type proxyServiceZero struct {
 	Proxy
 }
 
-// Server0 returns a proxy to a remote service
-func (s Constructor) Server0() (Server0Proxy, error) {
-	proxy, err := s.session.Proxy("Server0", 1)
+// ServiceZero returns a proxy to a remote service
+func (s Constructor) ServiceZero() (ServiceZeroProxy, error) {
+	proxy, err := s.session.Proxy("ServiceZero", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &proxyServer0{proxy}, nil
+	return &proxyServiceZero{proxy}, nil
 }
 
 // Authenticate calls the remote procedure
-func (p *proxyServer0) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
+func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
 	var buf bytes.Buffer

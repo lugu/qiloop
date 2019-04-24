@@ -31,10 +31,10 @@ func MakeObject(proxy Proxy) ObjectProxy {
 }
 
 // ServiceServer retruns a proxy to the authenticating service (ID 0)
-func (s Constructor) ServiceServer() (Server0Proxy, error) {
-	proxy, err := s.session.Proxy("Server0", 0)
+func (s Constructor) ServiceServer() (ServiceZeroProxy, error) {
+	proxy, err := s.session.Proxy("ServiceZero", 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return &proxyServer0{proxy}, nil
+	return &proxyServiceZero{proxy}, nil
 }
