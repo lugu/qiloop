@@ -59,7 +59,7 @@ type stubObject struct {
 func ObjectObject(impl ObjectImplementor) bus.ServerObject {
 	var stb stubObject
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.obj = bus.NewBasicObject()
 	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
 	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
 	stb.obj.Wrap(uint32(0x2), stb.MetaObject)

@@ -21,11 +21,11 @@ var ErrWrongObjectID = errors.New("Wrong object ID")
 // implemented.
 var ErrNotYetImplemented = errors.New("Not supported")
 
-func (s *stubGeneric) UpdateSignal(signal uint32, data []byte) error {
+func (s *stubObject) UpdateSignal(signal uint32, data []byte) error {
 	return s.obj.UpdateSignal(signal, data)
 }
 
-func (s *stubGeneric) UpdateProperty(id uint32, sig string, data []byte) error {
+func (s *stubObject) UpdateProperty(id uint32, sig string, data []byte) error {
 	objImpl, ok := (s.impl).(*objectImpl)
 	if !ok {
 		return fmt.Errorf("unexpected implementation")
@@ -47,7 +47,7 @@ func (s *stubGeneric) UpdateProperty(id uint32, sig string, data []byte) error {
 	return s.obj.UpdateProperty(id, sig, data)
 }
 
-func (s *stubGeneric) Wrap(id uint32, fn ActionWrapper) {
+func (s *stubObject) Wrap(id uint32, fn ActionWrapper) {
 	s.obj.Wrap(id, fn)
 }
 
@@ -56,7 +56,7 @@ type objectImpl struct {
 	meta              object.MetaObject
 	onPropertyChange  func(string, []byte) error
 	objectID          uint32
-	signal            GenericSignalHelper
+	signal            ObjectSignalHelper
 	properties        map[string]value.Value
 	propertiesMutex   sync.RWMutex
 	terminate         func()
@@ -83,8 +83,8 @@ func NewObject(meta object.MetaObject,
 		properties:        make(map[string]value.Value),
 		observableWrapper: make(map[uint32]ActionWrapper),
 	}
-	obj := GenericObject(impl)
-	stub := obj.(*stubGeneric)
+	obj := ObjectObject(impl)
+	stub := obj.(*stubObject)
 	impl.basicObject(stub.obj.(*basicObject))
 	return stub
 }
@@ -95,7 +95,7 @@ func (o *objectImpl) basicObject(obj *basicObject) {
 }
 
 func (o *objectImpl) Activate(activation Activation,
-	signal GenericSignalHelper) error {
+	signal ObjectSignalHelper) error {
 
 	o.signal = signal
 	o.objectID = activation.ObjectID

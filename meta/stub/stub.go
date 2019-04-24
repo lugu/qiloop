@@ -498,7 +498,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	writing = append(writing, code)
 	code = jen.Id("stb.impl = impl")
 	writing = append(writing, code)
-	if itf.Name == "Generic" {
+	if itf.Name == "Object" {
 		code = jen.Id("stb.obj").Op("=").Qual(
 			"github.com/lugu/qiloop/bus",
 			"NewBasicObject",
