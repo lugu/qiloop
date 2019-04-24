@@ -49,15 +49,16 @@ func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap,
 }
 
 func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
-	const serviceID = 0
-	const objectID = 0
 
-	client0 := NewClient(endpoint)
-	proxy0 := NewProxy(client0, object.MetaService0, serviceID, objectID)
-	server0 := proxyServiceZero{
-		proxy0,
+	cache := NewCache(endpoint)
+	cache.AddService("ServiceZero", 0, object.MetaService0)
+	proxies := Services(cache)
+	service0, err := proxies.ServiceServer()
+	if err != nil {
+		return CapabilityMap{}, err
 	}
-	return server0.Authenticate(permissions)
+
+	return service0.Authenticate(permissions)
 }
 
 func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap) error {
