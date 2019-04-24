@@ -11,7 +11,7 @@ import (
 // When serialized, the signature of the true type is sent followed by
 // the actual value.
 type Value interface {
-	signature() string
+	Signature() string
 	Write(w io.Writer) error
 }
 
@@ -58,7 +58,7 @@ func Opaque(signature string, data []byte) Value {
 	}
 }
 
-func (o *OpaqueValue) signature() string {
+func (o *OpaqueValue) Signature() string {
 	return o.sig
 }
 
@@ -89,12 +89,12 @@ func newBool(r io.Reader) (Value, error) {
 	return Bool(b), err
 }
 
-func (b BoolValue) signature() string {
+func (b BoolValue) Signature() string {
 	return "b"
 }
 
 func (b BoolValue) Write(w io.Writer) error {
-	if err := basic.WriteString(b.signature(), w); err != nil {
+	if err := basic.WriteString(b.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteBool(b.Value(), w)
@@ -118,12 +118,12 @@ func newUint8(r io.Reader) (Value, error) {
 	return Uint8(i), err
 }
 
-func (i Uint8Value) signature() string {
+func (i Uint8Value) Signature() string {
 	return "C"
 }
 
 func (i Uint8Value) Write(w io.Writer) error {
-	if err := basic.WriteString(i.signature(), w); err != nil {
+	if err := basic.WriteString(i.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteUint8(i.Value(), w)
@@ -147,12 +147,12 @@ func newInt8(r io.Reader) (Value, error) {
 	return Int8(i), err
 }
 
-func (i Int8Value) signature() string {
+func (i Int8Value) Signature() string {
 	return "c"
 }
 
 func (i Int8Value) Write(w io.Writer) error {
-	if err := basic.WriteString(i.signature(), w); err != nil {
+	if err := basic.WriteString(i.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteInt8(i.Value(), w)
@@ -176,12 +176,12 @@ func newUint16(r io.Reader) (Value, error) {
 	return Uint16(i), err
 }
 
-func (i Uint16Value) signature() string {
+func (i Uint16Value) Signature() string {
 	return "W"
 }
 
 func (i Uint16Value) Write(w io.Writer) error {
-	if err := basic.WriteString(i.signature(), w); err != nil {
+	if err := basic.WriteString(i.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteUint16(i.Value(), w)
@@ -205,12 +205,12 @@ func newInt16(r io.Reader) (Value, error) {
 	return Int16(i), err
 }
 
-func (i Int16Value) signature() string {
+func (i Int16Value) Signature() string {
 	return "w"
 }
 
 func (i Int16Value) Write(w io.Writer) error {
-	if err := basic.WriteString(i.signature(), w); err != nil {
+	if err := basic.WriteString(i.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteInt16(i.Value(), w)
@@ -234,12 +234,12 @@ func newUint(r io.Reader) (Value, error) {
 	return Uint(i), err
 }
 
-func (i UintValue) signature() string {
+func (i UintValue) Signature() string {
 	return "I"
 }
 
 func (i UintValue) Write(w io.Writer) error {
-	if err := basic.WriteString(i.signature(), w); err != nil {
+	if err := basic.WriteString(i.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteUint32(i.Value(), w)
@@ -263,12 +263,12 @@ func newInt(r io.Reader) (Value, error) {
 	return Int(i), err
 }
 
-func (i IntValue) signature() string {
+func (i IntValue) Signature() string {
 	return "i"
 }
 
 func (i IntValue) Write(w io.Writer) error {
-	if err := basic.WriteString(i.signature(), w); err != nil {
+	if err := basic.WriteString(i.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteInt32(i.Value(), w)
@@ -292,12 +292,12 @@ func newUlong(r io.Reader) (Value, error) {
 	return Ulong(l), err
 }
 
-func (l UlongValue) signature() string {
+func (l UlongValue) Signature() string {
 	return "L"
 }
 
 func (l UlongValue) Write(w io.Writer) error {
-	if err := basic.WriteString(l.signature(), w); err != nil {
+	if err := basic.WriteString(l.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteUint64(l.Value(), w)
@@ -321,12 +321,12 @@ func newLong(r io.Reader) (Value, error) {
 	return Long(l), err
 }
 
-func (l LongValue) signature() string {
+func (l LongValue) Signature() string {
 	return "l"
 }
 
 func (l LongValue) Write(w io.Writer) error {
-	if err := basic.WriteString(l.signature(), w); err != nil {
+	if err := basic.WriteString(l.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteInt64(l.Value(), w)
@@ -350,12 +350,12 @@ func newFloat(r io.Reader) (Value, error) {
 	return Float(f), err
 }
 
-func (f FloatValue) signature() string {
+func (f FloatValue) Signature() string {
 	return "f"
 }
 
 func (f FloatValue) Write(w io.Writer) error {
-	if err := basic.WriteString(f.signature(), w); err != nil {
+	if err := basic.WriteString(f.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteFloat32(f.Value(), w)
@@ -379,12 +379,12 @@ func newString(r io.Reader) (Value, error) {
 	return String(s), err
 }
 
-func (s StringValue) signature() string {
+func (s StringValue) Signature() string {
 	return "s"
 }
 
 func (s StringValue) Write(w io.Writer) error {
-	if err := basic.WriteString(s.signature(), w); err != nil {
+	if err := basic.WriteString(s.Signature(), w); err != nil {
 		return err
 	}
 	return basic.WriteString(s.Value(), w)
@@ -418,12 +418,12 @@ func List(l []Value) Value {
 	return ListValue(l)
 }
 
-func (l ListValue) signature() string {
+func (l ListValue) Signature() string {
 	return "[m]"
 }
 
 func (l ListValue) Write(w io.Writer) error {
-	if err := basic.WriteString(l.signature(), w); err != nil {
+	if err := basic.WriteString(l.Signature(), w); err != nil {
 		return err
 	}
 	if err := basic.WriteUint32(uint32(len(l)), w); err != nil {
@@ -477,12 +477,12 @@ func Raw(b []byte) Value {
 	return RawValue(b)
 }
 
-func (b RawValue) signature() string {
+func (b RawValue) Signature() string {
 	return "r"
 }
 
 func (b RawValue) Write(w io.Writer) error {
-	if err := basic.WriteString(b.signature(), w); err != nil {
+	if err := basic.WriteString(b.Signature(), w); err != nil {
 		return err
 	}
 	if err := basic.WriteUint32(uint32(len(b)), w); err != nil {
@@ -517,12 +517,12 @@ func newVoid(r io.Reader) (Value, error) {
 	return VoidValue{}, nil
 }
 
-func (b VoidValue) signature() string {
+func (b VoidValue) Signature() string {
 	return "v"
 }
 
 func (b VoidValue) Write(w io.Writer) error {
-	if err := basic.WriteString(b.signature(), w); err != nil {
+	if err := basic.WriteString(b.Signature(), w); err != nil {
 		return err
 	}
 	return nil
