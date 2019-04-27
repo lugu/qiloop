@@ -3,6 +3,7 @@ package object
 import (
 	"encoding/json"
 	"fmt"
+	io "io"
 	"sort"
 	"strings"
 )
@@ -117,6 +118,26 @@ func (m *MetaObject) ForEachMethodAndSignal(
 		}
 	}
 	return nil
+}
+
+// ReadMetaObject unserialize a MetaObject and returns it.
+func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
+	return readMetaObject(r)
+}
+
+// WriteMetaObject serialize a MetaObject.
+func WriteMetaObject(s MetaObject, w io.Writer) (err error) {
+	return writeMetaObject(s, w)
+}
+
+// ReadMetaObject serialize an ObjectReference.
+func ReadObjectReference(r io.Reader) (s ObjectReference, err error) {
+	return readObjectReference(r)
+}
+
+// WriteObjectReference unserialize an ObjectReference and returns it.
+func WriteObjectReference(s ObjectReference, w io.Writer) (err error) {
+	return writeObjectReference(s, w)
 }
 
 // FullMetaObject fills the meta object with generic objects methods.

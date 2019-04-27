@@ -72,7 +72,7 @@ func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
 }
 func (p *stubLogProvider) SetVerbosity(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	level, err := ReadLogLevel(buf)
+	level, err := readLogLevel(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read level: %s", err)
 	}
@@ -89,7 +89,7 @@ func (p *stubLogProvider) SetCategory(payload []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read category: %s", err)
 	}
-	level, err := ReadLogLevel(buf)
+	level, err := readLogLevel(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read level: %s", err)
 	}
@@ -113,7 +113,7 @@ func (p *stubLogProvider) ClearAndSet(payload []byte) ([]byte, error) {
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := ReadLogLevel(buf)
+			v, err := readLogLevel(buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -220,7 +220,7 @@ func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 	switch name {
 	case "verbosity":
 		buf := bytes.NewBuffer(data)
-		prop, err := ReadLogLevel(buf)
+		prop, err := readLogLevel(buf)
 		if err != nil {
 			return fmt.Errorf("cannot read Verbosity: %s", err)
 		}
@@ -260,7 +260,7 @@ func (p *stubLogListener) SetCategory(payload []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read category: %s", err)
 	}
-	level, err := ReadLogLevel(buf)
+	level, err := readLogLevel(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read level: %s", err)
 	}
@@ -281,7 +281,7 @@ func (p *stubLogListener) ClearFilters(payload []byte) ([]byte, error) {
 }
 func (p *stubLogListener) SignalOnLogMessage(msg LogMessage) error {
 	var buf bytes.Buffer
-	if err := WriteLogMessage(msg, &buf); err != nil {
+	if err := writeLogMessage(msg, &buf); err != nil {
 		return fmt.Errorf("failed to serialize msg: %s", err)
 	}
 	err := p.obj.UpdateSignal(uint32(0x67), buf.Bytes())
@@ -293,7 +293,7 @@ func (p *stubLogListener) SignalOnLogMessage(msg LogMessage) error {
 }
 func (p *stubLogListener) UpdateVerbosity(level LogLevel) error {
 	var buf bytes.Buffer
-	if err := WriteLogLevel(level, &buf); err != nil {
+	if err := writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	err := p.obj.UpdateProperty(uint32(0x68), "(i)<LogLevel,level>", buf.Bytes())
@@ -436,7 +436,7 @@ func (p *stubLogManager) Log(payload []byte) ([]byte, error) {
 		}
 		b = make([]LogMessage, size)
 		for i := 0; i < int(size); i++ {
-			b[i], err = ReadLogMessage(buf)
+			b[i], err = readLogMessage(buf)
 			if err != nil {
 				return b, fmt.Errorf("failed to read slice value: %s", err)
 			}
@@ -598,16 +598,16 @@ type LogLevel struct {
 	Level int32
 }
 
-// ReadLogLevel unmarshalls LogLevel
-func ReadLogLevel(r io.Reader) (s LogLevel, err error) {
+// readLogLevel unmarshalls LogLevel
+func readLogLevel(r io.Reader) (s LogLevel, err error) {
 	if s.Level, err = basic.ReadInt32(r); err != nil {
 		return s, fmt.Errorf("failed to read Level field: " + err.Error())
 	}
 	return s, nil
 }
 
-// WriteLogLevel marshalls LogLevel
-func WriteLogLevel(s LogLevel, w io.Writer) (err error) {
+// writeLogLevel marshalls LogLevel
+func writeLogLevel(s LogLevel, w io.Writer) (err error) {
 	if err := basic.WriteInt32(s.Level, w); err != nil {
 		return fmt.Errorf("failed to write Level field: " + err.Error())
 	}
@@ -619,16 +619,16 @@ type TimePoint struct {
 	Ns uint64
 }
 
-// ReadTimePoint unmarshalls TimePoint
-func ReadTimePoint(r io.Reader) (s TimePoint, err error) {
+// readTimePoint unmarshalls TimePoint
+func readTimePoint(r io.Reader) (s TimePoint, err error) {
 	if s.Ns, err = basic.ReadUint64(r); err != nil {
 		return s, fmt.Errorf("failed to read Ns field: " + err.Error())
 	}
 	return s, nil
 }
 
-// WriteTimePoint marshalls TimePoint
-func WriteTimePoint(s TimePoint, w io.Writer) (err error) {
+// writeTimePoint marshalls TimePoint
+func writeTimePoint(s TimePoint, w io.Writer) (err error) {
 	if err := basic.WriteUint64(s.Ns, w); err != nil {
 		return fmt.Errorf("failed to write Ns field: " + err.Error())
 	}
@@ -647,12 +647,12 @@ type LogMessage struct {
 	SystemDate TimePoint
 }
 
-// ReadLogMessage unmarshalls LogMessage
-func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
+// readLogMessage unmarshalls LogMessage
+func readLogMessage(r io.Reader) (s LogMessage, err error) {
 	if s.Source, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Source field: " + err.Error())
 	}
-	if s.Level, err = ReadLogLevel(r); err != nil {
+	if s.Level, err = readLogLevel(r); err != nil {
 		return s, fmt.Errorf("failed to read Level field: " + err.Error())
 	}
 	if s.Category, err = basic.ReadString(r); err != nil {
@@ -667,21 +667,21 @@ func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Id field: " + err.Error())
 	}
-	if s.Date, err = ReadTimePoint(r); err != nil {
+	if s.Date, err = readTimePoint(r); err != nil {
 		return s, fmt.Errorf("failed to read Date field: " + err.Error())
 	}
-	if s.SystemDate, err = ReadTimePoint(r); err != nil {
+	if s.SystemDate, err = readTimePoint(r); err != nil {
 		return s, fmt.Errorf("failed to read SystemDate field: " + err.Error())
 	}
 	return s, nil
 }
 
-// WriteLogMessage marshalls LogMessage
-func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
+// writeLogMessage marshalls LogMessage
+func writeLogMessage(s LogMessage, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Source, w); err != nil {
 		return fmt.Errorf("failed to write Source field: " + err.Error())
 	}
-	if err := WriteLogLevel(s.Level, w); err != nil {
+	if err := writeLogLevel(s.Level, w); err != nil {
 		return fmt.Errorf("failed to write Level field: " + err.Error())
 	}
 	if err := basic.WriteString(s.Category, w); err != nil {
@@ -696,10 +696,10 @@ func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
 		return fmt.Errorf("failed to write Id field: " + err.Error())
 	}
-	if err := WriteTimePoint(s.Date, w); err != nil {
+	if err := writeTimePoint(s.Date, w); err != nil {
 		return fmt.Errorf("failed to write Date field: " + err.Error())
 	}
-	if err := WriteTimePoint(s.SystemDate, w); err != nil {
+	if err := writeTimePoint(s.SystemDate, w); err != nil {
 		return fmt.Errorf("failed to write SystemDate field: " + err.Error())
 	}
 	return nil
@@ -745,7 +745,7 @@ func (s Constructor) LogProvider() (LogProviderProxy, error) {
 func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	var err error
 	var buf bytes.Buffer
-	if err = WriteLogLevel(level, &buf); err != nil {
+	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setVerbosity", buf.Bytes())
@@ -762,7 +762,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, &buf); err != nil {
+	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -786,7 +786,7 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = WriteLogLevel(v, &buf)
+			err = writeLogLevel(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -857,7 +857,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, &buf); err != nil {
+	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -905,7 +905,7 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadLogMessage(buf)
+			e, err := readLogMessage(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -938,7 +938,7 @@ func (p *proxyLogListener) GetVerbosity() (ret LogLevel, err error) {
 		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
 			s, sig)
 	}
-	ret, err = ReadLogLevel(&buf)
+	ret, err = readLogLevel(&buf)
 	return ret, err
 }
 
@@ -946,7 +946,7 @@ func (p *proxyLogListener) GetVerbosity() (ret LogLevel, err error) {
 func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
 	name := value.String("verbosity")
 	var buf bytes.Buffer
-	err := WriteLogLevel(update, &buf)
+	err := writeLogLevel(update, &buf)
 	if err != nil {
 		return fmt.Errorf("marshall error: %s", err)
 	}
@@ -981,7 +981,7 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadLogLevel(buf)
+			e, err := readLogLevel(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -1170,7 +1170,7 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
 		for _, v := range messages {
-			err = WriteLogMessage(v, &buf)
+			err = writeLogMessage(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
 			}

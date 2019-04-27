@@ -3,10 +3,11 @@ package signature
 import (
 	"bytes"
 	"fmt"
-	"github.com/dave/jennifer/jen"
-	"github.com/lugu/qiloop/bus/util"
 	"log"
 	"strings"
+
+	"github.com/dave/jennifer/jen"
+	"github.com/lugu/qiloop/bus/util"
 )
 
 // TypeSet is a container which contains exactly one instance of each
@@ -790,14 +791,14 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 	readFields[len(s.Members)] = jen.Return(jen.Id("s"), jen.Nil())
 	writeFields[len(s.Members)] = jen.Return(jen.Nil())
 
-	file.Commentf("Read%s unmarshalls %s", s.name(), s.name())
-	file.Func().Id("Read"+s.name()).Params(
+	file.Commentf("read%s unmarshalls %s", s.name(), s.name())
+	file.Func().Id("read"+s.name()).Params(
 		jen.Id("r").Id("io.Reader"),
 	).Params(
 		jen.Id("s").Id(s.name()), jen.Err().Error(),
 	).Block(readFields...)
-	file.Commentf("Write%s marshalls %s", s.name(), s.name())
-	file.Func().Id("Write"+s.name()).Params(
+	file.Commentf("write%s marshalls %s", s.name(), s.name())
+	file.Func().Id("write"+s.name()).Params(
 		jen.Id("s").Id(s.name()),
 		jen.Id("w").Qual("io", "Writer"),
 	).Params(jen.Err().Error()).Block(writeFields...)
@@ -807,14 +808,14 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 // the variable "id" into the io.Writer "writer" while returning an
 // error.
 func (s *StructType) Marshal(structID string, writer string) *Statement {
-	return jen.Id("Write"+s.name()).Call(jen.Id(structID), jen.Id(writer))
+	return jen.Id("write"+s.name()).Call(jen.Id(structID), jen.Id(writer))
 }
 
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (s *StructType) Unmarshal(reader string) *Statement {
-	return jen.Id("Read" + s.name()).Call(jen.Id(reader))
+	return jen.Id("read" + s.name()).Call(jen.Id(reader))
 }
 
 // EnumType represents a const.

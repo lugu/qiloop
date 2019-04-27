@@ -413,7 +413,7 @@ func (p *stubObject) Stats(payload []byte) ([]byte, error) {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = WriteMethodStatistics(v, &out)
+			err = writeMethodStatistics(v, &out)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -460,7 +460,7 @@ func (p *stubObject) EnableTrace(payload []byte) ([]byte, error) {
 }
 func (p *stubObject) SignalTraceObject(event EventTrace) error {
 	var buf bytes.Buffer
-	if err := WriteEventTrace(event, &buf); err != nil {
+	if err := writeEventTrace(event, &buf); err != nil {
 		return fmt.Errorf("failed to serialize event: %s", err)
 	}
 	err := p.obj.UpdateSignal(uint32(0x56), buf.Bytes())
@@ -925,7 +925,7 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := ReadMethodStatistics(resp)
+			v, err := readMethodStatistics(resp)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -1008,7 +1008,7 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadEventTrace(buf)
+			e, err := readEventTrace(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -1025,8 +1025,8 @@ type MetaMethodParameter struct {
 	Description string
 }
 
-// ReadMetaMethodParameter unmarshalls MetaMethodParameter
-func ReadMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
+// readMetaMethodParameter unmarshalls MetaMethodParameter
+func readMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Name field: " + err.Error())
 	}
@@ -1036,8 +1036,8 @@ func ReadMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 	return s, nil
 }
 
-// WriteMetaMethodParameter marshalls MetaMethodParameter
-func WriteMetaMethodParameter(s MetaMethodParameter, w io.Writer) (err error) {
+// writeMetaMethodParameter marshalls MetaMethodParameter
+func writeMetaMethodParameter(s MetaMethodParameter, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
 		return fmt.Errorf("failed to write Name field: " + err.Error())
 	}
@@ -1058,8 +1058,8 @@ type MetaMethod struct {
 	ReturnDescription   string
 }
 
-// ReadMetaMethod unmarshalls MetaMethod
-func ReadMetaMethod(r io.Reader) (s MetaMethod, err error) {
+// readMetaMethod unmarshalls MetaMethod
+func readMetaMethod(r io.Reader) (s MetaMethod, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
 	}
@@ -1082,7 +1082,7 @@ func ReadMetaMethod(r io.Reader) (s MetaMethod, err error) {
 		}
 		b = make([]MetaMethodParameter, size)
 		for i := 0; i < int(size); i++ {
-			b[i], err = ReadMetaMethodParameter(r)
+			b[i], err = readMetaMethodParameter(r)
 			if err != nil {
 				return b, fmt.Errorf("failed to read slice value: %s", err)
 			}
@@ -1097,8 +1097,8 @@ func ReadMetaMethod(r io.Reader) (s MetaMethod, err error) {
 	return s, nil
 }
 
-// WriteMetaMethod marshalls MetaMethod
-func WriteMetaMethod(s MetaMethod, w io.Writer) (err error) {
+// writeMetaMethod marshalls MetaMethod
+func writeMetaMethod(s MetaMethod, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
 		return fmt.Errorf("failed to write Uid field: " + err.Error())
 	}
@@ -1120,7 +1120,7 @@ func WriteMetaMethod(s MetaMethod, w io.Writer) (err error) {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
 		for _, v := range s.Parameters {
-			err = WriteMetaMethodParameter(v, w)
+			err = writeMetaMethodParameter(v, w)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
 			}
@@ -1142,8 +1142,8 @@ type MetaSignal struct {
 	Signature string
 }
 
-// ReadMetaSignal unmarshalls MetaSignal
-func ReadMetaSignal(r io.Reader) (s MetaSignal, err error) {
+// readMetaSignal unmarshalls MetaSignal
+func readMetaSignal(r io.Reader) (s MetaSignal, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
 	}
@@ -1156,8 +1156,8 @@ func ReadMetaSignal(r io.Reader) (s MetaSignal, err error) {
 	return s, nil
 }
 
-// WriteMetaSignal marshalls MetaSignal
-func WriteMetaSignal(s MetaSignal, w io.Writer) (err error) {
+// writeMetaSignal marshalls MetaSignal
+func writeMetaSignal(s MetaSignal, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
 		return fmt.Errorf("failed to write Uid field: " + err.Error())
 	}
@@ -1177,8 +1177,8 @@ type MetaProperty struct {
 	Signature string
 }
 
-// ReadMetaProperty unmarshalls MetaProperty
-func ReadMetaProperty(r io.Reader) (s MetaProperty, err error) {
+// readMetaProperty unmarshalls MetaProperty
+func readMetaProperty(r io.Reader) (s MetaProperty, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
 	}
@@ -1191,8 +1191,8 @@ func ReadMetaProperty(r io.Reader) (s MetaProperty, err error) {
 	return s, nil
 }
 
-// WriteMetaProperty marshalls MetaProperty
-func WriteMetaProperty(s MetaProperty, w io.Writer) (err error) {
+// writeMetaProperty marshalls MetaProperty
+func writeMetaProperty(s MetaProperty, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
 		return fmt.Errorf("failed to write Uid field: " + err.Error())
 	}
@@ -1213,8 +1213,8 @@ type MetaObject struct {
 	Description string
 }
 
-// ReadMetaObject unmarshalls MetaObject
-func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
+// readMetaObject unmarshalls MetaObject
+func readMetaObject(r io.Reader) (s MetaObject, err error) {
 	if s.Methods, err = func() (m map[uint32]MetaMethod, err error) {
 		size, err := basic.ReadUint32(r)
 		if err != nil {
@@ -1226,7 +1226,7 @@ func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := ReadMetaMethod(r)
+			v, err := readMetaMethod(r)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -1247,7 +1247,7 @@ func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := ReadMetaSignal(r)
+			v, err := readMetaSignal(r)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -1268,7 +1268,7 @@ func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := ReadMetaProperty(r)
+			v, err := readMetaProperty(r)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -1284,8 +1284,8 @@ func ReadMetaObject(r io.Reader) (s MetaObject, err error) {
 	return s, nil
 }
 
-// WriteMetaObject marshalls MetaObject
-func WriteMetaObject(s MetaObject, w io.Writer) (err error) {
+// writeMetaObject marshalls MetaObject
+func writeMetaObject(s MetaObject, w io.Writer) (err error) {
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Methods)), w)
 		if err != nil {
@@ -1296,7 +1296,7 @@ func WriteMetaObject(s MetaObject, w io.Writer) (err error) {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = WriteMetaMethod(v, w)
+			err = writeMetaMethod(v, w)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -1315,7 +1315,7 @@ func WriteMetaObject(s MetaObject, w io.Writer) (err error) {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = WriteMetaSignal(v, w)
+			err = writeMetaSignal(v, w)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -1334,7 +1334,7 @@ func WriteMetaObject(s MetaObject, w io.Writer) (err error) {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = WriteMetaProperty(v, w)
+			err = writeMetaProperty(v, w)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -1356,8 +1356,8 @@ type MinMaxSum struct {
 	CumulatedValue float32
 }
 
-// ReadMinMaxSum unmarshalls MinMaxSum
-func ReadMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
+// readMinMaxSum unmarshalls MinMaxSum
+func readMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
 	if s.MinValue, err = basic.ReadFloat32(r); err != nil {
 		return s, fmt.Errorf("failed to read MinValue field: " + err.Error())
 	}
@@ -1370,8 +1370,8 @@ func ReadMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
 	return s, nil
 }
 
-// WriteMinMaxSum marshalls MinMaxSum
-func WriteMinMaxSum(s MinMaxSum, w io.Writer) (err error) {
+// writeMinMaxSum marshalls MinMaxSum
+func writeMinMaxSum(s MinMaxSum, w io.Writer) (err error) {
 	if err := basic.WriteFloat32(s.MinValue, w); err != nil {
 		return fmt.Errorf("failed to write MinValue field: " + err.Error())
 	}
@@ -1392,35 +1392,35 @@ type MethodStatistics struct {
 	System MinMaxSum
 }
 
-// ReadMethodStatistics unmarshalls MethodStatistics
-func ReadMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
+// readMethodStatistics unmarshalls MethodStatistics
+func readMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
 	if s.Count, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Count field: " + err.Error())
 	}
-	if s.Wall, err = ReadMinMaxSum(r); err != nil {
+	if s.Wall, err = readMinMaxSum(r); err != nil {
 		return s, fmt.Errorf("failed to read Wall field: " + err.Error())
 	}
-	if s.User, err = ReadMinMaxSum(r); err != nil {
+	if s.User, err = readMinMaxSum(r); err != nil {
 		return s, fmt.Errorf("failed to read User field: " + err.Error())
 	}
-	if s.System, err = ReadMinMaxSum(r); err != nil {
+	if s.System, err = readMinMaxSum(r); err != nil {
 		return s, fmt.Errorf("failed to read System field: " + err.Error())
 	}
 	return s, nil
 }
 
-// WriteMethodStatistics marshalls MethodStatistics
-func WriteMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
+// writeMethodStatistics marshalls MethodStatistics
+func writeMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Count, w); err != nil {
 		return fmt.Errorf("failed to write Count field: " + err.Error())
 	}
-	if err := WriteMinMaxSum(s.Wall, w); err != nil {
+	if err := writeMinMaxSum(s.Wall, w); err != nil {
 		return fmt.Errorf("failed to write Wall field: " + err.Error())
 	}
-	if err := WriteMinMaxSum(s.User, w); err != nil {
+	if err := writeMinMaxSum(s.User, w); err != nil {
 		return fmt.Errorf("failed to write User field: " + err.Error())
 	}
-	if err := WriteMinMaxSum(s.System, w); err != nil {
+	if err := writeMinMaxSum(s.System, w); err != nil {
 		return fmt.Errorf("failed to write System field: " + err.Error())
 	}
 	return nil
@@ -1432,8 +1432,8 @@ type Timeval struct {
 	Tvusec int64
 }
 
-// ReadTimeval unmarshalls Timeval
-func ReadTimeval(r io.Reader) (s Timeval, err error) {
+// readTimeval unmarshalls Timeval
+func readTimeval(r io.Reader) (s Timeval, err error) {
 	if s.Tvsec, err = basic.ReadInt64(r); err != nil {
 		return s, fmt.Errorf("failed to read Tvsec field: " + err.Error())
 	}
@@ -1443,8 +1443,8 @@ func ReadTimeval(r io.Reader) (s Timeval, err error) {
 	return s, nil
 }
 
-// WriteTimeval marshalls Timeval
-func WriteTimeval(s Timeval, w io.Writer) (err error) {
+// writeTimeval marshalls Timeval
+func writeTimeval(s Timeval, w io.Writer) (err error) {
 	if err := basic.WriteInt64(s.Tvsec, w); err != nil {
 		return fmt.Errorf("failed to write Tvsec field: " + err.Error())
 	}
@@ -1467,8 +1467,8 @@ type EventTrace struct {
 	CalleeContext uint32
 }
 
-// ReadEventTrace unmarshalls EventTrace
-func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
+// readEventTrace unmarshalls EventTrace
+func readEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Id field: " + err.Error())
 	}
@@ -1481,7 +1481,7 @@ func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Arguments, err = value.NewValue(r); err != nil {
 		return s, fmt.Errorf("failed to read Arguments field: " + err.Error())
 	}
-	if s.Timestamp, err = ReadTimeval(r); err != nil {
+	if s.Timestamp, err = readTimeval(r); err != nil {
 		return s, fmt.Errorf("failed to read Timestamp field: " + err.Error())
 	}
 	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
@@ -1499,8 +1499,8 @@ func ReadEventTrace(r io.Reader) (s EventTrace, err error) {
 	return s, nil
 }
 
-// WriteEventTrace marshalls EventTrace
-func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
+// writeEventTrace marshalls EventTrace
+func writeEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
 		return fmt.Errorf("failed to write Id field: " + err.Error())
 	}
@@ -1513,7 +1513,7 @@ func WriteEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := s.Arguments.Write(w); err != nil {
 		return fmt.Errorf("failed to write Arguments field: " + err.Error())
 	}
-	if err := WriteTimeval(s.Timestamp, w); err != nil {
+	if err := writeTimeval(s.Timestamp, w); err != nil {
 		return fmt.Errorf("failed to write Timestamp field: " + err.Error())
 	}
 	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {

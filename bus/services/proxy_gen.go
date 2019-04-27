@@ -30,8 +30,8 @@ type ServiceAdded struct {
 	Name      string
 }
 
-// ReadServiceAdded unmarshalls ServiceAdded
-func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
+// readServiceAdded unmarshalls ServiceAdded
+func readServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
 	}
@@ -41,8 +41,8 @@ func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 	return s, nil
 }
 
-// WriteServiceAdded marshalls ServiceAdded
-func WriteServiceAdded(s ServiceAdded, w io.Writer) (err error) {
+// writeServiceAdded marshalls ServiceAdded
+func writeServiceAdded(s ServiceAdded, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
 		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
 	}
@@ -58,8 +58,8 @@ type ServiceRemoved struct {
 	Name      string
 }
 
-// ReadServiceRemoved unmarshalls ServiceRemoved
-func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
+// readServiceRemoved unmarshalls ServiceRemoved
+func readServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
 	}
@@ -69,8 +69,8 @@ func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 	return s, nil
 }
 
-// WriteServiceRemoved marshalls ServiceRemoved
-func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
+// writeServiceRemoved marshalls ServiceRemoved
+func writeServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
 		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
 	}
@@ -143,7 +143,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
 	resp := bytes.NewBuffer(response)
-	ret, err = ReadServiceInfo(resp)
+	ret, err = readServiceInfo(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse service response: %s", err)
 	}
@@ -167,7 +167,7 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 		}
 		b = make([]ServiceInfo, size)
 		for i := 0; i < int(size); i++ {
-			b[i], err = ReadServiceInfo(resp)
+			b[i], err = readServiceInfo(resp)
 			if err != nil {
 				return b, fmt.Errorf("failed to read slice value: %s", err)
 			}
@@ -185,7 +185,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	var err error
 	var ret uint32
 	var buf bytes.Buffer
-	if err = WriteServiceInfo(info, &buf); err != nil {
+	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize info: %s", err)
 	}
 	response, err := p.Call("registerService", buf.Bytes())
@@ -232,7 +232,7 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	var err error
 	var buf bytes.Buffer
-	if err = WriteServiceInfo(info, &buf); err != nil {
+	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("failed to serialize info: %s", err)
 	}
 	_, err = p.Call("updateServiceInfo", buf.Bytes())
@@ -306,7 +306,7 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadServiceAdded(buf)
+			e, err := readServiceAdded(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -344,7 +344,7 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadServiceRemoved(buf)
+			e, err := readServiceRemoved(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -365,8 +365,8 @@ type ServiceInfo struct {
 	SessionId string
 }
 
-// ReadServiceInfo unmarshalls ServiceInfo
-func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
+// readServiceInfo unmarshalls ServiceInfo
+func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Name field: " + err.Error())
 	}
@@ -401,8 +401,8 @@ func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	return s, nil
 }
 
-// WriteServiceInfo marshalls ServiceInfo
-func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
+// writeServiceInfo marshalls ServiceInfo
+func writeServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
 		return fmt.Errorf("failed to write Name field: " + err.Error())
 	}
@@ -441,16 +441,16 @@ type LogLevel struct {
 	Level int32
 }
 
-// ReadLogLevel unmarshalls LogLevel
-func ReadLogLevel(r io.Reader) (s LogLevel, err error) {
+// readLogLevel unmarshalls LogLevel
+func readLogLevel(r io.Reader) (s LogLevel, err error) {
 	if s.Level, err = basic.ReadInt32(r); err != nil {
 		return s, fmt.Errorf("failed to read Level field: " + err.Error())
 	}
 	return s, nil
 }
 
-// WriteLogLevel marshalls LogLevel
-func WriteLogLevel(s LogLevel, w io.Writer) (err error) {
+// writeLogLevel marshalls LogLevel
+func writeLogLevel(s LogLevel, w io.Writer) (err error) {
 	if err := basic.WriteInt32(s.Level, w); err != nil {
 		return fmt.Errorf("failed to write Level field: " + err.Error())
 	}
@@ -462,16 +462,16 @@ type TimePoint struct {
 	Ns uint64
 }
 
-// ReadTimePoint unmarshalls TimePoint
-func ReadTimePoint(r io.Reader) (s TimePoint, err error) {
+// readTimePoint unmarshalls TimePoint
+func readTimePoint(r io.Reader) (s TimePoint, err error) {
 	if s.Ns, err = basic.ReadUint64(r); err != nil {
 		return s, fmt.Errorf("failed to read Ns field: " + err.Error())
 	}
 	return s, nil
 }
 
-// WriteTimePoint marshalls TimePoint
-func WriteTimePoint(s TimePoint, w io.Writer) (err error) {
+// writeTimePoint marshalls TimePoint
+func writeTimePoint(s TimePoint, w io.Writer) (err error) {
 	if err := basic.WriteUint64(s.Ns, w); err != nil {
 		return fmt.Errorf("failed to write Ns field: " + err.Error())
 	}
@@ -490,12 +490,12 @@ type LogMessage struct {
 	SystemDate TimePoint
 }
 
-// ReadLogMessage unmarshalls LogMessage
-func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
+// readLogMessage unmarshalls LogMessage
+func readLogMessage(r io.Reader) (s LogMessage, err error) {
 	if s.Source, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Source field: " + err.Error())
 	}
-	if s.Level, err = ReadLogLevel(r); err != nil {
+	if s.Level, err = readLogLevel(r); err != nil {
 		return s, fmt.Errorf("failed to read Level field: " + err.Error())
 	}
 	if s.Category, err = basic.ReadString(r); err != nil {
@@ -510,21 +510,21 @@ func ReadLogMessage(r io.Reader) (s LogMessage, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read Id field: " + err.Error())
 	}
-	if s.Date, err = ReadTimePoint(r); err != nil {
+	if s.Date, err = readTimePoint(r); err != nil {
 		return s, fmt.Errorf("failed to read Date field: " + err.Error())
 	}
-	if s.SystemDate, err = ReadTimePoint(r); err != nil {
+	if s.SystemDate, err = readTimePoint(r); err != nil {
 		return s, fmt.Errorf("failed to read SystemDate field: " + err.Error())
 	}
 	return s, nil
 }
 
-// WriteLogMessage marshalls LogMessage
-func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
+// writeLogMessage marshalls LogMessage
+func writeLogMessage(s LogMessage, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Source, w); err != nil {
 		return fmt.Errorf("failed to write Source field: " + err.Error())
 	}
-	if err := WriteLogLevel(s.Level, w); err != nil {
+	if err := writeLogLevel(s.Level, w); err != nil {
 		return fmt.Errorf("failed to write Level field: " + err.Error())
 	}
 	if err := basic.WriteString(s.Category, w); err != nil {
@@ -539,10 +539,10 @@ func WriteLogMessage(s LogMessage, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
 		return fmt.Errorf("failed to write Id field: " + err.Error())
 	}
-	if err := WriteTimePoint(s.Date, w); err != nil {
+	if err := writeTimePoint(s.Date, w); err != nil {
 		return fmt.Errorf("failed to write Date field: " + err.Error())
 	}
-	if err := WriteTimePoint(s.SystemDate, w); err != nil {
+	if err := writeTimePoint(s.SystemDate, w); err != nil {
 		return fmt.Errorf("failed to write SystemDate field: " + err.Error())
 	}
 	return nil
@@ -588,7 +588,7 @@ func (s Constructor) LogProvider() (LogProviderProxy, error) {
 func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	var err error
 	var buf bytes.Buffer
-	if err = WriteLogLevel(level, &buf); err != nil {
+	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setVerbosity", buf.Bytes())
@@ -605,7 +605,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, &buf); err != nil {
+	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -700,7 +700,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	if err = basic.WriteString(category, &buf); err != nil {
 		return fmt.Errorf("failed to serialize category: %s", err)
 	}
-	if err = WriteLogLevel(level, &buf); err != nil {
+	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
@@ -748,7 +748,7 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadLogMessage(buf)
+			e, err := readLogMessage(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -781,7 +781,7 @@ func (p *proxyLogListener) GetVerbosity() (ret LogLevel, err error) {
 		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
 			s, sig)
 	}
-	ret, err = ReadLogLevel(&buf)
+	ret, err = readLogLevel(&buf)
 	return ret, err
 }
 
@@ -789,7 +789,7 @@ func (p *proxyLogListener) GetVerbosity() (ret LogLevel, err error) {
 func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
 	name := value.String("verbosity")
 	var buf bytes.Buffer
-	err := WriteLogLevel(update, &buf)
+	err := writeLogLevel(update, &buf)
 	if err != nil {
 		return fmt.Errorf("marshall error: %s", err)
 	}
@@ -824,7 +824,7 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadLogLevel(buf)
+			e, err := readLogLevel(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -1013,7 +1013,7 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
 		for _, v := range messages {
-			err = WriteLogMessage(v, &buf)
+			err = writeLogMessage(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
 			}

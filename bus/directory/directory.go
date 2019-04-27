@@ -2,11 +2,13 @@ package directory
 
 import (
 	"fmt"
+	io "io"
+	"sort"
+	"sync"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
-	"sort"
-	"sync"
 )
 
 // serviceDirectory implements ServiceDirectoryImplementor
@@ -299,4 +301,12 @@ func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
 
 func (s *directorySession) Destroy() error {
 	return nil
+}
+
+func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
+	return readServiceInfo(r)
+}
+
+func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
+	return writeServiceInfo(s, w)
 }

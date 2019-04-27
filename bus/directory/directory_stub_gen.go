@@ -93,7 +93,7 @@ func (p *stubServiceDirectory) Service(payload []byte) ([]byte, error) {
 		return nil, callErr
 	}
 	var out bytes.Buffer
-	errOut := WriteServiceInfo(ret, &out)
+	errOut := writeServiceInfo(ret, &out)
 	if errOut != nil {
 		return nil, fmt.Errorf("cannot write response: %s", errOut)
 	}
@@ -111,7 +111,7 @@ func (p *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
 			return fmt.Errorf("failed to write slice size: %s", err)
 		}
 		for _, v := range ret {
-			err = WriteServiceInfo(v, &out)
+			err = writeServiceInfo(v, &out)
 			if err != nil {
 				return fmt.Errorf("failed to write slice value: %s", err)
 			}
@@ -125,7 +125,7 @@ func (p *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
 }
 func (p *stubServiceDirectory) RegisterService(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	info, err := ReadServiceInfo(buf)
+	info, err := readServiceInfo(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read info: %s", err)
 	}
@@ -168,7 +168,7 @@ func (p *stubServiceDirectory) ServiceReady(payload []byte) ([]byte, error) {
 }
 func (p *stubServiceDirectory) UpdateServiceInfo(payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
-	info, err := ReadServiceInfo(buf)
+	info, err := readServiceInfo(buf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read info: %s", err)
 	}
@@ -323,8 +323,8 @@ type ServiceAdded struct {
 	Name      string
 }
 
-// ReadServiceAdded unmarshalls ServiceAdded
-func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
+// readServiceAdded unmarshalls ServiceAdded
+func readServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
 	}
@@ -334,8 +334,8 @@ func ReadServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 	return s, nil
 }
 
-// WriteServiceAdded marshalls ServiceAdded
-func WriteServiceAdded(s ServiceAdded, w io.Writer) (err error) {
+// writeServiceAdded marshalls ServiceAdded
+func writeServiceAdded(s ServiceAdded, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
 		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
 	}
@@ -351,8 +351,8 @@ type ServiceRemoved struct {
 	Name      string
 }
 
-// ReadServiceRemoved unmarshalls ServiceRemoved
-func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
+// readServiceRemoved unmarshalls ServiceRemoved
+func readServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
 	}
@@ -362,8 +362,8 @@ func ReadServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 	return s, nil
 }
 
-// WriteServiceRemoved marshalls ServiceRemoved
-func WriteServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
+// writeServiceRemoved marshalls ServiceRemoved
+func writeServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
 		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
 	}
@@ -436,7 +436,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
 	resp := bytes.NewBuffer(response)
-	ret, err = ReadServiceInfo(resp)
+	ret, err = readServiceInfo(resp)
 	if err != nil {
 		return ret, fmt.Errorf("failed to parse service response: %s", err)
 	}
@@ -460,7 +460,7 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 		}
 		b = make([]ServiceInfo, size)
 		for i := 0; i < int(size); i++ {
-			b[i], err = ReadServiceInfo(resp)
+			b[i], err = readServiceInfo(resp)
 			if err != nil {
 				return b, fmt.Errorf("failed to read slice value: %s", err)
 			}
@@ -478,7 +478,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	var err error
 	var ret uint32
 	var buf bytes.Buffer
-	if err = WriteServiceInfo(info, &buf); err != nil {
+	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("failed to serialize info: %s", err)
 	}
 	response, err := p.Call("registerService", buf.Bytes())
@@ -525,7 +525,7 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	var err error
 	var buf bytes.Buffer
-	if err = WriteServiceInfo(info, &buf); err != nil {
+	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("failed to serialize info: %s", err)
 	}
 	_, err = p.Call("updateServiceInfo", buf.Bytes())
@@ -599,7 +599,7 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadServiceAdded(buf)
+			e, err := readServiceAdded(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -637,7 +637,7 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := ReadServiceRemoved(buf)
+			e, err := readServiceRemoved(buf)
 			if err != nil {
 				log.Printf("failed to unmarshall tuple: %s", err)
 				continue
@@ -658,8 +658,8 @@ type ServiceInfo struct {
 	SessionId string
 }
 
-// ReadServiceInfo unmarshalls ServiceInfo
-func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
+// readServiceInfo unmarshalls ServiceInfo
+func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("failed to read Name field: " + err.Error())
 	}
@@ -694,8 +694,8 @@ func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	return s, nil
 }
 
-// WriteServiceInfo marshalls ServiceInfo
-func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
+// writeServiceInfo marshalls ServiceInfo
+func writeServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
 		return fmt.Errorf("failed to write Name field: " + err.Error())
 	}
