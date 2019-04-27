@@ -1,6 +1,11 @@
 package main
 
-import "github.com/integrii/flaggy"
+import (
+	"fmt"
+
+	"github.com/integrii/flaggy"
+	asciibot "github.com/mattes/go-asciibot"
+)
 
 // Set version with:
 // % go build -ldflags='-X main.version=1.0'
@@ -22,7 +27,10 @@ var (
 
 func init() {
 	flaggy.SetName("qiloop")
-	flaggy.SetDescription("Utility to process QiMessaing IDL files")
+	description := fmt.Sprintf("%s\n\n%s",
+		"Utility to process QiMessaing IDL files",
+		asciibot.Random())
+	flaggy.SetDescription(description)
 
 	infoCommand = flaggy.NewSubcommand("info")
 	infoCommand.Description = "Connect a server and display services info"
