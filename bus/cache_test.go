@@ -1,6 +1,10 @@
 package bus_test
 
 import (
+	gonet "net"
+	"strings"
+	"testing"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/directory"
 	"github.com/lugu/qiloop/bus/net"
@@ -8,9 +12,6 @@ import (
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
-	gonet "net"
-	"strings"
-	"testing"
 )
 
 func TestCache(t *testing.T) {
@@ -150,7 +151,7 @@ func TestServerError(t *testing.T) {
 		srv.Close()
 	}()
 
-	cache := bus.NewCache(net.NewEndPoint(clt))
+	cache := bus.NewCache(net.ConnEndPoint(clt))
 	defer cache.Destroy()
 	cache.AddService("ServiceZero", 0, object.MetaService0)
 

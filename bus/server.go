@@ -505,7 +505,7 @@ func (s *server) handle(c gonet.Conn, authenticated bool) {
 		s.contexts[context] = true
 		s.contextsMutex.Unlock()
 	}
-	net.EndPointFinalizer(c, finalize)
+	net.EndPointFinalizer(net.ConnStream(c), finalize)
 }
 
 func (s *server) activate() error {
@@ -574,7 +574,7 @@ func (s *server) Terminate() error {
 func (s *server) Client() Client {
 	ctl, srv := gonet.Pipe()
 	s.handle(srv, true)
-	return NewClient(net.NewEndPoint(ctl))
+	return NewClient(net.ConnEndPoint(ctl))
 }
 
 // Session returns a local session able to contact local services

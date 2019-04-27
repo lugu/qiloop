@@ -108,7 +108,7 @@ loop:
 }
 
 type endPoint struct {
-	conn          gonet.Conn
+	stream        Stream
 	handlers      []*Handler
 	handlersMutex sync.Mutex
 }
@@ -116,9 +116,9 @@ type endPoint struct {
 // EndPointFinalizer creates a new EndPoint and let you process it
 // before it start handling messages. This allows you to add handler
 // or/and avoid data races.
-func EndPointFinalizer(conn gonet.Conn, finalizer func(EndPoint)) EndPoint {
+func EndPointFinalizer(stream Stream, finalizer func(EndPoint)) EndPoint {
 	e := &endPoint{
-		conn:     conn,
+		stream:   stream,
 		handlers: make([]*Handler, 10),
 	}
 	finalizer(e)
@@ -131,13 +131,17 @@ func EndPointFinalizer(conn gonet.Conn, finalizer func(EndPoint)) EndPoint {
 // creation of the EndPoint, any message receive will be droped until
 // and Handler is registered. Prefer EndPointFinalizer for a safe way
 // to construct EndPoint.
-func NewEndPoint(conn gonet.Conn) EndPoint {
+func NewEndPoint(stream Stream) EndPoint {
 	e := &endPoint{
-		conn:     conn,
+		stream:   stream,
 		handlers: make([]*Handler, 10),
 	}
 	go e.process()
 	return e
+}
+
+func ConnEndPoint(conn gonet.Conn) EndPoint {
+	return NewEndPoint(ConnStream(conn))
 }
 
 func dialUNIX(name string) (EndPoint, error) {
@@ -146,7 +150,7 @@ func dialUNIX(name string) (EndPoint, error) {
 		return nil, fmt.Errorf(`failed to connect unix socket "%s": %s`,
 			name, err)
 	}
-	return NewEndPoint(conn), nil
+	return ConnEndPoint(conn), nil
 }
 
 func dialTCP(addr string) (EndPoint, error) {
@@ -154,7 +158,7 @@ func dialTCP(addr string) (EndPoint, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect %s: %s", addr, err)
 	}
-	return NewEndPoint(conn), nil
+	return ConnEndPoint(conn), nil
 }
 
 // dialTLS connects regardless of the certificate.
@@ -166,7 +170,7 @@ func dialTLS(addr string) (EndPoint, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect %s: %s", addr, err)
 	}
-	return NewEndPoint(conn), nil
+	return ConnEndPoint(conn), nil
 }
 
 // DialEndPoint construct an endpoint by contacting a given address.
@@ -189,13 +193,13 @@ func DialEndPoint(addr string) (EndPoint, error) {
 
 // Send post a message to the other side of the endpoint.
 func (e *endPoint) Send(m Message) error {
-	return m.Write(e.conn)
+	return m.Write(e.stream)
 }
 
 // closeWith close all handler
 func (e *endPoint) closeWith(err error) error {
 
-	ret := e.conn.Close()
+	ret := e.stream.Close()
 
 	e.handlersMutex.Lock()
 	defer e.handlersMutex.Unlock()
@@ -286,7 +290,7 @@ func (e *endPoint) process() {
 
 	for {
 		msg := new(Message)
-		err = msg.Read(e.conn)
+		err = msg.Read(e.stream)
 		if err != nil {
 			e.closeWith(err)
 			return
@@ -317,12 +321,11 @@ func (e *endPoint) ReceiveAny() (chan *Message, error) {
 }
 
 func (e *endPoint) String() string {
-	return e.conn.RemoteAddr().Network() + "://" +
-		e.conn.RemoteAddr().String()
+	return e.stream.String()
 }
 
 // Pipe returns a set of EndPoint connected to each other.
 func Pipe() (EndPoint, EndPoint) {
 	a, b := gonet.Pipe()
-	return NewEndPoint(a), NewEndPoint(b)
+	return ConnEndPoint(a), ConnEndPoint(b)
 }

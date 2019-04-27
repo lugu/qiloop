@@ -2,14 +2,15 @@ package net_test
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/util"
 	"io/ioutil"
 	gonet "net"
 	"os"
 	"reflect"
 	"sync"
 	"testing"
+
+	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/util"
 )
 
 func TestConnectUnix(t *testing.T) {
@@ -37,7 +38,7 @@ func TestSend(t *testing.T) {
 	defer a.Close()
 	defer b.Close()
 
-	e := net.NewEndPoint(a)
+	e := net.ConnEndPoint(a)
 
 	h := net.NewHeader(net.Call, 1, 2, 3, 4)
 	m := net.NewMessage(h, []byte{0xab, 0xcd})
@@ -74,7 +75,7 @@ func TestReceiveOne(t *testing.T) {
 
 	var wait sync.WaitGroup
 
-	e := net.NewEndPoint(b)
+	e := net.ConnEndPoint(b)
 	msgChan, err := e.ReceiveAny()
 	if err != nil {
 		panic(err)
@@ -166,7 +167,7 @@ func TestEndPointFinalizer(t *testing.T) {
 	finalizer := func(e net.EndPoint) {
 		e.AddHandler(filter, consumer, closer)
 	}
-	endpoint := net.EndPointFinalizer(b, finalizer)
+	endpoint := net.EndPointFinalizer(net.ConnStream(b), finalizer)
 	defer endpoint.Close()
 	msg, ok := <-wait
 	if !ok {
@@ -193,7 +194,7 @@ func TestEndpointShallAcceptMultipleHandlers(t *testing.T) {
 	closer := func(err error) {
 	}
 
-	endpoint := net.NewEndPoint(b)
+	endpoint := net.ConnEndPoint(b)
 	defer endpoint.Close()
 
 	ids := make([]int, 20)
@@ -221,7 +222,7 @@ func TestEndPoint_ShallDropMessages(t *testing.T) {
 	a, b := gonet.Pipe()
 	defer a.Close()
 	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
-	endpoint := net.NewEndPoint(b)
+	endpoint := net.ConnEndPoint(b)
 	if endpoint.String() == "" {
 		panic("empty name")
 	}
