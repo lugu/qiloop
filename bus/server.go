@@ -3,12 +3,13 @@ package bus
 import (
 	"errors"
 	"fmt"
-	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/util"
 	"log"
 	"math/rand"
 	gonet "net"
 	"sync"
+
+	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/bus/util"
 )
 
 // ErrServiceNotFound is returned with a message refers to an unknown
@@ -380,9 +381,9 @@ func NewContext(e net.EndPoint) *Context {
 	return &Context{e, false}
 }
 
-// Firewall ensures an endpoint talks only to autorized services.
+// firewall ensures an endpoint talks only to autorized services.
 // Especially, it ensure authentication is passed.
-func Firewall(m *net.Message, from *Context) error {
+func firewall(m *net.Message, from *Context) error {
 	if from.Authenticated == false && m.Header.Service != 0 {
 		return ErrNotAuthenticated
 	}
@@ -481,7 +482,7 @@ func (s *server) handle(c gonet.Conn, authenticated bool) {
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {
-		err := Firewall(msg, context)
+		err := firewall(msg, context)
 		if err != nil {
 			log.Printf("missing authentication from %s: %#v",
 				context.EndPoint.String(), msg.Header)
