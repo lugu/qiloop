@@ -3,11 +3,12 @@ package net
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/lugu/qiloop/bus/net/cert"
 	"log"
 	gonet "net"
 	"net/url"
 	"strings"
+
+	"github.com/lugu/qiloop/bus/net/cert"
 )
 
 func listenTCP(addr string) (gonet.Listener, error) {
@@ -28,8 +29,7 @@ func listenTLS(addr string) (gonet.Listener, error) {
 	}
 
 	conf := &tls.Config{
-		Certificates:       []tls.Certificate{cer},
-		InsecureSkipVerify: true,
+		Certificates: []tls.Certificate{cer},
 	}
 
 	return tls.Listen("tcp", addr, conf)
