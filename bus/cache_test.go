@@ -2,7 +2,6 @@ package bus_test
 
 import (
 	gonet "net"
-	"strings"
 	"testing"
 
 	"github.com/lugu/qiloop/bus"
@@ -120,8 +119,7 @@ func TestDialError(t *testing.T) {
 func TestCacheAuthError(t *testing.T) {
 	addr := util.NewUnixAddr()
 
-	listener, err := gonet.Listen("unix", strings.TrimPrefix(addr,
-		"unix://"))
+	listener, err := net.Listen(addr)
 	if err != nil {
 		panic(err)
 	}

@@ -3,22 +3,20 @@ package bus_test
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"testing"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
-	"io"
-	gonet "net"
-	"strings"
-	"testing"
 )
 
 func TestAuth(t *testing.T) {
 	addr := util.NewUnixAddr()
 
-	listener, err := gonet.Listen("unix", strings.TrimPrefix(addr,
-		"unix://"))
+	listener, err := net.Listen(addr)
 	if err != nil {
 		panic(err)
 	}

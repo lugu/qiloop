@@ -393,7 +393,7 @@ func firewall(m *net.Message, from *Context) error {
 // server listen from incomming connections, set-up the end points and
 // forward the EndPoint to the dispatcher.
 type server struct {
-	listen        gonet.Listener
+	listen        net.Listener
 	addrs         []string
 	namespace     Namespace
 	Router        *Router
@@ -403,7 +403,7 @@ type server struct {
 	waitChan      chan error
 }
 
-func NewServer(listener gonet.Listener, auth Authenticator,
+func NewServer(listener net.Listener, auth Authenticator,
 	namespace Namespace, service1 ServerObject) (Server, error) {
 
 	service0 := ServiceAuthenticate(auth)
@@ -435,7 +435,7 @@ func NewServer(listener gonet.Listener, auth Authenticator,
 }
 
 // StandAloneServer starts a new server
-func StandAloneServer(listener gonet.Listener, auth Authenticator,
+func StandAloneServer(listener net.Listener, auth Authenticator,
 	namespace Namespace) (Server, error) {
 
 	service0 := ServiceAuthenticate(auth)
@@ -473,7 +473,7 @@ func (s *server) NewService(name string, object ServerObject) (Service, error) {
 	return s.Router.NewService(name, object)
 }
 
-func (s *server) handle(c gonet.Conn, authenticated bool) {
+func (s *server) handle(stream net.Stream, authenticated bool) {
 
 	context := &Context{
 		Authenticated: authenticated,
@@ -505,7 +505,7 @@ func (s *server) handle(c gonet.Conn, authenticated bool) {
 		s.contexts[context] = true
 		s.contextsMutex.Unlock()
 	}
-	net.EndPointFinalizer(net.ConnStream(c), finalize)
+	net.EndPointFinalizer(stream, finalize)
 }
 
 func (s *server) activate() error {
@@ -518,7 +518,7 @@ func (s *server) activate() error {
 
 func (s *server) run() {
 	for {
-		c, err := s.listen.Accept()
+		stream, err := s.listen.Accept()
 		if err != nil {
 			select {
 			case <-s.closeChan:
@@ -528,7 +528,7 @@ func (s *server) run() {
 			}
 			break
 		}
-		s.handle(c, false)
+		s.handle(stream, false)
 	}
 }
 
@@ -573,7 +573,7 @@ func (s *server) Terminate() error {
 // creating a new connection.
 func (s *server) Client() Client {
 	ctl, srv := gonet.Pipe()
-	s.handle(srv, true)
+	s.handle(net.ConnStream(srv), true)
 	return NewClient(net.ConnEndPoint(ctl))
 }
 

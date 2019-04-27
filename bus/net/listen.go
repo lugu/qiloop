@@ -11,11 +11,31 @@ import (
 	"github.com/lugu/qiloop/bus/net/cert"
 )
 
-func listenTCP(addr string) (gonet.Listener, error) {
-	return gonet.Listen("tcp", addr)
+type connListener struct {
+	l gonet.Listener
 }
 
-func listenTLS(addr string) (gonet.Listener, error) {
+func (c connListener) Accept() (Stream, error) {
+	conn, err := c.l.Accept()
+	if err != nil {
+		return nil, err
+	}
+	return ConnStream(conn), nil
+}
+
+func (c connListener) Close() error {
+	return c.l.Close()
+}
+
+func listenTCP(addr string) (Listener, error) {
+	conn, err := gonet.Listen("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	return connListener{conn}, nil
+}
+
+func listenTLS(addr string) (Listener, error) {
 	var err1, err2 error
 	cer, err1 := cert.Certificate()
 	if err1 != nil {
@@ -32,16 +52,29 @@ func listenTLS(addr string) (gonet.Listener, error) {
 		Certificates: []tls.Certificate{cer},
 	}
 
-	return tls.Listen("tcp", addr, conf)
+	conn, err := tls.Listen("tcp", addr, conf)
+	if err != nil {
+		return nil, err
+	}
+	return connListener{conn}, nil
 }
 
-func listenUNIX(name string) (gonet.Listener, error) {
-	return gonet.Listen("unix", name)
+func listenUNIX(name string) (Listener, error) {
+	conn, err := gonet.Listen("unix", name)
+	if err != nil {
+		return nil, err
+	}
+	return connListener{conn}, nil
+}
+
+type Listener interface {
+	Accept() (Stream, error)
+	Close() error
 }
 
 // Listen reads the transport of addr and listen at the address. addr
 // can be of the form: unix://, tcp:// or tcps://.
-func Listen(addr string) (gonet.Listener, error) {
+func Listen(addr string) (Listener, error) {
 	u, err := url.Parse(addr)
 	if err != nil {
 		return nil, fmt.Errorf("listen: invalid address: %s", err)
