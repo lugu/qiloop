@@ -1,10 +1,11 @@
 package bus
 
 import (
+	"testing"
+
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
-	"testing"
 )
 
 func TestBasicObjectWrap(t *testing.T) {

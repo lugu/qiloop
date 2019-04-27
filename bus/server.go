@@ -1,6 +1,7 @@
 package bus
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -372,19 +373,47 @@ func (r *Router) Dispatch(m *net.Message, from *Context) error {
 
 // Context represents the context of the request
 type Context struct {
-	EndPoint      net.EndPoint
-	Authenticated bool
+	EndPoint net.EndPoint
+	context  context.Context
 }
 
 // NewContext retuns a non authenticate context.
 func NewContext(e net.EndPoint) *Context {
-	return &Context{e, false}
+	return &Context{e, context.TODO()}
+}
+
+const (
+	keyContextAuth = "isAuthenticated"
+)
+
+// Authenticated returns true if the connection is authenticated.
+func (c *Context) Authenticated() bool {
+	ans := c.context.Value(keyContextAuth)
+	if ans == nil {
+		return false
+	}
+	auth, ok := ans.(bool)
+	if !ok {
+		return false
+	}
+	return auth
+}
+
+// Authenticate tells the context that the authentication procedure
+// completed with success.
+//
+// FIXME: make c.context mutable. since the context.Context is passed
+// from the stream and quic allow for several streams, authentication
+// of the stream of a connection shall authenticate all the streams of
+// the connection.
+func (c *Context) Authenticate() {
+	c.context = context.WithValue(c.context, keyContextAuth, true)
 }
 
 // firewall ensures an endpoint talks only to autorized services.
 // Especially, it ensure authentication is passed.
 func firewall(m *net.Message, from *Context) error {
-	if from.Authenticated == false && m.Header.Service != 0 {
+	if from.Authenticated() == false && m.Header.Service != 0 {
 		return ErrNotAuthenticated
 	}
 	return nil
@@ -476,7 +505,8 @@ func (s *server) NewService(name string, object ServerObject) (Service, error) {
 func (s *server) handle(stream net.Stream, authenticated bool) {
 
 	context := &Context{
-		Authenticated: authenticated,
+		context: context.WithValue(
+			stream.Context(), keyContextAuth, authenticated),
 	}
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true

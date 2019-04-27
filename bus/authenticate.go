@@ -3,12 +3,13 @@ package bus
 import (
 	"bytes"
 	"fmt"
+	"io"
+
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
-	"io"
 )
 
 // Authenticator decides if a user/token tuple is valid. It is used to
@@ -151,7 +152,7 @@ func (s *serviceAuthenticate) Authenticate(from *Context, cap CapabilityMap) Cap
 		}
 	}
 	if s.auth.Authenticate(user, token) {
-		from.Authenticated = true
+		from.Authenticate()
 		return CapabilityMap{
 			KeyState: value.Uint(StateDone),
 		}
