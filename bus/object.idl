@@ -1,6 +1,6 @@
 package bus
 
-interface Server0
+interface ServiceZero
 	fn authenticate(capability: Map<str,any>) -> Map<str,any> //uid:8
 end
 
