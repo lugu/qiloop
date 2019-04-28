@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+
+	quic "github.com/lucas-clemente/quic-go"
 )
 
 // Filter returns true if given message shall be processed by a
@@ -173,6 +175,23 @@ func dialTLS(addr string) (EndPoint, error) {
 	return ConnEndPoint(conn), nil
 }
 
+// dialQUIC connects regardless of the certificate.
+// FIXME: does not multiplex sessions
+func dialQUIC(addr string) (EndPoint, error) {
+	conf := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	session, err := quic.DialAddr(addr, conf, nil)
+	if err != nil {
+		return nil, err
+	}
+	stream, err := session.OpenStreamSync()
+	if err != nil {
+		return nil, err
+	}
+	return NewEndPoint(newQuicStream(stream)), nil
+}
+
 // DialEndPoint construct an endpoint by contacting a given address.
 func DialEndPoint(addr string) (EndPoint, error) {
 	u, err := url.Parse(addr)
@@ -184,6 +203,8 @@ func DialEndPoint(addr string) (EndPoint, error) {
 		return dialTCP(u.Host)
 	case "tcps":
 		return dialTLS(u.Host)
+	case "quic":
+		return dialQUIC(u.Host)
 	case "unix":
 		return dialUNIX(strings.TrimPrefix(addr, "unix://"))
 	default:

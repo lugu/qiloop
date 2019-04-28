@@ -1,7 +1,7 @@
 package net_test
 
 import (
-	"fmt"
+	"io"
 	"io/ioutil"
 	gonet "net"
 	"os"
@@ -160,7 +160,7 @@ func TestEndPointFinalizer(t *testing.T) {
 	wait := make(chan *net.Message)
 	consumer := func(msg *net.Message) error {
 		wait <- msg
-		return fmt.Errorf("something go log")
+		return nil
 	}
 	closer := func(err error) {
 	}
@@ -296,6 +296,81 @@ func TestEndPoint_DialTLS(t *testing.T) {
 	defer endpoint.Close()
 
 	addr = "tcps://localhost"
+	_, err = net.Listen(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+
+	_, err = net.DialEndPoint(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+}
+
+func TestEndPoint_DialQUIC(t *testing.T) {
+	addr := "quic://localhost:54322"
+	listener, err := net.Listen(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+	go func() {
+		conn, err := listener.Accept()
+		if err == io.EOF {
+			panic("unexpected closed listener")
+		}
+		if err != nil {
+			panic(err)
+		}
+
+		filter := func(hrd *net.Header) (bool, bool) {
+			return true, false
+		}
+		wait := make(chan *net.Message)
+		consumer := func(msg *net.Message) error {
+			wait <- msg
+			return nil
+		}
+		closer := func(err error) {
+		}
+		finalizer := func(e net.EndPoint) {
+			e.AddHandler(filter, consumer, closer)
+		}
+
+		endpoint := net.EndPointFinalizer(conn, finalizer)
+
+		msg := <-wait
+		err = endpoint.Send(*msg)
+		if err != nil {
+			panic(err)
+		}
+		endpoint.Close()
+
+	}()
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer endpoint.Close()
+
+	response, err := endpoint.ReceiveAny()
+	if err != nil {
+		panic(err)
+	}
+
+	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
+	endpoint.Send(msg)
+
+	msg2, ok := <-response
+	if !ok {
+		panic("failed to receive message")
+	}
+
+	if msg.Header != msg2.Header {
+		panic("different messages")
+	}
+
+	addr = "quic://localhost"
 	_, err = net.Listen(addr)
 	if err == nil {
 		panic("shall fail")

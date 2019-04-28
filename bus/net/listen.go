@@ -84,6 +84,8 @@ func Listen(addr string) (Listener, error) {
 		return listenTCP(u.Host)
 	case "tcps":
 		return listenTLS(u.Host)
+	case "quic":
+		return listenQUIC(u.Host)
 	case "unix":
 		return listenUNIX(strings.TrimPrefix(addr, "unix://"))
 	default:
