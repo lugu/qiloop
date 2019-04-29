@@ -3,16 +3,17 @@ package pingpong_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus/benchmark/pingpong"
-	dir "github.com/lugu/qiloop/bus/directory"
-	sess "github.com/lugu/qiloop/bus/session"
-	"github.com/lugu/qiloop/bus/util"
-	"github.com/lugu/qiloop/type/basic"
 	"io"
 	gonet "net"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/lugu/qiloop/bus/benchmark/pingpong"
+	dir "github.com/lugu/qiloop/bus/directory"
+	sess "github.com/lugu/qiloop/bus/session"
+	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/type/basic"
 )
 
 func TestPingPong(t *testing.T) {
@@ -113,6 +114,10 @@ func BenchmarkPingPongTCP(b *testing.B) {
 // EOF
 func BenchmarkPingPongTLS(b *testing.B) {
 	testRemoteAddr(b, "tcps://localhost:54321")
+}
+
+func BenchmarkPingPongQUIC(b *testing.B) {
+	testRemoteAddr(b, "quic://localhost:54322")
 }
 
 func BenchmarkPingPongLocal(b *testing.B) {
