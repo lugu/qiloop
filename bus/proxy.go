@@ -2,6 +2,7 @@ package bus
 
 import (
 	"fmt"
+
 	"github.com/lugu/qiloop/type/object"
 )
 
@@ -82,6 +83,16 @@ func (p proxy) SignalID(name string) (uint32, error) {
 // returns the property id.
 func (p proxy) PropertyID(name string) (uint32, error) {
 	return p.meta.PropertyID(name)
+}
+
+// ProxyService returns a reference to a remote service which can be used
+// to create client side objects.
+func (p proxy) ProxyService(sess Session) Service {
+	c, ok := p.client.(*client)
+	if !ok {
+		panic("unexpected client implementation")
+	}
+	return NewServiceReference(sess, c.endpoint, p.service)
 }
 
 // NewProxy construct a Proxy.

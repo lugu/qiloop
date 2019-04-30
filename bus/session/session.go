@@ -2,11 +2,12 @@ package session
 
 import (
 	"fmt"
+	"log"
+	"sync"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
-	"log"
-	"sync"
 )
 
 // Session implements the Session interface. It is an

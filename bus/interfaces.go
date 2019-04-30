@@ -35,6 +35,10 @@ type Proxy interface {
 
 	// Disconnect stop the network connection to the remote object.
 	Disconnect() error
+
+	// ProxyService returns a reference to a remote service which can be used
+	// to create client side objects.
+	ProxyService(s Session) Service
 }
 
 // Session represents a connection to a bus: it is used to instanciate

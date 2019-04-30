@@ -2,6 +2,7 @@ package bus
 
 import (
 	"fmt"
+
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/object"
 )

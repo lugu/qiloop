@@ -2,8 +2,9 @@ package bus
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/type/object"
 	"sync"
+
+	"github.com/lugu/qiloop/type/object"
 )
 
 type privateNamespace struct {
