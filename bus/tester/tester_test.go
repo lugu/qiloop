@@ -1,12 +1,13 @@
 package tester_test
 
 import (
+	"sync"
+	"testing"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/tester"
 	"github.com/lugu/qiloop/bus/util"
-	"sync"
-	"testing"
 )
 
 func TestAddRemoveObject(t *testing.T) {
@@ -97,6 +98,57 @@ func TestAddRemoveObject(t *testing.T) {
 
 	service.Terminate()
 	srv.Terminate()
+}
+
+func TestClientBomb(t *testing.T) {
+
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ns := bus.PrivateNamespace()
+	srv, err := bus.StandAloneServer(listener, bus.Yes{}, ns)
+	if err != nil {
+		t.Error(err)
+	}
+	defer srv.Terminate()
+
+	obj := tester.NewSpacecraftObject()
+	_, err = srv.NewService("Spacecraft", obj)
+	if err != nil {
+		t.Error(err)
+	}
+
+	session := srv.Session()
+	proxies := tester.Services(session)
+
+	spacecraft, err := proxies.Spacecraft()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = spacecraft.Shoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	proxyService := spacecraft.ProxyService(session)
+
+	bomb, err := tester.CreateBomb(session, proxyService)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = spacecraft.Ammo(bomb)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Skip("server side does not know how to access client object")
+	_, err = spacecraft.Shoot()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 }
 

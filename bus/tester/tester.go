@@ -2,6 +2,7 @@ package tester
 
 import (
 	"fmt"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/type/object"
 )
@@ -18,6 +19,7 @@ type spacecraftImpl struct {
 	session   bus.Session
 	terminate func()
 	service   bus.Service
+	ammo      BombProxy
 }
 
 func (f *spacecraftImpl) Activate(activation bus.Activation,
@@ -25,7 +27,9 @@ func (f *spacecraftImpl) Activate(activation bus.Activation,
 	f.session = activation.Session
 	f.terminate = activation.Terminate
 	f.service = activation.Service
-	return nil
+	ammo, err := CreateBomb(f.session, f.service)
+	f.ammo = ammo
+	return err
 }
 
 func (f *spacecraftImpl) OnTerminate() {
@@ -33,10 +37,11 @@ func (f *spacecraftImpl) OnTerminate() {
 }
 
 func (f *spacecraftImpl) Shoot() (BombProxy, error) {
-	return CreateBomb(f.session, f.service, &bombImpl{})
+	return f.ammo, nil
 }
 
 func (f *spacecraftImpl) Ammo(b BombProxy) error {
+	f.ammo = b
 	return nil
 }
 
@@ -70,11 +75,10 @@ func NewBombObject() bus.ServerObject {
 
 // Not entirely satisfying: need to allow for client side object
 // generation... Here comes the ObjectID question..
-func CreateBomb(session bus.Session, service bus.Service,
-	impl BombImplementor) (BombProxy, error) {
+func CreateBomb(session bus.Session, service bus.Service) (BombProxy, error) {
 
 	var stb stubBomb
-	stb.impl = impl
+	stb.impl = &bombImpl{}
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
@@ -82,16 +86,10 @@ func CreateBomb(session bus.Session, service bus.Service,
 		return nil, err
 	}
 
-	ref := object.ObjectReference{
-		true, // with meta object
-		object.FullMetaObject(stb.metaObject()),
-		0,
-		service.ServiceID(),
-		objectID,
-	}
-	proxy, err := session.Object(ref)
-	if err != nil {
-		return nil, err
-	}
+	meta := object.FullMetaObject(stb.metaObject())
+
+	client := bus.DirectClient(&stb)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+
 	return MakeBomb(session, proxy), nil
 }
