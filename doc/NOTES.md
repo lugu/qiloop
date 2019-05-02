@@ -133,10 +133,14 @@ How does QiMessaging compares with:
   QiMessaging objects are first class citizens (a method can return an
   object).
 
-* **Thrift**: Both Thrift and QiMessaging enable procedure call over
-  the network. Thrift have a serialization format optimized to reduce
-  the size of the packets. QiMessaging uses a simpler serialization
-  format for discoverability.
+* **gRPC**: Both gRPC and QiMessaging use IDL to provide remote
+  procedure call, and have support for notifications and
+  authentication. gRPC serialization format is optimized for
+  performance (protobuf) while QiMessaging favors discoverability and
+  introspection. gRCP has a concept of deadline. QiMessaging act as a
+  bus: it allows service registraction and name resolution.
+  QiMessaging objects (i.e. services) to be passed to or returned from
+  a remote call.
 
 * **Component Object Model (COM)**: Both COM and QiMessaging offer an
   IPC mechanism independent of a particular programming language which
@@ -148,8 +152,8 @@ How does QiMessaging compares with:
 * **ROS**: Both ROS and QiMessaging offer a publisher/subscriber model
   as well as an RPC mecanism. Conceptually, the two solutions have a
   lot in common. ROS 1 uses XMLRPC (i.e. XML over HTTP) while
-  QiMessaging use a binary format over TCP connections. QiMessaging
-  does not timestamp messages as opposed to ROS.
+  QiMessaging use a binary format over TCP/TLS connections.
+  QiMessaging does not timestamp messages as opposed to ROS.
 
 ### OSI Model
 
