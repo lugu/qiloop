@@ -16,4 +16,4 @@ Unsorted TODO list
 - introduce channel concept to capture the endpoint capability
 - generate interface object constructor
 - service tutorial
-- test client side objects
+- actor: use a generalized receiver interface
