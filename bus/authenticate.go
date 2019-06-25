@@ -153,9 +153,7 @@ func (s *serviceAuthenticate) Authenticate(from *Context, cap CapabilityMap) Cap
 	}
 	if s.auth.Authenticate(user, token) {
 		from.Authenticate()
-		return CapabilityMap{
-			KeyState: value.Uint(StateDone),
-		}
+		return from.Cap
 	}
 	return s.capError()
 }
@@ -163,5 +161,7 @@ func (s *serviceAuthenticate) Authenticate(from *Context, cap CapabilityMap) Cap
 // ServiceAuthenticate represents the servie server (serivce zero)
 // used to authenticate a new connection.
 func ServiceAuthenticate(auth Authenticator) ServerObject {
-	return &serviceAuthenticate{auth: auth}
+	return &serviceAuthenticate{
+		auth: auth,
+	}
 }

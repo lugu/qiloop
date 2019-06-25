@@ -1,7 +1,6 @@
 package bus
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -379,43 +378,31 @@ func (r *Router) Dispatch(m *net.Message, from *Context) error {
 	return util.ReplyError(from.EndPoint, m, ErrServiceNotFound)
 }
 
-// Context represents the context of the request
+// Context represent an established connection between a client and a
+// server.
+//
+// TODO: rename into Channel.
 type Context struct {
+	Cap      CapabilityMap
 	EndPoint net.EndPoint
-	context  context.Context
 }
 
 // NewContext retuns a non authenticate context.
 func NewContext(e net.EndPoint) *Context {
-	return &Context{e, context.TODO()}
+	return &Context{
+		EndPoint: e,
+		Cap:      PreferedCap("", ""),
+	}
 }
-
-const (
-	keyContextAuth = "isAuthenticated"
-)
 
 // Authenticated returns true if the connection is authenticated.
 func (c *Context) Authenticated() bool {
-	ans := c.context.Value(keyContextAuth)
-	if ans == nil {
-		return false
-	}
-	auth, ok := ans.(bool)
-	if !ok {
-		return false
-	}
-	return auth
+	return c.Cap.Authenticated()
 }
 
-// Authenticate tells the context that the authentication procedure
-// completed with success.
-//
-// FIXME: make c.context mutable. since the context.Context is passed
-// from the stream and quic allow for several streams, authentication
-// of the stream of a connection shall authenticate all the streams of
-// the connection.
+// Authenticate marks the context as authenticated.
 func (c *Context) Authenticate() {
-	c.context = context.WithValue(c.context, keyContextAuth, true)
+	c.Cap.Authenticate()
 }
 
 // firewall ensures an endpoint talks only to autorized services.
@@ -513,8 +500,10 @@ func (s *server) NewService(name string, object ServerObject) (Service, error) {
 func (s *server) handle(stream net.Stream, authenticated bool) {
 
 	context := &Context{
-		context: context.WithValue(
-			stream.Context(), keyContextAuth, authenticated),
+		Cap: PreferedCap("", ""),
+	}
+	if authenticated {
+		context.Authenticate()
 	}
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true

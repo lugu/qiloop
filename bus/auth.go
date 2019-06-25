@@ -2,6 +2,7 @@ package bus
 
 import (
 	"fmt"
+
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session/token"
 	"github.com/lugu/qiloop/type/object"
@@ -32,7 +33,35 @@ const (
 // which features are supported and to verify the client credentials.
 type CapabilityMap map[string]value.Value
 
-func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap, error) {
+// Authenticated return true if the authentication procedure has been
+// completed with success.
+func (c CapabilityMap) Authenticated() bool {
+	statusValue, ok := c[KeyState]
+	if !ok {
+		return false
+	}
+	status, ok := statusValue.(value.UintValue)
+	if !ok {
+		status2, ok := statusValue.(value.IntValue)
+		if !ok {
+			return false
+		}
+		status = value.UintValue(uint32(status2.Value()))
+	}
+	if uint32(status) == StateDone {
+		return true
+	}
+	return false
+}
+
+// Authenticate force the done status in the capability map.
+func (c CapabilityMap) Authenticate() {
+	c[KeyState] = value.Uint(StateDone)
+}
+
+// PreferedCap returns a CapabilityMap based on default settings. If
+// user or token is empty, it is ignored.
+func PreferedCap(user, token string) CapabilityMap {
 	permissions := CapabilityMap{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
@@ -45,7 +74,7 @@ func authenticateUser(endpoint net.EndPoint, user, token string) (CapabilityMap,
 	if token != "" {
 		permissions[KeyToken] = value.String(token)
 	}
-	return authenticateCall(endpoint, permissions)
+	return permissions
 }
 
 func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
@@ -61,7 +90,10 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 	return service0.Authenticate(permissions)
 }
 
-func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap) error {
+// authenticateContinue update the token with the server provided
+// token. The prefered CapabilityMap is updated with an entry
+// KeyNewToken containing the new token.
+func authenticateContinue(endpoint net.EndPoint, prefered, resp CapabilityMap) error {
 	newTokenValue, ok := resp[KeyNewToken]
 	if !ok {
 		return fmt.Errorf("missing authentication new token")
@@ -70,7 +102,9 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	if !ok {
 		return fmt.Errorf("new token format error")
 	}
-	resp2, err := authenticateUser(endpoint, user, string(newToken))
+	oldToken := prefered[KeyToken]
+	prefered[KeyToken] = value.String(string(newToken))
+	resp2, err := authenticateCall(endpoint, prefered)
 	if err != nil {
 		return fmt.Errorf("new token authentication failed: %s", err)
 	}
@@ -89,7 +123,9 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 	}
 	switch uint32(status) {
 	case StateDone:
-		return token.WriteUserToken(user, string(newToken))
+		prefered[KeyNewToken] = prefered[KeyToken]
+		prefered[KeyToken] = oldToken
+		return nil
 	case StateContinue:
 		return fmt.Errorf("new token authentication dropped")
 	case StateError:
@@ -103,7 +139,24 @@ func authenticateContinue(endpoint net.EndPoint, user string, resp CapabilityMap
 // and token. If user or token is empty, it is not included in the
 // request.
 func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
-	resp, err := authenticateUser(endpoint, user, token)
+	return Authentication(endpoint, PreferedCap(user, token))
+}
+
+// Authenticate runs the authentication procedure of a given
+// connection. If the clients fails to authenticate itself, it returns
+// an error. In response the connection shall be closed.
+func Authenticate(endpoint net.EndPoint) error {
+	user, token := token.GetUserToken()
+	return AuthenticateUser(endpoint, user, token)
+}
+
+// Authentication runs the authentication procedure. The prefered
+// CapabilityMap is updated with the negociated capabilities.
+// If a new token was issued, it is store in the KeyNewToken entry of
+// the prefered capapbility map.
+func Authentication(endpoint net.EndPoint, prefered CapabilityMap) error {
+
+	resp, err := authenticateCall(endpoint, prefered)
 	if err != nil {
 		return fmt.Errorf("authentication failed: %s", err)
 	}
@@ -124,18 +177,10 @@ func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
 	case StateDone:
 		return nil
 	case StateContinue:
-		return authenticateContinue(endpoint, user, resp)
+		return authenticateContinue(endpoint, prefered, resp)
 	case StateError:
 		return fmt.Errorf("Authentication failed")
 	default:
 		return fmt.Errorf("invalid state type: %d", status)
 	}
-}
-
-// Authenticate runs the authentication procedure of a given
-// connection. If the clients fails to authenticate itself, it returns
-// an error. In response the connection shall be closed.
-func Authenticate(endpoint net.EndPoint) error {
-	user, token := token.GetUserToken()
-	return AuthenticateUser(endpoint, user, token)
 }
