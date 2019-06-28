@@ -91,14 +91,14 @@ func objectActivation(service *serviceImpl, session Session, serviceID, objectID
 
 // ServerObject interface used by Server to manipulate services.
 type ServerObject interface {
-	Receive(m *net.Message, from *Context) error
+	Receive(m *net.Message, from *Channel) error
 	Activate(activation Activation) error
 	OnTerminate()
 }
 
 type pendingObject struct{}
 
-func (p pendingObject) Receive(m *net.Message, from *Context) error {
+func (p pendingObject) Receive(m *net.Message, from *Channel) error {
 	return ErrObjectNotFound
 }
 
@@ -210,7 +210,7 @@ func (s *serviceImpl) Remove(objectID uint32) error {
 }
 
 // Dispatch forwards the message to the appropriate object.
-func (s *serviceImpl) Dispatch(m *net.Message, from *Context) error {
+func (s *serviceImpl) Dispatch(m *net.Message, from *Channel) error {
 	s.RLock()
 	o, ok := s.objects[m.Header.Object]
 	s.RUnlock()
@@ -367,7 +367,7 @@ func (r *Router) Remove(serviceID uint32) error {
 
 // Dispatch process a message. The message will be replied if the
 // router can not found the destination.
-func (r *Router) Dispatch(m *net.Message, from *Context) error {
+func (r *Router) Dispatch(m *net.Message, from *Channel) error {
 	r.RLock()
 	s, ok := r.services[m.Header.Service]
 	r.RUnlock()
@@ -378,36 +378,34 @@ func (r *Router) Dispatch(m *net.Message, from *Context) error {
 	return util.ReplyError(from.EndPoint, m, ErrServiceNotFound)
 }
 
-// Context represent an established connection between a client and a
+// Channel represent an established connection between a client and a
 // server.
-//
-// TODO: rename into Channel.
-type Context struct {
+type Channel struct {
 	Cap      CapabilityMap
 	EndPoint net.EndPoint
 }
 
 // NewContext retuns a non authenticate context.
-func NewContext(e net.EndPoint) *Context {
-	return &Context{
+func NewContext(e net.EndPoint) *Channel {
+	return &Channel{
 		EndPoint: e,
 		Cap:      PreferedCap("", ""),
 	}
 }
 
 // Authenticated returns true if the connection is authenticated.
-func (c *Context) Authenticated() bool {
+func (c *Channel) Authenticated() bool {
 	return c.Cap.Authenticated()
 }
 
 // Authenticate marks the context as authenticated.
-func (c *Context) Authenticate() {
+func (c *Channel) Authenticate() {
 	c.Cap.Authenticate()
 }
 
 // firewall ensures an endpoint talks only to autorized services.
 // Especially, it ensure authentication is passed.
-func firewall(m *net.Message, from *Context) error {
+func firewall(m *net.Message, from *Channel) error {
 	if from.Authenticated() == false && m.Header.Service != 0 {
 		return ErrNotAuthenticated
 	}
@@ -421,7 +419,7 @@ type server struct {
 	addrs         []string
 	namespace     Namespace
 	Router        *Router
-	contexts      map[*Context]bool
+	contexts      map[*Channel]bool
 	contextsMutex sync.Mutex
 	closeChan     chan int
 	waitChan      chan error
@@ -438,7 +436,7 @@ func NewServer(listener net.Listener, auth Authenticator,
 		listen:        listener,
 		namespace:     namespace,
 		Router:        router,
-		contexts:      make(map[*Context]bool),
+		contexts:      make(map[*Channel]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
 		waitChan:      make(chan error, 1),
@@ -470,7 +468,7 @@ func StandAloneServer(listener net.Listener, auth Authenticator,
 		listen:        listener,
 		namespace:     namespace,
 		Router:        router,
-		contexts:      make(map[*Context]bool),
+		contexts:      make(map[*Channel]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
 		waitChan:      make(chan error, 1),
@@ -499,7 +497,7 @@ func (s *server) NewService(name string, object ServerObject) (Service, error) {
 
 func (s *server) handle(stream net.Stream, authenticated bool) {
 
-	context := &Context{
+	context := &Channel{
 		Cap: PreferedCap("", ""),
 	}
 	if authenticated {

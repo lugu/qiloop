@@ -85,7 +85,7 @@ func (p *stubObject) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubObject) Receive(msg *net.Message, from *bus.Context) error {
+func (p *stubObject) Receive(msg *net.Message, from *bus.Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubObject) onPropertyChange(name string, data []byte) error {

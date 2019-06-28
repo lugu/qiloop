@@ -92,7 +92,7 @@ type serviceAuthenticate struct {
 	auth Authenticator
 }
 
-func (s *serviceAuthenticate) Receive(m *net.Message, from *Context) error {
+func (s *serviceAuthenticate) Receive(m *net.Message, from *Channel) error {
 	if m.Header.Action != object.AuthenticateActionID {
 		return util.ReplyError(from.EndPoint, m, ErrActionNotFound)
 	}
@@ -114,7 +114,7 @@ func (s *serviceAuthenticate) Activate(activation Activation) error {
 func (s *serviceAuthenticate) OnTerminate() {
 }
 
-func (s *serviceAuthenticate) wrapAuthenticate(from *Context, payload []byte) ([]byte, error) {
+func (s *serviceAuthenticate) wrapAuthenticate(from *Channel, payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	m, err := ReadCapabilityMap(buf)
 	if err != nil {
@@ -135,7 +135,7 @@ func (s *serviceAuthenticate) capError() CapabilityMap {
 	}
 }
 
-func (s *serviceAuthenticate) Authenticate(from *Context, cap CapabilityMap) CapabilityMap {
+func (s *serviceAuthenticate) Authenticate(from *Channel, cap CapabilityMap) CapabilityMap {
 	var user, token string
 	if userValue, ok := cap[KeyUser]; ok {
 		if userStr, ok := userValue.(value.StringValue); ok {

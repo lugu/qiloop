@@ -61,7 +61,7 @@ func (p *stubLogProvider) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Context) error {
+func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
@@ -213,7 +213,7 @@ func (p *stubLogListener) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubLogListener) Receive(msg *net.Message, from *bus.Context) error {
+func (p *stubLogListener) Receive(msg *net.Message, from *bus.Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
@@ -418,7 +418,7 @@ func (p *stubLogManager) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubLogManager) Receive(msg *net.Message, from *bus.Context) error {
+func (p *stubLogManager) Receive(msg *net.Message, from *bus.Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubLogManager) onPropertyChange(name string, data []byte) error {

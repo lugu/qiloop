@@ -73,7 +73,7 @@ func (p *stubServiceDirectory) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Context) error {
+func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error {

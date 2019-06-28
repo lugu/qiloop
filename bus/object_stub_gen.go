@@ -56,7 +56,7 @@ func (p *stubServiceZero) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubServiceZero) Receive(msg *net.Message, from *Context) error {
+func (p *stubServiceZero) Receive(msg *net.Message, from *Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubServiceZero) onPropertyChange(name string, data []byte) error {
@@ -200,7 +200,7 @@ func (p *stubObject) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubObject) Receive(msg *net.Message, from *Context) error {
+func (p *stubObject) Receive(msg *net.Message, from *Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubObject) onPropertyChange(name string, data []byte) error {

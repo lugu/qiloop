@@ -13,7 +13,6 @@ Unsorted TODO list
 - implement raw data type (signature, Type and IDL)
 - example: NAO say, Pepper say
 - get ride of implicit tokens when creating a session (Option)
-- rename Context into Channel
 - generate interface object constructor
 - service tutorial
 - actor: use a generalized receiver interface

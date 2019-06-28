@@ -2,13 +2,14 @@ package stub
 
 import (
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
-	"io"
-	"strings"
 )
 
 func stubName(name string) string {
@@ -424,7 +425,7 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
-		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus", "Context"),
+		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus", "Channel"),
 	).Params(jen.Error()).Block(
 		jen.Id(`return p.obj.Receive(msg, from)`),
 	)

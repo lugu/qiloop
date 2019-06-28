@@ -16,7 +16,7 @@ type signalUser struct {
 	signalID  uint32
 	messageID uint32
 	clientID  uint64
-	context   *Context
+	context   *Channel
 }
 
 // basicObject implements the ServerObject interface. It handles the
@@ -57,7 +57,7 @@ func (o *basicObject) Wrap(id uint32, fn actionWrapper) {
 // addSignalUser register the context as a client of event signalID.
 // TODO: check if the signalID is valid
 func (o *basicObject) addSignalUser(signalID, messageID uint32,
-	from *Context) uint64 {
+	from *Channel) uint64 {
 
 	clientID := rand.Uint64()
 	newUser := signalUser{
@@ -86,7 +86,7 @@ func (o *basicObject) removeSignalUser(clientID uint64) error {
 	return nil
 }
 
-func (o *basicObject) handleRegisterEvent(from *Context,
+func (o *basicObject) handleRegisterEvent(from *Channel,
 	msg *net.Message) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
@@ -121,7 +121,7 @@ func (o *basicObject) handleRegisterEvent(from *Context,
 	return o.reply(from, msg, out.Bytes())
 }
 
-func (o *basicObject) handleUnregisterEvent(from *Context,
+func (o *basicObject) handleUnregisterEvent(from *Channel,
 	msg *net.Message) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
@@ -208,14 +208,14 @@ func (o *basicObject) sendTerminate(client *signalUser, signal uint32) error {
 	return client.context.EndPoint.Send(msg)
 }
 
-func (o *basicObject) replyError(from *Context, msg *net.Message,
+func (o *basicObject) replyError(from *Channel, msg *net.Message,
 	err error) error {
 
 	o.trace(msg)
 	return util.ReplyError(from.EndPoint, msg, err)
 }
 
-func (o *basicObject) reply(from *Context, msg *net.Message,
+func (o *basicObject) reply(from *Channel, msg *net.Message,
 	response []byte) error {
 
 	hdr := o.newHeader(net.Reply, msg.Header.Action, msg.Header.ID)
@@ -224,7 +224,7 @@ func (o *basicObject) reply(from *Context, msg *net.Message,
 	return from.EndPoint.Send(reply)
 }
 
-func (o *basicObject) handleDefault(from *Context,
+func (o *basicObject) handleDefault(from *Channel,
 	msg *net.Message) error {
 
 	fn, ok := o.wrapper[msg.Header.Action]
@@ -241,7 +241,7 @@ func (o *basicObject) handleDefault(from *Context,
 // Receive processes the incoming message and responds to the client.
 // The returned error is not destinated to the client which have
 // already be replied.
-func (o *basicObject) Receive(msg *net.Message, from *Context) error {
+func (o *basicObject) Receive(msg *net.Message, from *Channel) error {
 	o.trace(msg)
 
 	if msg.Header.Type != net.Call {

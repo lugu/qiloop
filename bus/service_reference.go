@@ -32,7 +32,7 @@ type clientService struct {
 	objectsHandlers map[uint32]int
 	objectsMutex    sync.RWMutex
 	session         Session
-	context         *Context
+	context         *Channel
 }
 
 func NewServiceReference(s Session, e net.EndPoint, serviceID uint32) Service {

@@ -60,7 +60,7 @@ func (p *stubBomb) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubBomb) Receive(msg *net.Message, from *bus.Context) error {
+func (p *stubBomb) Receive(msg *net.Message, from *bus.Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubBomb) onPropertyChange(name string, data []byte) error {
@@ -161,7 +161,7 @@ func (p *stubSpacecraft) OnTerminate() {
 	p.impl.OnTerminate()
 	p.obj.OnTerminate()
 }
-func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Context) error {
+func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Channel) error {
 	return p.obj.Receive(msg, from)
 }
 func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
