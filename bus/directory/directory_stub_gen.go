@@ -4,14 +4,14 @@
 package directory
 
 import (
-	bytes "bytes"
-	fmt "fmt"
+	"bytes"
+	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
-	io "io"
-	log "log"
+	"io"
+	"log"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
