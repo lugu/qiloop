@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
-	"log"
-	"sync"
-	"time"
 )
 
 // ErrWrongObjectID is returned when a method argument is given the
@@ -67,7 +68,7 @@ type objectImpl struct {
 	traceMutex        sync.RWMutex
 }
 
-// NewObject returns an Object which implements ServerObject. It
+// NewObject returns an BasicObject which implements Actor. It
 // handles all the generic methods and signals common to all objects.
 // Services implementation user this Object and fill it with the
 // extra actions they wish to handle using the Wrap method. See

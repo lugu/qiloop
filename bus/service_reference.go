@@ -7,7 +7,7 @@ import (
 	"github.com/lugu/qiloop/bus/net"
 )
 
-func DirectClient(obj ServerObject) Client {
+func DirectClient(obj Actor) Client {
 	proxy, server := net.Pipe()
 	context := NewContext(server)
 	context.Authenticate()
@@ -48,7 +48,7 @@ func (c *clientService) ServiceID() uint32 {
 	return c.serviceID
 }
 
-func (c *clientService) Add(obj ServerObject) (uint32, error) {
+func (c *clientService) Add(obj Actor) (uint32, error) {
 
 	c.nextIDMutex.Lock()
 	if c.nextID > 2^31-1 {

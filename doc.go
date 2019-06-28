@@ -61,10 +61,9 @@
 // When offering a service, a Server is be used to handle incomming
 // connection and to dispatch the requests.
 //
-// The actual implementation of a service is provided by a
-// ServerObject which responds to the call requests and emits the
-// signals. ServerObject are attached to a Server via a Service
-// interface.
+// The actual implementation of a service is provided by a object
+// (Actor interface) which responds to call requests and emits the
+// signals.
 //
 package qiloop
 
@@ -94,7 +93,7 @@ type Authenticator interface {
 // dispatches the message to the services and objects.
 type Server interface {
 	// NewService register a new service to the service directory.
-	NewService(name string, object bus.ServerObject) (bus.Service, error)
+	NewService(name string, object bus.Actor) (bus.Service, error)
 	// Session returns a local session object which can be used to
 	// access the server without authentication.
 	Session() bus.Session

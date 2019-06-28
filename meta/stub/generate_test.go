@@ -48,7 +48,7 @@ type ObjectSignalHelper interface {
 	SignalTraceObject(event EventTrace) error
 }
 
-// stubObject implements server.ServerObject.
+// stubObject implements server.Actor.
 type stubObject struct {
 	obj     bus.BasicObject
 	impl    ObjectImplementor
@@ -56,7 +56,7 @@ type stubObject struct {
 }
 
 // ObjectObject returns an object using ObjectImplementor
-func ObjectObject(impl ObjectImplementor) bus.ServerObject {
+func ObjectObject(impl ObjectImplementor) bus.Actor {
 	var stb stubObject
 	stb.impl = impl
 	stb.obj = bus.NewBasicObject()

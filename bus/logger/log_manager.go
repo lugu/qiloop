@@ -27,7 +27,7 @@ type logManager struct {
 	activation   bus.Activation
 }
 
-func NewLogManager() bus.ServerObject {
+func NewLogManager() bus.Actor {
 	return LogManagerObject(&logManager{
 		clients: make(map[uint32]logClient),
 	})

@@ -16,3 +16,4 @@ Unsorted TODO list
 - generate interface object constructor
 - service tutorial
 - actor: use a generalized receiver interface
+- actor: use Terminate message instead of OnTerminate.

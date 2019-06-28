@@ -160,7 +160,7 @@ func (s *serviceAuthenticate) Authenticate(from *Channel, cap CapabilityMap) Cap
 
 // ServiceAuthenticate represents the servie server (serivce zero)
 // used to authenticate a new connection.
-func ServiceAuthenticate(auth Authenticator) ServerObject {
+func ServiceAuthenticate(auth Authenticator) Actor {
 	return &serviceAuthenticate{
 		auth: auth,
 	}

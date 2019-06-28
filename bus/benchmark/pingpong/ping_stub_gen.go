@@ -34,7 +34,7 @@ type PingPongSignalHelper interface {
 	SignalPong(a string) error
 }
 
-// stubPingPong implements server.ServerObject.
+// stubPingPong implements server.Actor.
 type stubPingPong struct {
 	obj     bus.BasicObject
 	impl    PingPongImplementor
@@ -42,7 +42,7 @@ type stubPingPong struct {
 }
 
 // PingPongObject returns an object using PingPongImplementor
-func PingPongObject(impl PingPongImplementor) bus.ServerObject {
+func PingPongObject(impl PingPongImplementor) bus.Actor {
 	var stb stubPingPong
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)

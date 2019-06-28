@@ -37,7 +37,7 @@ type BombSignalHelper interface {
 	UpdateDelay(duration int32) error
 }
 
-// stubBomb implements server.ServerObject.
+// stubBomb implements server.Actor.
 type stubBomb struct {
 	obj     bus.BasicObject
 	impl    BombImplementor
@@ -45,7 +45,7 @@ type stubBomb struct {
 }
 
 // BombObject returns an object using BombImplementor
-func BombObject(impl BombImplementor) bus.ServerObject {
+func BombObject(impl BombImplementor) bus.Actor {
 	var stb stubBomb
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
@@ -136,7 +136,7 @@ type SpacecraftImplementor interface {
 // SpacecraftSignalHelper provided to Spacecraft a companion object
 type SpacecraftSignalHelper interface{}
 
-// stubSpacecraft implements server.ServerObject.
+// stubSpacecraft implements server.Actor.
 type stubSpacecraft struct {
 	obj     bus.BasicObject
 	impl    SpacecraftImplementor
@@ -144,7 +144,7 @@ type stubSpacecraft struct {
 }
 
 // SpacecraftObject returns an object using SpacecraftImplementor
-func SpacecraftObject(impl SpacecraftImplementor) bus.ServerObject {
+func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 	var stb stubSpacecraft
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)

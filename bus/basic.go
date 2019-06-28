@@ -3,13 +3,14 @@ package bus
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"math/rand"
+	"sync"
+
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/value"
-	"io"
-	"math/rand"
-	"sync"
 )
 
 type signalUser struct {
@@ -19,7 +20,7 @@ type signalUser struct {
 	context   *Channel
 }
 
-// basicObject implements the ServerObject interface. It handles the
+// basicObject implements the Actor interface. It handles the
 // generic methods and signals common to all objects. Services
 // implementation embedded a basicObject and fill it with the extra
 // actions they wish to handle using the Wrap method. See
@@ -34,7 +35,7 @@ type basicObject struct {
 }
 
 type BasicObject interface {
-	ServerObject
+	Actor
 	UpdateSignal(signal uint32, data []byte) error
 	UpdateProperty(property uint32, signature string, data []byte) error
 	Wrap(id uint32, fn actionWrapper)

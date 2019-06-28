@@ -42,7 +42,7 @@ type ServiceDirectorySignalHelper interface {
 	SignalServiceRemoved(serviceID uint32, name string) error
 }
 
-// stubServiceDirectory implements server.ServerObject.
+// stubServiceDirectory implements server.Actor.
 type stubServiceDirectory struct {
 	obj     bus.BasicObject
 	impl    ServiceDirectoryImplementor
@@ -50,7 +50,7 @@ type stubServiceDirectory struct {
 }
 
 // ServiceDirectoryObject returns an object using ServiceDirectoryImplementor
-func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.ServerObject {
+func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 	var stb stubServiceDirectory
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)

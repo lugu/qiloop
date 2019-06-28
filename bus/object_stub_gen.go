@@ -32,7 +32,7 @@ type ServiceZeroImplementor interface {
 // ServiceZeroSignalHelper provided to ServiceZero a companion object
 type ServiceZeroSignalHelper interface{}
 
-// stubServiceZero implements server.ServerObject.
+// stubServiceZero implements server.Actor.
 type stubServiceZero struct {
 	obj     BasicObject
 	impl    ServiceZeroImplementor
@@ -40,7 +40,7 @@ type stubServiceZero struct {
 }
 
 // ServiceZeroObject returns an object using ServiceZeroImplementor
-func ServiceZeroObject(impl ServiceZeroImplementor) ServerObject {
+func ServiceZeroObject(impl ServiceZeroImplementor) Actor {
 	var stb stubServiceZero
 	stb.impl = impl
 	stb.obj = NewObject(stb.metaObject(), stb.onPropertyChange)
@@ -163,7 +163,7 @@ type ObjectSignalHelper interface {
 	SignalTraceObject(event EventTrace) error
 }
 
-// stubObject implements server.ServerObject.
+// stubObject implements server.Actor.
 type stubObject struct {
 	obj     BasicObject
 	impl    ObjectImplementor
@@ -171,7 +171,7 @@ type stubObject struct {
 }
 
 // ObjectObject returns an object using ObjectImplementor
-func ObjectObject(impl ObjectImplementor) ServerObject {
+func ObjectObject(impl ObjectImplementor) Actor {
 	var stb stubObject
 	stb.impl = impl
 	stb.obj = NewBasicObject()

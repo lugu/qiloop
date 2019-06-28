@@ -35,7 +35,7 @@ type LogProviderImplementor interface {
 // LogProviderSignalHelper provided to LogProvider a companion object
 type LogProviderSignalHelper interface{}
 
-// stubLogProvider implements server.ServerObject.
+// stubLogProvider implements server.Actor.
 type stubLogProvider struct {
 	obj     bus.BasicObject
 	impl    LogProviderImplementor
@@ -43,7 +43,7 @@ type stubLogProvider struct {
 }
 
 // LogProviderObject returns an object using LogProviderImplementor
-func LogProviderObject(impl LogProviderImplementor) bus.ServerObject {
+func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 	var stb stubLogProvider
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
@@ -188,7 +188,7 @@ type LogListenerSignalHelper interface {
 	UpdateFilters(filters map[string]int32) error
 }
 
-// stubLogListener implements server.ServerObject.
+// stubLogListener implements server.Actor.
 type stubLogListener struct {
 	obj     bus.BasicObject
 	impl    LogListenerImplementor
@@ -196,7 +196,7 @@ type stubLogListener struct {
 }
 
 // LogListenerObject returns an object using LogListenerImplementor
-func LogListenerObject(impl LogListenerImplementor) bus.ServerObject {
+func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 	var stb stubLogListener
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
@@ -390,7 +390,7 @@ type LogManagerImplementor interface {
 // LogManagerSignalHelper provided to LogManager a companion object
 type LogManagerSignalHelper interface{}
 
-// stubLogManager implements server.ServerObject.
+// stubLogManager implements server.Actor.
 type stubLogManager struct {
 	obj     bus.BasicObject
 	impl    LogManagerImplementor
@@ -398,7 +398,7 @@ type stubLogManager struct {
 }
 
 // LogManagerObject returns an object using LogManagerImplementor
-func LogManagerObject(impl LogManagerImplementor) bus.ServerObject {
+func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 	var stb stubLogManager
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)

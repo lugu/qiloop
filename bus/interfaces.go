@@ -53,7 +53,7 @@ type Session interface {
 // already connected.
 type Server interface {
 	// NewService register a new service to the service directory.
-	NewService(name string, object ServerObject) (Service, error)
+	NewService(name string, object Actor) (Service, error)
 	// Session returns a local session object which can be used to
 	// access the server without authentication.
 	Session() Session

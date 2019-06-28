@@ -89,8 +89,8 @@ func objectActivation(service *serviceImpl, session Session, serviceID, objectID
 	}
 }
 
-// ServerObject interface used by Server to manipulate services.
-type ServerObject interface {
+// Actor interface used by Server to manipulate services.
+type Actor interface {
 	Receive(m *net.Message, from *Channel) error
 	Activate(activation Activation) error
 	OnTerminate()
@@ -113,7 +113,7 @@ func (p pendingObject) OnTerminate() {
 // object within its domain.
 type serviceImpl struct {
 	sync.RWMutex
-	objects   map[uint32]ServerObject
+	objects   map[uint32]Actor
 	terminate func()
 	session   Session
 	serviceID uint32
@@ -121,9 +121,9 @@ type serviceImpl struct {
 
 // NewService returns a service with the given object associated with
 // object id 1.
-func NewService(o ServerObject) *serviceImpl {
+func NewService(o Actor) *serviceImpl {
 	return &serviceImpl{
-		objects: map[uint32]ServerObject{
+		objects: map[uint32]Actor{
 			1: o,
 		},
 	}
@@ -134,7 +134,7 @@ func (s *serviceImpl) ServiceID() uint32 {
 }
 
 // Add is used to add an object to a service domain.
-func (s *serviceImpl) Add(obj ServerObject) (index uint32, err error) {
+func (s *serviceImpl) Add(obj Actor) (index uint32, err error) {
 	// assign the first object to the index 0. following objects will
 	// be assigned random values.
 	s.Lock()
@@ -176,7 +176,7 @@ func (s *serviceImpl) Activate(activation Activation) error {
 	s.serviceID = activation.ServiceID
 	ret := make(chan error, len(s.objects))
 	for objectID, obj := range s.objects {
-		go func(obj ServerObject, objectID uint32) {
+		go func(obj Actor, objectID uint32) {
 			objActivation := objectActivation(s, activation.Session,
 				activation.ServiceID, objectID)
 			err := obj.Activate(objActivation)
@@ -245,11 +245,11 @@ type Router struct {
 }
 
 // NewRouter construct a router with the service zero passed.
-func NewRouter(authenticator ServerObject, namespace Namespace) *Router {
+func NewRouter(authenticator Actor, namespace Namespace) *Router {
 	return &Router{
 		services: map[uint32]*serviceImpl{
 			0: {
-				objects: map[uint32]ServerObject{
+				objects: map[uint32]Actor{
 					0: authenticator,
 				},
 			},
@@ -303,7 +303,7 @@ func (r *Router) Terminate() error {
 // 2. activate the service
 // 3. add the service to the router dispatcher
 // 4. advertize the service to the namespace (service directory)
-func (r *Router) NewService(name string, object ServerObject) (Service, error) {
+func (r *Router) NewService(name string, object Actor) (Service, error) {
 
 	r.RLock()
 	session := r.session
@@ -426,7 +426,7 @@ type server struct {
 }
 
 func NewServer(listener net.Listener, auth Authenticator,
-	namespace Namespace, service1 ServerObject) (Server, error) {
+	namespace Namespace, service1 Actor) (Server, error) {
 
 	service0 := ServiceAuthenticate(auth)
 
@@ -484,14 +484,14 @@ func StandAloneServer(listener net.Listener, auth Authenticator,
 // Service represents a running service.
 type Service interface {
 	ServiceID() uint32
-	Add(o ServerObject) (uint32, error)
+	Add(o Actor) (uint32, error)
 	Remove(objectID uint32) error
 	Terminate() error
 }
 
 // NewService returns a new service. The service is activated as part
 // of the creation.
-func (s *server) NewService(name string, object ServerObject) (Service, error) {
+func (s *server) NewService(name string, object Actor) (Service, error) {
 	return s.Router.NewService(name, object)
 }
 

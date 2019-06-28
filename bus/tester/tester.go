@@ -13,7 +13,7 @@ var (
 )
 
 // NewSpacecraftObject creates a new server side Spacecraft object.
-func NewSpacecraftObject() bus.ServerObject {
+func NewSpacecraftObject() bus.Actor {
 	return SpacecraftObject(&spacecraftImpl{})
 }
 
@@ -73,7 +73,7 @@ func (f *bombImpl) OnDelayChange(duration int32) error {
 
 // NewBombObject returns the server side implementation of a Bomb
 // object.
-func NewBombObject() bus.ServerObject {
+func NewBombObject() bus.Actor {
 	return BombObject(&bombImpl{})
 }
 
