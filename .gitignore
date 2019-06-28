@@ -5,6 +5,8 @@
 *.swp
 *.swo
 *~
+/coverage.out
+/package-lock.json
 /main
 /debug.test
 /coverage.txt
