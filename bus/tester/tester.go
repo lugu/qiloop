@@ -8,9 +8,11 @@ import (
 )
 
 var (
+	// Hook let the test program record what is happening
 	Hook = func(event string) {}
 )
 
+// NewSpacecraftObject creates a new server side Spacecraft object.
 func NewSpacecraftObject() bus.ServerObject {
 	return SpacecraftObject(&spacecraftImpl{})
 }
@@ -69,10 +71,14 @@ func (f *bombImpl) OnDelayChange(duration int32) error {
 	return nil
 }
 
+// NewBombObject returns the server side implementation of a Bomb
+// object.
 func NewBombObject() bus.ServerObject {
 	return BombObject(&bombImpl{})
 }
 
+// CreateBomb returns a new Bomb object.
+//
 // Not entirely satisfying: need to allow for client side object
 // generation... Here comes the ObjectID question..
 func CreateBomb(session bus.Session, service bus.Service) (BombProxy, error) {

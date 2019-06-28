@@ -28,6 +28,7 @@ type Closer func(err error)
 // EndPoint reprensents a network socket capable of sending and
 // receiving messages.
 type EndPoint interface {
+	fmt.Stringer
 
 	// Send pushes the message into the network.
 	Send(m Message) error
@@ -47,8 +48,6 @@ type EndPoint interface {
 
 	// Close close the underlying connection
 	Close() error
-
-	String() string
 }
 
 // Handler represents a client of a incomming message stream. It
@@ -142,6 +141,7 @@ func NewEndPoint(stream Stream) EndPoint {
 	return e
 }
 
+// ConnEndPoint returns an EndPoint using a go connection.
 func ConnEndPoint(conn gonet.Conn) EndPoint {
 	return NewEndPoint(ConnStream(conn))
 }

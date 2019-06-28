@@ -19,8 +19,8 @@ type Stream interface {
 	io.Reader
 	io.Writer
 	io.Closer
+	fmt.Stringer
 	Context() context.Context
-	String() string
 }
 
 type connStream struct {
@@ -37,6 +37,7 @@ func (c connStream) Context() context.Context {
 	return c.ctx
 }
 
+// ConnStream construct a Stream from a connection.
 func ConnStream(conn gonet.Conn) Stream {
 	return connStream{
 		conn,
