@@ -75,9 +75,14 @@ func objectActivation(service *serviceImpl, session Session, serviceID, objectID
 	}
 }
 
+// Receiver handles incomming messages.
+type Receiver interface {
+	Receive(m *net.Message, from *Channel) error
+}
+
 // Actor interface used by Server to manipulate services.
 type Actor interface {
-	Receive(m *net.Message, from *Channel) error
+	Receiver
 	Activate(activation Activation) error
 	OnTerminate()
 }

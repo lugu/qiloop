@@ -20,8 +20,6 @@ import (
 // the message header. This generalized form allows the subscription
 // to be implemented as a normal call as well as the authentication
 // procedure. This highlight the actor model of qimessaging:
-//
-// type receiver func(m *net.Message, from Channel) error
 type actionWrapper func(payload []byte) ([]byte, error)
 
 // wrapper is used to dispatch messages to actionWrapper.
