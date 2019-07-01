@@ -1,3 +1,3 @@
-//go:generate qiloop stub --idl testdata/object.idl --output generate_test.go
+//go:generate stub --idl testdata/object.idl --output generate_test.go
 
 package stub
