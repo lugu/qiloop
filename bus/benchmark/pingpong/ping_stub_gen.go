@@ -68,35 +68,35 @@ func (p *stubPingPong) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubPingPong) Hello(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubPingPong) Hello(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	a, err := basic.ReadString(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read a: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read a: %s", err))
 	}
 	ret, callErr := p.impl.Hello(a)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteString(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubPingPong) Ping(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubPingPong) Ping(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	a, err := basic.ReadString(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read a: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read a: %s", err))
 	}
 	callErr := p.impl.Ping(a)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubPingPong) SignalPong(a string) error {
 	var buf bytes.Buffer

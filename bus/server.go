@@ -333,6 +333,21 @@ type Channel struct {
 	EndPoint net.EndPoint
 }
 
+func (c *Channel) SendError(msg *net.Message, err error) error {
+	// FIXME: missing trace here.
+	// o.trace(msg)
+	return util.ReplyError(c.EndPoint, msg, err)
+}
+
+func (c *Channel) SendReply(msg *net.Message, response []byte) error {
+	hdr := msg.Header
+	hdr.Type = net.Reply
+	reply := net.NewMessage(hdr, response)
+	// FIXME: missing trace here.
+	// o.trace(&reply)
+	return c.EndPoint.Send(reply)
+}
+
 // NewContext retuns a non authenticate context.
 func NewContext(e net.EndPoint) *Channel {
 	return &Channel{

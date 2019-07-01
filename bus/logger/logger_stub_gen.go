@@ -70,38 +70,38 @@ func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubLogProvider) SetVerbosity(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubLogProvider) SetVerbosity(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	level, err := readLogLevel(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read level: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
 	}
 	callErr := p.impl.SetVerbosity(level)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogProvider) SetCategory(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubLogProvider) SetCategory(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	category, err := basic.ReadString(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read category: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read category: %s", err))
 	}
 	level, err := readLogLevel(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read level: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
 	}
 	callErr := p.impl.SetCategory(category, level)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogProvider) ClearAndSet(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubLogProvider) ClearAndSet(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	filters, err := func() (m map[string]LogLevel, err error) {
 		size, err := basic.ReadUint32(buf)
 		if err != nil {
@@ -122,14 +122,14 @@ func (p *stubLogProvider) ClearAndSet(payload []byte) ([]byte, error) {
 		return m, nil
 	}()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read filters: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read filters: %s", err))
 	}
 	callErr := p.impl.ClearAndSet(filters)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubLogProvider) metaObject() object.MetaObject {
 	return object.MetaObject{
@@ -254,30 +254,30 @@ func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubLogListener) SetCategory(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubLogListener) SetCategory(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	category, err := basic.ReadString(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read category: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read category: %s", err))
 	}
 	level, err := readLogLevel(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read level: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
 	}
 	callErr := p.impl.SetCategory(category, level)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogListener) ClearFilters(payload []byte) ([]byte, error) {
+func (p *stubLogListener) ClearFilters(msg *net.Message, c *bus.Channel) error {
 	callErr := p.impl.ClearFilters()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubLogListener) SignalOnLogMessage(msg LogMessage) error {
 	var buf bytes.Buffer
@@ -427,8 +427,8 @@ func (p *stubLogManager) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubLogManager) Log(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubLogManager) Log(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	messages, err := func() (b []LogMessage, err error) {
 		size, err := basic.ReadUint32(buf)
 		if err != nil {
@@ -444,19 +444,19 @@ func (p *stubLogManager) Log(payload []byte) ([]byte, error) {
 		return b, nil
 	}()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read messages: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read messages: %s", err))
 	}
 	callErr := p.impl.Log(messages)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) CreateListener(payload []byte) ([]byte, error) {
+func (p *stubLogManager) CreateListener(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.CreateListener()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -474,14 +474,14 @@ func (p *stubLogManager) CreateListener(payload []byte) ([]byte, error) {
 		return object.WriteObjectReference(ref, &out)
 	}()
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) GetListener(payload []byte) ([]byte, error) {
+func (p *stubLogManager) GetListener(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.GetListener()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -499,12 +499,12 @@ func (p *stubLogManager) GetListener(payload []byte) ([]byte, error) {
 		return object.WriteObjectReference(ref, &out)
 	}()
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) AddProvider(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubLogManager) AddProvider(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	source, err := func() (LogProviderProxy, error) {
 		ref, err := object.ReadObjectReference(buf)
 		if err != nil {
@@ -517,31 +517,31 @@ func (p *stubLogManager) AddProvider(payload []byte) ([]byte, error) {
 		return MakeLogProvider(p.session, proxy), nil
 	}()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read source: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read source: %s", err))
 	}
 	ret, callErr := p.impl.AddProvider(source)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteInt32(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) RemoveProvider(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubLogManager) RemoveProvider(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	sourceID, err := basic.ReadInt32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read sourceID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read sourceID: %s", err))
 	}
 	callErr := p.impl.RemoveProvider(sourceID)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubLogManager) metaObject() object.MetaObject {
 	return object.MetaObject{

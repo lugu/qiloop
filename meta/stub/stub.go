@@ -118,7 +118,7 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	params := make([]jen.Code, 0)
 	code := jen.Id("buf").Op(":=").Qual(
 		"bytes", "NewBuffer",
-	).Call(jen.Id("payload"))
+	).Call(jen.Id("msg.Payload"))
 	if len(method.Params) != 0 {
 		writing = append(writing, code)
 	}
@@ -129,15 +129,9 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 			param.Type.Unmarshal("buf"),
 		)
 		writing = append(writing, code)
-		code = jen.If(jen.Err().Op("!=").Nil()).Block(
-			jen.Return().List(
-				jen.Nil(),
-				jen.Qual("fmt", "Errorf").Call(
-					jen.Lit("cannot read "+param.Name+": %s"),
-					jen.Err(),
-				),
-			),
-		)
+		code = jen.Id(`if err != nil {
+		    return c.SendError(msg, fmt.Errorf("cannot read ` + param.Name + `: %s", err))
+	        }`)
 		writing = append(writing, code)
 	}
 	ret := method.Return
@@ -155,7 +149,7 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	}
 	writing = append(writing, code)
 	code = jen.Id(`if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer`)
 	writing = append(writing, code)
@@ -164,11 +158,11 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 		writing = append(writing, code)
 
 		code = jen.Id(`if errOut != nil {
-		    return nil, fmt.Errorf("cannot write response: %s", errOut)
+		    return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	        }`)
 		writing = append(writing, code)
 	}
-	code = jen.Id(`return out.Bytes(), nil`)
+	code = jen.Id(`return c.SendReply(msg, out.Bytes())`)
 	writing = append(writing, code)
 
 	return jen.Block(
@@ -186,9 +180,10 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 	}
 
 	file.Func().Params(jen.Id("p").Op("*").Id(stubName(itf.Name))).Id(methodName).Params(
-		jen.Id("payload []byte"),
+		jen.Id("msg *net.Message"),
+		jen.Id("c").Op("*").Qual("github.com/lugu/qiloop/bus", "Channel"),
 	).Params(
-		jen.Id("[]byte, error"),
+		jen.Id("error"),
 	).Add(body)
 	return nil
 }

@@ -65,8 +65,8 @@ func (p *stubServiceZero) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubServiceZero) Authenticate(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubServiceZero) Authenticate(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	capability, err := func() (m map[string]value.Value, err error) {
 		size, err := basic.ReadUint32(buf)
 		if err != nil {
@@ -87,11 +87,11 @@ func (p *stubServiceZero) Authenticate(payload []byte) ([]byte, error) {
 		return m, nil
 	}()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read capability: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read capability: %s", err))
 	}
 	ret, callErr := p.impl.Authenticate(capability)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -112,9 +112,9 @@ func (p *stubServiceZero) Authenticate(payload []byte) ([]byte, error) {
 		return nil
 	}()
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubServiceZero) metaObject() object.MetaObject {
 	return object.MetaObject{
@@ -209,120 +209,120 @@ func (p *stubObject) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubObject) RegisterEvent(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) RegisterEvent(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read objectID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
 	}
 	actionID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read actionID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read actionID: %s", err))
 	}
 	handler, err := basic.ReadUint64(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read handler: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read handler: %s", err))
 	}
 	ret, callErr := p.impl.RegisterEvent(objectID, actionID, handler)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteUint64(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) UnregisterEvent(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) UnregisterEvent(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read objectID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
 	}
 	actionID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read actionID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read actionID: %s", err))
 	}
 	handler, err := basic.ReadUint64(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read handler: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read handler: %s", err))
 	}
 	callErr := p.impl.UnregisterEvent(objectID, actionID, handler)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) MetaObject(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) MetaObject(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read objectID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
 	}
 	ret, callErr := p.impl.MetaObject(objectID)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := object.WriteMetaObject(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Terminate(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) Terminate(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read objectID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
 	}
 	callErr := p.impl.Terminate(objectID)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Property(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) Property(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read name: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read name: %s", err))
 	}
 	ret, callErr := p.impl.Property(name)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := ret.Write(&out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) SetProperty(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) SetProperty(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read name: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read name: %s", err))
 	}
 	value, err := value.NewValue(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read value: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read value: %s", err))
 	}
 	callErr := p.impl.SetProperty(name, value)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Properties(payload []byte) ([]byte, error) {
+func (p *stubObject) Properties(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.Properties()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -339,68 +339,68 @@ func (p *stubObject) Properties(payload []byte) ([]byte, error) {
 		return nil
 	}()
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) RegisterEventWithSignature(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) RegisterEventWithSignature(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read objectID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
 	}
 	actionID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read actionID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read actionID: %s", err))
 	}
 	handler, err := basic.ReadUint64(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read handler: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read handler: %s", err))
 	}
 	P3, err := basic.ReadString(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read P3: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read P3: %s", err))
 	}
 	ret, callErr := p.impl.RegisterEventWithSignature(objectID, actionID, handler, P3)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteUint64(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) IsStatsEnabled(payload []byte) ([]byte, error) {
+func (p *stubObject) IsStatsEnabled(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.IsStatsEnabled()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteBool(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) EnableStats(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) EnableStats(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	enabled, err := basic.ReadBool(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read enabled: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read enabled: %s", err))
 	}
 	callErr := p.impl.EnableStats(enabled)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Stats(payload []byte) ([]byte, error) {
+func (p *stubObject) Stats(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.Stats()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -421,42 +421,42 @@ func (p *stubObject) Stats(payload []byte) ([]byte, error) {
 		return nil
 	}()
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) ClearStats(payload []byte) ([]byte, error) {
+func (p *stubObject) ClearStats(msg *net.Message, c *Channel) error {
 	callErr := p.impl.ClearStats()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) IsTraceEnabled(payload []byte) ([]byte, error) {
+func (p *stubObject) IsTraceEnabled(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.IsTraceEnabled()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteBool(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) EnableTrace(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubObject) EnableTrace(msg *net.Message, c *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	traced, err := basic.ReadBool(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read traced: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read traced: %s", err))
 	}
 	callErr := p.impl.EnableTrace(traced)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubObject) SignalTraceObject(event EventTrace) error {
 	var buf bytes.Buffer

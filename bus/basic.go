@@ -8,19 +8,12 @@ import (
 	"sync"
 
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/value"
 )
 
 // actionWrapper handles messages for an action.
-//
-// FIXME: in order to allow the creation of a client object associated
-// with the client endpoint, the context needs to be passed as well as
-// the message header. This generalized form allows the subscription
-// to be implemented as a normal call as well as the authentication
-// procedure. This highlight the actor model of qimessaging:
-type actionWrapper func(payload []byte) ([]byte, error)
+type actionWrapper func(m *net.Message, from *Channel) error
 
 // wrapper is used to dispatch messages to actionWrapper.
 type wrapper map[uint32]actionWrapper
@@ -99,29 +92,28 @@ func (o *basicObject) removeSignalUser(clientID uint64) error {
 	return nil
 }
 
-func (o *basicObject) handleRegisterEvent(from *Channel,
-	msg *net.Message) error {
+func (o *basicObject) registerEvent(msg *net.Message, from *Channel) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
 		err = fmt.Errorf("cannot read object uid: %s", err)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	if objectID != o.objectID {
 		err := fmt.Errorf("wrong object id, expecting %d, got %d",
 			msg.Header.Object, objectID)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	signalID, err := basic.ReadUint32(buf)
 	if err != nil {
 		err = fmt.Errorf("cannot read signal uid: %s", err)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	_, err = basic.ReadUint64(buf)
 	if err != nil {
 		err = fmt.Errorf("cannot read client uid: %s", err)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	messageID := msg.Header.ID
 	clientID := o.addSignalUser(signalID, messageID, from)
@@ -129,41 +121,40 @@ func (o *basicObject) handleRegisterEvent(from *Channel,
 	err = basic.WriteUint64(clientID, &out)
 	if err != nil {
 		err = fmt.Errorf("cannot write client uid: %s", err)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
-	return o.reply(from, msg, out.Bytes())
+	return from.SendReply(msg, out.Bytes())
 }
 
-func (o *basicObject) handleUnregisterEvent(from *Channel,
-	msg *net.Message) error {
+func (o *basicObject) unregisterEvent(msg *net.Message, from *Channel) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
 		err = fmt.Errorf("cannot read object uid: %s", err)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	if objectID != o.objectID {
 		err := fmt.Errorf("wrong object id, expecting %d, got %d",
 			msg.Header.Object, objectID)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	_, err = basic.ReadUint32(buf)
 	if err != nil {
 		err = fmt.Errorf("cannot read action uid: %s", err)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	clientID, err := basic.ReadUint64(buf)
 	if err != nil {
 		err = fmt.Errorf("cannot read client uid: %s", err)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	err = o.removeSignalUser(clientID)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	var out bytes.Buffer
-	return o.reply(from, msg, out.Bytes())
+	return from.SendReply(msg, out.Bytes())
 }
 
 // UpdateSignal informs the registered clients of the new state.
@@ -221,34 +212,17 @@ func (o *basicObject) sendTerminate(client *signalUser, signal uint32) error {
 	return client.context.EndPoint.Send(msg)
 }
 
-func (o *basicObject) replyError(from *Channel, msg *net.Message,
-	err error) error {
-
-	o.trace(msg)
-	return util.ReplyError(from.EndPoint, msg, err)
-}
-
-func (o *basicObject) reply(from *Channel, msg *net.Message,
-	response []byte) error {
-
-	hdr := o.newHeader(net.Reply, msg.Header.Action, msg.Header.ID)
-	reply := net.NewMessage(hdr, response)
-	o.trace(&reply)
-	return from.EndPoint.Send(reply)
-}
-
-func (o *basicObject) handleDefault(from *Channel,
-	msg *net.Message) error {
+func (o *basicObject) defaultReceive(msg *net.Message, from *Channel) error {
 
 	fn, ok := o.wrapper[msg.Header.Action]
 	if !ok {
-		return o.replyError(from, msg, ErrActionNotFound)
+		return from.SendError(msg, ErrActionNotFound)
 	}
-	response, err := fn(msg.Payload)
+	err := fn(msg, from)
 	if err != nil {
-		return o.replyError(from, msg, err)
+		return fmt.Errorf("error while processing %v: %s", msg.Header, err)
 	}
-	return o.reply(from, msg, response)
+	return nil
 }
 
 // Receive processes the incoming message and responds to the client.
@@ -260,15 +234,15 @@ func (o *basicObject) Receive(msg *net.Message, from *Channel) error {
 	if msg.Header.Type != net.Call {
 		err := fmt.Errorf("unsupported message type: %d",
 			msg.Header.Type)
-		return o.replyError(from, msg, err)
+		return from.SendError(msg, err)
 	}
 	switch msg.Header.Action {
 	case 0x0:
-		return o.handleRegisterEvent(from, msg)
+		return o.registerEvent(msg, from)
 	case 0x1:
-		return o.handleUnregisterEvent(from, msg)
+		return o.unregisterEvent(msg, from)
 	default:
-		return o.handleDefault(from, msg)
+		return o.defaultReceive(msg, from)
 	}
 }
 

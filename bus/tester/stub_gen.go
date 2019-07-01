@@ -170,10 +170,10 @@ func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubSpacecraft) Shoot(payload []byte) ([]byte, error) {
+func (p *stubSpacecraft) Shoot(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.Shoot()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -191,12 +191,12 @@ func (p *stubSpacecraft) Shoot(payload []byte) ([]byte, error) {
 		return object.WriteObjectReference(ref, &out)
 	}()
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubSpacecraft) Ammo(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubSpacecraft) Ammo(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	ammo, err := func() (BombProxy, error) {
 		ref, err := object.ReadObjectReference(buf)
 		if err != nil {
@@ -209,14 +209,14 @@ func (p *stubSpacecraft) Ammo(payload []byte) ([]byte, error) {
 		return MakeBomb(p.session, proxy), nil
 	}()
 	if err != nil {
-		return nil, fmt.Errorf("cannot read ammo: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read ammo: %s", err))
 	}
 	callErr := p.impl.Ammo(ammo)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubSpacecraft) metaObject() object.MetaObject {
 	return object.MetaObject{

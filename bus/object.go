@@ -241,16 +241,16 @@ func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 
 // observer returns an actionWrapper based on fn which records statistics
 func (o *objectImpl) observer(id uint32, fn actionWrapper) actionWrapper {
-	return func(payload []byte) ([]byte, error) {
+	return func(m *net.Message, from *Channel) error {
 		start := time.Now()
-		ret, err := fn(payload)
+		err := fn(m, from)
 		duration := time.Since(start)
 		o.statsLock.Lock()
 		defer o.statsLock.Unlock()
 		if o.stats != nil {
 			o.stats[id] = o.stats[id].updateWith(duration)
 		}
-		return ret, err
+		return err
 	}
 }
 

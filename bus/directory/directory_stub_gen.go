@@ -82,27 +82,27 @@ func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error 
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubServiceDirectory) Service(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubServiceDirectory) Service(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	name, err := basic.ReadString(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read name: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read name: %s", err))
 	}
 	ret, callErr := p.impl.Service(name)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := writeServiceInfo(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
+func (p *stubServiceDirectory) Services(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.Services()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := func() error {
@@ -119,94 +119,94 @@ func (p *stubServiceDirectory) Services(payload []byte) ([]byte, error) {
 		return nil
 	}()
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) RegisterService(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubServiceDirectory) RegisterService(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	info, err := readServiceInfo(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read info: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read info: %s", err))
 	}
 	ret, callErr := p.impl.RegisterService(info)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteUint32(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) UnregisterService(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubServiceDirectory) UnregisterService(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read serviceID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read serviceID: %s", err))
 	}
 	callErr := p.impl.UnregisterService(serviceID)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) ServiceReady(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubServiceDirectory) ServiceReady(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read serviceID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read serviceID: %s", err))
 	}
 	callErr := p.impl.ServiceReady(serviceID)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) UpdateServiceInfo(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubServiceDirectory) UpdateServiceInfo(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	info, err := readServiceInfo(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read info: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read info: %s", err))
 	}
 	callErr := p.impl.UpdateServiceInfo(info)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) MachineId(payload []byte) ([]byte, error) {
+func (p *stubServiceDirectory) MachineId(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.MachineId()
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := basic.WriteString(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) _socketOfService(payload []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(payload)
+func (p *stubServiceDirectory) _socketOfService(msg *net.Message, c *bus.Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
 	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read serviceID: %s", err)
+		return c.SendError(msg, fmt.Errorf("cannot read serviceID: %s", err))
 	}
 	ret, callErr := p.impl._socketOfService(serviceID)
 	if callErr != nil {
-		return nil, callErr
+		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer
 	errOut := object.WriteObjectReference(ret, &out)
 	if errOut != nil {
-		return nil, fmt.Errorf("cannot write response: %s", errOut)
+		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
 	}
-	return out.Bytes(), nil
+	return c.SendReply(msg, out.Bytes())
 }
 func (p *stubServiceDirectory) SignalServiceAdded(serviceID uint32, name string) error {
 	var buf bytes.Buffer

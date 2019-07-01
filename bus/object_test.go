@@ -12,9 +12,10 @@ func TestBasicObjectWrap(t *testing.T) {
 	obj := NewBasicObject()
 	passed := false
 
-	obj.Wrap(123, func(payload []byte) ([]byte, error) {
+	obj.Wrap(123, func(m *net.Message, from *Channel) error {
 		passed = true
-		return nil, nil
+		empty := []byte{}
+		return from.SendReply(m, empty)
 	})
 	in, out := net.Pipe()
 
