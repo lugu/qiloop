@@ -297,49 +297,6 @@ func (r *Router) Terminate() error {
 	return ret
 }
 
-// NewService brings a new service online. It requires the router to
-// be activated (as part of a session). The steps involves are:
-// 1. request the name to the namespace (service directory)
-// 2. activate the service
-// 3. add the service to the router dispatcher
-// 4. advertize the service to the namespace (service directory)
-func (r *Router) NewService(name string, object Actor) (Service, error) {
-
-	r.RLock()
-	session := r.session
-	r.RUnlock()
-
-	// if the router is not yet activated, this is an error
-	if session == nil {
-		return nil, fmt.Errorf("cannot create service prior to activation")
-	}
-
-	service := NewService(object)
-	// 1. reserve the name
-	serviceID, err := r.namespace.Reserve(name)
-	if err != nil {
-		return nil, err
-	}
-
-	// 2. activate the service
-	err = service.Activate(serviceActivation(r, session, serviceID))
-	if err != nil {
-		return nil, err
-	}
-	// 3. make it available
-	err = r.Add(serviceID, service)
-	if err != nil {
-		return nil, err
-	}
-	// 4. advertize it
-	err = r.namespace.Enable(serviceID)
-	if err != nil {
-		r.Remove(serviceID)
-		return nil, err
-	}
-	return service, nil
-}
-
 // Add Add a service ot a router. This does not call the Activate()
 // method on the service.
 func (r *Router) Add(serviceID uint32, s *serviceImpl) error {
@@ -491,8 +448,46 @@ type Service interface {
 
 // NewService returns a new service. The service is activated as part
 // of the creation.
+// This brings the new service online. The steps involves are:
+// 1. request the name to the namespace (service directory)
+// 2. activate the service
+// 3. add the service to the router dispatcher
+// 4. advertize the service to the namespace (service directory)
 func (s *server) NewService(name string, object Actor) (Service, error) {
-	return s.Router.NewService(name, object)
+
+	s.Router.RLock()
+	session := s.Router.session
+	s.Router.RUnlock()
+
+	// if the router is not yet activated, this is an error
+	if session == nil {
+		return nil, fmt.Errorf("cannot create service prior to activation")
+	}
+
+	// 1. reserve the name
+	serviceID, err := s.namespace.Reserve(name)
+	if err != nil {
+		return nil, err
+	}
+	service := NewService(object)
+
+	// 2. activate the service
+	err = service.Activate(serviceActivation(s.Router, session, serviceID))
+	if err != nil {
+		return nil, err
+	}
+	// 3. make it available
+	err = s.Router.Add(serviceID, service)
+	if err != nil {
+		return nil, err
+	}
+	// 4. advertize it
+	err = s.namespace.Enable(serviceID)
+	if err != nil {
+		s.Router.Remove(serviceID)
+		return nil, err
+	}
+	return service, nil
 }
 
 func (s *server) handle(stream net.Stream, authenticated bool) {
