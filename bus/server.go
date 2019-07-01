@@ -32,20 +32,6 @@ var ErrNotAuthenticated = errors.New("Not authenticated")
 // clients subscribes to its signals.
 var ErrTerminate = errors.New("Object terminated")
 
-// actionWrapper handles messages for an action.
-//
-// FIXME: in order to allow the creation of a client object associated
-// with the client endpoint, the context needs to be passed as well as
-// the message header. This generalized form allows the subscription
-// to be implemented as a normal call as well as the authentication
-// procedure. This highlight the actor model of qimessaging:
-//
-// type receiver func(m *net.Message, from *Context) error
-type actionWrapper func(payload []byte) ([]byte, error)
-
-// wrapper is used to dispatch messages to actionWrapper.
-type wrapper map[uint32]actionWrapper
-
 // Activation is sent during activation: it informs the object of the
 // context in which the object is being used.
 type Activation struct {
