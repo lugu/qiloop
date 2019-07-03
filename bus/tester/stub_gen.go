@@ -61,7 +61,10 @@ func (p *stubBomb) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubBomb) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubBomb) onPropertyChange(name string, data []byte) error {
 	switch name {
@@ -148,8 +151,6 @@ func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 	var stb stubSpacecraft
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
-	stb.obj.Wrap(uint32(0x64), stb.Shoot)
-	stb.obj.Wrap(uint32(0x65), stb.Ammo)
 	return &stb
 }
 func (p *stubSpacecraft) Activate(activation bus.Activation) error {
@@ -162,7 +163,14 @@ func (p *stubSpacecraft) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	case uint32(0x64):
+		return p.Shoot(msg, from)
+	case uint32(0x65):
+		return p.Ammo(msg, from)
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
 	switch name {

@@ -416,15 +416,67 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id(`p.impl.OnTerminate()`),
 		jen.Id(`p.obj.OnTerminate()`),
 	)
+
+	err := generateReceiveMethod(file, itf)
+	if err != nil {
+		return err
+	}
+
+	return generateStubPropertyCallback(file, itf)
+}
+
+func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
+	writing := make([]jen.Code, 0)
+	method := func(m object.MetaMethod, methodName string) error {
+		// RegisterEvent and UnregisterEvent are implemented
+		// in basicObject.
+		if methodName == "RegisterEvent" && m.Uid == 0x0 {
+			return nil
+		}
+		if methodName == "UnregisterEvent" && m.Uid == 0x1 {
+			return nil
+		}
+		method := itf.Methods[m.Uid]
+		code := jen.Case(jen.Lit(method.ID))
+		writing = append(writing, code)
+		code = jen.Return().Id("p").Dot(methodName).Call(
+			jen.Id("msg"),
+			jen.Id("from"),
+		)
+		writing = append(writing, code)
+		return nil
+	}
+
+	signal := func(m object.MetaSignal, signalName string) error {
+		return nil
+	}
+
+	property := func(p object.MetaProperty, propertyName string) error {
+		return nil
+	}
+
+	meta := itf.MetaObject()
+	err := meta.ForEachMethodAndSignal(method, signal, property)
+	if err != nil {
+		return fmt.Errorf("failed to generate receive: %s: %s",
+			itf.Name, err)
+	}
+	code := jen.Default()
+	writing = append(writing, code)
+	code = jen.Id(`return p.obj.Receive(msg, from)`)
+	writing = append(writing, code)
+
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
 		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus", "Channel"),
 	).Params(jen.Error()).Block(
-		jen.Id(`return p.obj.Receive(msg, from)`),
+		jen.Switch(jen.Id("msg.Header.Action")).Block(
+			writing...,
+		),
 	)
-	return generateStubPropertyCallback(file, itf)
+	return nil
 }
 
 func generateStubPropertyCallback(file *jen.File, itf *idl.InterfaceType) error {
@@ -510,29 +562,6 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	writing = append(writing, code)
 
-	method := func(m object.MetaMethod, methodName string) error {
-		method := itf.Methods[m.Uid]
-		code = jen.Id("stb.obj.Wrap").Call(
-			jen.Lit(method.ID),
-			jen.Id("stb").Dot(methodName),
-		)
-		writing = append(writing, code)
-		return nil
-	}
-
-	signal := func(m object.MetaSignal, signalName string) error {
-		return nil
-	}
-
-	property := func(p object.MetaProperty, propertyName string) error {
-		return nil
-	}
-
-	meta := itf.MetaObject()
-	if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate interface object %s: %s",
-			itf.Name, err)
-	}
 	code = jen.Return().Op("&").Id("stb")
 	writing = append(writing, code)
 

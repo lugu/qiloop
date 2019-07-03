@@ -48,41 +48,32 @@ func (s *stubObject) UpdateProperty(id uint32, sig string, data []byte) error {
 	return s.obj.UpdateProperty(id, sig, data)
 }
 
-func (s *stubObject) Wrap(id uint32, fn actionWrapper) {
-	s.obj.Wrap(id, fn)
-}
-
 type objectImpl struct {
-	obj               *basicObject
-	meta              object.MetaObject
-	onPropertyChange  func(string, []byte) error
-	objectID          uint32
-	signal            ObjectSignalHelper
-	properties        map[string]value.Value
-	propertiesMutex   sync.RWMutex
-	terminate         func()
-	stats             map[uint32]MethodStatistics
-	statsLock         sync.RWMutex
-	observableWrapper wrapper
-	traceEnabled      bool
-	traceMutex        sync.RWMutex
+	obj              *basicObject
+	meta             object.MetaObject
+	onPropertyChange func(string, []byte) error
+	objectID         uint32
+	signal           ObjectSignalHelper
+	properties       map[string]value.Value
+	propertiesMutex  sync.RWMutex
+	terminate        func()
+	stats            map[uint32]MethodStatistics
+	statsLock        sync.RWMutex
+	traceEnabled     bool
+	traceMutex       sync.RWMutex
 }
 
 // NewObject returns an BasicObject which implements Actor. It
 // handles all the generic methods and signals common to all objects.
-// Services implementation user this Object and fill it with the
-// extra actions they wish to handle using the Wrap method. See
-// type/object.Object for a list of the default methods.
 // onPropertyChange is called each time a property is udpated.
 func NewObject(meta object.MetaObject,
 	onPropertyChange func(string, []byte) error) BasicObject {
 
 	impl := &objectImpl{
-		meta:              object.FullMetaObject(meta),
-		onPropertyChange:  onPropertyChange,
-		stats:             nil,
-		properties:        make(map[string]value.Value),
-		observableWrapper: make(map[uint32]actionWrapper),
+		meta:             object.FullMetaObject(meta),
+		onPropertyChange: onPropertyChange,
+		stats:            nil,
+		properties:       make(map[string]value.Value),
 	}
 	obj := ObjectObject(impl)
 	stub := obj.(*stubObject)
@@ -102,11 +93,6 @@ func (o *objectImpl) Activate(activation Activation,
 	o.objectID = activation.ObjectID
 	o.terminate = activation.Terminate
 
-	// During activation, all the action wrapper have been
-	// registered. Dupplicate them to enable method statistics.
-	for id, fn := range o.obj.wrapper {
-		o.observableWrapper[id] = o.observer(id, fn)
-	}
 	return nil
 }
 
@@ -239,35 +225,15 @@ func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 	return m
 }
 
-// observer returns an actionWrapper based on fn which records statistics
-func (o *objectImpl) observer(id uint32, fn actionWrapper) actionWrapper {
-	return func(m *net.Message, from *Channel) error {
-		start := time.Now()
-		err := fn(m, from)
-		duration := time.Since(start)
-		o.statsLock.Lock()
-		defer o.statsLock.Unlock()
-		if o.stats != nil {
-			o.stats[id] = o.stats[id].updateWith(duration)
-		}
-		return err
-	}
-}
-
-func (o *objectImpl) swipeWrapper() {
-	o.observableWrapper, o.obj.wrapper = o.obj.wrapper, o.observableWrapper
-}
-
 func (o *objectImpl) EnableStats(enabled bool) error {
 	o.statsLock.Lock()
 	defer o.statsLock.Unlock()
 	if enabled && o.stats == nil {
 		o.stats = make(map[uint32]MethodStatistics)
-		o.swipeWrapper()
 	} else if !enabled && o.stats != nil {
 		o.stats = nil
-		o.swipeWrapper()
 	}
+	panic("not yet implemented")
 	return nil
 }
 

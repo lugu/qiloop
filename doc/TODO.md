@@ -15,5 +15,6 @@ Unsorted TODO list
 - get ride of implicit tokens when creating a session (Option)
 - generate interface object constructor
 - service tutorial
-- actor: use a generalized receiver interface
 - actor: use Terminate message instead of OnTerminate.
+- actor: reverse object ownership (basic -> object -> stub)
+- repair stats and traces

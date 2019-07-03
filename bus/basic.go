@@ -12,12 +12,6 @@ import (
 	"github.com/lugu/qiloop/type/value"
 )
 
-// actionWrapper handles messages for an action.
-type actionWrapper func(m *net.Message, from *Channel) error
-
-// wrapper is used to dispatch messages to actionWrapper.
-type wrapper map[uint32]actionWrapper
-
 type signalUser struct {
 	signalID  uint32
 	messageID uint32
@@ -25,15 +19,12 @@ type signalUser struct {
 	context   *Channel
 }
 
-// basicObject implements the Actor interface. It handles the
-// generic methods and signals common to all objects. Services
-// implementation embedded a basicObject and fill it with the extra
-// actions they wish to handle using the Wrap method. See
-// type/object.Object for a list of the default methods.
+// basicObject implements the Actor interface. It implements the
+// registerEvent and unregisterEvent methods and provides a means to
+// update a signal.
 type basicObject struct {
 	signals      map[uint64]signalUser
 	signalsMutex sync.RWMutex
-	wrapper      wrapper
 	serviceID    uint32
 	objectID     uint32
 	tracer       func(*net.Message)
@@ -43,21 +34,14 @@ type BasicObject interface {
 	Actor
 	UpdateSignal(signal uint32, data []byte) error
 	UpdateProperty(property uint32, signature string, data []byte) error
-	Wrap(id uint32, fn actionWrapper)
 }
 
 // NewBasicObject construct a BasicObject from a MetaObject.
 func NewBasicObject() *basicObject {
 	return &basicObject{
 		signals: make(map[uint64]signalUser),
-		wrapper: make(map[uint32]actionWrapper),
 		tracer:  nil,
 	}
-}
-
-// Wrap let a BasicObject owner extend it with custom actions.
-func (o *basicObject) Wrap(id uint32, fn actionWrapper) {
-	o.wrapper[id] = fn
 }
 
 // addSignalUser register the context as a client of event signalID.
@@ -212,19 +196,6 @@ func (o *basicObject) sendTerminate(client *signalUser, signal uint32) error {
 	return client.context.EndPoint.Send(msg)
 }
 
-func (o *basicObject) defaultReceive(msg *net.Message, from *Channel) error {
-
-	fn, ok := o.wrapper[msg.Header.Action]
-	if !ok {
-		return from.SendError(msg, ErrActionNotFound)
-	}
-	err := fn(msg, from)
-	if err != nil {
-		return fmt.Errorf("error while processing %v: %s", msg.Header, err)
-	}
-	return nil
-}
-
 // Receive processes the incoming message and responds to the client.
 // The returned error is not destinated to the client which have
 // already be replied.
@@ -242,7 +213,7 @@ func (o *basicObject) Receive(msg *net.Message, from *Channel) error {
 	case 0x1:
 		return o.unregisterEvent(msg, from)
 	default:
-		return o.defaultReceive(msg, from)
+		return from.SendError(msg, ErrActionNotFound)
 	}
 }
 

@@ -54,14 +54,6 @@ func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 	var stb stubServiceDirectory
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
-	stb.obj.Wrap(uint32(0x64), stb.Service)
-	stb.obj.Wrap(uint32(0x65), stb.Services)
-	stb.obj.Wrap(uint32(0x66), stb.RegisterService)
-	stb.obj.Wrap(uint32(0x67), stb.UnregisterService)
-	stb.obj.Wrap(uint32(0x68), stb.ServiceReady)
-	stb.obj.Wrap(uint32(0x69), stb.UpdateServiceInfo)
-	stb.obj.Wrap(uint32(0x6c), stb.MachineId)
-	stb.obj.Wrap(uint32(0x6d), stb._socketOfService)
 	return &stb
 }
 func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
@@ -74,7 +66,26 @@ func (p *stubServiceDirectory) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	case uint32(0x64):
+		return p.Service(msg, from)
+	case uint32(0x65):
+		return p.Services(msg, from)
+	case uint32(0x66):
+		return p.RegisterService(msg, from)
+	case uint32(0x67):
+		return p.UnregisterService(msg, from)
+	case uint32(0x68):
+		return p.ServiceReady(msg, from)
+	case uint32(0x69):
+		return p.UpdateServiceInfo(msg, from)
+	case uint32(0x6c):
+		return p.MachineId(msg, from)
+	case uint32(0x6d):
+		return p._socketOfService(msg, from)
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error {
 	switch name {

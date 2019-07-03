@@ -46,8 +46,6 @@ func PingPongObject(impl PingPongImplementor) bus.Actor {
 	var stb stubPingPong
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
-	stb.obj.Wrap(uint32(0x64), stb.Hello)
-	stb.obj.Wrap(uint32(0x65), stb.Ping)
 	return &stb
 }
 func (p *stubPingPong) Activate(activation bus.Activation) error {
@@ -60,7 +58,14 @@ func (p *stubPingPong) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubPingPong) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	case uint32(0x64):
+		return p.Hello(msg, from)
+	case uint32(0x65):
+		return p.Ping(msg, from)
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubPingPong) onPropertyChange(name string, data []byte) error {
 	switch name {

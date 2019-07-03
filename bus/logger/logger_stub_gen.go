@@ -47,9 +47,6 @@ func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 	var stb stubLogProvider
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
-	stb.obj.Wrap(uint32(0x64), stb.SetVerbosity)
-	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
-	stb.obj.Wrap(uint32(0x66), stb.ClearAndSet)
 	return &stb
 }
 func (p *stubLogProvider) Activate(activation bus.Activation) error {
@@ -62,7 +59,16 @@ func (p *stubLogProvider) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	case uint32(0x64):
+		return p.SetVerbosity(msg, from)
+	case uint32(0x65):
+		return p.SetCategory(msg, from)
+	case uint32(0x66):
+		return p.ClearAndSet(msg, from)
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
 	switch name {
@@ -200,8 +206,6 @@ func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 	var stb stubLogListener
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
-	stb.obj.Wrap(uint32(0x65), stb.SetCategory)
-	stb.obj.Wrap(uint32(0x66), stb.ClearFilters)
 	return &stb
 }
 func (p *stubLogListener) Activate(activation bus.Activation) error {
@@ -214,7 +218,14 @@ func (p *stubLogListener) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubLogListener) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	case uint32(0x65):
+		return p.SetCategory(msg, from)
+	case uint32(0x66):
+		return p.ClearFilters(msg, from)
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 	switch name {
@@ -402,11 +413,6 @@ func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 	var stb stubLogManager
 	stb.impl = impl
 	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
-	stb.obj.Wrap(uint32(0x64), stb.Log)
-	stb.obj.Wrap(uint32(0x65), stb.CreateListener)
-	stb.obj.Wrap(uint32(0x66), stb.GetListener)
-	stb.obj.Wrap(uint32(0x67), stb.AddProvider)
-	stb.obj.Wrap(uint32(0x68), stb.RemoveProvider)
 	return &stb
 }
 func (p *stubLogManager) Activate(activation bus.Activation) error {
@@ -419,7 +425,20 @@ func (p *stubLogManager) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubLogManager) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	case uint32(0x64):
+		return p.Log(msg, from)
+	case uint32(0x65):
+		return p.CreateListener(msg, from)
+	case uint32(0x66):
+		return p.GetListener(msg, from)
+	case uint32(0x67):
+		return p.AddProvider(msg, from)
+	case uint32(0x68):
+		return p.RemoveProvider(msg, from)
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubLogManager) onPropertyChange(name string, data []byte) error {
 	switch name {

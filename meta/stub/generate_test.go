@@ -60,20 +60,6 @@ func ObjectObject(impl ObjectImplementor) bus.Actor {
 	var stb stubObject
 	stb.impl = impl
 	stb.obj = bus.NewBasicObject()
-	stb.obj.Wrap(uint32(0x0), stb.RegisterEvent)
-	stb.obj.Wrap(uint32(0x1), stb.UnregisterEvent)
-	stb.obj.Wrap(uint32(0x2), stb.MetaObject)
-	stb.obj.Wrap(uint32(0x3), stb.Terminate)
-	stb.obj.Wrap(uint32(0x5), stb.Property)
-	stb.obj.Wrap(uint32(0x6), stb.SetProperty)
-	stb.obj.Wrap(uint32(0x7), stb.Properties)
-	stb.obj.Wrap(uint32(0x8), stb.RegisterEventWithSignature)
-	stb.obj.Wrap(uint32(0x50), stb.IsStatsEnabled)
-	stb.obj.Wrap(uint32(0x51), stb.EnableStats)
-	stb.obj.Wrap(uint32(0x52), stb.Stats)
-	stb.obj.Wrap(uint32(0x53), stb.ClearStats)
-	stb.obj.Wrap(uint32(0x54), stb.IsTraceEnabled)
-	stb.obj.Wrap(uint32(0x55), stb.EnableTrace)
 	return &stb
 }
 func (p *stubObject) Activate(activation bus.Activation) error {
@@ -86,7 +72,34 @@ func (p *stubObject) OnTerminate() {
 	p.obj.OnTerminate()
 }
 func (p *stubObject) Receive(msg *net.Message, from *bus.Channel) error {
-	return p.obj.Receive(msg, from)
+	switch msg.Header.Action {
+	case uint32(0x2):
+		return p.MetaObject(msg, from)
+	case uint32(0x3):
+		return p.Terminate(msg, from)
+	case uint32(0x5):
+		return p.Property(msg, from)
+	case uint32(0x6):
+		return p.SetProperty(msg, from)
+	case uint32(0x7):
+		return p.Properties(msg, from)
+	case uint32(0x8):
+		return p.RegisterEventWithSignature(msg, from)
+	case uint32(0x50):
+		return p.IsStatsEnabled(msg, from)
+	case uint32(0x51):
+		return p.EnableStats(msg, from)
+	case uint32(0x52):
+		return p.Stats(msg, from)
+	case uint32(0x53):
+		return p.ClearStats(msg, from)
+	case uint32(0x54):
+		return p.IsTraceEnabled(msg, from)
+	case uint32(0x55):
+		return p.EnableTrace(msg, from)
+	default:
+		return p.obj.Receive(msg, from)
+	}
 }
 func (p *stubObject) onPropertyChange(name string, data []byte) error {
 	switch name {
