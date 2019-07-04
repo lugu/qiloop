@@ -40,6 +40,8 @@ type Activation struct {
 	Session   Session
 	Terminate func()
 	Service   Service
+	// TODO: offer a means to create client objects
+	// Route(id uint32, to *Channel) (uint32, error)
 }
 
 func objectTerminator(service Service, objectID uint32) func() {

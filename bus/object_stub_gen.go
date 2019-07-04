@@ -169,7 +169,7 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.Actor.
 type stubObject struct {
-	obj     BasicObject
+	obj     *signalHandler
 	impl    ObjectImplementor
 	session Session
 }
@@ -178,7 +178,7 @@ type stubObject struct {
 func ObjectObject(impl ObjectImplementor) Actor {
 	var stb stubObject
 	stb.impl = impl
-	stb.obj = NewBasicObject()
+	stb.obj = NewSignalHandler()
 	return &stb
 }
 func (p *stubObject) Activate(activation Activation) error {
@@ -192,6 +192,10 @@ func (p *stubObject) OnTerminate() {
 }
 func (p *stubObject) Receive(msg *net.Message, from *Channel) error {
 	switch msg.Header.Action {
+	case uint32(0x0):
+		return p.obj.RegisterEvent(msg, from)
+	case uint32(0x1):
+		return p.obj.UnregisterEvent(msg, from)
 	case uint32(0x2):
 		return p.MetaObject(msg, from)
 	case uint32(0x3):
@@ -217,7 +221,7 @@ func (p *stubObject) Receive(msg *net.Message, from *Channel) error {
 	case uint32(0x55):
 		return p.EnableTrace(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return from.SendError(msg, ErrActionNotFound)
 	}
 }
 func (p *stubObject) onPropertyChange(name string, data []byte) error {

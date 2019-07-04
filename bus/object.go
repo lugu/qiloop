@@ -49,7 +49,7 @@ func (s *stubObject) UpdateProperty(id uint32, sig string, data []byte) error {
 }
 
 type objectImpl struct {
-	obj              *basicObject
+	obj              *signalHandler
 	meta             object.MetaObject
 	onPropertyChange func(string, []byte) error
 	objectID         uint32
@@ -77,11 +77,11 @@ func NewObject(meta object.MetaObject,
 	}
 	obj := ObjectObject(impl)
 	stub := obj.(*stubObject)
-	impl.basicObject(stub.obj.(*basicObject))
+	impl.basicObject(stub.obj)
 	return stub
 }
 
-func (o *objectImpl) basicObject(obj *basicObject) {
+func (o *objectImpl) basicObject(obj *signalHandler) {
 	o.obj = obj
 	obj.tracer = o.tracer()
 }

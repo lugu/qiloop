@@ -428,21 +428,28 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 	writing := make([]jen.Code, 0)
 	method := func(m object.MetaMethod, methodName string) error {
-		// RegisterEvent and UnregisterEvent are implemented
-		// in basicObject.
-		if methodName == "RegisterEvent" && m.Uid == 0x0 {
-			return nil
-		}
-		if methodName == "UnregisterEvent" && m.Uid == 0x1 {
-			return nil
-		}
 		method := itf.Methods[m.Uid]
 		code := jen.Case(jen.Lit(method.ID))
 		writing = append(writing, code)
-		code = jen.Return().Id("p").Dot(methodName).Call(
-			jen.Id("msg"),
-			jen.Id("from"),
-		)
+
+		// RegisterEvent and UnregisterEvent are implemented
+		// in basicObject.
+		if methodName == "RegisterEvent" && m.Uid == 0x0 {
+			code = jen.Return().Id("p").Dot("obj").Dot(methodName).Call(
+				jen.Id("msg"),
+				jen.Id("from"),
+			)
+		} else if methodName == "UnregisterEvent" && m.Uid == 0x1 {
+			code = jen.Return().Id("p").Dot("obj").Dot(methodName).Call(
+				jen.Id("msg"),
+				jen.Id("from"),
+			)
+		} else {
+			code = jen.Return().Id("p").Dot(methodName).Call(
+				jen.Id("msg"),
+				jen.Id("from"),
+			)
+		}
 		writing = append(writing, code)
 		return nil
 	}
@@ -463,7 +470,11 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	code := jen.Default()
 	writing = append(writing, code)
-	code = jen.Id(`return p.obj.Receive(msg, from)`)
+	if itf.Name == "Object" {
+		code = jen.Id(`return from.SendError(msg, ErrActionNotFound)`)
+	} else {
+		code = jen.Id(`return p.obj.Receive(msg, from)`)
+	}
 	writing = append(writing, code)
 
 	file.Func().Params(
@@ -549,7 +560,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	if itf.Name == "Object" {
 		code = jen.Id("stb.obj").Op("=").Qual(
 			"github.com/lugu/qiloop/bus",
-			"NewBasicObject",
+			"NewSignalHandler",
 		).Call()
 	} else {
 		code = jen.Id("stb.obj").Op("=").Qual(
@@ -577,10 +588,13 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Commentf("%s implements server.Actor.", stubName(itf.Name))
+	base := jen.Id("obj").Qual("github.com/lugu/qiloop/bus", "BasicObject")
+	if itf.Name == "Object" {
+		base = jen.Id("obj").Op("*").Qual("github.com/lugu/qiloop/bus", "signalHandler")
+	}
+
 	file.Type().Id(stubName(itf.Name)).Struct(
-		jen.Id("obj").Qual(
-			"github.com/lugu/qiloop/bus", "BasicObject",
-		),
+		base,
 		jen.Id("impl").Id(implName(itf.Name)),
 		jen.Id("session").Qual(
 			"github.com/lugu/qiloop/bus", "Session",
