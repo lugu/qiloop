@@ -37,7 +37,7 @@ type LogProviderSignalHelper interface{}
 
 // stubLogProvider implements server.Actor.
 type stubLogProvider struct {
-	obj     bus.BasicObject
+	signal  bus.BasicObject
 	impl    LogProviderImplementor
 	session bus.Session
 }
@@ -46,17 +46,17 @@ type stubLogProvider struct {
 func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubLogProvider) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogProvider) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -67,7 +67,7 @@ func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x66):
 		return p.ClearAndSet(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
@@ -196,7 +196,7 @@ type LogListenerSignalHelper interface {
 
 // stubLogListener implements server.Actor.
 type stubLogListener struct {
-	obj     bus.BasicObject
+	signal  bus.BasicObject
 	impl    LogListenerImplementor
 	session bus.Session
 }
@@ -205,17 +205,17 @@ type stubLogListener struct {
 func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 	var stb stubLogListener
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubLogListener) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogListener) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubLogListener) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -224,7 +224,7 @@ func (p *stubLogListener) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x66):
 		return p.ClearFilters(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
@@ -295,7 +295,7 @@ func (p *stubLogListener) SignalOnLogMessage(msg LogMessage) error {
 	if err := writeLogMessage(msg, &buf); err != nil {
 		return fmt.Errorf("failed to serialize msg: %s", err)
 	}
-	err := p.obj.UpdateSignal(uint32(0x67), buf.Bytes())
+	err := p.signal.UpdateSignal(uint32(0x67), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalOnLogMessage: %s", err)
@@ -307,7 +307,7 @@ func (p *stubLogListener) UpdateVerbosity(level LogLevel) error {
 	if err := writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("failed to serialize level: %s", err)
 	}
-	err := p.obj.UpdateProperty(uint32(0x68), "(i)<LogLevel,level>", buf.Bytes())
+	err := p.signal.UpdateProperty(uint32(0x68), "(i)<LogLevel,level>", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateVerbosity: %s", err)
@@ -335,7 +335,7 @@ func (p *stubLogListener) UpdateFilters(filters map[string]int32) error {
 	}(); err != nil {
 		return fmt.Errorf("failed to serialize filters: %s", err)
 	}
-	err := p.obj.UpdateProperty(uint32(0x69), "{si}", buf.Bytes())
+	err := p.signal.UpdateProperty(uint32(0x69), "{si}", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateFilters: %s", err)
@@ -403,7 +403,7 @@ type LogManagerSignalHelper interface{}
 
 // stubLogManager implements server.Actor.
 type stubLogManager struct {
-	obj     bus.BasicObject
+	signal  bus.BasicObject
 	impl    LogManagerImplementor
 	session bus.Session
 }
@@ -412,17 +412,17 @@ type stubLogManager struct {
 func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 	var stb stubLogManager
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubLogManager) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogManager) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubLogManager) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -437,7 +437,7 @@ func (p *stubLogManager) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x68):
 		return p.RemoveProvider(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubLogManager) onPropertyChange(name string, data []byte) error {

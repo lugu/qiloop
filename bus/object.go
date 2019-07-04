@@ -23,7 +23,7 @@ var ErrWrongObjectID = errors.New("Wrong object ID")
 var ErrNotYetImplemented = errors.New("Not supported")
 
 func (s *stubObject) UpdateSignal(signal uint32, data []byte) error {
-	return s.obj.UpdateSignal(signal, data)
+	return s.signal.UpdateSignal(signal, data)
 }
 
 func (s *stubObject) UpdateProperty(id uint32, sig string, data []byte) error {
@@ -45,7 +45,7 @@ func (s *stubObject) UpdateProperty(id uint32, sig string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	return s.obj.UpdateProperty(id, sig, data)
+	return s.signal.UpdateProperty(id, sig, data)
 }
 
 type objectImpl struct {
@@ -77,8 +77,8 @@ func NewObject(meta object.MetaObject,
 	}
 	obj := ObjectObject(impl)
 	stub := obj.(*stubObject)
-	impl.obj = stub.obj
-	impl.obj.tracer = stub.obj.tracer
+	impl.obj = stub.signal
+	impl.obj.tracer = stub.signal.tracer
 	return stub
 }
 

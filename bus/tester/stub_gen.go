@@ -39,7 +39,7 @@ type BombSignalHelper interface {
 
 // stubBomb implements server.Actor.
 type stubBomb struct {
-	obj     bus.BasicObject
+	signal  bus.BasicObject
 	impl    BombImplementor
 	session bus.Session
 }
@@ -48,22 +48,22 @@ type stubBomb struct {
 func BombObject(impl BombImplementor) bus.Actor {
 	var stb stubBomb
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubBomb) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubBomb) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubBomb) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubBomb) onPropertyChange(name string, data []byte) error {
@@ -84,7 +84,7 @@ func (p *stubBomb) SignalBoom(energy int32) error {
 	if err := basic.WriteInt32(energy, &buf); err != nil {
 		return fmt.Errorf("failed to serialize energy: %s", err)
 	}
-	err := p.obj.UpdateSignal(uint32(0x64), buf.Bytes())
+	err := p.signal.UpdateSignal(uint32(0x64), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalBoom: %s", err)
@@ -96,7 +96,7 @@ func (p *stubBomb) UpdateDelay(duration int32) error {
 	if err := basic.WriteInt32(duration, &buf); err != nil {
 		return fmt.Errorf("failed to serialize duration: %s", err)
 	}
-	err := p.obj.UpdateProperty(uint32(0x65), "i", buf.Bytes())
+	err := p.signal.UpdateProperty(uint32(0x65), "i", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateDelay: %s", err)
@@ -141,7 +141,7 @@ type SpacecraftSignalHelper interface{}
 
 // stubSpacecraft implements server.Actor.
 type stubSpacecraft struct {
-	obj     bus.BasicObject
+	signal  bus.BasicObject
 	impl    SpacecraftImplementor
 	session bus.Session
 }
@@ -150,17 +150,17 @@ type stubSpacecraft struct {
 func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 	var stb stubSpacecraft
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubSpacecraft) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubSpacecraft) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -169,7 +169,7 @@ func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x65):
 		return p.Ammo(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {

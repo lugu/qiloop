@@ -204,7 +204,7 @@ func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
 		)
 		writing = append(writing, code)
 	}
-	code = jen.Id("err := p.obj.UpdateProperty").Call(
+	code = jen.Id("err := p.signal.UpdateProperty").Call(
 		jen.Lit(property.ID),
 		jen.Lit(property.Type().Signature()),
 		jen.Id("buf.Bytes()"),
@@ -239,7 +239,7 @@ func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 		writing = append(writing, code)
 	}
 	// if has not return value
-	code = jen.Id("err := p.obj.UpdateSignal").Call(
+	code = jen.Id("err := p.signal.UpdateSignal").Call(
 		jen.Lit(signal.ID),
 		jen.Id("buf.Bytes()"),
 	)
@@ -407,14 +407,14 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Error(),
 	).Block(
 		jen.Id(`p.session = activation.Session`),
-		jen.Id(`p.obj.Activate(activation)`),
+		jen.Id(`p.signal.Activate(activation)`),
 		jen.Id(`return p.impl.Activate(activation, p)`),
 	)
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("OnTerminate").Params().Block(
 		jen.Id(`p.impl.OnTerminate()`),
-		jen.Id(`p.obj.OnTerminate()`),
+		jen.Id(`p.signal.OnTerminate()`),
 	)
 
 	err := generateReceiveMethod(file, itf)
@@ -435,12 +435,12 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 		// RegisterEvent and UnregisterEvent are implemented
 		// in basicObject.
 		if methodName == "RegisterEvent" && m.Uid == 0x0 {
-			code = jen.Return().Id("p").Dot("obj").Dot(methodName).Call(
+			code = jen.Return().Id("p").Dot("signal").Dot(methodName).Call(
 				jen.Id("msg"),
 				jen.Id("from"),
 			)
 		} else if methodName == "UnregisterEvent" && m.Uid == 0x1 {
-			code = jen.Return().Id("p").Dot("obj").Dot(methodName).Call(
+			code = jen.Return().Id("p").Dot("signal").Dot(methodName).Call(
 				jen.Id("msg"),
 				jen.Id("from"),
 			)
@@ -473,7 +473,7 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 	if itf.Name == "Object" {
 		code = jen.Id(`return from.SendError(msg, ErrActionNotFound)`)
 	} else {
-		code = jen.Id(`return p.obj.Receive(msg, from)`)
+		code = jen.Id(`return p.signal.Receive(msg, from)`)
 	}
 	writing = append(writing, code)
 
@@ -558,12 +558,12 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	code = jen.Id("stb.impl = impl")
 	writing = append(writing, code)
 	if itf.Name == "Object" {
-		code = jen.Id("stb.obj").Op("=").Qual(
+		code = jen.Id("stb.signal").Op("=").Qual(
 			"github.com/lugu/qiloop/bus",
 			"NewSignalHandler",
 		).Call()
 	} else {
-		code = jen.Id("stb.obj").Op("=").Qual(
+		code = jen.Id("stb.signal").Op("=").Qual(
 			"github.com/lugu/qiloop/bus",
 			"NewObject",
 		).Call(
@@ -588,9 +588,9 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Commentf("%s implements server.Actor.", stubName(itf.Name))
-	base := jen.Id("obj").Qual("github.com/lugu/qiloop/bus", "BasicObject")
+	base := jen.Id("signal").Qual("github.com/lugu/qiloop/bus", "BasicObject")
 	if itf.Name == "Object" {
-		base = jen.Id("obj").Op("*").Qual("github.com/lugu/qiloop/bus", "signalHandler")
+		base = jen.Id("signal").Op("*").Qual("github.com/lugu/qiloop/bus", "signalHandler")
 	}
 
 	file.Type().Id(stubName(itf.Name)).Struct(

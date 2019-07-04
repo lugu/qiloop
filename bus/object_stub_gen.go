@@ -34,7 +34,7 @@ type ServiceZeroSignalHelper interface{}
 
 // stubServiceZero implements server.Actor.
 type stubServiceZero struct {
-	obj     BasicObject
+	signal  BasicObject
 	impl    ServiceZeroImplementor
 	session Session
 }
@@ -43,24 +43,24 @@ type stubServiceZero struct {
 func ServiceZeroObject(impl ServiceZeroImplementor) Actor {
 	var stb stubServiceZero
 	stb.impl = impl
-	stb.obj = NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubServiceZero) Activate(activation Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubServiceZero) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubServiceZero) Receive(msg *net.Message, from *Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x8):
 		return p.Authenticate(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubServiceZero) onPropertyChange(name string, data []byte) error {
@@ -169,7 +169,7 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.Actor.
 type stubObject struct {
-	obj     *signalHandler
+	signal  *signalHandler
 	impl    ObjectImplementor
 	session Session
 }
@@ -178,24 +178,24 @@ type stubObject struct {
 func ObjectObject(impl ObjectImplementor) Actor {
 	var stb stubObject
 	stb.impl = impl
-	stb.obj = NewSignalHandler()
+	stb.signal = NewSignalHandler()
 	return &stb
 }
 func (p *stubObject) Activate(activation Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubObject) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubObject) Receive(msg *net.Message, from *Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x0):
-		return p.obj.RegisterEvent(msg, from)
+		return p.signal.RegisterEvent(msg, from)
 	case uint32(0x1):
-		return p.obj.UnregisterEvent(msg, from)
+		return p.signal.UnregisterEvent(msg, from)
 	case uint32(0x2):
 		return p.MetaObject(msg, from)
 	case uint32(0x3):
@@ -484,7 +484,7 @@ func (p *stubObject) SignalTraceObject(event EventTrace) error {
 	if err := writeEventTrace(event, &buf); err != nil {
 		return fmt.Errorf("failed to serialize event: %s", err)
 	}
-	err := p.obj.UpdateSignal(uint32(0x56), buf.Bytes())
+	err := p.signal.UpdateSignal(uint32(0x56), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalTraceObject: %s", err)

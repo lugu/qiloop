@@ -36,7 +36,7 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.Actor.
 type stubPingPong struct {
-	obj     bus.BasicObject
+	signal  bus.BasicObject
 	impl    PingPongImplementor
 	session bus.Session
 }
@@ -45,17 +45,17 @@ type stubPingPong struct {
 func PingPongObject(impl PingPongImplementor) bus.Actor {
 	var stb stubPingPong
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubPingPong) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubPingPong) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubPingPong) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -64,7 +64,7 @@ func (p *stubPingPong) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x65):
 		return p.Ping(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubPingPong) onPropertyChange(name string, data []byte) error {
@@ -108,7 +108,7 @@ func (p *stubPingPong) SignalPong(a string) error {
 	if err := basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("failed to serialize a: %s", err)
 	}
-	err := p.obj.UpdateSignal(uint32(0x66), buf.Bytes())
+	err := p.signal.UpdateSignal(uint32(0x66), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalPong: %s", err)

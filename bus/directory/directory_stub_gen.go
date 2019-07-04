@@ -44,7 +44,7 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.Actor.
 type stubServiceDirectory struct {
-	obj     bus.BasicObject
+	signal  bus.BasicObject
 	impl    ServiceDirectoryImplementor
 	session bus.Session
 }
@@ -53,17 +53,17 @@ type stubServiceDirectory struct {
 func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.obj.Activate(activation)
+	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubServiceDirectory) OnTerminate() {
 	p.impl.OnTerminate()
-	p.obj.OnTerminate()
+	p.signal.OnTerminate()
 }
 func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -84,7 +84,7 @@ func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Channel) erro
 	case uint32(0x6d):
 		return p._socketOfService(msg, from)
 	default:
-		return p.obj.Receive(msg, from)
+		return p.signal.Receive(msg, from)
 	}
 }
 func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error {
@@ -227,7 +227,7 @@ func (p *stubServiceDirectory) SignalServiceAdded(serviceID uint32, name string)
 	if err := basic.WriteString(name, &buf); err != nil {
 		return fmt.Errorf("failed to serialize name: %s", err)
 	}
-	err := p.obj.UpdateSignal(uint32(0x6a), buf.Bytes())
+	err := p.signal.UpdateSignal(uint32(0x6a), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalServiceAdded: %s", err)
@@ -242,7 +242,7 @@ func (p *stubServiceDirectory) SignalServiceRemoved(serviceID uint32, name strin
 	if err := basic.WriteString(name, &buf); err != nil {
 		return fmt.Errorf("failed to serialize name: %s", err)
 	}
-	err := p.obj.UpdateSignal(uint32(0x6b), buf.Bytes())
+	err := p.signal.UpdateSignal(uint32(0x6b), buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update SignalServiceRemoved: %s", err)

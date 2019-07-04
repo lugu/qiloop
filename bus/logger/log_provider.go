@@ -2,11 +2,12 @@ package logger
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
-	"sync"
-	"time"
 )
 
 type logProvider struct {
@@ -92,7 +93,7 @@ func CreateLogProvider(session bus.Session, service bus.Service,
 
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.obj = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {
