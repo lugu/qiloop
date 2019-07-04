@@ -77,13 +77,9 @@ func NewObject(meta object.MetaObject,
 	}
 	obj := ObjectObject(impl)
 	stub := obj.(*stubObject)
-	impl.basicObject(stub.obj)
+	impl.obj = stub.obj
+	impl.obj.tracer = stub.obj.tracer
 	return stub
-}
-
-func (o *objectImpl) basicObject(obj *signalHandler) {
-	o.obj = obj
-	obj.tracer = o.tracer()
 }
 
 func (o *objectImpl) Activate(activation Activation,
