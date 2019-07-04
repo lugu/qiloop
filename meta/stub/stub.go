@@ -628,7 +628,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	definitions = append(definitions, comment)
 	comment = jen.Comment("activation.Session can access other services.")
 	definitions = append(definitions, comment)
-	comment = jen.Comment("helper enables signals an properties updates.")
+	comment = jen.Comment("helper enables signals and properties updates.")
 	definitions = append(definitions, comment)
 	comment = jen.Comment("Properties must be initialized using helper,")
 	definitions = append(definitions, comment)

@@ -22,7 +22,7 @@ type LogProviderImplementor interface {
 	// activation provides runtime informations.
 	// activation.Terminate() unregisters the object.
 	// activation.Session can access other services.
-	// helper enables signals an properties updates.
+	// helper enables signals and properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
 	Activate(activation bus.Activation, helper LogProviderSignalHelper) error
@@ -172,7 +172,7 @@ type LogListenerImplementor interface {
 	// activation provides runtime informations.
 	// activation.Terminate() unregisters the object.
 	// activation.Session can access other services.
-	// helper enables signals an properties updates.
+	// helper enables signals and properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
 	Activate(activation bus.Activation, helper LogListenerSignalHelper) error
@@ -386,7 +386,7 @@ type LogManagerImplementor interface {
 	// activation provides runtime informations.
 	// activation.Terminate() unregisters the object.
 	// activation.Session can access other services.
-	// helper enables signals an properties updates.
+	// helper enables signals and properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
 	Activate(activation bus.Activation, helper LogManagerSignalHelper) error

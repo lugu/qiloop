@@ -21,7 +21,7 @@ type BombImplementor interface {
 	// activation provides runtime informations.
 	// activation.Terminate() unregisters the object.
 	// activation.Session can access other services.
-	// helper enables signals an properties updates.
+	// helper enables signals and properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
 	Activate(activation bus.Activation, helper BombSignalHelper) error
@@ -127,7 +127,7 @@ type SpacecraftImplementor interface {
 	// activation provides runtime informations.
 	// activation.Terminate() unregisters the object.
 	// activation.Session can access other services.
-	// helper enables signals an properties updates.
+	// helper enables signals and properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
 	Activate(activation bus.Activation, helper SpacecraftSignalHelper) error

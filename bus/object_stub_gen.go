@@ -21,7 +21,7 @@ type ServiceZeroImplementor interface {
 	// activation provides runtime informations.
 	// activation.Terminate() unregisters the object.
 	// activation.Session can access other services.
-	// helper enables signals an properties updates.
+	// helper enables signals and properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
 	Activate(activation Activation, helper ServiceZeroSignalHelper) error
@@ -141,7 +141,7 @@ type ObjectImplementor interface {
 	// activation provides runtime informations.
 	// activation.Terminate() unregisters the object.
 	// activation.Session can access other services.
-	// helper enables signals an properties updates.
+	// helper enables signals and properties updates.
 	// Properties must be initialized using helper,
 	// during the Activate call.
 	Activate(activation Activation, helper ObjectSignalHelper) error
