@@ -49,7 +49,7 @@ func (s *stubObject) UpdateProperty(id uint32, sig string, data []byte) error {
 }
 
 type objectImpl struct {
-	obj              *signalHandler
+	signalHandler    *signalHandler
 	meta             object.MetaObject
 	onPropertyChange func(string, []byte) error
 	objectID         uint32
@@ -72,14 +72,13 @@ func NewObject(meta object.MetaObject,
 	impl := &objectImpl{
 		meta:             object.FullMetaObject(meta),
 		onPropertyChange: onPropertyChange,
-		stats:            nil,
+		signalHandler:    NewSignalHandler(),
 		properties:       make(map[string]value.Value),
 	}
-	obj := ObjectObject(impl)
-	stub := obj.(*stubObject)
-	impl.obj = stub.signal
-	impl.obj.tracer = stub.signal.tracer
-	return stub
+	return &stubObject{
+		impl:   impl,
+		signal: impl.signalHandler,
+	}
 }
 
 func (o *objectImpl) Activate(activation Activation,
@@ -93,7 +92,7 @@ func (o *objectImpl) Activate(activation Activation,
 }
 
 func (o *objectImpl) OnTerminate() {
-	o.obj.OnTerminate()
+	o.signalHandler.OnTerminate()
 }
 
 func (o *objectImpl) RegisterEvent(objectID uint32, actionID uint32,
@@ -177,7 +176,7 @@ func (o *objectImpl) SetProperty(name value.Value, newValue value.Value) error {
 	if err != nil {
 		return fmt.Errorf("cannot set property: %s", err)
 	}
-	return o.obj.UpdateProperty(id, sig, data)
+	return o.signalHandler.UpdateProperty(id, sig, data)
 }
 
 func (o *objectImpl) saveProperty(name string, newValue value.Value) error {
@@ -191,7 +190,7 @@ func (o *objectImpl) Properties() ([]string, error) {
 	properties := make([]string, 0)
 	o.propertiesMutex.RLock()
 	defer o.propertiesMutex.RUnlock()
-	for property, _ := range o.properties {
+	for property := range o.properties {
 		properties = append(properties, property)
 	}
 	return properties, nil
@@ -230,7 +229,6 @@ func (o *objectImpl) EnableStats(enabled bool) error {
 		o.stats = nil
 	}
 	panic("not yet implemented")
-	return nil
 }
 
 func (o *objectImpl) Stats() (map[uint32]MethodStatistics, error) {

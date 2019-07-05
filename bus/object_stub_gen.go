@@ -6,12 +6,13 @@ package bus
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"log"
+
 	net "github.com/lugu/qiloop/bus/net"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
-	"log"
 )
 
 // ServiceZeroImplementor interface of the service implementation
