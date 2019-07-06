@@ -46,24 +46,23 @@ type ServiceDirectorySignalHelper interface {
 type stubServiceDirectory struct {
 	impl    ServiceDirectoryImplementor
 	session bus.Session
-	signal  bus.BasicObject
+	signal  bus.SignalHandler
 }
 
 // ServiceDirectoryObject returns an object using ServiceDirectoryImplementor
 func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubServiceDirectory) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -84,7 +83,7 @@ func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Channel) erro
 	case uint32(0x6d):
 		return p._socketOfService(msg, from)
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, bus.ErrActionNotFound)
 	}
 }
 func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error {

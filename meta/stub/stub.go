@@ -396,6 +396,33 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 }
 
 func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
+	writing := make([]jen.Code, 0)
+	if itf.Name == "Object" {
+		code := jen.Id(`p.signal.Activate(activation)`)
+		writing = append(writing, code)
+		code = jen.Id(`p.session = activation.Session`)
+		writing = append(writing, code)
+		code = jen.Id(`err := p.impl.Activate(activation, p)
+		if err != nil {
+			p.signal.OnTerminate()
+			return err
+		}`)
+		writing = append(writing, code)
+		code = jen.Id(`err = p.obj.Activate(activation)
+		if err != nil {
+			p.impl.OnTerminate()
+			p.signal.OnTerminate()
+			return err
+		}
+		return nil`)
+		writing = append(writing, code)
+	} else {
+		code := jen.Id(`p.session = activation.Session`)
+		writing = append(writing, code)
+		code = jen.Id(`return p.impl.Activate(activation, p)`)
+		writing = append(writing, code)
+	}
+
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Activate").Params(
@@ -403,19 +430,24 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 			"github.com/lugu/qiloop/bus",
 			"Activation",
 		),
-	).Params(
-		jen.Error(),
-	).Block(
-		jen.Id(`p.session = activation.Session`),
-		jen.Id(`p.signal.Activate(activation)`),
-		jen.Id(`return p.impl.Activate(activation, p)`),
-	)
+	).Params(jen.Error()).Block(writing...)
+
+	writing = make([]jen.Code, 0)
+	if itf.Name == "Object" {
+		code := jen.Id(`p.obj.OnTerminate()`)
+		writing = append(writing, code)
+		code = jen.Id(`p.impl.OnTerminate()`)
+		writing = append(writing, code)
+		code = jen.Id(`p.signal.OnTerminate()`)
+		writing = append(writing, code)
+	} else {
+		code := jen.Id(`p.impl.OnTerminate()`)
+		writing = append(writing, code)
+	}
+
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
-	).Id("OnTerminate").Params().Block(
-		jen.Id(`p.impl.OnTerminate()`),
-		jen.Id(`p.signal.OnTerminate()`),
-	)
+	).Id("OnTerminate").Params().Block(writing...)
 
 	err := generateReceiveMethod(file, itf)
 	if err != nil {
@@ -471,11 +503,18 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 	code := jen.Default()
 	writing = append(writing, code)
 	if itf.Name == "Object" {
-		code = jen.Id(`return from.SendError(msg, ErrActionNotFound)`)
+		code = jen.Id(`return p.obj.Receive(msg, from)`)
+		writing = append(writing, code)
 	} else {
-		code = jen.Id(`return p.signal.Receive(msg, from)`)
+		code = jen.Return().Id("from").Op(".").Id("SendError").Call(
+			jen.Id("msg"),
+			jen.Qual(
+				"github.com/lugu/qiloop/bus",
+				"ErrActionNotFound",
+			),
+		)
+		writing = append(writing, code)
 	}
-	writing = append(writing, code)
 
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
@@ -562,19 +601,24 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 			"github.com/lugu/qiloop/bus",
 			"NewSignalHandler",
 		).Call()
+		writing = append(writing, code)
+		code = jen.Return().Op("&").Id("stb")
+		writing = append(writing, code)
 	} else {
-		code = jen.Id("stb.signal").Op("=").Qual(
+		code = jen.Id("obj").Op(":=").Qual(
 			"github.com/lugu/qiloop/bus",
 			"NewBasicObject",
 		).Call(
+			jen.Id("&stb"),
 			jen.Id("stb.metaObject()"),
 			jen.Id("stb.onPropertyChange"),
 		)
+		writing = append(writing, code)
+		code = jen.Id(`stb.signal = obj`)
+		writing = append(writing, code)
+		code = jen.Id(`return obj`)
+		writing = append(writing, code)
 	}
-	writing = append(writing, code)
-
-	code = jen.Return().Op("&").Id("stb")
-	writing = append(writing, code)
 
 	file.Commentf("%s returns an object using %s", itf.Name+"Object",
 		implName(itf.Name))
@@ -602,7 +646,7 @@ func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 		writing = append(writing, code)
 	} else {
 		code = jen.Id("signal").Qual("github.com/lugu/qiloop/bus",
-			"BasicObject")
+			"SignalHandler")
 		writing = append(writing, code)
 	}
 

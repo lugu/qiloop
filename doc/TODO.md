@@ -16,5 +16,4 @@ Unsorted TODO list
 - generate interface object constructor
 - service tutorial
 - actor: use Terminate message instead of OnTerminate.
-- actor: reverse object ownership (basic -> object -> stub)
 - repair stats and traces

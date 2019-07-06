@@ -41,29 +41,28 @@ type BombSignalHelper interface {
 type stubBomb struct {
 	impl    BombImplementor
 	session bus.Session
-	signal  bus.BasicObject
+	signal  bus.SignalHandler
 }
 
 // BombObject returns an object using BombImplementor
 func BombObject(impl BombImplementor) bus.Actor {
 	var stb stubBomb
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubBomb) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubBomb) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubBomb) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, bus.ErrActionNotFound)
 	}
 }
 func (p *stubBomb) onPropertyChange(name string, data []byte) error {
@@ -143,24 +142,23 @@ type SpacecraftSignalHelper interface{}
 type stubSpacecraft struct {
 	impl    SpacecraftImplementor
 	session bus.Session
-	signal  bus.BasicObject
+	signal  bus.SignalHandler
 }
 
 // SpacecraftObject returns an object using SpacecraftImplementor
 func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 	var stb stubSpacecraft
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubSpacecraft) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubSpacecraft) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -169,7 +167,7 @@ func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x65):
 		return p.Ammo(msg, from)
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, bus.ErrActionNotFound)
 	}
 }
 func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {

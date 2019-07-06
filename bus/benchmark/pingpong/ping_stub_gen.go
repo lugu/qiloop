@@ -38,24 +38,23 @@ type PingPongSignalHelper interface {
 type stubPingPong struct {
 	impl    PingPongImplementor
 	session bus.Session
-	signal  bus.BasicObject
+	signal  bus.SignalHandler
 }
 
 // PingPongObject returns an object using PingPongImplementor
 func PingPongObject(impl PingPongImplementor) bus.Actor {
 	var stb stubPingPong
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubPingPong) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubPingPong) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubPingPong) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -64,7 +63,7 @@ func (p *stubPingPong) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x65):
 		return p.Ping(msg, from)
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, bus.ErrActionNotFound)
 	}
 }
 func (p *stubPingPong) onPropertyChange(name string, data []byte) error {

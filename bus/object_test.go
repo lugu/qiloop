@@ -8,8 +8,18 @@ import (
 	"github.com/lugu/qiloop/type/object"
 )
 
+type dummyActor struct{}
+
+func (d dummyActor) Receive(m *net.Message, from *Channel) error {
+	return nil
+}
+func (d dummyActor) Activate(activation Activation) error {
+	return nil
+}
+func (d dummyActor) OnTerminate() {
+}
 func newObject() BasicObject {
-	return NewBasicObject(object.MetaObject{
+	return NewBasicObject(dummyActor{}, object.MetaObject{
 		Description: "",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),

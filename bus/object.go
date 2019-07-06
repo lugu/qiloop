@@ -66,7 +66,7 @@ type objectImpl struct {
 // NewBasicObject returns an BasicObject which implements Actor. It
 // handles all the generic methods and signals common to all objects.
 // onPropertyChange is called each time a property is udpated.
-func NewBasicObject(meta object.MetaObject,
+func NewBasicObject(obj Actor, meta object.MetaObject,
 	onPropertyChange func(string, []byte) error) BasicObject {
 
 	impl := &objectImpl{
@@ -77,6 +77,7 @@ func NewBasicObject(meta object.MetaObject,
 	}
 	return &stubObject{
 		impl:   impl,
+		obj:    obj,
 		signal: impl.signalHandler,
 	}
 }

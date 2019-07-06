@@ -39,24 +39,23 @@ type LogProviderSignalHelper interface{}
 type stubLogProvider struct {
 	impl    LogProviderImplementor
 	session bus.Session
-	signal  bus.BasicObject
+	signal  bus.SignalHandler
 }
 
 // LogProviderObject returns an object using LogProviderImplementor
 func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubLogProvider) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogProvider) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -67,7 +66,7 @@ func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x66):
 		return p.ClearAndSet(msg, from)
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, bus.ErrActionNotFound)
 	}
 }
 func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
@@ -198,24 +197,23 @@ type LogListenerSignalHelper interface {
 type stubLogListener struct {
 	impl    LogListenerImplementor
 	session bus.Session
-	signal  bus.BasicObject
+	signal  bus.SignalHandler
 }
 
 // LogListenerObject returns an object using LogListenerImplementor
 func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 	var stb stubLogListener
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubLogListener) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogListener) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubLogListener) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -224,7 +222,7 @@ func (p *stubLogListener) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x66):
 		return p.ClearFilters(msg, from)
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, bus.ErrActionNotFound)
 	}
 }
 func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
@@ -405,24 +403,23 @@ type LogManagerSignalHelper interface{}
 type stubLogManager struct {
 	impl    LogManagerImplementor
 	session bus.Session
-	signal  bus.BasicObject
+	signal  bus.SignalHandler
 }
 
 // LogManagerObject returns an object using LogManagerImplementor
 func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 	var stb stubLogManager
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubLogManager) Activate(activation bus.Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogManager) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubLogManager) Receive(msg *net.Message, from *bus.Channel) error {
 	switch msg.Header.Action {
@@ -437,7 +434,7 @@ func (p *stubLogManager) Receive(msg *net.Message, from *bus.Channel) error {
 	case uint32(0x68):
 		return p.RemoveProvider(msg, from)
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, bus.ErrActionNotFound)
 	}
 }
 func (p *stubLogManager) onPropertyChange(name string, data []byte) error {

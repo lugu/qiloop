@@ -36,31 +36,30 @@ type ServiceZeroSignalHelper interface{}
 type stubServiceZero struct {
 	impl    ServiceZeroImplementor
 	session Session
-	signal  BasicObject
+	signal  SignalHandler
 }
 
 // ServiceZeroObject returns an object using ServiceZeroImplementor
 func ServiceZeroObject(impl ServiceZeroImplementor) Actor {
 	var stb stubServiceZero
 	stb.impl = impl
-	stb.signal = NewBasicObject(stb.metaObject(), stb.onPropertyChange)
-	return &stb
+	obj := NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
+	return obj
 }
 func (p *stubServiceZero) Activate(activation Activation) error {
 	p.session = activation.Session
-	p.signal.Activate(activation)
 	return p.impl.Activate(activation, p)
 }
 func (p *stubServiceZero) OnTerminate() {
 	p.impl.OnTerminate()
-	p.signal.OnTerminate()
 }
 func (p *stubServiceZero) Receive(msg *net.Message, from *Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x8):
 		return p.Authenticate(msg, from)
 	default:
-		return p.signal.Receive(msg, from)
+		return from.SendError(msg, ErrActionNotFound)
 	}
 }
 func (p *stubServiceZero) onPropertyChange(name string, data []byte) error {
@@ -183,11 +182,23 @@ func ObjectObject(impl ObjectImplementor) Actor {
 	return &stb
 }
 func (p *stubObject) Activate(activation Activation) error {
-	p.session = activation.Session
 	p.signal.Activate(activation)
-	return p.impl.Activate(activation, p)
+	p.session = activation.Session
+	err := p.impl.Activate(activation, p)
+	if err != nil {
+		p.signal.OnTerminate()
+		return err
+	}
+	err = p.obj.Activate(activation)
+	if err != nil {
+		p.impl.OnTerminate()
+		p.signal.OnTerminate()
+		return err
+	}
+	return nil
 }
 func (p *stubObject) OnTerminate() {
+	p.obj.OnTerminate()
 	p.impl.OnTerminate()
 	p.signal.OnTerminate()
 }
@@ -222,7 +233,7 @@ func (p *stubObject) Receive(msg *net.Message, from *Channel) error {
 	case uint32(0x55):
 		return p.EnableTrace(msg, from)
 	default:
-		return from.SendError(msg, ErrActionNotFound)
+		return p.obj.Receive(msg, from)
 	}
 }
 func (p *stubObject) onPropertyChange(name string, data []byte) error {

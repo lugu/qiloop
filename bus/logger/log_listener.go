@@ -36,9 +36,10 @@ func CreateLogListener(session bus.Session, service bus.Service,
 	}
 	var stb stubLogListener
 	stb.impl = impl
-	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
+	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
+	stb.signal = obj
 
-	objectID, err := service.Add(&stb)
+	objectID, err := service.Add(obj)
 	if err != nil {
 		return nil, err
 	}
