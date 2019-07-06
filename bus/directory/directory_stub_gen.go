@@ -1,6 +1,3 @@
-// Package directory contains a generated stub
-// .
-
 package directory
 
 import (
@@ -407,7 +404,7 @@ type ServiceDirectory interface {
 	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
 }
 
-// ServiceDirectory represents a proxy object to the service
+// ServiceDirectoryProxy represents a proxy object to the service
 type ServiceDirectoryProxy interface {
 	object.Object
 	bus.Proxy
@@ -420,6 +417,7 @@ type proxyServiceDirectory struct {
 	session bus.Session
 }
 
+// MakeServiceDirectory returns a specialized proxy.
 func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryProxy {
 	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }

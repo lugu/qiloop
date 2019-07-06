@@ -2,6 +2,7 @@ package idl
 
 import (
 	"fmt"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/meta/signature"
@@ -121,7 +122,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 		jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	definitions = append(definitions, jen.Id(serviceName))
 
-	file.Comment(serviceName + " represents a proxy object to the service")
+	file.Comment(objName(serviceName) + " represents a proxy object to the service")
 	file.Type().Id(objName(serviceName)).Interface(
 		definitions...,
 	)
@@ -269,6 +270,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		)
 	}
 	if ProxyName != proxyName("Object") && ProxyName != proxyName("ServiceZero") {
+		file.Comment("Make" + serviceName + " returns a specialized proxy.")
 		file.Func().Id("Make"+serviceName).Params(
 			jen.Id("sess").Qual("github.com/lugu/qiloop/bus", "Session"),
 			jen.Id("proxy").Qual("github.com/lugu/qiloop/bus", "Proxy"),

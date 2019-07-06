@@ -1,6 +1,3 @@
-// Package logger contains a generated stub
-// .
-
 package logger
 
 import (
@@ -481,11 +478,11 @@ func (p *stubLogManager) CreateListener(msg *net.Message, c *bus.Channel) error 
 			return fmt.Errorf("failed to get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			true,
-			meta,
-			0,
-			ret.ServiceID(),
-			ret.ObjectID(),
+			Boolean:    true,
+			MetaObject: meta,
+			MetaID:     0,
+			ServiceID:  ret.ServiceID(),
+			ObjectID:   ret.ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -506,11 +503,11 @@ func (p *stubLogManager) GetListener(msg *net.Message, c *bus.Channel) error {
 			return fmt.Errorf("failed to get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			true,
-			meta,
-			0,
-			ret.ServiceID(),
-			ret.ObjectID(),
+			Boolean:    true,
+			MetaObject: meta,
+			MetaID:     0,
+			ServiceID:  ret.ServiceID(),
+			ObjectID:   ret.ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -731,7 +728,7 @@ type LogProvider interface {
 	ClearAndSet(filters map[string]LogLevel) error
 }
 
-// LogProvider represents a proxy object to the service
+// LogProviderProxy represents a proxy object to the service
 type LogProviderProxy interface {
 	object.Object
 	bus.Proxy
@@ -744,6 +741,7 @@ type proxyLogProvider struct {
 	session bus.Session
 }
 
+// MakeLogProvider returns a specialized proxy.
 func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
@@ -840,7 +838,7 @@ type LogListener interface {
 	SubscribeFilters() (unsubscribe func(), updates chan map[string]int32, err error)
 }
 
-// LogListener represents a proxy object to the service
+// LogListenerProxy represents a proxy object to the service
 type LogListenerProxy interface {
 	object.Object
 	bus.Proxy
@@ -853,6 +851,7 @@ type proxyLogListener struct {
 	session bus.Session
 }
 
+// MakeLogListener returns a specialized proxy.
 func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
@@ -1150,7 +1149,7 @@ type LogManager interface {
 	RemoveProvider(sourceID int32) error
 }
 
-// LogManager represents a proxy object to the service
+// LogManagerProxy represents a proxy object to the service
 type LogManagerProxy interface {
 	object.Object
 	bus.Proxy
@@ -1163,6 +1162,7 @@ type proxyLogManager struct {
 	session bus.Session
 }
 
+// MakeLogManager returns a specialized proxy.
 func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }
@@ -1267,11 +1267,11 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 			return fmt.Errorf("failed to get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			true,
-			meta,
-			0,
-			source.ServiceID(),
-			source.ObjectID(),
+			Boolean:    true,
+			MetaObject: meta,
+			MetaID:     0,
+			ServiceID:  source.ServiceID(),
+			ObjectID:   source.ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {

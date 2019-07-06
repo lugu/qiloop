@@ -2,6 +2,7 @@ package idl
 
 import (
 	"fmt"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
@@ -279,11 +280,11 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 		return fmt.Errorf("failed to get meta: %s", err)
 	    }
 	    ref := object.ObjectReference {
-		    true,
-		    meta,
-		    0,
-		    ` + id + `.ServiceID(),
-		    ` + id + `.ObjectID(),
+		    Boolean: true,
+		    MetaObject: meta,
+		    MetaID: 0,
+		    ServiceID: ` + id + `.ServiceID(),
+		    ObjectID: ` + id + `.ObjectID(),
 	    }
 	    return object.WriteObjectReference(ref, ` + writer + `)
 	}()`)

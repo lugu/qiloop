@@ -1,6 +1,3 @@
-// Package pingpong contains a generated stub
-// .
-
 package pingpong
 
 import (
@@ -160,7 +157,7 @@ type PingPong interface {
 	SubscribePong() (unsubscribe func(), updates chan string, err error)
 }
 
-// PingPong represents a proxy object to the service
+// PingPongProxy represents a proxy object to the service
 type PingPongProxy interface {
 	object.Object
 	bus.Proxy
@@ -173,6 +170,7 @@ type proxyPingPong struct {
 	session bus.Session
 }
 
+// MakePingPong returns a specialized proxy.
 func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 	return &proxyPingPong{bus.MakeObject(proxy), sess}
 }

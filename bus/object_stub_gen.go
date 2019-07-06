@@ -1,6 +1,3 @@
-// Package bus contains a generated stub
-// .
-
 package bus
 
 import (
@@ -617,7 +614,7 @@ type ServiceZero interface {
 	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
 }
 
-// ServiceZero represents a proxy object to the service
+// ServiceZeroProxy represents a proxy object to the service
 type ServiceZeroProxy interface {
 	Proxy
 	ServiceZero
@@ -709,7 +706,7 @@ type Object interface {
 	SubscribeTraceObject() (unsubscribe func(), updates chan EventTrace, err error)
 }
 
-// Object represents a proxy object to the service
+// ObjectProxy represents a proxy object to the service
 type ObjectProxy interface {
 	object.Object
 	Proxy

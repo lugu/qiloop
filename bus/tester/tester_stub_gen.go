@@ -1,6 +1,3 @@
-// Package tester contains a generated stub
-// .
-
 package tester
 
 import (
@@ -188,11 +185,11 @@ func (p *stubSpacecraft) Shoot(msg *net.Message, c *bus.Channel) error {
 			return fmt.Errorf("failed to get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			true,
-			meta,
-			0,
-			ret.ServiceID(),
-			ret.ObjectID(),
+			Boolean:    true,
+			MetaObject: meta,
+			MetaID:     0,
+			ServiceID:  ret.ServiceID(),
+			ObjectID:   ret.ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -268,7 +265,7 @@ type Bomb interface {
 	SubscribeDelay() (unsubscribe func(), updates chan int32, err error)
 }
 
-// Bomb represents a proxy object to the service
+// BombProxy represents a proxy object to the service
 type BombProxy interface {
 	object.Object
 	bus.Proxy
@@ -281,6 +278,7 @@ type proxyBomb struct {
 	session bus.Session
 }
 
+// MakeBomb returns a specialized proxy.
 func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 	return &proxyBomb{bus.MakeObject(proxy), sess}
 }
@@ -416,7 +414,7 @@ type Spacecraft interface {
 	Ammo(ammo BombProxy) error
 }
 
-// Spacecraft represents a proxy object to the service
+// SpacecraftProxy represents a proxy object to the service
 type SpacecraftProxy interface {
 	object.Object
 	bus.Proxy
@@ -429,6 +427,7 @@ type proxySpacecraft struct {
 	session bus.Session
 }
 
+// MakeSpacecraft returns a specialized proxy.
 func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 	return &proxySpacecraft{bus.MakeObject(proxy), sess}
 }
@@ -479,11 +478,11 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 			return fmt.Errorf("failed to get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			true,
-			meta,
-			0,
-			ammo.ServiceID(),
-			ammo.ObjectID(),
+			Boolean:    true,
+			MetaObject: meta,
+			MetaID:     0,
+			ServiceID:  ammo.ServiceID(),
+			ObjectID:   ammo.ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
