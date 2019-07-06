@@ -1,4 +1,4 @@
-package pingpong
+package pong
 
 import (
 	"github.com/lugu/qiloop/bus"
@@ -8,6 +8,7 @@ type impl struct {
 	signal PingPongSignalHelper
 }
 
+// PingPongImpl returns an implementation of ping pong.
 func PingPongImpl() PingPongImplementor {
 	return new(impl)
 }
