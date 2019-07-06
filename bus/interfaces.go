@@ -62,7 +62,7 @@ type Server interface {
 	// Returns a channel to wait for the server terminaison.
 	WaitTerminate() chan error
 
-	// FIXME: can we get ride of Client?
+	// Client returns a direct Client.
 	Client() Client
 }
 

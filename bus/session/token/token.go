@@ -40,8 +40,7 @@ func readUserToken() (string, string) {
 	if err != io.EOF && err != nil {
 		return "", ""
 	}
-	// FIXME: don't trim space from pwd
-	return strings.TrimSpace(user), strings.TrimSpace(pwd)
+	return strings.TrimSpace(user), pwd
 }
 
 // WriteUserToken save the user credentials.

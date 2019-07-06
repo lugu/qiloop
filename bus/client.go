@@ -3,10 +3,11 @@ package bus
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/type/value"
 	"strings"
 	"sync"
+
+	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/type/value"
 )
 
 type client struct {
@@ -52,8 +53,6 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 	}
 
 	closer := func(err error) {
-		// FIXME: remote connection closed: shall set
-		// the client as unusable
 		close(reply)
 	}
 
@@ -158,7 +157,7 @@ func SelectEndPoint(addrs []string) (endpoint net.EndPoint, err error) {
 	// sort the addresses based on their value
 	for _, addr := range addrs {
 		// do not connect the test range.
-		// FIXME: unless a local interface has such IP
+		// TODO: unless a local interface has such IP
 		// address.
 		if strings.Contains(addr, "198.18.0") {
 			continue

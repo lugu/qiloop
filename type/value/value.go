@@ -2,8 +2,9 @@ package value
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/type/basic"
 	"io"
+
+	"github.com/lugu/qiloop/type/basic"
 )
 
 // Value represents a value whose type in unknown at compile time. The
@@ -46,11 +47,13 @@ func NewValue(r io.Reader) (Value, error) {
 	return f(r)
 }
 
+// OpaqueValue represents a value using a signature and the data.
 type OpaqueValue struct {
 	sig  string
 	data []byte
 }
 
+// Opaque creates a Value (an OpaqueValue).
 func Opaque(signature string, data []byte) Value {
 	return &OpaqueValue{
 		sig:  signature,
@@ -58,10 +61,12 @@ func Opaque(signature string, data []byte) Value {
 	}
 }
 
+// Signature returns the signature of the value.
 func (o *OpaqueValue) Signature() string {
 	return o.sig
 }
 
+// Write the value.
 func (o *OpaqueValue) Write(w io.Writer) error {
 	if err := basic.WriteString(o.sig, w); err != nil {
 		return err
@@ -89,6 +94,7 @@ func newBool(r io.Reader) (Value, error) {
 	return Bool(b), err
 }
 
+// Signature returns the boolean signature "b".
 func (b BoolValue) Signature() string {
 	return "b"
 }
@@ -108,7 +114,7 @@ func (b BoolValue) Value() bool {
 // Uint8Value represents a Value of an uint8.
 type Uint8Value uint8
 
-// Uint8 constructs a Value.
+// Uint8 constructs a Value corresponding to an unsigned char.
 func Uint8(i uint8) Value {
 	return Uint8Value(i)
 }
@@ -118,6 +124,7 @@ func newUint8(r io.Reader) (Value, error) {
 	return Uint8(i), err
 }
 
+// Signature returns the signature of an unsigned char.
 func (i Uint8Value) Signature() string {
 	return "C"
 }
@@ -137,7 +144,7 @@ func (i Uint8Value) Value() uint8 {
 // Int8Value represents a Value of an int8.
 type Int8Value int8
 
-// Int8 constructs a Value. FIXME: Int shall be int32
+// Int8 constructs a Value.
 func Int8(i int8) Value {
 	return Int8Value(i)
 }
@@ -147,6 +154,7 @@ func newInt8(r io.Reader) (Value, error) {
 	return Int8(i), err
 }
 
+// Signature returns the signature of an signed char ("c").
 func (i Int8Value) Signature() string {
 	return "c"
 }
@@ -166,7 +174,7 @@ func (i Int8Value) Value() int8 {
 // Uint16Value represents a Value of an uint16.
 type Uint16Value uint16
 
-// Uint16 constructs a Value. FIXME: Int shall be int32
+// Uint16 constructs a Value.
 func Uint16(i uint16) Value {
 	return Uint16Value(i)
 }
@@ -176,6 +184,7 @@ func newUint16(r io.Reader) (Value, error) {
 	return Uint16(i), err
 }
 
+// Signature returns "W"
 func (i Uint16Value) Signature() string {
 	return "W"
 }
@@ -195,7 +204,7 @@ func (i Uint16Value) Value() uint16 {
 // Int16Value represents a Value of an int16.
 type Int16Value int16
 
-// Int16 constructs a Value. FIXME: Int shall be int32
+// Int16 constructs a Value.
 func Int16(i int16) Value {
 	return Int16Value(i)
 }
@@ -205,6 +214,7 @@ func newInt16(r io.Reader) (Value, error) {
 	return Int16(i), err
 }
 
+// Signature returns "w".
 func (i Int16Value) Signature() string {
 	return "w"
 }
@@ -224,7 +234,7 @@ func (i Int16Value) Value() int16 {
 // UintValue represents a Value of an uint32.
 type UintValue uint32
 
-// Uint constructs a Value. FIXME: Int shall be int32
+// Uint constructs a Value.
 func Uint(i uint32) Value {
 	return UintValue(i)
 }
@@ -234,6 +244,7 @@ func newUint(r io.Reader) (Value, error) {
 	return Uint(i), err
 }
 
+// Signature returns "I".
 func (i UintValue) Signature() string {
 	return "I"
 }
@@ -253,7 +264,7 @@ func (i UintValue) Value() uint32 {
 // IntValue represents a Value of an uint32.
 type IntValue int32
 
-// Int constructs a Value. FIXME: Int shall be int32
+// Int constructs a Value.
 func Int(i int32) Value {
 	return IntValue(i)
 }
@@ -263,6 +274,7 @@ func newInt(r io.Reader) (Value, error) {
 	return Int(i), err
 }
 
+// Signature returns "i".
 func (i IntValue) Signature() string {
 	return "i"
 }
@@ -292,6 +304,7 @@ func newUlong(r io.Reader) (Value, error) {
 	return Ulong(l), err
 }
 
+// Signature returns "L".
 func (l UlongValue) Signature() string {
 	return "L"
 }
@@ -321,6 +334,7 @@ func newLong(r io.Reader) (Value, error) {
 	return Long(l), err
 }
 
+// Signature returns "l"
 func (l LongValue) Signature() string {
 	return "l"
 }
@@ -350,6 +364,7 @@ func newFloat(r io.Reader) (Value, error) {
 	return Float(f), err
 }
 
+// Signature returns "f".
 func (f FloatValue) Signature() string {
 	return "f"
 }
@@ -379,6 +394,7 @@ func newString(r io.Reader) (Value, error) {
 	return String(s), err
 }
 
+// Signature returns "s".
 func (s StringValue) Signature() string {
 	return "s"
 }
@@ -418,6 +434,7 @@ func List(l []Value) Value {
 	return ListValue(l)
 }
 
+// Signature returns "[m]".
 func (l ListValue) Signature() string {
 	return "[m]"
 }
@@ -477,6 +494,7 @@ func Raw(b []byte) Value {
 	return RawValue(b)
 }
 
+// Signature returns "r".
 func (b RawValue) Signature() string {
 	return "r"
 }
@@ -517,6 +535,7 @@ func newVoid(r io.Reader) (Value, error) {
 	return VoidValue{}, nil
 }
 
+// Signature returns "v".
 func (b VoidValue) Signature() string {
 	return "v"
 }

@@ -176,7 +176,7 @@ func dialTLS(addr string) (EndPoint, error) {
 }
 
 // dialQUIC connects regardless of the certificate.
-// FIXME: does not multiplex sessions
+// TOOD: does not multiplex sessions
 func dialQUIC(addr string) (EndPoint, error) {
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
