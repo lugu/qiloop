@@ -9,7 +9,7 @@ import (
 )
 
 func newObject() BasicObject {
-	return NewObject(object.MetaObject{
+	return NewBasicObject(object.MetaObject{
 		Description: "",
 		Methods:     make(map[uint32]object.MetaMethod),
 		Signals:     make(map[uint32]object.MetaSignal),

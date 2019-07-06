@@ -36,16 +36,16 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.Actor.
 type stubPingPong struct {
-	signal  bus.BasicObject
 	impl    PingPongImplementor
 	session bus.Session
+	signal  bus.BasicObject
 }
 
 // PingPongObject returns an object using PingPongImplementor
 func PingPongObject(impl PingPongImplementor) bus.Actor {
 	var stb stubPingPong
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubPingPong) Activate(activation bus.Activation) error {

@@ -85,7 +85,7 @@ func CreateBomb(session bus.Session, service bus.Service) (BombProxy, error) {
 
 	var stb stubBomb
 	stb.impl = &bombImpl{}
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {

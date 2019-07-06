@@ -565,7 +565,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	} else {
 		code = jen.Id("stb.signal").Op("=").Qual(
 			"github.com/lugu/qiloop/bus",
-			"NewObject",
+			"NewBasicObject",
 		).Call(
 			jen.Id("stb.metaObject()"),
 			jen.Id("stb.onPropertyChange"),
@@ -588,18 +588,25 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	file.Commentf("%s implements server.Actor.", stubName(itf.Name))
-	base := jen.Id("signal").Qual("github.com/lugu/qiloop/bus", "BasicObject")
+
+	writing := make([]jen.Code, 0)
+	code := jen.Id("impl").Id(implName(itf.Name))
+	writing = append(writing, code)
+	code = jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session")
+	writing = append(writing, code)
 	if itf.Name == "Object" {
-		base = jen.Id("signal").Op("*").Qual("github.com/lugu/qiloop/bus", "signalHandler")
+		code = jen.Id("signal").Op("*").Qual(
+			"github.com/lugu/qiloop/bus", "signalHandler")
+		writing = append(writing, code)
+		code = jen.Id("obj").Qual("github.com/lugu/qiloop/bus", "Actor")
+		writing = append(writing, code)
+	} else {
+		code = jen.Id("signal").Qual("github.com/lugu/qiloop/bus",
+			"BasicObject")
+		writing = append(writing, code)
 	}
 
-	file.Type().Id(stubName(itf.Name)).Struct(
-		base,
-		jen.Id("impl").Id(implName(itf.Name)),
-		jen.Id("session").Qual(
-			"github.com/lugu/qiloop/bus", "Session",
-		),
-	)
+	file.Type().Id(stubName(itf.Name)).Struct(writing...)
 	return nil
 }
 

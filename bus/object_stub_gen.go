@@ -6,13 +6,12 @@ package bus
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"log"
-
 	net "github.com/lugu/qiloop/bus/net"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
+	"io"
+	"log"
 )
 
 // ServiceZeroImplementor interface of the service implementation
@@ -35,16 +34,16 @@ type ServiceZeroSignalHelper interface{}
 
 // stubServiceZero implements server.Actor.
 type stubServiceZero struct {
-	signal  BasicObject
 	impl    ServiceZeroImplementor
 	session Session
+	signal  BasicObject
 }
 
 // ServiceZeroObject returns an object using ServiceZeroImplementor
 func ServiceZeroObject(impl ServiceZeroImplementor) Actor {
 	var stb stubServiceZero
 	stb.impl = impl
-	stb.signal = NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubServiceZero) Activate(activation Activation) error {
@@ -170,9 +169,10 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.Actor.
 type stubObject struct {
-	signal  *signalHandler
 	impl    ObjectImplementor
 	session Session
+	signal  *signalHandler
+	obj     Actor
 }
 
 // ObjectObject returns an object using ObjectImplementor

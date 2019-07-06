@@ -44,16 +44,16 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.Actor.
 type stubServiceDirectory struct {
-	signal  bus.BasicObject
 	impl    ServiceDirectoryImplementor
 	session bus.Session
+	signal  bus.BasicObject
 }
 
 // ServiceDirectoryObject returns an object using ServiceDirectoryImplementor
 func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 	var stb stubServiceDirectory
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubServiceDirectory) Activate(activation bus.Activation) error {

@@ -93,7 +93,7 @@ func CreateLogProvider(session bus.Session, service bus.Service,
 
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 
 	objectID, err := service.Add(&stb)
 	if err != nil {

@@ -39,16 +39,16 @@ type BombSignalHelper interface {
 
 // stubBomb implements server.Actor.
 type stubBomb struct {
-	signal  bus.BasicObject
 	impl    BombImplementor
 	session bus.Session
+	signal  bus.BasicObject
 }
 
 // BombObject returns an object using BombImplementor
 func BombObject(impl BombImplementor) bus.Actor {
 	var stb stubBomb
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubBomb) Activate(activation bus.Activation) error {
@@ -141,16 +141,16 @@ type SpacecraftSignalHelper interface{}
 
 // stubSpacecraft implements server.Actor.
 type stubSpacecraft struct {
-	signal  bus.BasicObject
 	impl    SpacecraftImplementor
 	session bus.Session
+	signal  bus.BasicObject
 }
 
 // SpacecraftObject returns an object using SpacecraftImplementor
 func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 	var stb stubSpacecraft
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubSpacecraft) Activate(activation bus.Activation) error {

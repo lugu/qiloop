@@ -37,16 +37,16 @@ type LogProviderSignalHelper interface{}
 
 // stubLogProvider implements server.Actor.
 type stubLogProvider struct {
-	signal  bus.BasicObject
 	impl    LogProviderImplementor
 	session bus.Session
+	signal  bus.BasicObject
 }
 
 // LogProviderObject returns an object using LogProviderImplementor
 func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 	var stb stubLogProvider
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubLogProvider) Activate(activation bus.Activation) error {
@@ -196,16 +196,16 @@ type LogListenerSignalHelper interface {
 
 // stubLogListener implements server.Actor.
 type stubLogListener struct {
-	signal  bus.BasicObject
 	impl    LogListenerImplementor
 	session bus.Session
+	signal  bus.BasicObject
 }
 
 // LogListenerObject returns an object using LogListenerImplementor
 func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 	var stb stubLogListener
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubLogListener) Activate(activation bus.Activation) error {
@@ -403,16 +403,16 @@ type LogManagerSignalHelper interface{}
 
 // stubLogManager implements server.Actor.
 type stubLogManager struct {
-	signal  bus.BasicObject
 	impl    LogManagerImplementor
 	session bus.Session
+	signal  bus.BasicObject
 }
 
 // LogManagerObject returns an object using LogManagerImplementor
 func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 	var stb stubLogManager
 	stb.impl = impl
-	stb.signal = bus.NewObject(stb.metaObject(), stb.onPropertyChange)
+	stb.signal = bus.NewBasicObject(stb.metaObject(), stb.onPropertyChange)
 	return &stb
 }
 func (p *stubLogManager) Activate(activation bus.Activation) error {

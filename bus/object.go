@@ -63,10 +63,10 @@ type objectImpl struct {
 	traceMutex       sync.RWMutex
 }
 
-// NewObject returns an BasicObject which implements Actor. It
+// NewBasicObject returns an BasicObject which implements Actor. It
 // handles all the generic methods and signals common to all objects.
 // onPropertyChange is called each time a property is udpated.
-func NewObject(meta object.MetaObject,
+func NewBasicObject(meta object.MetaObject,
 	onPropertyChange func(string, []byte) error) BasicObject {
 
 	impl := &objectImpl{
