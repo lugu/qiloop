@@ -2,14 +2,15 @@ package directory_test
 
 import (
 	"bytes"
+	"io"
+	"testing"
+
 	"github.com/lugu/qiloop/bus"
 	dir "github.com/lugu/qiloop/bus/directory"
 	proxy "github.com/lugu/qiloop/bus/services"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
-	"io"
-	"testing"
 )
 
 func TestNewServer(t *testing.T) {
@@ -67,7 +68,7 @@ func newObjectRef(serviceID uint32) object.ObjectReference {
 	return object.ObjectReference{
 		Boolean:    true,
 		MetaObject: object.ObjectMetaObject,
-		ParentID:   0,
+		MetaID:     0,
 		ServiceID:  serviceID,
 		ObjectID:   1,
 	}

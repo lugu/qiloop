@@ -1,9 +1,10 @@
 package signature_test
 
 import (
+	"testing"
+
 	"github.com/dave/jennifer/jen"
 	. "github.com/lugu/qiloop/meta/signature"
-	"testing"
 )
 
 func helpTestBasics(t *testing.T, typ Type, signature, idl string,
@@ -54,7 +55,7 @@ func TestBasicTypes(t *testing.T) {
 }
 
 func TestObjectSignature(t *testing.T) {
-	expectedSignature := "(b({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>III)<ObjectReference,boolean,metaObject,parentID,serviceID,objectID>"
+	expectedSignature := "(b({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>III)<ObjectReference,boolean,metaObject,metaID,serviceID,objectID>"
 
 	if ObjectSignature != expectedSignature {
 		t.Errorf("invalid signature: %s", ObjectSignature)

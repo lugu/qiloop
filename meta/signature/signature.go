@@ -2,10 +2,11 @@ package signature
 
 import (
 	"fmt"
-	"github.com/dave/jennifer/jen"
-	parsec "github.com/prataprc/goparsec"
 	"io"
 	"reflect"
+
+	"github.com/dave/jennifer/jen"
+	parsec "github.com/prataprc/goparsec"
 )
 
 // MetaObjectSignature is the signature of MetaObject. It is used to
@@ -14,7 +15,7 @@ import (
 const MetaObjectSignature = "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>"
 
 // ObjectSignature is the signature of ObjectReference.
-var ObjectSignature = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaObject,parentID,serviceID,objectID>",
+var ObjectSignature = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaObject,metaID,serviceID,objectID>",
 	MetaObjectSignature)
 
 // Statement is a short version for jen.Statement.

@@ -3,12 +3,13 @@ package object_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/lugu/qiloop/type/object"
 	"io"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/lugu/qiloop/type/object"
 )
 
 func helpReadGolden(t *testing.T) object.MetaObject {
@@ -190,7 +191,7 @@ func newObjectReference() object.ObjectReference {
 	return object.ObjectReference{
 		Boolean:    true,
 		MetaObject: newMetaObject(),
-		ParentID:   1,
+		MetaID:     1,
 		ServiceID:  1,
 		ObjectID:   2,
 	}

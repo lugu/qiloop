@@ -341,7 +341,7 @@ func writeMetaObject(s MetaObject, w io.Writer) (err error) {
 type ObjectReference struct {
 	Boolean    bool
 	MetaObject MetaObject
-	ParentID   uint32
+	MetaID     uint32
 	ServiceID  uint32
 	ObjectID   uint32
 }
@@ -354,8 +354,8 @@ func readObjectReference(r io.Reader) (s ObjectReference, err error) {
 	if s.MetaObject, err = readMetaObject(r); err != nil {
 		return s, fmt.Errorf("failed to read MetaObject field: " + err.Error())
 	}
-	if s.ParentID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ParentID field: " + err.Error())
+	if s.MetaID, err = basic.ReadUint32(r); err != nil {
+		return s, fmt.Errorf("failed to read MetaID field: " + err.Error())
 	}
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
@@ -374,8 +374,8 @@ func writeObjectReference(s ObjectReference, w io.Writer) (err error) {
 	if err := writeMetaObject(s.MetaObject, w); err != nil {
 		return fmt.Errorf("failed to write MetaObject field: " + err.Error())
 	}
-	if err := basic.WriteUint32(s.ParentID, w); err != nil {
-		return fmt.Errorf("failed to write ParentID field: " + err.Error())
+	if err := basic.WriteUint32(s.MetaID, w); err != nil {
+		return fmt.Errorf("failed to write MetaID field: " + err.Error())
 	}
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
 		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
