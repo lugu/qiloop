@@ -112,9 +112,9 @@ type serviceImpl struct {
 	serviceID uint32
 }
 
-// NewService returns a service with the given object associated with
+// newService returns a service with the given object associated with
 // object id 1.
-func NewService(o Actor) *serviceImpl {
+func newService(o Actor) *serviceImpl {
 	return &serviceImpl{
 		objects: map[uint32]Actor{
 			1: o,
@@ -335,12 +335,14 @@ type Channel struct {
 	EndPoint net.EndPoint
 }
 
+// SendError send a error message in response to msg.
 func (c *Channel) SendError(msg *net.Message, err error) error {
 	// FIXME: missing trace here.
 	// o.trace(msg)
 	return util.ReplyError(c.EndPoint, msg, err)
 }
 
+// SendReply send a reply message in response to msg.
 func (c *Channel) SendReply(msg *net.Message, response []byte) error {
 	hdr := msg.Header
 	hdr.Type = net.Reply
@@ -390,6 +392,8 @@ type server struct {
 	waitChan      chan error
 }
 
+// NewServer creates a new server which respond to incomming
+// connection requests.
 func NewServer(listener net.Listener, auth Authenticator,
 	namespace Namespace, service1 Actor) (Server, error) {
 
@@ -477,7 +481,7 @@ func (s *server) NewService(name string, object Actor) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	service := NewService(object)
+	service := newService(object)
 
 	// 2. activate the service
 	err = service.Activate(serviceActivation(s.Router, session, serviceID))
