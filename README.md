@@ -7,7 +7,6 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/b192466a26dbced44274/test_coverage)](https://codeclimate.com/github/lugu/qiloop/test_coverage)
 [![Maintainability](https://api.codeclimate.com/v1/badges/b192466a26dbced44274/maintainability)](https://codeclimate.com/github/lugu/qiloop/maintainability)
 [![stability-unstable](https://img.shields.io/badge/stability-unstable-yellow.svg)](https://github.com/emersion/stability-badges#unstable)
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/lugu/qiloop.svg?columns=To%20Do,In%20Progress)](https://waffle.io/lugu/qiloop)
 
 **`qiloop`** is an implementation of QiMessaging written in [Go](https://golang.org).
 
