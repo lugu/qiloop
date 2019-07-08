@@ -163,11 +163,12 @@ func (s *serviceImpl) Add(obj Actor) (index uint32, err error) {
 // ready to handle requests. activation.Service is nil.
 func (s *serviceImpl) Activate(activation Activation) error {
 	var wait sync.WaitGroup
-	wait.Add(len(s.objects))
 	s.terminate = activation.Terminate
 	s.session = activation.Session
 	s.serviceID = activation.ServiceID
+	s.Lock()
 	ret := make(chan error, len(s.objects))
+	wait.Add(len(s.objects))
 	for objectID, obj := range s.objects {
 		go func(obj Actor, objectID uint32) {
 			objActivation := objectActivation(s, activation.Session,
@@ -179,6 +180,7 @@ func (s *serviceImpl) Activate(activation Activation) error {
 			wait.Done()
 		}(obj, objectID)
 	}
+	s.Unlock()
 	wait.Wait()
 	close(ret)
 	for err := range ret {
