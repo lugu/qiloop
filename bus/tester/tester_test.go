@@ -185,17 +185,24 @@ func TestOnTerminate(t *testing.T) {
 	}
 
 	var wait sync.WaitGroup
+	var waiting sync.WaitGroup
 	wait.Add(1)
-	tester.Hook = func(event string) {
-		if event == "Bomb.OnTerminate()" {
-			wait.Done()
+	waiting.Add(1)
+	go func() {
+		for {
+			waiting.Done()
+			event := <-tester.Hook
+			if event == "Bomb.OnTerminate()" {
+				wait.Done()
+				return
+			}
 		}
-	}
+	}()
+	waiting.Wait()
 
 	err = bomb.Terminate(bomb.ObjectID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	wait.Wait()
-	tester.Hook = func(event string) {}
 }

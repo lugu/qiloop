@@ -9,7 +9,7 @@ import (
 
 var (
 	// Hook let the test program record what is happening
-	Hook = func(event string) {}
+	Hook = make(chan string)
 )
 
 // NewSpacecraftObject creates a new server side Spacecraft object.
@@ -35,7 +35,10 @@ func (f *spacecraftImpl) Activate(activation bus.Activation,
 }
 
 func (f *spacecraftImpl) OnTerminate() {
-	Hook("SpaceCraft.OnTerminate()")
+	select {
+	case Hook <- "SpaceCraft.OnTerminate()":
+	default:
+	}
 }
 
 func (f *spacecraftImpl) Shoot() (BombProxy, error) {
@@ -60,7 +63,10 @@ func (f *bombImpl) Activate(activation bus.Activation,
 }
 
 func (f *bombImpl) OnTerminate() {
-	Hook("Bomb.OnTerminate()")
+	select {
+	case Hook <- "Bomb.OnTerminate()":
+	default:
+	}
 
 }
 
