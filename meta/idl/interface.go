@@ -300,6 +300,15 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	    if err != nil {
 		return nil, fmt.Errorf("failed to get meta: %s", err)
 	    }
+	    /*
+	    if ref.ServiceID == p.serviceID && ref.ObjectID >= 2^31 {
+		actor := bus.NewClientObject(ref.ObjectID, c)
+		ref.ObjectID, err = p.service.Add(actor)
+		if err != nil {
+	    		return nil, fmt.Errorf("add client object: %s", err)
+		}
+	    }
+	    */
 	    proxy, err := p.session.Object(ref)
 	    if err != nil {
 		    return nil, fmt.Errorf("failed to get proxy: %s", err)

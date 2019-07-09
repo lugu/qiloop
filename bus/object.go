@@ -300,3 +300,91 @@ func (o *objectImpl) trace(msg *net.Message) {
 		log.Printf("trace error: %s", err)
 	}
 }
+
+// clientObject implements Actor. It is used to forward incomming
+// messages to a remote client object.
+type clientObject struct {
+	serviceID uint32
+	remoteID  uint32
+	channel   *Channel
+	client    Client
+}
+
+// NewClientObject returns an Actor which forwards messages to a
+// remote object.
+func NewClientObject(remoteID uint32, from *Channel) Actor {
+	return &clientObject{
+		remoteID: remoteID,
+		channel:  from,
+		client:   NewClient(from.EndPoint),
+	}
+}
+
+func (c *clientObject) handleRegister(msg *net.Message, from *Channel) error {
+	buf := bytes.NewBuffer(msg.Payload)
+	objectID, err := basic.ReadUint32(buf)
+	if err != nil {
+		err = fmt.Errorf("cannot read object uid: %s", err)
+		return from.SendError(msg, err)
+	}
+	if objectID != c.remoteID {
+		err = fmt.Errorf("invalid object ID: %d instead of %d",
+			objectID, c.remoteID)
+		return from.SendError(msg, err)
+	}
+	signalID, err := basic.ReadUint32(buf)
+	if err != nil {
+		err = fmt.Errorf("cannot read signal uid: %s", err)
+		return from.SendError(msg, err)
+	}
+	// FIXME: hook to the unregister message and call cancel.
+	_, events, err := c.client.Subscribe(msg.Header.Service,
+		c.remoteID, signalID)
+	if err != nil {
+		return from.SendError(msg, err)
+	}
+	for event := range events {
+		m := net.NewMessage(msg.Header, event)
+		m.Header.Type = net.Event
+		return from.Send(&m)
+	}
+	return nil
+}
+
+func (c *clientObject) handleCall(msg *net.Message, from *Channel) error {
+	resp, err := c.client.Call(msg.Header.Service, c.remoteID,
+		msg.Header.Action, msg.Payload)
+	if err != nil {
+		return from.SendError(msg, err)
+	}
+	return from.SendReply(msg, resp)
+}
+func (c *clientObject) Receive(msg *net.Message, from *Channel) error {
+	// call to RegisterEvent
+	if msg.Header.Type == net.Call && msg.Header.Action == 0x0 {
+		go c.handleRegister(msg, from)
+		return nil
+	} else if msg.Header.Type == net.Call {
+		go c.handleCall(msg, from)
+		return nil
+	}
+	msg.Header.Object = c.remoteID
+	return c.channel.Send(msg)
+}
+func (c *clientObject) Activate(activation Activation) error {
+	c.serviceID = activation.ServiceID
+	return nil
+}
+
+// OnTerminate post a terminate message to the client object.
+func (c *clientObject) OnTerminate() {
+	var out bytes.Buffer
+	err := basic.WriteUint32(c.remoteID, &out)
+	if err != nil {
+		return
+	}
+	terminateID := uint32(0x3)
+	hdr := net.NewHeader(net.Post, c.serviceID, c.remoteID, terminateID, 0)
+	m := net.NewMessage(hdr, out.Bytes())
+	c.channel.Send(&m)
+}

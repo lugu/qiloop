@@ -354,6 +354,13 @@ func (c *Channel) SendReply(msg *net.Message, response []byte) error {
 	return c.EndPoint.Send(reply)
 }
 
+// SendReply send a reply message in response to msg.
+func (c *Channel) Send(msg *net.Message) error {
+	// FIXME: missing trace here.
+	// o.trace(&reply)
+	return c.EndPoint.Send(*msg)
+}
+
 // NewContext retuns a non authenticate context.
 func NewContext(e net.EndPoint) *Channel {
 	return &Channel{
