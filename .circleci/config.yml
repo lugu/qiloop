@@ -8,6 +8,7 @@ jobs:
       - image: circleci/golang:latest
     steps:
       - checkout
+      - run: pwd
       - run: curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
       - run: chmod +x ./cc-test-reporter
       - run: ./cc-test-reporter before-build
@@ -21,5 +22,5 @@ jobs:
       - run: go vet -composites=false ./...
       - run: go test ./... -race -coverprofile=coverage.txt -covermode=atomic -timeout 2m
       - run: bash <(curl -s https://codecov.io/bash)
-      - run: mv coverage.txt c.out
+      - run: sed 's#github.com/lugu/qiloop/##g' coverage.txt > c.out
       - run: ./cc-test-reporter after-build
