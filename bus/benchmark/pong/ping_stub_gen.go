@@ -33,9 +33,11 @@ type PingPongSignalHelper interface {
 
 // stubPingPong implements server.Actor.
 type stubPingPong struct {
-	impl    PingPongImplementor
-	session bus.Session
-	signal  bus.SignalHandler
+	impl      PingPongImplementor
+	session   bus.Session
+	service   bus.Service
+	serviceID uint32
+	signal    bus.SignalHandler
 }
 
 // PingPongObject returns an object using PingPongImplementor
@@ -48,6 +50,8 @@ func PingPongObject(impl PingPongImplementor) bus.Actor {
 }
 func (p *stubPingPong) Activate(activation bus.Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubPingPong) OnTerminate() {

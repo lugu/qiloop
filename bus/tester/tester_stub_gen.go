@@ -36,9 +36,11 @@ type BombSignalHelper interface {
 
 // stubBomb implements server.Actor.
 type stubBomb struct {
-	impl    BombImplementor
-	session bus.Session
-	signal  bus.SignalHandler
+	impl      BombImplementor
+	session   bus.Session
+	service   bus.Service
+	serviceID uint32
+	signal    bus.SignalHandler
 }
 
 // BombObject returns an object using BombImplementor
@@ -51,6 +53,8 @@ func BombObject(impl BombImplementor) bus.Actor {
 }
 func (p *stubBomb) Activate(activation bus.Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubBomb) OnTerminate() {
@@ -137,9 +141,11 @@ type SpacecraftSignalHelper interface{}
 
 // stubSpacecraft implements server.Actor.
 type stubSpacecraft struct {
-	impl    SpacecraftImplementor
-	session bus.Session
-	signal  bus.SignalHandler
+	impl      SpacecraftImplementor
+	session   bus.Session
+	service   bus.Service
+	serviceID uint32
+	signal    bus.SignalHandler
 }
 
 // SpacecraftObject returns an object using SpacecraftImplementor
@@ -152,6 +158,8 @@ func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 }
 func (p *stubSpacecraft) Activate(activation bus.Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubSpacecraft) OnTerminate() {
@@ -204,6 +212,13 @@ func (p *stubSpacecraft) Ammo(msg *net.Message, c *bus.Channel) error {
 		ref, err := object.ReadObjectReference(buf)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
+		}
+		if ref.ServiceID == p.serviceID && ref.ObjectID >= 2^31 {
+			actor := bus.NewClientObject(ref.ObjectID, c)
+			ref.ObjectID, err = p.service.Add(actor)
+			if err != nil {
+				return nil, fmt.Errorf("add client object: %s", err)
+			}
 		}
 		proxy, err := p.session.Object(ref)
 		if err != nil {

@@ -41,9 +41,11 @@ type ServiceDirectorySignalHelper interface {
 
 // stubServiceDirectory implements server.Actor.
 type stubServiceDirectory struct {
-	impl    ServiceDirectoryImplementor
-	session bus.Session
-	signal  bus.SignalHandler
+	impl      ServiceDirectoryImplementor
+	session   bus.Session
+	service   bus.Service
+	serviceID uint32
+	signal    bus.SignalHandler
 }
 
 // ServiceDirectoryObject returns an object using ServiceDirectoryImplementor
@@ -56,6 +58,8 @@ func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 }
 func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubServiceDirectory) OnTerminate() {

@@ -182,6 +182,7 @@ type InterfaceType struct {
 	Properties  map[uint32]Property
 	Scope       Scope
 	Namespace   Namespace
+	ForStub     bool
 }
 
 // Signature returns "o".
@@ -290,25 +291,32 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	}()`)
 }
 
+// InterfaceTypeForStub is a global flags which informs the
+// InterfaceType instances if they are used in the context of the
+// generation of a stub.
+var InterfaceTypeForStub = false
+
 // Unmarshal returns a statement which represent the code needed to read
 // from a reader "reader" of type io.Reader and returns both the value
 // read and an error.
 func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 
-	return jen.Func().Params().Params(s.TypeName(), jen.Error()).Block(
-		jen.Id(`ref, err := object.ReadObjectReference(` + reader + `)
-	    if err != nil {
-		return nil, fmt.Errorf("failed to get meta: %s", err)
-	    }
-	    /*
+	var extra string
+	if InterfaceTypeForStub {
+		extra = `
 	    if ref.ServiceID == p.serviceID && ref.ObjectID >= 2^31 {
 		actor := bus.NewClientObject(ref.ObjectID, c)
 		ref.ObjectID, err = p.service.Add(actor)
 		if err != nil {
 	    		return nil, fmt.Errorf("add client object: %s", err)
 		}
-	    }
-	    */
+	    }`
+	}
+	return jen.Func().Params().Params(s.TypeName(), jen.Error()).Block(
+		jen.Id(`ref, err := object.ReadObjectReference(` + reader + `)
+	    if err != nil {
+		return nil, fmt.Errorf("failed to get meta: %s", err)
+	    }` + extra + `
 	    proxy, err := p.session.Object(ref)
 	    if err != nil {
 		    return nil, fmt.Errorf("failed to get proxy: %s", err)

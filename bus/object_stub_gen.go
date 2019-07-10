@@ -31,9 +31,11 @@ type ServiceZeroSignalHelper interface{}
 
 // stubServiceZero implements server.Actor.
 type stubServiceZero struct {
-	impl    ServiceZeroImplementor
-	session Session
-	signal  SignalHandler
+	impl      ServiceZeroImplementor
+	session   Session
+	service   Service
+	serviceID uint32
+	signal    SignalHandler
 }
 
 // ServiceZeroObject returns an object using ServiceZeroImplementor
@@ -46,6 +48,8 @@ func ServiceZeroObject(impl ServiceZeroImplementor) Actor {
 }
 func (p *stubServiceZero) Activate(activation Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubServiceZero) OnTerminate() {
@@ -165,10 +169,12 @@ type ObjectSignalHelper interface {
 
 // stubObject implements server.Actor.
 type stubObject struct {
-	impl    ObjectImplementor
-	session Session
-	signal  *signalHandler
-	obj     Actor
+	impl      ObjectImplementor
+	session   Session
+	service   Service
+	serviceID uint32
+	signal    *signalHandler
+	obj       Actor
 }
 
 // ObjectObject returns an object using ObjectImplementor

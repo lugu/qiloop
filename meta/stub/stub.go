@@ -33,6 +33,7 @@ func GeneratePackage(w io.Writer, packagePath string,
 	for _, typ := range pkg.Types {
 		typ.RegisterTo(set)
 
+		idl.InterfaceTypeForStub = true
 		itf, ok := typ.(*idl.InterfaceType)
 		if ok {
 			err := generateInterface(file, set, itf)
@@ -40,6 +41,7 @@ func GeneratePackage(w io.Writer, packagePath string,
 				return err
 			}
 		}
+		idl.InterfaceTypeForStub = false
 	}
 
 	proxy.GenerateNewServices(file)
@@ -416,6 +418,10 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 	} else {
 		code := jen.Id(`p.session = activation.Session`)
 		writing = append(writing, code)
+		code = jen.Id(`p.service = activation.Service`)
+		writing = append(writing, code)
+		code = jen.Id(`p.serviceID = activation.ServiceID`)
+		writing = append(writing, code)
 		code = jen.Id(`return p.impl.Activate(activation, p)`)
 		writing = append(writing, code)
 	}
@@ -634,6 +640,10 @@ func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
 	code := jen.Id("impl").Id(implName(itf.Name))
 	writing = append(writing, code)
 	code = jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session")
+	writing = append(writing, code)
+	code = jen.Id("service").Qual("github.com/lugu/qiloop/bus", "Service")
+	writing = append(writing, code)
+	code = jen.Id("serviceID").Uint32()
 	writing = append(writing, code)
 	if itf.Name == "Object" {
 		code = jen.Id("signal").Op("*").Qual(

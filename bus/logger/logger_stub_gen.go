@@ -34,9 +34,11 @@ type LogProviderSignalHelper interface{}
 
 // stubLogProvider implements server.Actor.
 type stubLogProvider struct {
-	impl    LogProviderImplementor
-	session bus.Session
-	signal  bus.SignalHandler
+	impl      LogProviderImplementor
+	session   bus.Session
+	service   bus.Service
+	serviceID uint32
+	signal    bus.SignalHandler
 }
 
 // LogProviderObject returns an object using LogProviderImplementor
@@ -49,6 +51,8 @@ func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 }
 func (p *stubLogProvider) Activate(activation bus.Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogProvider) OnTerminate() {
@@ -192,9 +196,11 @@ type LogListenerSignalHelper interface {
 
 // stubLogListener implements server.Actor.
 type stubLogListener struct {
-	impl    LogListenerImplementor
-	session bus.Session
-	signal  bus.SignalHandler
+	impl      LogListenerImplementor
+	session   bus.Session
+	service   bus.Service
+	serviceID uint32
+	signal    bus.SignalHandler
 }
 
 // LogListenerObject returns an object using LogListenerImplementor
@@ -207,6 +213,8 @@ func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 }
 func (p *stubLogListener) Activate(activation bus.Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogListener) OnTerminate() {
@@ -398,9 +406,11 @@ type LogManagerSignalHelper interface{}
 
 // stubLogManager implements server.Actor.
 type stubLogManager struct {
-	impl    LogManagerImplementor
-	session bus.Session
-	signal  bus.SignalHandler
+	impl      LogManagerImplementor
+	session   bus.Session
+	service   bus.Service
+	serviceID uint32
+	signal    bus.SignalHandler
 }
 
 // LogManagerObject returns an object using LogManagerImplementor
@@ -413,6 +423,8 @@ func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 }
 func (p *stubLogManager) Activate(activation bus.Activation) error {
 	p.session = activation.Session
+	p.service = activation.Service
+	p.serviceID = activation.ServiceID
 	return p.impl.Activate(activation, p)
 }
 func (p *stubLogManager) OnTerminate() {
@@ -522,6 +534,13 @@ func (p *stubLogManager) AddProvider(msg *net.Message, c *bus.Channel) error {
 		ref, err := object.ReadObjectReference(buf)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
+		}
+		if ref.ServiceID == p.serviceID && ref.ObjectID >= 2^31 {
+			actor := bus.NewClientObject(ref.ObjectID, c)
+			ref.ObjectID, err = p.service.Add(actor)
+			if err != nil {
+				return nil, fmt.Errorf("add client object: %s", err)
+			}
 		}
 		proxy, err := p.session.Object(ref)
 		if err != nil {
