@@ -144,7 +144,6 @@ func TestClientBomb(t *testing.T) {
 		t.Error(err)
 	}
 
-	t.Skip("server side does not know how to access client object")
 	_, err = spacecraft.Shoot()
 	if err != nil {
 		t.Fatal(err)

@@ -535,7 +535,7 @@ func (p *stubLogManager) AddProvider(msg *net.Message, c *bus.Channel) error {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get meta: %s", err)
 		}
-		if ref.ServiceID == p.serviceID && ref.ObjectID >= 2^31 {
+		if ref.ServiceID == p.serviceID && ref.ObjectID >= (1<<31) {
 			actor := bus.NewClientObject(ref.ObjectID, c)
 			ref.ObjectID, err = p.service.Add(actor)
 			if err != nil {

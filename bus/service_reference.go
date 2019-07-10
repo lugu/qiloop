@@ -51,11 +51,11 @@ func (c *clientService) ServiceID() uint32 {
 func (c *clientService) Add(obj Actor) (uint32, error) {
 
 	c.nextIDMutex.Lock()
-	if c.nextID > 2^31-1 {
+	if c.nextID > (1<<31)-1 {
 		c.nextIDMutex.Unlock()
 		return 0, fmt.Errorf("object ID overflow")
 	}
-	id := 2 ^ 31 + c.nextID
+	id := 1<<31 + c.nextID
 	c.nextID++
 	c.nextIDMutex.Unlock()
 
@@ -70,7 +70,7 @@ func (c *clientService) Add(obj Actor) (uint32, error) {
 	})
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
-		if hdr.Service == c.serviceID && hdr.Object == id {
+		if hdr.Type == net.Call && hdr.Service == c.serviceID && hdr.Object == id {
 			return true, true
 		}
 		return false, true

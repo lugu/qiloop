@@ -304,7 +304,7 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	var extra string
 	if InterfaceTypeForStub {
 		extra = `
-	    if ref.ServiceID == p.serviceID && ref.ObjectID >= 2^31 {
+	    if ref.ServiceID == p.serviceID && ref.ObjectID >= (1<<31) {
 		actor := bus.NewClientObject(ref.ObjectID, c)
 		ref.ObjectID, err = p.service.Add(actor)
 		if err != nil {

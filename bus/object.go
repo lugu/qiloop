@@ -107,14 +107,16 @@ func (o *objectImpl) UnregisterEvent(objectID uint32, actionID uint32,
 }
 
 func (o *objectImpl) MetaObject(objectID uint32) (object.MetaObject, error) {
-	if objectID != o.objectID {
+	// remote objects don't know their real object id.
+	if o.objectID < (1<<31) && objectID != o.objectID {
 		return o.meta, ErrWrongObjectID
 	}
 	return o.meta, nil
 }
 
 func (o *objectImpl) Terminate(objectID uint32) error {
-	if objectID != o.objectID {
+	// remote objects don't know their real object id.
+	if o.objectID < (1<<31) && objectID != o.objectID {
 		return ErrWrongObjectID
 	}
 	o.terminate()
@@ -312,6 +314,26 @@ type clientObject struct {
 
 // NewClientObject returns an Actor which forwards messages to a
 // remote object.
+//
+// TODO: Why this can't work correctly:
+// - Pb 1: the client side does not know its public object id. this
+// means for methods like MetaObject(id uint32), it can't correctly
+// compare its object id with the one embedded in the payload. in
+// other words: rewritting the header is not enougth for actions which
+// includes the object id (ex: metaObject, terminate, register event,
+// ...). Work around: do not check object id in such cases.
+// - Pb 2: the client side does not know its public object id. this
+// means it cannot share this id with different services. in other
+// words: each time the object is shared with a service it must
+// register again to this service using the 2^31 tricks.
+//
+// The obvious solution is to inform the remote object of its true
+// identity. This can be done using a new method LendObjectID() uint32
+// to the services: those services would dedicate an id on demand and
+// route the traffic at this stage. The process would go like:
+// 1. client side request the service to lend her an object id.
+// 2. service allocate an id for the client and setup a route.
+// 3. client side can share its "official" reference to anyone.
 func NewClientObject(remoteID uint32, from *Channel) Actor {
 	return &clientObject{
 		remoteID: remoteID,
@@ -359,6 +381,7 @@ func (c *clientObject) handleCall(msg *net.Message, from *Channel) error {
 	}
 	return from.SendReply(msg, resp)
 }
+
 func (c *clientObject) Receive(msg *net.Message, from *Channel) error {
 	// call to RegisterEvent
 	if msg.Header.Type == net.Call && msg.Header.Action == 0x0 {
@@ -367,9 +390,11 @@ func (c *clientObject) Receive(msg *net.Message, from *Channel) error {
 	} else if msg.Header.Type == net.Call {
 		go c.handleCall(msg, from)
 		return nil
+	} else if msg.Header.Type == net.Post {
+		msg.Header.Object = c.remoteID
+		return c.channel.Send(msg)
 	}
-	msg.Header.Object = c.remoteID
-	return c.channel.Send(msg)
+	return from.SendError(msg, fmt.Errorf("unexpected message type: %#v", msg))
 }
 func (c *clientObject) Activate(activation Activation) error {
 	c.serviceID = activation.ServiceID
