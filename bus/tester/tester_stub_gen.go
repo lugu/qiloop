@@ -51,6 +51,21 @@ func BombObject(impl BombImplementor) bus.Actor {
 	stb.signal = obj
 	return obj
 }
+
+// NewBomb registers a new object to a service
+// and returns a proxy to the newly created object
+func (c Constructor) NewBomb(service bus.Service, impl BombImplementor) (BombProxy, error) {
+	obj := BombObject(impl)
+	objectID, err := service.Add(obj)
+	if err != nil {
+		return nil, err
+	}
+	stb := &stubBomb{}
+	meta := object.FullMetaObject(stb.metaObject())
+	client := bus.DirectClient(obj)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+	return MakeBomb(c.session, proxy), nil
+}
 func (p *stubBomb) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.service = activation.Service
@@ -155,6 +170,21 @@ func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
 	stb.signal = obj
 	return obj
+}
+
+// NewSpacecraft registers a new object to a service
+// and returns a proxy to the newly created object
+func (c Constructor) NewSpacecraft(service bus.Service, impl SpacecraftImplementor) (SpacecraftProxy, error) {
+	obj := SpacecraftObject(impl)
+	objectID, err := service.Add(obj)
+	if err != nil {
+		return nil, err
+	}
+	stb := &stubSpacecraft{}
+	meta := object.FullMetaObject(stb.metaObject())
+	client := bus.DirectClient(obj)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+	return MakeSpacecraft(c.session, proxy), nil
 }
 func (p *stubSpacecraft) Activate(activation bus.Activation) error {
 	p.session = activation.Session

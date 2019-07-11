@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/type/object"
 )
 
 var (
@@ -83,26 +82,7 @@ func NewBombObject() bus.Actor {
 	return BombObject(&bombImpl{})
 }
 
-// CreateBomb returns a new Bomb object.
-//
-// Not entirely satisfying: need to allow for client side object
-// generation... Here comes the ObjectID question..
 func CreateBomb(session bus.Session, service bus.Service) (BombProxy, error) {
-
-	var stb stubBomb
-	stb.impl = &bombImpl{}
-	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
-	stb.signal = obj
-
-	objectID, err := service.Add(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	meta := object.FullMetaObject(stb.metaObject())
-
-	client := bus.DirectClient(obj)
-	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-
-	return MakeBomb(session, proxy), nil
+	constructor := Services(session)
+	return constructor.NewBomb(service, &bombImpl{})
 }

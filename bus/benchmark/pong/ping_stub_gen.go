@@ -48,6 +48,21 @@ func PingPongObject(impl PingPongImplementor) bus.Actor {
 	stb.signal = obj
 	return obj
 }
+
+// NewPingPong registers a new object to a service
+// and returns a proxy to the newly created object
+func (c Constructor) NewPingPong(service bus.Service, impl PingPongImplementor) (PingPongProxy, error) {
+	obj := PingPongObject(impl)
+	objectID, err := service.Add(obj)
+	if err != nil {
+		return nil, err
+	}
+	stb := &stubPingPong{}
+	meta := object.FullMetaObject(stb.metaObject())
+	client := bus.DirectClient(obj)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+	return MakePingPong(c.session, proxy), nil
+}
 func (p *stubPingPong) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.service = activation.Service

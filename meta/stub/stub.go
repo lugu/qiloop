@@ -630,7 +630,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	).Qual(
 		"github.com/lugu/qiloop/bus", "Actor",
 	).Block(writing...)
-	return nil
+	return generateObjectConstructor(file, itf)
 }
 
 func generateStubType(file *jen.File, itf *idl.InterfaceType) error {
@@ -758,6 +758,44 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		itf.Name+"SignalHelper", itf.Name)
 	file.Type().Id(itf.Name + "SignalHelper").Interface(
 		signalDefinitions...,
+	)
+	return nil
+}
+
+func generateObjectConstructor(file *jen.File, itf *idl.InterfaceType) error {
+	if itf.Name == "Object" || itf.Name == "ServiceZero" {
+		return nil
+	}
+	file.Comment("New" + itf.Name + " registers a new object to a service")
+	file.Comment("and returns a proxy to the newly created object")
+	file.Func().Params(
+		jen.Id("c").Id("Constructor"),
+	).Id("New"+itf.Name).Params(
+		jen.Id("service").Qual("github.com/lugu/qiloop/bus", "Service"),
+		jen.Id("impl").Id(implName(itf.Name)),
+	).Params(
+		jen.Id(itf.Name+"Proxy"),
+		jen.Error(),
+	).Block(
+		jen.Id(`obj := `+itf.Name+`Object(impl)
+		        objectID, err := service.Add(obj)
+		        if err != nil {
+		                return nil, err
+		        }
+		        stb := &stub`+itf.Name+`{}
+		        meta := object.FullMetaObject(stb.metaObject())`),
+		jen.Id("client").Op(":=").Qual(
+			"github.com/lugu/qiloop/bus", "DirectClient",
+		).Call(jen.Id("obj")),
+		jen.Id("proxy").Op(":=").Qual(
+			"github.com/lugu/qiloop/bus", "NewProxy",
+		).Call(
+			jen.Id("client"),
+			jen.Id("meta"),
+			jen.Id("service.ServiceID()"),
+			jen.Id("objectID"),
+		),
+		jen.Id(`return Make`+itf.Name+`(c.session, proxy), nil`),
 	)
 	return nil
 }

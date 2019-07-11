@@ -56,6 +56,21 @@ func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 	stb.signal = obj
 	return obj
 }
+
+// NewServiceDirectory registers a new object to a service
+// and returns a proxy to the newly created object
+func (c Constructor) NewServiceDirectory(service bus.Service, impl ServiceDirectoryImplementor) (ServiceDirectoryProxy, error) {
+	obj := ServiceDirectoryObject(impl)
+	objectID, err := service.Add(obj)
+	if err != nil {
+		return nil, err
+	}
+	stb := &stubServiceDirectory{}
+	meta := object.FullMetaObject(stb.metaObject())
+	client := bus.DirectClient(obj)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+	return MakeServiceDirectory(c.session, proxy), nil
+}
 func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.service = activation.Service

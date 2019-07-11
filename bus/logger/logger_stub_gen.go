@@ -49,6 +49,21 @@ func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 	stb.signal = obj
 	return obj
 }
+
+// NewLogProvider registers a new object to a service
+// and returns a proxy to the newly created object
+func (c Constructor) NewLogProvider(service bus.Service, impl LogProviderImplementor) (LogProviderProxy, error) {
+	obj := LogProviderObject(impl)
+	objectID, err := service.Add(obj)
+	if err != nil {
+		return nil, err
+	}
+	stb := &stubLogProvider{}
+	meta := object.FullMetaObject(stb.metaObject())
+	client := bus.DirectClient(obj)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+	return MakeLogProvider(c.session, proxy), nil
+}
 func (p *stubLogProvider) Activate(activation bus.Activation) error {
 	p.session = activation.Session
 	p.service = activation.Service
@@ -210,6 +225,21 @@ func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
 	stb.signal = obj
 	return obj
+}
+
+// NewLogListener registers a new object to a service
+// and returns a proxy to the newly created object
+func (c Constructor) NewLogListener(service bus.Service, impl LogListenerImplementor) (LogListenerProxy, error) {
+	obj := LogListenerObject(impl)
+	objectID, err := service.Add(obj)
+	if err != nil {
+		return nil, err
+	}
+	stb := &stubLogListener{}
+	meta := object.FullMetaObject(stb.metaObject())
+	client := bus.DirectClient(obj)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+	return MakeLogListener(c.session, proxy), nil
 }
 func (p *stubLogListener) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -420,6 +450,21 @@ func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
 	stb.signal = obj
 	return obj
+}
+
+// NewLogManager registers a new object to a service
+// and returns a proxy to the newly created object
+func (c Constructor) NewLogManager(service bus.Service, impl LogManagerImplementor) (LogManagerProxy, error) {
+	obj := LogManagerObject(impl)
+	objectID, err := service.Add(obj)
+	if err != nil {
+		return nil, err
+	}
+	stb := &stubLogManager{}
+	meta := object.FullMetaObject(stb.metaObject())
+	client := bus.DirectClient(obj)
+	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
+	return MakeLogManager(c.session, proxy), nil
 }
 func (p *stubLogManager) Activate(activation bus.Activation) error {
 	p.session = activation.Session
