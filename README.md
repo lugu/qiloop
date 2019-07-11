@@ -1,12 +1,16 @@
 # qiloop
 
 [![Build Status](https://travis-ci.org/lugu/qiloop.svg?branch=master)](https://travis-ci.org/lugu/qiloop)
+[![Documentation](https://godoc.org/github.com/lugu/qiloop?status.svg)](http://godoc.org/github.com/lugu/qiloop)
+[![license](https://img.shields.io/github/license/lugu/qiloop.svg?maxAge=2592000)](https://github.com/lugu/qiloop/blob/master/LICENSE)
+[![stability-unstable](https://img.shields.io/badge/stability-unstable-yellow.svg)](https://github.com/emersion/stability-badges#unstable)
+[![Release](https://img.shields.io/github/tag/lugu/qiloop.svg)](https://github.com/lugu/qiloop/releases)
+
 [![CircleCI](https://circleci.com/gh/lugu/qiloop/tree/master.svg?style=shield)](https://circleci.com/gh/lugu/qiloop/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lugu/qiloop)](https://goreportcard.com/report/github.com/lugu/qiloop)
 [![codecov](https://codecov.io/gh/lugu/qiloop/branch/master/graph/badge.svg)](https://codecov.io/gh/lugu/qiloop)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/b192466a26dbced44274/test_coverage)](https://codeclimate.com/github/lugu/qiloop/test_coverage)
 [![Maintainability](https://api.codeclimate.com/v1/badges/b192466a26dbced44274/maintainability)](https://codeclimate.com/github/lugu/qiloop/maintainability)
-[![stability-unstable](https://img.shields.io/badge/stability-unstable-yellow.svg)](https://github.com/emersion/stability-badges#unstable)
 
 **`qiloop`** is an implementation of QiMessaging written in [Go](https://golang.org).
 
