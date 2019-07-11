@@ -1,19 +1,23 @@
-Unsorted TODO list
-==================
+for v0.5
+--------
 
-- QUIC implementation: multiplex client
-- session: re-use established connections
 - doc: diagram which shows a bus
 - doc: clarify if implementor are actors and document it in the tutorial
   and the generated documentation of the interface.
 - document internal pipeline
-- benchmark bandwith
+- service tutorial
+- complete implemetation of log manager
+
+for later
+---------
+
+- example: NAO say, Pepper say
+- benchmark bandwidth
 - gateway implementation
 - websocket protocol
 - implement raw data type (signature, Type and IDL)
-- example: NAO say, Pepper say
 - get ride of implicit tokens when creating a session (Option)
-- generate interface object constructor
-- service tutorial
-- actor: use Terminate message instead of OnTerminate.
+- session: re-use established connections
 - repair stats and traces
+- actor: use Terminate message instead of OnTerminate.
+- QUIC implementation: multiplex client
