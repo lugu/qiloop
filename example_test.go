@@ -9,6 +9,10 @@ import (
 // and instanciate the proxy object of the service directory to list
 // the services.
 func Example_basic() {
+	// imports the following packages:
+	// 	"github.com/lugu/qiloop"
+	// 	"github.com/lugu/qiloop/bus/services"
+
 	// Create a new session.
 	session, err := qiloop.NewSession(
 		"tcps://localhost:9443", // service directory URL
@@ -19,11 +23,11 @@ func Example_basic() {
 		panic(err)
 	}
 
-	// Access the specialized proxy generated.
-	proxies := services.Services(session)
+	// Access the specialized proxy constructor.
+	constructor := services.Services(session)
 
 	// Access a proxy object of the service directory.
-	directory, err := proxies.ServiceDirectory()
+	directory, err := constructor.ServiceDirectory()
 	if err != nil {
 		panic(err)
 	}

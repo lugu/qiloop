@@ -34,15 +34,15 @@ package main
 
 import (
 	"github.com/lugu/qiloop"
-	"github.com/lugu/qiloop/bus/client/services"
+	"github.com/lugu/qiloop/bus/services"
 )
 
 func main() {
 	// Create a new session.
 	session, err := qiloop.NewSession(
-		"tcp://localhost:9559", // service directory URL
-		"",                     // user
-		"",                     // token
+		"tcps://localhost:9443", // service directory URL
+		"nao",                   // user
+		"nao",                   // token
 	)
 	if err != nil {
 		panic(err)

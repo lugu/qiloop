@@ -38,25 +38,26 @@
 // access to the service:
 //
 // 	$ go get github.com/lugu/qiloop/cmd/qiloop
-// 	$ qiloop proxy --idl some_service.idl.qi --output proxy_gen.go
+// 	$ qiloop proxy --idl robotic.idl.qi --output proxy_gen.go
 //
 // The file proxy_gen.go contains a method called Services which gives
-// access to the MyRobot service. The example bellow illustrate this.
+// access to the RoboticService service. The example bellow illustrate this.
 //
 // In order to communicate with an existing service for which the IDL
-// file is unknown, the command scan can be use to introspect a
+// file is unknown, the `scan` command can be use to introspect a
 // running instance of the service and generate its IDL description.
+// The following produce the IDL file of LogManager service:
 //
 // 	$ qiloop scan --qi-url "tcp://localhost:9559" --service LogManager --idl log_manager.idl.qi
 //
 // In order to implement a new service, create an IDL file and run
-// the stub command to generate the helper method to register the
+// the `stub` command to generate the helper method to register the
 // service:
 //
 // 	$ qiloop stub --idl my_service.idl.qi --output stub_gen.go
 //
-// The file stub_gen.go the interface to implement as well as the
-// helper methods to register the services.
+// The file stub_gen.go defines the interface to implement as well as
+// the helper methods to register the service.
 //
 // When offering a service, a Server is be used to handle incomming
 // connection and to dispatch the requests.
