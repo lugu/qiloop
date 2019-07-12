@@ -1,4 +1,12 @@
-package tester
+// This files contains the implementation of the Spacecraft and Bomb
+// objects.
+//
+// The file space_stub_gen.go is generated with:
+//
+// 	$ qiloop stub --idl space.qi.idl --output space_stub_gen.go
+//
+
+package space
 
 import (
 	"fmt"
@@ -16,6 +24,7 @@ func NewSpacecraftObject() bus.Actor {
 	return SpacecraftObject(&spacecraftImpl{})
 }
 
+// spacecraftImpl implements SpacecraftImplementor.
 type spacecraftImpl struct {
 	session   bus.Session
 	terminate func()
@@ -49,6 +58,7 @@ func (f *spacecraftImpl) Ammo(b BombProxy) error {
 	return nil
 }
 
+// bombImpl implements BombImplementor.
 type bombImpl struct{}
 
 func (f *bombImpl) Activate(activation bus.Activation,

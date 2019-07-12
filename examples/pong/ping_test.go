@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lugu/qiloop/bus/benchmark/pong"
 	dir "github.com/lugu/qiloop/bus/directory"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/examples/pong"
 	"github.com/lugu/qiloop/type/basic"
 )
 

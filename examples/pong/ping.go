@@ -1,3 +1,9 @@
+// This files contains the implementation of the PingPong service.
+//
+// The file ping_stub_gen.go is generated with:
+//
+// 	$ qiloop stub --idl ping.qi.idl --output ping_stub_gen.go
+//
 package pong
 
 import (

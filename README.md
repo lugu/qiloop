@@ -25,51 +25,24 @@ protocol](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
 
     go get github.com/lugu/qiloop/...
 
-## Demo
+## Examples
 
-Here is how to connect to a server and list the running services:
+The [examples directory](https://github.com/lugu/qiloop/blob/master/examples/)
+illustrates some basic usages of qilooop:
 
-```golang
-package main
+-   [method call](https://github.com/lugu/qiloop/blob/master/examples/method)
+    illustrates how to call a method of a service: this example lists
+    the services registered to the service directory.
 
-import (
-	"github.com/lugu/qiloop"
-	"github.com/lugu/qiloop/bus/services"
-)
+-   [signal registration](https://github.com/lugu/qiloop/blob/master/examples/signal)
+    illustrates how to subscribe to a signal: this example prints a
+    log each time a service is added to the service directory.
 
-func main() {
-	// Create a new session.
-	session, err := qiloop.NewSession(
-		"tcps://localhost:9443", // service directory URL
-		"nao",                   // user
-		"nao",                   // token
-	)
-	if err != nil {
-		panic(err)
-	}
+-   [ping pong service](https://github.com/lugu/qiloop/blob/master/examples/pong)
+    illustrates how to implement a service.
 
-	// Access the specialized proxy generated.
-	proxies := services.Services(session)
-
-	// Access a proxy object of the service directory.
-	directory, err := proxies.ServiceDirectory()
-	if err != nil {
-		panic(err)
-	}
-
-	// Remote procedure call: call the method "services" of the
-	// service directory.
-	serviceList, err := directory.Services()
-	if err != nil {
-		panic(err)
-	}
-
-	// Iterate over the list of services.
-	for _, info := range serviceList {
-		println("service " + info.Name)
-	}
-}
-```
+-   [space service](https://github.com/lugu/qiloop/blob/master/examples/space)
+    illustrates the client side objects creation.
 
 ## Proxy generation tutorial
 
@@ -77,17 +50,6 @@ By default, `qiloop` comes with two proxies: ServiceDirectory and
 LogManager.
 
 Follow [this tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md) to generate more proxy.
-
-## Examples
-
--   [method call](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/method/main.go)
-    illustrates how to call a method of a service: this example lists
-    the services registered to the service directory.
-
-
--   [signal registration](https://github.com/lugu/qiloop/blob/master/bus/client/services/demo/cmd/signal/main.go)
-    illustrates how to subscribe to a signal: this example prints a
-    log each time a service is added to the service directory.
 
 ## Authentication
 

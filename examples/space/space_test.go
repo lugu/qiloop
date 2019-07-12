@@ -1,4 +1,4 @@
-package tester_test
+package space_test
 
 import (
 	"sync"
@@ -6,8 +6,8 @@ import (
 
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/tester"
 	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/examples/space"
 )
 
 func TestAddRemoveObject(t *testing.T) {
@@ -23,14 +23,14 @@ func TestAddRemoveObject(t *testing.T) {
 		t.Error(err)
 	}
 
-	obj := tester.NewSpacecraftObject()
+	obj := space.NewSpacecraftObject()
 	service, err := srv.NewService("Spacecraft", obj)
 	if err != nil {
 		t.Error(err)
 	}
 
 	session := srv.Session()
-	proxies := tester.Services(session)
+	proxies := space.Services(session)
 
 	spacecraft, err := proxies.Spacecraft()
 	if err != nil {
@@ -79,7 +79,7 @@ func TestAddRemoveObject(t *testing.T) {
 		t.Error(err)
 	}
 
-	ammo := tester.NewBombObject()
+	ammo := space.NewBombObject()
 	id, err := service.Add(ammo)
 	if err != nil {
 		t.Error(err)
@@ -90,7 +90,7 @@ func TestAddRemoveObject(t *testing.T) {
 		t.Error(err)
 	}
 
-	ammoProxy := tester.MakeBomb(session, proxy)
+	ammoProxy := space.MakeBomb(session, proxy)
 	err = spacecraft.Ammo(ammoProxy)
 	if err != nil {
 		t.Error(err)
@@ -114,14 +114,14 @@ func TestClientBomb(t *testing.T) {
 	}
 	defer srv.Terminate()
 
-	obj := tester.NewSpacecraftObject()
+	obj := space.NewSpacecraftObject()
 	_, err = srv.NewService("Spacecraft", obj)
 	if err != nil {
 		t.Error(err)
 	}
 
 	session := srv.Session()
-	proxies := tester.Services(session)
+	proxies := space.Services(session)
 
 	spacecraft, err := proxies.Spacecraft()
 	if err != nil {
@@ -134,7 +134,7 @@ func TestClientBomb(t *testing.T) {
 
 	proxyService := spacecraft.ProxyService(session)
 
-	bomb, err := tester.CreateBomb(session, proxyService)
+	bomb, err := space.CreateBomb(session, proxyService)
 	if err != nil {
 		t.Error(err)
 	}
@@ -163,7 +163,7 @@ func TestOnTerminate(t *testing.T) {
 		t.Error(err)
 	}
 
-	obj := tester.NewSpacecraftObject()
+	obj := space.NewSpacecraftObject()
 	service, err := srv.NewService("Spacecraft", obj)
 	if err != nil {
 		t.Error(err)
@@ -171,7 +171,7 @@ func TestOnTerminate(t *testing.T) {
 	defer service.Terminate()
 
 	session := srv.Session()
-	proxies := tester.Services(session)
+	proxies := space.Services(session)
 
 	spacecraft, err := proxies.Spacecraft()
 	if err != nil {
@@ -190,7 +190,7 @@ func TestOnTerminate(t *testing.T) {
 	go func() {
 		for {
 			waiting.Done()
-			event := <-tester.Hook
+			event := <-space.Hook
 			if event == "Bomb.OnTerminate()" {
 				wait.Done()
 				return

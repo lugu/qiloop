@@ -1,4 +1,4 @@
-package tester
+package space
 
 interface Bomb
         sig boom(energy: int32)

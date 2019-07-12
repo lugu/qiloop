@@ -5,6 +5,7 @@ for v0.5
 - doc: clarify if implementor are actors and document it in the tutorial
   and the generated documentation of the interface.
 - document internal pipeline
+- fix go get and GOPATH doc: decide which version to support
 - service tutorial
 - complete implemetation of log manager
 
