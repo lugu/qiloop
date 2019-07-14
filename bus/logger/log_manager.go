@@ -1,18 +1,26 @@
 package logger
 
 import (
-	"github.com/lugu/qiloop/bus"
 	"sync"
+
+	"github.com/lugu/qiloop/bus"
 )
 
 var (
-	LogLevelNone    LogLevel = LogLevel{Level: 0}
-	LogLevelFatal   LogLevel = LogLevel{Level: 1}
-	LogLevelError   LogLevel = LogLevel{Level: 2}
+	// LogLevelNone does not output logs
+	LogLevelNone LogLevel = LogLevel{Level: 0}
+	// LogLevelFatal only shows catastrophic errors
+	LogLevelFatal LogLevel = LogLevel{Level: 1}
+	// LogLevelError shows all errors
+	LogLevelError LogLevel = LogLevel{Level: 2}
+	// LogLevelWarning shows errors and warning
 	LogLevelWarning LogLevel = LogLevel{Level: 3}
-	LogLevelInfo    LogLevel = LogLevel{Level: 4}
+	// LogLevelInfo shows errors, warning and info
+	LogLevelInfo LogLevel = LogLevel{Level: 4}
+	// LogLevelVerbose shows an excessive amount of log
 	LogLevelVerbose LogLevel = LogLevel{Level: 5}
-	LogLevelDebug   LogLevel = LogLevel{Level: 6}
+	// LogLevelDebug shows log to debug
+	LogLevelDebug LogLevel = LogLevel{Level: 6}
 )
 
 type logClient struct {
@@ -27,6 +35,7 @@ type logManager struct {
 	activation   bus.Activation
 }
 
+// NewLogManager returns an object to be registered as the LogManager.
 func NewLogManager() bus.Actor {
 	return LogManagerObject(&logManager{
 		clients: make(map[uint32]logClient),

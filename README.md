@@ -68,8 +68,8 @@ first line and your password on the second.
 
 This is work in progress, you have been warned.
 
-The client and the server side is working: one can implement a service
-from an IDL and generate a specialized proxy for this service.
+The client and the server side are working: one can implement a
+service from an IDL and generate a specialized proxy for this service.
 A service directory is implemented as part of the standalone server.
 
 What is working:
