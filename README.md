@@ -25,6 +25,17 @@ protocol](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
 
     go get github.com/lugu/qiloop/...
 
+## Tutorials
+
+By default, `qiloop` comes with two proxies: ServiceDirectory and
+LogManager.
+
+Follow the [ALVideoDevice tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md)
+to learn how to create a proxy to an existing service.
+
+Follow the [clock tutorial](https://github.com/lugu/qiloop/blob/master/doc/SERVICE_TUTORIAL.md)
+to create your own service.
+
 ## Examples
 
 The [examples directory](https://github.com/lugu/qiloop/blob/master/examples/)
@@ -44,12 +55,8 @@ illustrates some basic usages of qilooop:
 -   [space service](https://github.com/lugu/qiloop/blob/master/examples/space)
     illustrates the client side objects creation.
 
-## Proxy generation tutorial
-
-By default, `qiloop` comes with two proxies: ServiceDirectory and
-LogManager.
-
-Follow [this tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md) to generate more proxy.
+-   [clock service](https://github.com/lugu/qiloop/blob/master/examples/space)
+    completed version of the clock tutorial.
 
 ## Authentication
 

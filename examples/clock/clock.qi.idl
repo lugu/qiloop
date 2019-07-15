@@ -1,0 +1,5 @@
+package clock
+
+interface Timestamp
+    fn nanoseconds() -> int64
+end

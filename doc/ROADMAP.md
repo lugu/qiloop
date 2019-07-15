@@ -14,6 +14,7 @@ for later
 
 - example: NAO say, Pepper say
 - benchmark bandwidth
+- simplify service creation (see clock example)
 - gateway implementation
 - websocket protocol
 - implement raw data type (signature, Type and IDL)
