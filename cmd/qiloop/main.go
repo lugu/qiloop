@@ -12,11 +12,12 @@ import (
 var version = "unknown"
 
 var (
-	infoCommand  *flaggy.Subcommand
-	logCommand   *flaggy.Subcommand
-	scanCommand  *flaggy.Subcommand
-	proxyCommand *flaggy.Subcommand
-	stubCommand  *flaggy.Subcommand
+	infoCommand      *flaggy.Subcommand
+	logCommand       *flaggy.Subcommand
+	scanCommand      *flaggy.Subcommand
+	proxyCommand     *flaggy.Subcommand
+	stubCommand      *flaggy.Subcommand
+	directoryCommand *flaggy.Subcommand
 
 	serverURL   string = "tcp://localhost:9559"
 	serviceName string = ""
@@ -65,11 +66,18 @@ func init() {
 	stubCommand.String(&outputFile, "o", "output", "server stub file (output)")
 	stubCommand.String(&packageName, "p", "path", "optional package name")
 
+	directoryCommand = flaggy.NewSubcommand("directory")
+	directoryCommand.Description =
+		"Starts a service directory and listen to incomming connection"
+	directoryCommand.String(&serverURL, "r", "qi-url",
+		"server URL (default: tcp://localhost:9559)")
+
 	flaggy.AttachSubcommand(infoCommand, 1)
 	flaggy.AttachSubcommand(logCommand, 1)
 	flaggy.AttachSubcommand(scanCommand, 1)
 	flaggy.AttachSubcommand(proxyCommand, 1)
 	flaggy.AttachSubcommand(stubCommand, 1)
+	flaggy.AttachSubcommand(directoryCommand, 1)
 
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
 	flaggy.SetVersion(version)
@@ -87,6 +95,8 @@ func main() {
 		stub(inputFile, outputFile, packageName)
 	} else if logCommand.Used {
 		logger(serverURL)
+	} else if directoryCommand.Used {
+		directory(serverURL)
 	} else {
 		flaggy.DefaultParser.ShowHelpAndExit("missing command")
 	}
