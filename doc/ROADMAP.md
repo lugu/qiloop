@@ -2,11 +2,8 @@ for v0.5
 --------
 
 - doc: diagram which shows a bus
-- doc: clarify if implementor are actors and document it in the tutorial
-  and the generated documentation of the interface.
-- document internal pipeline (go generate)
+- complete implementation of log manager
 - fix go get and GOPATH doc: decide which version to support
-- complete implemetation of log manager
 
 for later
 ---------
