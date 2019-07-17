@@ -80,8 +80,34 @@ Create a file called clock.go with the following implementation:
 ## Create a program
 
 In order to use the timestamp service, we need a program which uses
-`NewTimestampObject` and registers it. The clock example contains such
-program: see [main.go](https://github.com/lugu/qiloop/blob/master/examples/clock/cmd/service).
+`NewTimestampObject` and registers it. The `app` package contains an
+helper function for this.
+
+        package main
+
+        import (
+                "flag"
+                "log"
+
+                "github.com/lugu/qiloop/app"
+                "github.com/lugu/qiloop/examples/clock"
+        )
+
+        func main() {
+                flag.Parse()
+
+                server, err := app.ServerFromFlag("Timestamp", clock.NewTimestampObject())
+                if err != nil {
+                        log.Fatalf("Failed to register service %s: %s", "Timestamp", err)
+                }
+
+                log.Printf("Timestamp service running...")
+
+                err = <-server.WaitTerminate()
+                if err != nil {
+                        log.Fatalf("Terminate server: %s", err)
+                }
+        }
 
 In order to test it, we need a running instance of QiMessaging. We can
 create one with the `qiloop directory` command:
@@ -92,10 +118,10 @@ create one with the `qiloop directory` command:
 Now we can start the timestamp service with:
 
         $ go run ./examples/clock/cmd/service/main.go
-	2019/07/15 23:00:20 Service Timestamp registered
+	2019/07/15 23:00:20 Timestamp service running...
 
-Let see if the timestamp service is advertized by the service directory using
-`qiloop info`:
+Let double check if the timestamp service is registered to the service
+directory using `qiloop info`:
 
 	$ qiloop info
 	[
@@ -120,3 +146,9 @@ Let see if the timestamp service is advertized by the service directory using
 		"SessionId": ""
 	    }
 	]
+
+Mission completed: a fonctionnal timestamp service! But wait, isn't it stupid
+to use QiMessaging to get a timestamp ?
+
+You will see in part two, how to use this service to synchronize a
+local objects and get precise and synchronized timestamps.
