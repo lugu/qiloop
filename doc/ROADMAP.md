@@ -9,10 +9,12 @@ for later
 ---------
 
 - example: NAO say, Pepper say
-- benchmark bandwidth
-- simplify service creation (see clock example)
+- benchmark bandwidth (128, 512, 1024, 4096 bytes per message)
+- benchmark latency: (50, 75, 90, 99, 99.9, 99.99, 99.999 percentil)
+- transport: fifo / pipe
+- transport: socketpair
+- transport: websocket
 - gateway implementation
-- websocket protocol
 - implement raw data type (signature, Type and IDL)
 - get ride of implicit tokens when creating a session (Option)
 - session: re-use established connections

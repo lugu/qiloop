@@ -172,9 +172,15 @@ introspect an object. Here is the description of the MetaObject type:
                 description: str
         end
 
-## Signature
-## Binary format
-## Transport scheme
-## Message origin
-## Service / Object relation
-## Post message type
+## logs
+## directory
+## wireshark
+## stat
+## trace
+## syntax idl
+## authentication
+## gateway
+## transport / scheme
+## signature
+## codec
+## message origin
