@@ -199,14 +199,14 @@ type LogListenerImplementor interface {
 	OnVerbosityChange(level LogLevel) error
 	// OnFiltersChange is called when the property is updated.
 	// Returns an error if the property value is not allowed
-	OnFiltersChange(filters map[string]int32) error
+	OnFiltersChange(filters map[string]LogLevel) error
 }
 
 // LogListenerSignalHelper provided to LogListener a companion object
 type LogListenerSignalHelper interface {
 	SignalOnLogMessage(msg LogMessage) error
 	UpdateVerbosity(level LogLevel) error
-	UpdateFilters(filters map[string]int32) error
+	UpdateFilters(filters map[string]LogLevel) error
 }
 
 // stubLogListener implements server.Actor.
@@ -271,18 +271,18 @@ func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 		return p.impl.OnVerbosityChange(prop)
 	case "filters":
 		buf := bytes.NewBuffer(data)
-		prop, err := func() (m map[string]int32, err error) {
+		prop, err := func() (m map[string]LogLevel, err error) {
 			size, err := basic.ReadUint32(buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map size: %s", err)
 			}
-			m = make(map[string]int32, size)
+			m = make(map[string]LogLevel, size)
 			for i := 0; i < int(size); i++ {
 				k, err := basic.ReadString(buf)
 				if err != nil {
 					return m, fmt.Errorf("failed to read map key: %s", err)
 				}
-				v, err := basic.ReadInt32(buf)
+				v, err := readLogLevel(buf)
 				if err != nil {
 					return m, fmt.Errorf("failed to read map value: %s", err)
 				}
@@ -347,7 +347,7 @@ func (p *stubLogListener) UpdateVerbosity(level LogLevel) error {
 	}
 	return nil
 }
-func (p *stubLogListener) UpdateFilters(filters map[string]int32) error {
+func (p *stubLogListener) UpdateFilters(filters map[string]LogLevel) error {
 	var buf bytes.Buffer
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(filters)), &buf)
@@ -359,7 +359,7 @@ func (p *stubLogListener) UpdateFilters(filters map[string]int32) error {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = basic.WriteInt32(v, &buf)
+			err = writeLogLevel(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -368,7 +368,7 @@ func (p *stubLogListener) UpdateFilters(filters map[string]int32) error {
 	}(); err != nil {
 		return fmt.Errorf("failed to serialize filters: %s", err)
 	}
-	err := p.signal.UpdateProperty(uint32(0x69), "{si}", buf.Bytes())
+	err := p.signal.UpdateProperty(uint32(0x69), "{s(i)<LogLevel,level>}", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("failed to update UpdateFilters: %s", err)
@@ -400,7 +400,7 @@ func (p *stubLogListener) metaObject() object.MetaObject {
 			},
 			uint32(0x69): {
 				Name:      "filters",
-				Signature: "{si}",
+				Signature: "{s(i)<LogLevel,level>}",
 				Uid:       uint32(0x69),
 			},
 		},
@@ -895,11 +895,11 @@ type LogListener interface {
 	// SubscribeVerbosity regusters to a property
 	SubscribeVerbosity() (unsubscribe func(), updates chan LogLevel, err error)
 	// GetFilters returns the property value
-	GetFilters() (map[string]int32, error)
+	GetFilters() (map[string]LogLevel, error)
 	// SetFilters sets the property value
-	SetFilters(map[string]int32) error
+	SetFilters(map[string]LogLevel) error
 	// SubscribeFilters regusters to a property
-	SubscribeFilters() (unsubscribe func(), updates chan map[string]int32, err error)
+	SubscribeFilters() (unsubscribe func(), updates chan map[string]LogLevel, err error)
 }
 
 // LogListenerProxy represents a proxy object to the service
@@ -1072,7 +1072,7 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 }
 
 // GetFilters updates the property value
-func (p *proxyLogListener) GetFilters() (ret map[string]int32, err error) {
+func (p *proxyLogListener) GetFilters() (ret map[string]LogLevel, err error) {
 	name := value.String("filters")
 	value, err := p.Property(name)
 	if err != nil {
@@ -1088,23 +1088,23 @@ func (p *proxyLogListener) GetFilters() (ret map[string]int32, err error) {
 		return ret, fmt.Errorf("read signature: %s", err)
 	}
 	// check the signature
-	sig := "{si}"
+	sig := "{s(i)<LogLevel,level>}"
 	if sig != s {
 		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
 			s, sig)
 	}
-	ret, err = func() (m map[string]int32, err error) {
+	ret, err = func() (m map[string]LogLevel, err error) {
 		size, err := basic.ReadUint32(&buf)
 		if err != nil {
 			return m, fmt.Errorf("failed to read map size: %s", err)
 		}
-		m = make(map[string]int32, size)
+		m = make(map[string]LogLevel, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(&buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map key: %s", err)
 			}
-			v, err := basic.ReadInt32(&buf)
+			v, err := readLogLevel(&buf)
 			if err != nil {
 				return m, fmt.Errorf("failed to read map value: %s", err)
 			}
@@ -1116,7 +1116,7 @@ func (p *proxyLogListener) GetFilters() (ret map[string]int32, err error) {
 }
 
 // SetFilters updates the property value
-func (p *proxyLogListener) SetFilters(update map[string]int32) error {
+func (p *proxyLogListener) SetFilters(update map[string]LogLevel) error {
 	name := value.String("filters")
 	var buf bytes.Buffer
 	err := func() error {
@@ -1129,7 +1129,7 @@ func (p *proxyLogListener) SetFilters(update map[string]int32) error {
 			if err != nil {
 				return fmt.Errorf("failed to write map key: %s", err)
 			}
-			err = basic.WriteInt32(v, &buf)
+			err = writeLogLevel(v, &buf)
 			if err != nil {
 				return fmt.Errorf("failed to write map value: %s", err)
 			}
@@ -1139,12 +1139,12 @@ func (p *proxyLogListener) SetFilters(update map[string]int32) error {
 	if err != nil {
 		return fmt.Errorf("marshall error: %s", err)
 	}
-	val := value.Opaque("{si}", buf.Bytes())
+	val := value.Opaque("{s(i)<LogLevel,level>}", buf.Bytes())
 	return p.SetProperty(name, val)
 }
 
 // SubscribeFilters subscribe to a remote property
-func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, error) {
+func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]LogLevel, error) {
 	propertyID, err := p.PropertyID("filters")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
@@ -1154,7 +1154,7 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "filters", err)
 	}
-	ch := make(chan map[string]int32)
+	ch := make(chan map[string]LogLevel)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to request property: %s", err)
@@ -1170,18 +1170,18 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 			}
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
-			e, err := func() (m map[string]int32, err error) {
+			e, err := func() (m map[string]LogLevel, err error) {
 				size, err := basic.ReadUint32(buf)
 				if err != nil {
 					return m, fmt.Errorf("failed to read map size: %s", err)
 				}
-				m = make(map[string]int32, size)
+				m = make(map[string]LogLevel, size)
 				for i := 0; i < int(size); i++ {
 					k, err := basic.ReadString(buf)
 					if err != nil {
 						return m, fmt.Errorf("failed to read map key: %s", err)
 					}
-					v, err := basic.ReadInt32(buf)
+					v, err := readLogLevel(buf)
 					if err != nil {
 						return m, fmt.Errorf("failed to read map value: %s", err)
 					}

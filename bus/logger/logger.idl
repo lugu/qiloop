@@ -30,7 +30,7 @@ interface LogListener
         fn clearFilters() //uid:102
         sig onLogMessage(msg: LogMessage) //uid:103
         prop verbosity(level: LogLevel) //uid:104
-        prop filters(filters: Map<str,int32>) //uid:105
+        prop filters(filters: Map<str,LogLevel>) //uid:105
 end
 
 interface LogManager

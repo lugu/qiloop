@@ -10,34 +10,14 @@ import (
 
 // logListenerImpl implements LogListenerImplementor
 type logListenerImpl struct {
-	filters      map[string]int32
+	filters      map[string]LogLevel
 	filtersReg   map[string]*regexp.Regexp
-	level        int32
+	defaultLevel LogLevel
 	filtersMutex sync.RWMutex
+	manager      *logManager
 
-	cancel      chan struct{}
-	logs        chan []LogMessage
-	activation  bus.Activation
-	helper      LogListenerSignalHelper
-	onTerminate func()
-}
-
-// CreateLogListener create a LogListener object and add it to the
-// service. It returns a proxy of the listener.
-func CreateLogListener(session bus.Session, service bus.Service,
-	producer chan []LogMessage, onTerminate func()) (
-	LogListenerProxy, error) {
-
-	impl := &logListenerImpl{
-		filters:     make(map[string]int32),
-		filtersReg:  make(map[string]*regexp.Regexp),
-		level:       LogLevelInfo.Level,
-		logs:        producer,
-		cancel:      make(chan struct{}),
-		onTerminate: onTerminate,
-	}
-
-	return Services(session).NewLogListener(service, impl)
+	activation bus.Activation
+	helper     LogListenerSignalHelper
 }
 
 func (l *logListenerImpl) filter(msg *LogMessage) bool {
@@ -49,12 +29,12 @@ func (l *logListenerImpl) filter(msg *LogMessage) bool {
 
 	for pattern, reg := range l.filtersReg {
 		if reg.FindString(msg.Category) != "" {
-			if msg.Level.Level <= l.filters[pattern] {
+			if msg.Level.Level <= l.filters[pattern].Level {
 				return true
 			}
 		}
 	}
-	if msg.Level.Level <= l.level {
+	if msg.Level.Level <= l.defaultLevel.Level {
 		return true
 	}
 	return false
@@ -69,34 +49,22 @@ func (l *logListenerImpl) Activate(activation bus.Activation,
 	if err := helper.UpdateVerbosity(LogLevelInfo); err != nil {
 		return err
 	}
-	if err := helper.UpdateFilters(make(map[string]int32)); err != nil {
+	if err := helper.UpdateFilters(make(map[string]LogLevel)); err != nil {
 		return err
 	}
 
-	go func() {
-		for {
-			select {
-			case <-l.cancel:
-				return
-			case messages, ok := <-l.logs:
-				if !ok {
-					l.activation.Terminate()
-					return
-				}
-				for _, msg := range messages {
-					if l.filter(&msg) {
-						l.helper.SignalOnLogMessage(msg)
-					}
-				}
-			}
-		}
-	}()
 	return nil
 }
 
+func (l *logListenerImpl) Messages(messages []LogMessage) {
+	for _, msg := range messages {
+		if l.filter(&msg) {
+			l.helper.SignalOnLogMessage(msg)
+		}
+	}
+}
+
 func (l *logListenerImpl) OnTerminate() {
-	close(l.cancel)
-	l.onTerminate()
 }
 
 func validateLevel(level LogLevel) error {
@@ -117,16 +85,18 @@ func (l *logListenerImpl) SetCategory(category string, level LogLevel) error {
 	}
 	l.filtersMutex.Lock()
 	defer l.filtersMutex.Unlock()
-	l.filters[category] = level.Level
+	l.filters[category] = level
 	l.filtersReg[category] = reg
+	l.manager.UpdateFilters()
 	return nil
 }
 
 func (l *logListenerImpl) ClearFilters() error {
 	l.filtersMutex.Lock()
-	defer l.filtersMutex.Unlock()
-	l.filters = make(map[string]int32)
+	l.filters = make(map[string]LogLevel)
 	l.filtersReg = make(map[string]*regexp.Regexp)
+	l.filtersMutex.Unlock()
+	l.manager.UpdateFilters()
 	return nil
 }
 
@@ -135,17 +105,19 @@ func (l *logListenerImpl) OnVerbosityChange(level LogLevel) error {
 		return err
 	}
 	l.filtersMutex.Lock()
-	defer l.filtersMutex.Unlock()
-	l.level = level.Level
+	l.defaultLevel = level
+	l.filtersMutex.Unlock()
+	l.manager.UpdateVerbosity()
 	return nil
 }
 
-func (l *logListenerImpl) OnFiltersChange(filters map[string]int32) error {
+func (l *logListenerImpl) OnFiltersChange(filters map[string]LogLevel) error {
 
-	newFilters := make(map[string]int32)
+	newFilters := make(map[string]LogLevel)
 	newFiltersReg := make(map[string]*regexp.Regexp)
+	fmt.Printf("filters len: %d\n", len(filters))
 	for pattern, level := range filters {
-		if err := validateLevel(LogLevel{level}); err != nil {
+		if err := validateLevel(level); err != nil {
 			return err
 		}
 		reg, err := regexp.Compile(pattern)
@@ -157,8 +129,9 @@ func (l *logListenerImpl) OnFiltersChange(filters map[string]int32) error {
 	}
 
 	l.filtersMutex.Lock()
-	defer l.filtersMutex.Unlock()
 	l.filters = newFilters
 	l.filtersReg = newFiltersReg
+	l.filtersMutex.Unlock()
+	l.manager.UpdateFilters()
 	return nil
 }
