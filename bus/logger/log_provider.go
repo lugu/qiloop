@@ -7,7 +7,6 @@ import (
 
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/util"
-	"github.com/lugu/qiloop/type/object"
 )
 
 type logProvider struct {
@@ -87,30 +86,13 @@ func (l *logProvider) ClearAndSet(filters map[string]LogLevel) error {
 	panic("not yet implemented")
 }
 
+// CreateLogProvider create a LogProvider object and add it to the
+// service. It returns a proxy of the provider.
 func CreateLogProvider(session bus.Session, service bus.Service,
-	impl LogProviderImplementor) (
-	LogProviderProxy, error) {
+	source, category string) (
+	LogProviderProxy, Logger, error) {
 
-	var stb stubLogProvider
-	stb.impl = impl
-	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
-	stb.signal = obj
-
-	objectID, err := service.Add(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	ref := object.ObjectReference{
-		true, // with meta object
-		object.FullMetaObject(stb.metaObject()),
-		0,
-		service.ServiceID(),
-		objectID,
-	}
-	proxy, err := session.Object(ref)
-	if err != nil {
-		return nil, err
-	}
-	return MakeLogProvider(session, proxy), nil
+	impl, logger := NewLogProviderImpl(source, category)
+	proxy, err := Services(session).NewLogProvider(service, impl)
+	return proxy, logger, err
 }

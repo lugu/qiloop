@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	"github.com/lugu/qiloop/bus"
-	"github.com/lugu/qiloop/type/object"
 )
 
+// logListenerImpl implements LogListenerImplementor
 type logListenerImpl struct {
 	filters      map[string]int32
 	filtersReg   map[string]*regexp.Regexp
@@ -22,6 +22,8 @@ type logListenerImpl struct {
 	onTerminate func()
 }
 
+// CreateLogListener create a LogListener object and add it to the
+// service. It returns a proxy of the listener.
 func CreateLogListener(session bus.Session, service bus.Service,
 	producer chan []LogMessage, onTerminate func()) (
 	LogListenerProxy, error) {
@@ -34,28 +36,8 @@ func CreateLogListener(session bus.Session, service bus.Service,
 		cancel:      make(chan struct{}),
 		onTerminate: onTerminate,
 	}
-	var stb stubLogListener
-	stb.impl = impl
-	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
-	stb.signal = obj
 
-	objectID, err := service.Add(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	ref := object.ObjectReference{
-		true, // with meta object
-		object.FullMetaObject(stb.metaObject()),
-		0,
-		service.ServiceID(),
-		objectID,
-	}
-	proxy, err := session.Object(ref)
-	if err != nil {
-		return nil, err
-	}
-	return MakeLogListener(session, proxy), nil
+	return Services(session).NewLogListener(service, impl)
 }
 
 func (l *logListenerImpl) filter(msg *LogMessage) bool {
