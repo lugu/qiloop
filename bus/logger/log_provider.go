@@ -9,6 +9,10 @@ import (
 	"github.com/lugu/qiloop/bus/util"
 )
 
+// ErrNotImplemented is returned when a method is not supported by
+// this implementation.
+var ErrNotImplemented = fmt.Errorf("Not supported")
+
 type logProvider struct {
 	manager        LogManager
 	location       string
@@ -77,13 +81,13 @@ func (l *logProvider) Activate(activation bus.Activation,
 func (l *logProvider) OnTerminate() {
 }
 func (l *logProvider) SetVerbosity(level LogLevel) error {
-	panic("not yet implemented")
+	return ErrNotImplemented
 }
 func (l *logProvider) SetCategory(category string, level LogLevel) error {
-	panic("not yet implemented")
+	return ErrNotImplemented
 }
 func (l *logProvider) ClearAndSet(filters map[string]LogLevel) error {
-	panic("not yet implemented")
+	return ErrNotImplemented
 }
 
 // CreateLogProvider create a LogProvider object and add it to the
