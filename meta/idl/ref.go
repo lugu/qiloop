@@ -2,6 +2,7 @@ package idl
 
 import (
 	"fmt"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/signature"
 )
@@ -95,4 +96,17 @@ func (r *RefType) resolve(set *signature.TypeSet) (signature.Type, error) {
 			r.Name, len(set.Types))
 	}
 	return typ, nil
+}
+
+// Reader returns a TypeReader of the referenced type.
+func (r *RefType) Reader() signature.TypeReader {
+	t, err := r.Scope.Search(r.Name)
+	if err == nil {
+		reader, err := signature.MakeReader(t.Signature())
+		if err != nil {
+			return signature.UnknownReader(r.Signature())
+		}
+		return reader
+	}
+	return t.Reader()
 }

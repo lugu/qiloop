@@ -231,12 +231,15 @@ func ReadString(r io.Reader) (string, error) {
 	if size == 0 {
 		return "", nil
 	}
-	buf := make([]byte, size, size)
+	// FIXME: do not allocate everything at one, read by block of
+	// 4094 until either the reader fail or size is reached.
+	buf := make([]byte, size)
 	bytes, err := r.Read(buf)
 	if err != nil {
 		return "", err
 	} else if uint32(bytes) != size {
-		return "", fmt.Errorf("failed to read string data (%d instead of %d)", bytes, size)
+		return "", fmt.Errorf("failed to read string: %d instead of %d",
+			bytes, size)
 	}
 	return string(buf), nil
 }

@@ -325,6 +325,11 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	).Call()
 }
 
+// Reader returns a TypeReader for object references
+func (s *InterfaceType) Reader() signature.TypeReader {
+	panic("not yet implemented")
+}
+
 // MetaObject returs the MetaObject describing the interface.
 func (s *InterfaceType) MetaObject() object.MetaObject {
 	var meta object.MetaObject

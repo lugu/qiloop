@@ -42,11 +42,10 @@ func NewValue(r io.Reader) (Value, error) {
 		"v":   newVoid,
 	}
 	f, ok := solve[s]
-	if !ok {
-		panic(s)
-		return nil, fmt.Errorf("unsuported signature: \"%s\"", s)
+	if ok {
+		return f(r)
 	}
-	return f(r)
+	return newOpaque(s, r)
 }
 
 // OpaqueValue represents a value using a signature and the data.

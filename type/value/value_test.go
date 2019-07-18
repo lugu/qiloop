@@ -2,9 +2,11 @@ package value_test
 
 import (
 	"bytes"
-	"github.com/lugu/qiloop/type/value"
+	"io"
 	"reflect"
 	"testing"
+
+	"github.com/lugu/qiloop/type/value"
 )
 
 func TestValues(t *testing.T) {
@@ -31,17 +33,47 @@ func TestValues(t *testing.T) {
 	}
 }
 
+type LimitedWriter struct {
+	size int
+}
+
+func (b *LimitedWriter) Write(buf []byte) (int, error) {
+	if len(buf) <= b.size {
+		b.size -= len(buf)
+		return len(buf), nil
+	}
+	oldSize := b.size
+	b.size = 0
+	return oldSize, io.EOF
+}
+
+func NewLimitedWriter(size int) io.Writer {
+	return &LimitedWriter{
+		size: size,
+	}
+}
+
 func helpValueWrite(t *testing.T, expected value.Value) {
 	var buf bytes.Buffer
 	err := expected.Write(&buf)
 	if err != nil {
 		t.Errorf("failed to write: %s", err)
 	}
+	size := len(buf.Bytes())
 	val, err := value.NewValue(&buf)
 	if err != nil {
 		t.Errorf("failed to read: %s", err)
 	} else if !reflect.DeepEqual(val, expected) {
 		t.Errorf("value constructor error")
+	}
+
+	err = expected.Write(NewLimitedWriter(4))
+	if err == nil {
+		t.Errorf("shall not work")
+	}
+	err = expected.Write(NewLimitedWriter(size - 1))
+	if err == nil {
+		t.Errorf("shall not work")
 	}
 }
 
@@ -65,6 +97,16 @@ func TestValueWriteRead(t *testing.T) {
 	helpValueWrite(t, value.String(""))
 	helpValueWrite(t, value.String("keep testing"))
 	helpValueWrite(t, value.Void())
+	helpValueWrite(t, value.Raw([]byte{1, 2, 3}))
+	helpValueWrite(t, value.List([]value.Value{
+		value.String("abc"),
+		value.Int(0),
+		value.List([]value.Value{
+			value.String("abc"),
+			value.Int(0),
+		}),
+	}))
+	helpValueWrite(t, value.Opaque("(b)", []byte{1}))
 }
 
 func helpParseValue(t *testing.T, b []byte, expected value.Value) {

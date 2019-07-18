@@ -18,6 +18,9 @@ const MetaObjectSignature = "({I(Issss[(ss)<MetaMethodParameter,name,description
 var ObjectSignature = fmt.Sprintf("(b%sIII)<ObjectReference,boolean,metaObject,metaID,serviceID,objectID>",
 	MetaObjectSignature)
 
+// typeSignature is the signature parser.
+var typeSignature parsec.Parser
+
 // Statement is a short version for jen.Statement.
 type Statement = jen.Statement
 
@@ -227,10 +230,7 @@ func nodifyStrucType(nodes []Node) Node {
 	return NewStructType(name, members)
 }
 
-// Parse reads a signature contained in a string and constructs its
-// type representation.
-func Parse(input string) (Type, error) {
-	text := []byte(input)
+func init() {
 
 	var arrayType parsec.Parser
 	var mapType parsec.Parser
@@ -273,7 +273,13 @@ func Parse(input string) (Type, error) {
 		&declarationType, &declarationType,
 		parsec.Atom("}", "MapClose"))
 
-	var typeSignature = declarationType
+	typeSignature = declarationType
+}
+
+// Parse reads a signature contained in a string and constructs its
+// type representation.
+func Parse(input string) (Type, error) {
+	text := []byte(input)
 
 	root, _ := typeSignature(parsec.NewScanner(text))
 	if root == nil {
@@ -283,7 +289,8 @@ func Parse(input string) (Type, error) {
 	if !ok {
 		err, ok := root.(error)
 		if !ok {
-			return nil, fmt.Errorf("failed to convert array: %+v", reflect.TypeOf(root))
+			return nil, fmt.Errorf("failed to convert array: %+v",
+				reflect.TypeOf(root))
 		}
 		return nil, err
 	}
@@ -292,7 +299,8 @@ func Parse(input string) (Type, error) {
 	}
 	constructor, ok := types[0].(Type)
 	if !ok {
-		return nil, fmt.Errorf("failed to convert value: %+v", reflect.TypeOf(types[0]))
+		return nil, fmt.Errorf("failed to convert value: %+v",
+			reflect.TypeOf(types[0]))
 	}
 	return constructor, nil
 }

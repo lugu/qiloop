@@ -85,6 +85,7 @@ type Type interface {
 	RegisterTo(s *TypeSet)
 	Marshal(id string, writer string) *Statement // returns an error
 	Unmarshal(reader string) *Statement          // returns (type, err)
+	Reader() TypeReader
 }
 
 type typeConstructor struct {
@@ -93,6 +94,7 @@ type typeConstructor struct {
 	typeName     *Statement
 	marshal      func(id string, writer string) *Statement // returns an error
 	unmarshal    func(reader string) *Statement            // returns (type, err)
+	reader       TypeReader
 }
 
 func (t *typeConstructor) Signature() string {
@@ -116,6 +118,9 @@ func (t *typeConstructor) Marshal(id string, writer string) *Statement {
 func (t *typeConstructor) Unmarshal(reader string) *Statement {
 	return t.unmarshal(reader)
 }
+func (t *typeConstructor) Reader() TypeReader {
+	return t.reader
+}
 
 // Print render the type into a string. It is only used for testing.
 func Print(v Type) string {
@@ -131,11 +136,14 @@ func NewInt8Type() Type {
 		signatureIDL: "int8",
 		typeName:     jen.Int8(),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt8").Call(jen.Id(id), jen.Id(writer))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteInt8").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt8").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadInt8").Call(jen.Id(reader))
 		},
+		reader: constReader(1),
 	}
 }
 
@@ -146,11 +154,14 @@ func NewUint8Type() Type {
 		signatureIDL: "uint8",
 		typeName:     jen.Uint8(),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint8").Call(jen.Id(id), jen.Id(writer))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteUint8").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint8").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadUint8").Call(jen.Id(reader))
 		},
+		reader: constReader(1),
 	}
 }
 
@@ -161,11 +172,14 @@ func NewInt16Type() Type {
 		signatureIDL: "int16",
 		typeName:     jen.Int16(),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt16").Call(jen.Id(id), jen.Id(writer))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteInt16").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt16").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadInt16").Call(jen.Id(reader))
 		},
+		reader: constReader(2),
 	}
 }
 
@@ -176,71 +190,14 @@ func NewUint16Type() Type {
 		signatureIDL: "uint16",
 		typeName:     jen.Uint16(),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint16").Call(jen.Id(id), jen.Id(writer))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteUint16").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint16").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadUint16").Call(jen.Id(reader))
 		},
-	}
-}
-
-// NewLongType is a contructor for the representation of a uint64.
-func NewLongType() Type {
-	return &typeConstructor{
-		signature:    "l",
-		signatureIDL: "int64",
-		typeName:     jen.Int64(),
-		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt64").Call(jen.Id(id), jen.Id(writer))
-		},
-		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt64").Call(jen.Id(reader))
-		},
-	}
-}
-
-// NewULongType is a contructor for the representation of a uint64.
-func NewULongType() Type {
-	return &typeConstructor{
-		signature:    "L",
-		signatureIDL: "uint64",
-		typeName:     jen.Uint64(),
-		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint64").Call(jen.Id(id), jen.Id(writer))
-		},
-		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint64").Call(jen.Id(reader))
-		},
-	}
-}
-
-// NewFloatType is a contructor for the representation of a float32.
-func NewFloatType() Type {
-	return &typeConstructor{
-		signature:    "f",
-		signatureIDL: "float32",
-		typeName:     jen.Float32(),
-		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat32").Call(jen.Id(id), jen.Id(writer))
-		},
-		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadFloat32").Call(jen.Id(reader))
-		},
-	}
-}
-
-// NewDoubleType is a contructor for the representation of a float32.
-func NewDoubleType() Type {
-	return &typeConstructor{
-		signature:    "d",
-		signatureIDL: "float64",
-		typeName:     jen.Float64(),
-		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteFloat64").Call(jen.Id(id), jen.Id(writer))
-		},
-		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadFloat64").Call(jen.Id(reader))
-		},
+		reader: constReader(2),
 	}
 }
 
@@ -251,11 +208,14 @@ func NewIntType() Type {
 		signatureIDL: "int32",
 		typeName:     jen.Int32(),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteInt32").Call(jen.Id(id), jen.Id(writer))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteInt32").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadInt32").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadInt32").Call(jen.Id(reader))
 		},
+		reader: constReader(4),
 	}
 }
 
@@ -266,11 +226,86 @@ func NewUIntType() Type {
 		signatureIDL: "uint32",
 		typeName:     jen.Uint32(),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "WriteUint32").Call(jen.Id(id), jen.Id(writer))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteUint32").Call(jen.Id(id), jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadUint32").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadUint32").Call(jen.Id(reader))
 		},
+		reader: constReader(4),
+	}
+}
+
+// NewLongType is a contructor for the representation of a uint64.
+func NewLongType() Type {
+	return &typeConstructor{
+		signature:    "l",
+		signatureIDL: "int64",
+		typeName:     jen.Int64(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteInt64").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadInt64").Call(jen.Id(reader))
+		},
+		reader: constReader(8),
+	}
+}
+
+// NewULongType is a contructor for the representation of a uint64.
+func NewULongType() Type {
+	return &typeConstructor{
+		signature:    "L",
+		signatureIDL: "uint64",
+		typeName:     jen.Uint64(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteUint64").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadUint64").Call(jen.Id(reader))
+		},
+		reader: constReader(8),
+	}
+}
+
+// NewFloatType is a contructor for the representation of a float32.
+func NewFloatType() Type {
+	return &typeConstructor{
+		signature:    "f",
+		signatureIDL: "float32",
+		typeName:     jen.Float32(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteFloat32").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadFloat32").Call(jen.Id(reader))
+		},
+		reader: constReader(4),
+	}
+}
+
+// NewDoubleType is a contructor for the representation of a float32.
+func NewDoubleType() Type {
+	return &typeConstructor{
+		signature:    "d",
+		signatureIDL: "float64",
+		typeName:     jen.Float64(),
+		marshal: func(id string, writer string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"WriteFloat64").Call(jen.Id(id), jen.Id(writer))
+		},
+		unmarshal: func(reader string) *Statement {
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadFloat64").Call(jen.Id(reader))
+		},
+		reader: constReader(8),
 	}
 }
 
@@ -281,11 +316,14 @@ func NewStringType() Type {
 		signatureIDL: "str",
 		typeName:     jen.String(),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Id("basic.WriteString").Call(jen.Id(id), jen.Id(writer))
+			return jen.Id("basic.WriteString").Call(jen.Id(id),
+				jen.Id(writer))
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadString").Call(jen.Id(reader))
+			return jen.Qual("github.com/lugu/qiloop/type/basic",
+				"ReadString").Call(jen.Id(reader))
 		},
+		reader: stringReader{},
 	}
 }
 
@@ -303,6 +341,7 @@ func NewVoidType() Type {
 		unmarshal: func(reader string) *Statement {
 			return jen.Empty()
 		},
+		reader: constReader(0),
 	}
 }
 
@@ -318,6 +357,7 @@ func NewValueType() Type {
 		unmarshal: func(reader string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/value", "NewValue").Call(jen.Id(reader))
 		},
+		reader: valueReader{},
 	}
 }
 
@@ -333,12 +373,18 @@ func NewBoolType() Type {
 		unmarshal: func(reader string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadBool").Call(jen.Id(reader))
 		},
+		reader: constReader(1),
 	}
 }
 
 // NewMetaObjectType is a contructor for the representation of an
 // object.
 func NewMetaObjectType() Type {
+	reader, err := MakeReader(MetaObjectSignature)
+	if err != nil {
+		panic(fmt.Errorf("invalid MetaObjectSignature: %s",
+			MetaObjectSignature))
+	}
 	return &typeConstructor{
 		signature:    MetaObjectSignature,
 		signatureIDL: "MetaObject",
@@ -349,6 +395,7 @@ func NewMetaObjectType() Type {
 		unmarshal: func(reader string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadMetaObject").Call(jen.Id(reader))
 		},
+		reader: reader,
 	}
 }
 
@@ -364,6 +411,7 @@ func NewObjectType() Type {
 		unmarshal: func(reader string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadObjectReference").Call(jen.Id(reader))
 		},
+		reader: objectReader{},
 	}
 }
 
@@ -379,6 +427,7 @@ func NewUnknownType() Type {
 		unmarshal: func(reader string) *Statement {
 			return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type deserialization not supported")))
 		},
+		reader: UnknownReader("X"),
 	}
 }
 
@@ -468,6 +517,13 @@ func (l *ListType) Unmarshal(reader string) *Statement {
 	).Call()
 }
 
+// Reader returns a list TypeReader.
+func (l *ListType) Reader() TypeReader {
+	return varReader{
+		reader: l.value.Reader(),
+	}
+}
+
 // NewMapType is a contructor for the representation of a map.
 func NewMapType(key, value Type) *MapType {
 	return &MapType{key, value}
@@ -508,6 +564,16 @@ func (m *MapType) RegisterTo(s *TypeSet) {
 // TypeDeclaration writes the type declaration into file.
 func (m *MapType) TypeDeclaration(file *jen.File) {
 	return
+}
+
+// Reader returns a map TypeReader.
+func (m *MapType) Reader() TypeReader {
+	return varReader{
+		reader: tupleReader(map[string]TypeReader{
+			"key":   stringReader{},
+			"value": m.value.Reader(),
+		}),
+	}
 }
 
 // Marshal returns a statement which represent the code needed to put
@@ -698,6 +764,15 @@ func (t *TupleType) Unmarshal(reader string) *Statement {
 	).Call()
 }
 
+// Reader returns a map TypeReader.
+func (t *TupleType) Reader() TypeReader {
+	readers := make(map[string]TypeReader)
+	for _, m := range t.Members {
+		readers[m.Name] = m.Type.Reader()
+	}
+	return tupleReader(readers)
+}
+
 // ConvertMetaObjects replace any element type which has the same
 // signature as MetaObject with an element of the type
 // object.MetaObject. This is required to generate proxy services
@@ -817,6 +892,15 @@ func (s *StructType) Unmarshal(reader string) *Statement {
 	return jen.Id("read" + s.name()).Call(jen.Id(reader))
 }
 
+// Reader returns a struct TypeReader.
+func (s *StructType) Reader() TypeReader {
+	readers := make(map[string]TypeReader)
+	for _, m := range s.Members {
+		readers[m.Name] = m.Type.Reader()
+	}
+	return tupleReader(readers)
+}
+
 // EnumType represents a const.
 type EnumType struct {
 	Name   string
@@ -895,4 +979,9 @@ func (e *EnumType) Marshal(id string, writer string) *Statement {
 // read and an error.
 func (e *EnumType) Unmarshal(reader string) *Statement {
 	return NewIntType().Unmarshal(reader)
+}
+
+// Reader returns an enum TypeReader.
+func (e *EnumType) Reader() TypeReader {
+	return constReader(4)
 }
