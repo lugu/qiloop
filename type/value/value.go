@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/basic"
 )
 
@@ -42,6 +43,7 @@ func NewValue(r io.Reader) (Value, error) {
 	}
 	f, ok := solve[s]
 	if !ok {
+		panic(s)
 		return nil, fmt.Errorf("unsuported signature: \"%s\"", s)
 	}
 	return f(r)
@@ -79,6 +81,21 @@ func (o *OpaqueValue) Write(w io.Writer) error {
 			bytes, len(o.data))
 	}
 	return nil
+}
+
+func newOpaque(sig string, r io.Reader) (Value, error) {
+	reader, err := signature.MakeReader(sig)
+	if err != nil {
+		return nil, fmt.Errorf("Invalid signature %s: %s", sig, err)
+	}
+	data, err := reader.Read(r)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read value %s: %s", sig, err)
+	}
+	return &OpaqueValue{
+		sig:  sig,
+		data: data,
+	}, nil
 }
 
 // BoolValue represents a Value of a boolean.

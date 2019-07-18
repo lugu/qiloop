@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/lugu/qiloop/bus/util"
 )
 
 // TypeSet is a container which contains exactly one instance of each
@@ -581,7 +580,7 @@ type MemberType struct {
 
 // Title is the public name of the field.
 func (m MemberType) Title() string {
-	return util.CleanName(m.Name)
+	return CleanName(m.Name)
 }
 
 // NewTupleType is a contructor for the representation of a series of
@@ -739,7 +738,7 @@ func (s *StructType) Signature() string {
 }
 
 func (s *StructType) name() string {
-	return util.CleanName(s.Name)
+	return CleanName(s.Name)
 }
 
 // SignatureIDL returns the idl signature of the struct.
@@ -879,7 +878,7 @@ func (e *EnumType) TypeDeclaration(file *jen.File) {
 	file.Type().Id(e.Name).Int()
 	var defs = make([]jen.Code, 0)
 	for i, v := range e.Values {
-		defs = append(defs, jen.Id(util.CleanName(i)).Op("=").Lit(v))
+		defs = append(defs, jen.Id(CleanName(i)).Op("=").Lit(v))
 	}
 	file.Const().Defs(defs...)
 }

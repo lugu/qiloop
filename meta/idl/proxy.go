@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 )
@@ -21,7 +20,7 @@ func proxyName(name string) string {
 }
 
 func generateInterface(itf *InterfaceType, file *jen.File) error {
-	serviceName := util.CleanName(itf.Name)
+	serviceName := signature.CleanName(itf.Name)
 	err := generateObjectInterface(itf, serviceName, file)
 	if err != nil {
 		return fmt.Errorf("failed to declare interface %s: %s",
@@ -55,7 +54,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 	definitions := make([]jen.Code, 0)
 	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
-		methodName = util.CleanName(methodName)
+		methodName = signature.CleanName(methodName)
 		if skipActionInterface(serviceName, m.Uid) {
 			return nil
 		}
@@ -70,7 +69,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
-		signalName = util.CleanName("Subscribe" + signalName)
+		signalName = signature.CleanName("Subscribe" + signalName)
 		if skipActionInterface(serviceName, s.Uid) {
 			return nil
 		}
@@ -223,7 +222,7 @@ func generateProxyObject(itf *InterfaceType, serviceName string,
 	}
 	signal := func(s object.MetaSignal, signalName string) error {
 		signal := itf.Signals[s.Uid]
-		signalName = util.CleanName("Subscribe" + signalName)
+		signalName = signature.CleanName("Subscribe" + signalName)
 		if serviceName != "Object" && serviceName != "ServiceZero" &&
 			s.Uid < object.MinUserActionID {
 			return nil
@@ -293,7 +292,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 	file.Func().Params(
 		jen.Id("s").Id("Constructor"),
 	).Id(
-		util.CleanName(serviceName),
+		signature.CleanName(serviceName),
 	).Params().Params(
 		jen.Id(objName(serviceName)), jen.Error(),
 	).Block(
@@ -338,7 +337,7 @@ func generateProxyMethod(file *jen.File, serviceName string,
 		returnCode = jen.Error()
 	}
 
-	goMethodName := util.CleanName(methodName)
+	goMethodName := signature.CleanName(methodName)
 	file.Comment(goMethodName + " calls the remote procedure")
 	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(goMethodName).Add(
 		paramType.Params(),
