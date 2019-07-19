@@ -1,16 +1,16 @@
-for v0.5
+for v0.6
 --------
 
-- doc: diagram which shows a bus
-- complete implementation of log manager
+- visual doc: diagram which shows a bus
 - fix go get and GOPATH doc: decide which version to support
+- benchmark bandwidth (128, 512, 1024, 4096 bytes per message)
+- benchmark latency: (50, 75, 90, 99, 99.9, 99.99, 99.999 percentil)
+- repair stats and traces
+- example: NAO say, Pepper say
 
 for later
 ---------
 
-- example: NAO say, Pepper say
-- benchmark bandwidth (128, 512, 1024, 4096 bytes per message)
-- benchmark latency: (50, 75, 90, 99, 99.9, 99.99, 99.999 percentil)
 - transport: fifo / pipe
 - transport: socketpair
 - transport: websocket
@@ -18,6 +18,5 @@ for later
 - implement raw data type (signature, Type and IDL)
 - get ride of implicit tokens when creating a session (Option)
 - session: re-use established connections
-- repair stats and traces
 - actor: use Terminate message instead of OnTerminate.
 - QUIC implementation: multiplex client
