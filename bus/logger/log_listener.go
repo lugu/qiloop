@@ -115,7 +115,6 @@ func (l *logListenerImpl) OnFiltersChange(filters map[string]LogLevel) error {
 
 	newFilters := make(map[string]LogLevel)
 	newFiltersReg := make(map[string]*regexp.Regexp)
-	fmt.Printf("filters len: %d\n", len(filters))
 	for pattern, level := range filters {
 		if err := validateLevel(level); err != nil {
 			return err
