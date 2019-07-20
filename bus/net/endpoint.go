@@ -1,6 +1,7 @@
 package net
 
 import (
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"sync"
 
 	quic "github.com/lucas-clemente/quic-go"
+	"github.com/lugu/qiloop/type/value"
 )
 
 // Filter returns true if given message shall be processed by a
@@ -304,6 +306,23 @@ func (e *endPoint) dispatch(msg *Message) error {
 	return ret
 }
 
+// readError returns the error embedded in the payload of an error
+// message.
+func readError(m *Message) error {
+	if m.Header.Type == Error {
+		buf := bytes.NewBuffer(m.Payload)
+		val, err := value.NewValue(buf)
+		if err != nil {
+			return fmt.Errorf("cannot read error: %s", err)
+		}
+		if msg, ok := val.(value.StringValue); ok {
+			return errors.New(msg.Value())
+		}
+		return fmt.Errorf("unexpected error type: %s", val.Signature())
+	}
+	return fmt.Errorf("not an error: wrong message type (%d)", m.Header.Type)
+}
+
 // process read all messages from the end point and dispatch them one
 // by one.
 func (e *endPoint) process() {
@@ -318,7 +337,12 @@ func (e *endPoint) process() {
 		}
 		err = e.dispatch(msg)
 		if err != nil {
-			log.Printf("%s: %#v", err, msg.Header)
+			if msg.Header.Type == Error {
+				log.Printf("%s: %#v, %s", err, msg.Header,
+					readError(msg))
+			} else {
+				log.Printf("%s: %#v", err, msg.Header)
+			}
 		}
 	}
 }
