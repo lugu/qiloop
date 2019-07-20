@@ -55,7 +55,7 @@ illustrates some basic usages of qilooop:
 -   [space service](https://github.com/lugu/qiloop/blob/master/examples/space)
     illustrates the client side objects creation.
 
--   [clock service](https://github.com/lugu/qiloop/blob/master/examples/space)
+-   [clock service](https://github.com/lugu/qiloop/blob/master/examples/clock)
     completed version of the clock tutorial.
 
 ## Authentication
