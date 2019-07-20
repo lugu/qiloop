@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/lugu/qiloop/type/basic"
 	"io"
+
+	"github.com/lugu/qiloop/type/basic"
 )
 
 // Magic is a constant to discriminate between message and garbage.
 const Magic = uint32(0x42dead42)
 
-// Filter messages larger than 10 MB
+// MaxPayloadSize limits the payload size of a message (10MB)
 const MaxPayloadSize = uint32(10 * 1024 * 1024)
 
 // Version is the supported version of the protocol.
