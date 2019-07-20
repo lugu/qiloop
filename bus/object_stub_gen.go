@@ -94,6 +94,11 @@ func (p *stubServiceZero) Authenticate(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read capability: %s", err))
 	}
 	ret, callErr := p.impl.Authenticate(capability)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -260,6 +265,11 @@ func (p *stubObject) RegisterEvent(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read handler: %s", err))
 	}
 	ret, callErr := p.impl.RegisterEvent(objectID, actionID, handler)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -285,6 +295,11 @@ func (p *stubObject) UnregisterEvent(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read handler: %s", err))
 	}
 	callErr := p.impl.UnregisterEvent(objectID, actionID, handler)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -298,6 +313,11 @@ func (p *stubObject) MetaObject(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
 	}
 	ret, callErr := p.impl.MetaObject(objectID)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -315,6 +335,11 @@ func (p *stubObject) Terminate(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
 	}
 	callErr := p.impl.Terminate(objectID)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -328,6 +353,11 @@ func (p *stubObject) Property(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read name: %s", err))
 	}
 	ret, callErr := p.impl.Property(name)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -349,6 +379,11 @@ func (p *stubObject) SetProperty(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read value: %s", err))
 	}
 	callErr := p.impl.SetProperty(name, value)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -357,6 +392,11 @@ func (p *stubObject) SetProperty(msg *net.Message, c *Channel) error {
 }
 func (p *stubObject) Properties(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.Properties()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -398,6 +438,11 @@ func (p *stubObject) RegisterEventWithSignature(msg *net.Message, c *Channel) er
 		return c.SendError(msg, fmt.Errorf("cannot read P3: %s", err))
 	}
 	ret, callErr := p.impl.RegisterEventWithSignature(objectID, actionID, handler, P3)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -410,6 +455,11 @@ func (p *stubObject) RegisterEventWithSignature(msg *net.Message, c *Channel) er
 }
 func (p *stubObject) IsStatsEnabled(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.IsStatsEnabled()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -427,6 +477,11 @@ func (p *stubObject) EnableStats(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read enabled: %s", err))
 	}
 	callErr := p.impl.EnableStats(enabled)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -435,6 +490,11 @@ func (p *stubObject) EnableStats(msg *net.Message, c *Channel) error {
 }
 func (p *stubObject) Stats(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.Stats()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -463,6 +523,11 @@ func (p *stubObject) Stats(msg *net.Message, c *Channel) error {
 }
 func (p *stubObject) ClearStats(msg *net.Message, c *Channel) error {
 	callErr := p.impl.ClearStats()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -471,6 +536,11 @@ func (p *stubObject) ClearStats(msg *net.Message, c *Channel) error {
 }
 func (p *stubObject) IsTraceEnabled(msg *net.Message, c *Channel) error {
 	ret, callErr := p.impl.IsTraceEnabled()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -488,6 +558,11 @@ func (p *stubObject) EnableTrace(msg *net.Message, c *Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read traced: %s", err))
 	}
 	callErr := p.impl.EnableTrace(traced)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}

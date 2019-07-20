@@ -115,6 +115,11 @@ func (p *stubServiceDirectory) Service(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read name: %s", err))
 	}
 	ret, callErr := p.impl.Service(name)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -127,6 +132,11 @@ func (p *stubServiceDirectory) Service(msg *net.Message, c *bus.Channel) error {
 }
 func (p *stubServiceDirectory) Services(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.Services()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -156,6 +166,11 @@ func (p *stubServiceDirectory) RegisterService(msg *net.Message, c *bus.Channel)
 		return c.SendError(msg, fmt.Errorf("cannot read info: %s", err))
 	}
 	ret, callErr := p.impl.RegisterService(info)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -173,6 +188,11 @@ func (p *stubServiceDirectory) UnregisterService(msg *net.Message, c *bus.Channe
 		return c.SendError(msg, fmt.Errorf("cannot read serviceID: %s", err))
 	}
 	callErr := p.impl.UnregisterService(serviceID)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -186,6 +206,11 @@ func (p *stubServiceDirectory) ServiceReady(msg *net.Message, c *bus.Channel) er
 		return c.SendError(msg, fmt.Errorf("cannot read serviceID: %s", err))
 	}
 	callErr := p.impl.ServiceReady(serviceID)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -199,6 +224,11 @@ func (p *stubServiceDirectory) UpdateServiceInfo(msg *net.Message, c *bus.Channe
 		return c.SendError(msg, fmt.Errorf("cannot read info: %s", err))
 	}
 	callErr := p.impl.UpdateServiceInfo(info)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -207,6 +237,11 @@ func (p *stubServiceDirectory) UpdateServiceInfo(msg *net.Message, c *bus.Channe
 }
 func (p *stubServiceDirectory) MachineId(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.MachineId()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -224,6 +259,11 @@ func (p *stubServiceDirectory) _socketOfService(msg *net.Message, c *bus.Channel
 		return c.SendError(msg, fmt.Errorf("cannot read serviceID: %s", err))
 	}
 	ret, callErr := p.impl._socketOfService(serviceID)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}

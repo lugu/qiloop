@@ -147,7 +147,12 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 		code = jen.Id("ret, callErr := p.impl").Dot(methodName).Call(params...)
 	}
 	writing = append(writing, code)
-	code = jen.Id(`if callErr != nil {
+	code = jen.Id(`
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+	    return nil
+	}
+	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
 	var out bytes.Buffer`)

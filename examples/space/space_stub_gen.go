@@ -213,6 +213,11 @@ func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
 }
 func (p *stubSpacecraft) Shoot(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.Shoot()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -260,6 +265,11 @@ func (p *stubSpacecraft) Ammo(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read ammo: %s", err))
 	}
 	callErr := p.impl.Ammo(ammo)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}

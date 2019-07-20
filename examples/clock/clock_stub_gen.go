@@ -84,6 +84,11 @@ func (p *stubTimestamp) onPropertyChange(name string, data []byte) error {
 }
 func (p *stubTimestamp) Nanoseconds(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.Nanoseconds()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}

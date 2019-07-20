@@ -98,6 +98,11 @@ func (p *stubLogProvider) SetVerbosity(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
 	}
 	callErr := p.impl.SetVerbosity(level)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -115,6 +120,11 @@ func (p *stubLogProvider) SetCategory(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
 	}
 	callErr := p.impl.SetCategory(category, level)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -146,6 +156,11 @@ func (p *stubLogProvider) ClearAndSet(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read filters: %s", err))
 	}
 	callErr := p.impl.ClearAndSet(filters)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -309,6 +324,11 @@ func (p *stubLogListener) SetCategory(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
 	}
 	callErr := p.impl.SetCategory(category, level)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -317,6 +337,11 @@ func (p *stubLogListener) SetCategory(msg *net.Message, c *bus.Channel) error {
 }
 func (p *stubLogListener) ClearFilters(msg *net.Message, c *bus.Channel) error {
 	callErr := p.impl.ClearFilters()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -517,6 +542,11 @@ func (p *stubLogManager) Log(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read messages: %s", err))
 	}
 	callErr := p.impl.Log(messages)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -525,6 +555,11 @@ func (p *stubLogManager) Log(msg *net.Message, c *bus.Channel) error {
 }
 func (p *stubLogManager) CreateListener(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.CreateListener()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -550,6 +585,11 @@ func (p *stubLogManager) CreateListener(msg *net.Message, c *bus.Channel) error 
 }
 func (p *stubLogManager) GetListener(msg *net.Message, c *bus.Channel) error {
 	ret, callErr := p.impl.GetListener()
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -597,6 +637,11 @@ func (p *stubLogManager) AddProvider(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read source: %s", err))
 	}
 	ret, callErr := p.impl.AddProvider(source)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -614,6 +659,11 @@ func (p *stubLogManager) RemoveProvider(msg *net.Message, c *bus.Channel) error 
 		return c.SendError(msg, fmt.Errorf("cannot read sourceID: %s", err))
 	}
 	callErr := p.impl.RemoveProvider(sourceID)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}

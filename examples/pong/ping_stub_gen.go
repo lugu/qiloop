@@ -95,6 +95,11 @@ func (p *stubPingPong) Hello(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read a: %s", err))
 	}
 	ret, callErr := p.impl.Hello(a)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
@@ -112,6 +117,11 @@ func (p *stubPingPong) Ping(msg *net.Message, c *bus.Channel) error {
 		return c.SendError(msg, fmt.Errorf("cannot read a: %s", err))
 	}
 	callErr := p.impl.Ping(a)
+
+	// do not respond to post messages.
+	if msg.Header.Type == net.Post {
+		return nil
+	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
 	}
