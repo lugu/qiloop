@@ -62,10 +62,10 @@ Create a file called clock.go with the following implementation:
         import (
                 "time"
 
-                bus "github.com/lugu/qiloop/bus"
+                "github.com/lugu/qiloop/bus"
         )
 
-        type timestampService struct{}
+        type timestampService time.Time
 
         func (t timestampService) Activate(activation bus.Activation,
                 helper TimestampSignalHelper) error {
@@ -74,7 +74,13 @@ Create a file called clock.go with the following implementation:
         func (t timestampService) OnTerminate() {
         }
         func (t timestampService) Nanoseconds() (int64, error) {
-                return time.Now().UnixNano(), nil
+                return time.Since(time.Time(t)).Nanoseconds(), nil
+        }
+
+        // NewTimestampObject creates a timestamp object which can be
+        // registered to a bus.Server.
+        func NewTimestampObject() bus.Actor {
+                return TimestampObject(timestampService{})
         }
 
 ## Create a program
