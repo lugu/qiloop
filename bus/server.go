@@ -354,7 +354,7 @@ func (c *Channel) SendReply(msg *net.Message, response []byte) error {
 	return c.EndPoint.Send(reply)
 }
 
-// SendReply send a reply message in response to msg.
+// Send send a reply message in response to msg.
 func (c *Channel) Send(msg *net.Message) error {
 	// FIXME: missing trace here.
 	// o.trace(&reply)
@@ -374,9 +374,9 @@ func (c *Channel) Authenticated() bool {
 	return c.Cap.Authenticated()
 }
 
-// Authenticate marks the context as authenticated.
-func (c *Channel) Authenticate() {
-	c.Cap.Authenticate()
+// SetAuthenticated marks the context as authenticated.
+func (c *Channel) SetAuthenticated() {
+	c.Cap.SetAuthenticated()
 }
 
 // firewall ensures an endpoint talks only to autorized services.
@@ -517,7 +517,7 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 		Cap: PreferedCap("", ""),
 	}
 	if authenticated {
-		context.Authenticate()
+		context.SetAuthenticated()
 	}
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true

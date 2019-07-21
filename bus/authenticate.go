@@ -152,7 +152,7 @@ func (s *serviceAuthenticate) Authenticate(from *Channel, cap CapabilityMap) Cap
 		}
 	}
 	if s.auth.Authenticate(user, token) {
-		from.Authenticate()
+		from.SetAuthenticated()
 		return from.Cap
 	}
 	return s.capError()

@@ -7,10 +7,12 @@ import (
 	"github.com/lugu/qiloop/bus/net"
 )
 
+// DirectClient creates a pipe and connect obj to a client.
+// FIXME: this will send messages to obj in a concurrent way.
 func DirectClient(obj Actor) Client {
 	proxy, server := net.Pipe()
 	context := NewContext(server)
-	context.Authenticate()
+	context.SetAuthenticated()
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true
@@ -35,6 +37,8 @@ type clientService struct {
 	context         *Channel
 }
 
+// NewServiceReference returns a remove reference to a service. This
+// service can be used to create client side objects.
 func NewServiceReference(s Session, e net.EndPoint, serviceID uint32) Service {
 	return &clientService{
 		serviceID:       serviceID,
