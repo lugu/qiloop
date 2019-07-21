@@ -132,7 +132,7 @@ func (s *serviceImpl) Add(obj Actor) (index uint32, err error) {
 	// be assigned random values.
 	s.Lock()
 	if _, ok := s.objects[1]; ok {
-		index = rand.Uint32()
+		index = (rand.Uint32() << 1) >> 1
 		if _, ok = s.objects[index]; ok {
 			s.Unlock()
 			return s.Add(obj)
