@@ -92,6 +92,7 @@ func NewBombObject() bus.Actor {
 	return BombObject(&bombImpl{})
 }
 
+// CreateBomb creates a new bomb and add it the to service.
 func CreateBomb(session bus.Session, service bus.Service) (BombProxy, error) {
 	constructor := Services(session)
 	return constructor.NewBomb(service, &bombImpl{})

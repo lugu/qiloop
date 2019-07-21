@@ -79,18 +79,23 @@ func TestAddRemoveObject(t *testing.T) {
 		t.Error(err)
 	}
 
+	// create a new bomb and register it
 	ammo := space.NewBombObject()
 	id, err := service.Add(ammo)
 	if err != nil {
 		t.Error(err)
 	}
 
+	// get a proxy of the new bomb
 	proxy, err := session.Proxy("Spacecraft", id)
 	if err != nil {
 		t.Error(err)
 	}
 
+	// get a specialized proxy of the new bomb
 	ammoProxy := space.MakeBomb(session, proxy)
+
+	// pass the client object to the service.
 	err = spacecraft.Ammo(ammoProxy)
 	if err != nil {
 		t.Error(err)
