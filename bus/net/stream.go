@@ -47,8 +47,8 @@ func ConnStream(conn gonet.Conn) Stream {
 
 type quicStream struct {
 	quic.Stream
-	// quic.Stream does not permit to call Close while Reading or
-	// Writing. See go-quic documentation.
+	// quic.Stream does not permit to call Close while Writing.
+	// Refer to go-quic documentation.
 	sync.RWMutex
 }
 
@@ -66,8 +66,6 @@ func (s *quicStream) Close() error {
 }
 
 func (s *quicStream) Read(p []byte) (int, error) {
-	s.RLock()
-	defer s.RUnlock()
 	return s.Stream.Read(p)
 }
 
