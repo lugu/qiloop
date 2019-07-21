@@ -323,28 +323,23 @@ func TestEndPoint_DialQUIC(t *testing.T) {
 			panic(err)
 		}
 
-		filter := func(hrd *net.Header) (bool, bool) {
-			return true, false
-		}
-		wait := make(chan *net.Message)
-		consumer := func(msg *net.Message) error {
-			wait <- msg
-			return nil
-		}
-		closer := func(err error) {
-		}
 		finalizer := func(e net.EndPoint) {
+			filter := func(hrd *net.Header) (bool, bool) {
+				return true, false
+			}
+			consumer := func(msg *net.Message) error {
+				err = e.Send(*msg)
+				if err != nil {
+					panic(err)
+				}
+				return nil
+			}
+			closer := func(err error) {
+			}
 			e.AddHandler(filter, consumer, closer)
 		}
 
-		endpoint := net.EndPointFinalizer(conn, finalizer)
-
-		msg := <-wait
-		err = endpoint.Send(*msg)
-		if err != nil {
-			panic(err)
-		}
-		endpoint.Close()
+		net.EndPointFinalizer(conn, finalizer)
 
 	}()
 	endpoint, err := net.DialEndPoint(addr)
