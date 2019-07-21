@@ -28,12 +28,10 @@ func init() {
 	flag.StringVar(&userToken, "token", "", "user token")
 }
 
-// ServerFromFlag is an helper method to write service applications. It uses
-// the flag package to get the session URL, the URL to listen to, the
-// user and token strings. It creates a new session session, connect
-// to the service directory and register the given service and listen
-// for incoming connections.
-func ServerFromFlag(serviceName string, object bus.Actor) (bus.Server, error) {
+// SessionFromFlag is an helper method to write client applications.
+// It uses the flag package to get the session URL, the user and token
+// strings to connect a session.
+func SessionFromFlag() (bus.Session, error) {
 
 	if listenURL == "" {
 		listenURL = util.NewUnixAddr()
@@ -48,13 +46,32 @@ func ServerFromFlag(serviceName string, object bus.Actor) (bus.Server, error) {
 		userToken = string(bytePassword)
 	}
 
-	session, err := qiloop.NewSession(
-		sessionURL, userName, userToken)
+	return qiloop.NewSession(sessionURL, userName, userToken)
+}
+
+// ServerFromFlag is an helper method to write service applications.
+// It uses the flag package to get the session URL, the URL to listen
+// to, the user and token strings. It creates a new session, connect
+// to the service directory and register the given service and listen
+// for incoming connections.
+func ServerFromFlag(serviceName string, object bus.Actor) (bus.Server, error) {
+
+	session, err := SessionFromFlag()
 	if err != nil {
 		log.Fatalf("Failed to connect %s: %s", sessionURL, err)
 	}
 
-	auth := bus.Yes{}
+	if listenURL == "" {
+		listenURL = util.NewUnixAddr()
+	}
+
+	var auth bus.Authenticator = bus.Yes{}
+	if userName != "" {
+		passwords := map[string]string{
+			userName: userToken,
+		}
+		auth = bus.Dictionary(passwords)
+	}
 	server, err := services.NewServer(session, listenURL, auth)
 	if err != nil {
 		log.Fatalf("Failed to start server at %s: %s", listenURL, err)
