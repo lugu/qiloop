@@ -130,7 +130,6 @@ func TestLogListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer cancel()
 
 	err = logManager.Log(messagesList())
 	if err != nil {
@@ -159,12 +158,13 @@ func TestLogListener(t *testing.T) {
 		}
 		wait.Done()
 	}()
+	cancel()
+	wait.Wait()
+
 	err = logListener.ClearFilters()
 	if err != nil {
 		t.Error(err)
 	}
-	logListener.Terminate(logListener.ObjectID())
-	wait.Wait()
 }
 
 func TestLogProvider(t *testing.T) {
@@ -217,7 +217,6 @@ func TestLogProvider(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer cancel()
 
 	var messageCount int
 	var wait sync.WaitGroup
@@ -243,8 +242,7 @@ func TestLogProvider(t *testing.T) {
 	logger2.Debug("pif")
 	logger2.Debug("pof")
 
-	logListener.Terminate(logListener.ObjectID())
-
+	cancel()
 	wait.Wait()
 
 	if messageCount != 4 {
