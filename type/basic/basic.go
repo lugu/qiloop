@@ -11,7 +11,7 @@ import (
 func ReadUint8(r io.Reader) (uint8, error) {
 	buf := []byte{0}
 	bytes, err := r.Read(buf)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return 0, err
 	} else if bytes != 1 {
 		return 0, fmt.Errorf("failed to read uint8 (%d instead of 1)", bytes)
@@ -46,7 +46,7 @@ func WriteInt8(i int8, w io.Writer) error {
 func ReadUint16(r io.Reader) (uint16, error) {
 	buf := []byte{0, 0}
 	bytes, err := r.Read(buf)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return 0, err
 	} else if bytes != 2 {
 		return 0, fmt.Errorf("failed to read uint16 (%d instead of 2)", bytes)
@@ -82,7 +82,7 @@ func WriteInt16(i int16, w io.Writer) error {
 func ReadUint32(r io.Reader) (uint32, error) {
 	buf := []byte{0, 0, 0, 0}
 	bytes, err := r.Read(buf)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return 0, err
 	} else if bytes != 4 {
 		return 0, fmt.Errorf("failed to read uint32 (%d instead of 4)", bytes)
@@ -107,7 +107,7 @@ func WriteUint32(i uint32, w io.Writer) error {
 func ReadUint64(r io.Reader) (uint64, error) {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
 	bytes, err := r.Read(buf)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return 0, err
 	} else if bytes != 8 {
 		return 0, fmt.Errorf("failed to read uint32 (%d instead of 8)", bytes)
@@ -154,7 +154,7 @@ func WriteInt64(i int64, w io.Writer) error {
 func ReadFloat32(r io.Reader) (float32, error) {
 	buf := []byte{0, 0, 0, 0}
 	bytes, err := r.Read(buf)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return 0, err
 	} else if bytes != 4 {
 		return 0, fmt.Errorf("failed to read float32 (%d instead of 4)", bytes)
@@ -181,7 +181,7 @@ func WriteFloat32(f float32, w io.Writer) error {
 func ReadFloat64(r io.Reader) (float64, error) {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
 	bytes, err := r.Read(buf)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return 0, err
 	} else if bytes != 8 {
 		return 0, fmt.Errorf("failed to read float64 (%d instead of 4)", bytes)
@@ -225,7 +225,7 @@ func WriteBool(b bool, w io.Writer) error {
 // using ReadUint32, then the bytes of the string.
 func ReadString(r io.Reader) (string, error) {
 	size, err := ReadUint32(r)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return "", fmt.Errorf("failed to read string size: %s", err)
 	}
 	if size == 0 {
@@ -235,7 +235,7 @@ func ReadString(r io.Reader) (string, error) {
 	// 4094 until either the reader fail or size is reached.
 	buf := make([]byte, size)
 	bytes, err := r.Read(buf)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return "", err
 	} else if uint32(bytes) != size {
 		return "", fmt.Errorf("failed to read string: %d instead of %d",

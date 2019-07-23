@@ -92,7 +92,7 @@ func (v varReader) Read(r io.Reader) ([]byte, error) {
 		data, err := v.reader.Read(r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read %d/%d: %s",
-				i, size, err)
+				i+1, size, err)
 		}
 		n, err := buf.Write(data)
 		if err != nil {
