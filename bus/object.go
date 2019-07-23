@@ -72,7 +72,7 @@ func NewBasicObject(obj Actor, meta object.MetaObject,
 	impl := &objectImpl{
 		meta:             object.FullMetaObject(meta),
 		onPropertyChange: onPropertyChange,
-		signalHandler:    NewSignalHandler(),
+		signalHandler:    newSignalHandler(),
 		properties:       make(map[string]value.Value),
 	}
 	return &stubObject{

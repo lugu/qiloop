@@ -186,7 +186,7 @@ type stubObject struct {
 func ObjectObject(impl ObjectImplementor) Actor {
 	var stb stubObject
 	stb.impl = impl
-	stb.signal = NewSignalHandler()
+	stb.signal = newSignalHandler()
 	return &stb
 }
 func (p *stubObject) Activate(activation Activation) error {

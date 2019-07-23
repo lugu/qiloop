@@ -30,18 +30,23 @@ type signalHandler struct {
 	tracer       func(*net.Message)
 }
 
+// SignalHandler is an helper object for service implementation: it
+// is passed during the activation call to allow a service implementor
+// to manipilate its signals and properties.
 type SignalHandler interface {
 	UpdateSignal(signal uint32, data []byte) error
 	UpdateProperty(property uint32, signature string, data []byte) error
 }
 
+// BasicObject implements the common behavior to all objects (including
+// the signal/properties subscriptions) in an abstract way.
 type BasicObject interface {
 	Actor
 	SignalHandler
 }
 
-// NewSignalHandler returns a helper to deal with signals.
-func NewSignalHandler() *signalHandler {
+// newSignalHandler returns a helper to deal with signals.
+func newSignalHandler() *signalHandler {
 	return &signalHandler{
 		signals: make(map[uint64]signalUser),
 		tracer:  nil,

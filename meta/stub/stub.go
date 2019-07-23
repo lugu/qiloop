@@ -607,7 +607,7 @@ func generateStubConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	if itf.Name == "Object" {
 		code = jen.Id("stb.signal").Op("=").Qual(
 			"github.com/lugu/qiloop/bus",
-			"NewSignalHandler",
+			"newSignalHandler",
 		).Call()
 		writing = append(writing, code)
 		code = jen.Return().Op("&").Id("stb")
