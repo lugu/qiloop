@@ -707,8 +707,8 @@ type proxyServiceZero struct {
 }
 
 // ServiceZero returns a proxy to a remote service
-func (s Constructor) ServiceZero() (ServiceZeroProxy, error) {
-	proxy, err := s.session.Proxy("ServiceZero", 1)
+func (c Constructor) ServiceZero() (ServiceZeroProxy, error) {
+	proxy, err := c.session.Proxy("ServiceZero", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
@@ -800,8 +800,8 @@ type proxyObject struct {
 }
 
 // Object returns a proxy to a remote service
-func (s Constructor) Object() (ObjectProxy, error) {
-	proxy, err := s.session.Proxy("Object", 1)
+func (c Constructor) Object() (ObjectProxy, error) {
+	proxy, err := c.session.Proxy("Object", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}

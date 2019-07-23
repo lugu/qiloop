@@ -123,12 +123,12 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 }
 
 // ServiceDirectory returns a proxy to a remote service
-func (s Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
-	proxy, err := s.session.Proxy("ServiceDirectory", 1)
+func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
+	proxy, err := c.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeServiceDirectory(s.session, proxy), nil
+	return MakeServiceDirectory(c.session, proxy), nil
 }
 
 // Service calls the remote procedure
@@ -578,12 +578,12 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 }
 
 // LogProvider returns a proxy to a remote service
-func (s Constructor) LogProvider() (LogProviderProxy, error) {
-	proxy, err := s.session.Proxy("LogProvider", 1)
+func (c Constructor) LogProvider() (LogProviderProxy, error) {
+	proxy, err := c.session.Proxy("LogProvider", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeLogProvider(s.session, proxy), nil
+	return MakeLogProvider(c.session, proxy), nil
 }
 
 // SetVerbosity calls the remote procedure
@@ -688,12 +688,12 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 }
 
 // LogListener returns a proxy to a remote service
-func (s Constructor) LogListener() (LogListenerProxy, error) {
-	proxy, err := s.session.Proxy("LogListener", 1)
+func (c Constructor) LogListener() (LogListenerProxy, error) {
+	proxy, err := c.session.Proxy("LogListener", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeLogListener(s.session, proxy), nil
+	return MakeLogListener(c.session, proxy), nil
 }
 
 // SetCategory calls the remote procedure
@@ -999,12 +999,12 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 }
 
 // LogManager returns a proxy to a remote service
-func (s Constructor) LogManager() (LogManagerProxy, error) {
-	proxy, err := s.session.Proxy("LogManager", 1)
+func (c Constructor) LogManager() (LogManagerProxy, error) {
+	proxy, err := c.session.Proxy("LogManager", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeLogManager(s.session, proxy), nil
+	return MakeLogManager(c.session, proxy), nil
 }
 
 // Log calls the remote procedure

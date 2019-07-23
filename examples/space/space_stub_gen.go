@@ -339,12 +339,12 @@ func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 }
 
 // Bomb returns a proxy to a remote service
-func (s Constructor) Bomb() (BombProxy, error) {
-	proxy, err := s.session.Proxy("Bomb", 1)
+func (c Constructor) Bomb() (BombProxy, error) {
+	proxy, err := c.session.Proxy("Bomb", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeBomb(s.session, proxy), nil
+	return MakeBomb(c.session, proxy), nil
 }
 
 // SubscribeBoom subscribe to a remote property
@@ -488,12 +488,12 @@ func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 }
 
 // Spacecraft returns a proxy to a remote service
-func (s Constructor) Spacecraft() (SpacecraftProxy, error) {
-	proxy, err := s.session.Proxy("Spacecraft", 1)
+func (c Constructor) Spacecraft() (SpacecraftProxy, error) {
+	proxy, err := c.session.Proxy("Spacecraft", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeSpacecraft(s.session, proxy), nil
+	return MakeSpacecraft(c.session, proxy), nil
 }
 
 // Shoot calls the remote procedure

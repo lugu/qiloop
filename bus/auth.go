@@ -54,7 +54,7 @@ func (c CapabilityMap) Authenticated() bool {
 	return false
 }
 
-// Authenticate force the done status in the capability map.
+// SetAuthenticated force the done status in the capability map.
 func (c CapabilityMap) SetAuthenticated() {
 	c[KeyState] = value.Uint(StateDone)
 }

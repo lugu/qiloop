@@ -205,12 +205,12 @@ func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 }
 
 // PingPong returns a proxy to a remote service
-func (s Constructor) PingPong() (PingPongProxy, error) {
-	proxy, err := s.session.Proxy("PingPong", 1)
+func (c Constructor) PingPong() (PingPongProxy, error) {
+	proxy, err := c.session.Proxy("PingPong", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakePingPong(s.session, proxy), nil
+	return MakePingPong(c.session, proxy), nil
 }
 
 // Hello calls the remote procedure

@@ -3,6 +3,7 @@ package bus
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 )
@@ -26,6 +27,7 @@ func GetMetaObject(client Client, serviceID uint32, objectID uint32) (m object.M
 	return m, nil
 }
 
+// MakeObject converts a Proxy into an ObjectProxy.
 func MakeObject(proxy Proxy) ObjectProxy {
 	return &proxyObject{proxy}
 }

@@ -283,20 +283,20 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		)
 	}
 	blockContructor := jen.Id(
-		`return Make` + serviceName + `(s.session, proxy), nil`,
+		`return Make` + serviceName + `(c.session, proxy), nil`,
 	)
 	if ProxyName == proxyName("Object") || ProxyName == proxyName("ServiceZero") {
 		blockContructor = jen.Id(`return &` + ProxyName + `{ proxy }, nil`)
 	}
 	file.Comment(serviceName + " returns a proxy to a remote service")
 	file.Func().Params(
-		jen.Id("s").Id("Constructor"),
+		jen.Id("c").Id("Constructor"),
 	).Id(
 		signature.CleanName(serviceName),
 	).Params().Params(
 		jen.Id(objName(serviceName)), jen.Error(),
 	).Block(
-		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("s.session").Dot("Proxy").Call(
+		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("c.session").Dot("Proxy").Call(
 			jen.Lit(serviceName),
 			jen.Lit(1),
 		),

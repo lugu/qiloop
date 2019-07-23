@@ -13,19 +13,19 @@ var ErrUnknownProvider = fmt.Errorf("Unknown provider")
 
 var (
 	// LogLevelNone does not output logs
-	LogLevelNone LogLevel = LogLevel{Level: 0}
+	LogLevelNone = LogLevel{Level: 0}
 	// LogLevelFatal only shows catastrophic errors
-	LogLevelFatal LogLevel = LogLevel{Level: 1}
+	LogLevelFatal = LogLevel{Level: 1}
 	// LogLevelError shows all errors
-	LogLevelError LogLevel = LogLevel{Level: 2}
+	LogLevelError = LogLevel{Level: 2}
 	// LogLevelWarning shows errors and warning
-	LogLevelWarning LogLevel = LogLevel{Level: 3}
+	LogLevelWarning = LogLevel{Level: 3}
 	// LogLevelInfo shows errors, warning and info
-	LogLevelInfo LogLevel = LogLevel{Level: 4}
+	LogLevelInfo = LogLevel{Level: 4}
 	// LogLevelVerbose shows an excessive amount of log
-	LogLevelVerbose LogLevel = LogLevel{Level: 5}
+	LogLevelVerbose = LogLevel{Level: 5}
 	// LogLevelDebug shows log to debug
-	LogLevelDebug LogLevel = LogLevel{Level: 6}
+	LogLevelDebug = LogLevel{Level: 6}
 )
 
 type logManager struct {

@@ -148,12 +148,12 @@ func MakeTimestamp(sess bus.Session, proxy bus.Proxy) TimestampProxy {
 }
 
 // Timestamp returns a proxy to a remote service
-func (s Constructor) Timestamp() (TimestampProxy, error) {
-	proxy, err := s.session.Proxy("Timestamp", 1)
+func (c Constructor) Timestamp() (TimestampProxy, error) {
+	proxy, err := c.session.Proxy("Timestamp", 1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact service: %s", err)
 	}
-	return MakeTimestamp(s.session, proxy), nil
+	return MakeTimestamp(c.session, proxy), nil
 }
 
 // Nanoseconds calls the remote procedure
