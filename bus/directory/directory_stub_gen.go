@@ -392,10 +392,10 @@ type ServiceAdded struct {
 // readServiceAdded unmarshalls ServiceAdded
 func readServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
+		return s, fmt.Errorf("failed to read ServiceID field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+		return s, fmt.Errorf("failed to read Name field: %s", err)
 	}
 	return s, nil
 }
@@ -403,10 +403,10 @@ func readServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 // writeServiceAdded marshalls ServiceAdded
 func writeServiceAdded(s ServiceAdded, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
-		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
+		return fmt.Errorf("failed to write ServiceID field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
+		return fmt.Errorf("failed to write Name field: %s", err)
 	}
 	return nil
 }
@@ -420,10 +420,10 @@ type ServiceRemoved struct {
 // readServiceRemoved unmarshalls ServiceRemoved
 func readServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
+		return s, fmt.Errorf("failed to read ServiceID field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+		return s, fmt.Errorf("failed to read Name field: %s", err)
 	}
 	return s, nil
 }
@@ -431,10 +431,10 @@ func readServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 // writeServiceRemoved marshalls ServiceRemoved
 func writeServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
-		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
+		return fmt.Errorf("failed to write ServiceID field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
+		return fmt.Errorf("failed to write Name field: %s", err)
 	}
 	return nil
 }
@@ -728,16 +728,16 @@ type ServiceInfo struct {
 // readServiceInfo unmarshalls ServiceInfo
 func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+		return s, fmt.Errorf("failed to read Name field: %s", err)
 	}
 	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceId field: " + err.Error())
+		return s, fmt.Errorf("failed to read ServiceId field: %s", err)
 	}
 	if s.MachineId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read MachineId field: " + err.Error())
+		return s, fmt.Errorf("failed to read MachineId field: %s", err)
 	}
 	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ProcessId field: " + err.Error())
+		return s, fmt.Errorf("failed to read ProcessId field: %s", err)
 	}
 	if s.Endpoints, err = func() (b []string, err error) {
 		size, err := basic.ReadUint32(r)
@@ -753,10 +753,10 @@ func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 		}
 		return b, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Endpoints field: " + err.Error())
+		return s, fmt.Errorf("failed to read Endpoints field: %s", err)
 	}
 	if s.SessionId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read SessionId field: " + err.Error())
+		return s, fmt.Errorf("failed to read SessionId field: %s", err)
 	}
 	return s, nil
 }
@@ -764,16 +764,16 @@ func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 // writeServiceInfo marshalls ServiceInfo
 func writeServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
+		return fmt.Errorf("failed to write Name field: %s", err)
 	}
 	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
-		return fmt.Errorf("failed to write ServiceId field: " + err.Error())
+		return fmt.Errorf("failed to write ServiceId field: %s", err)
 	}
 	if err := basic.WriteString(s.MachineId, w); err != nil {
-		return fmt.Errorf("failed to write MachineId field: " + err.Error())
+		return fmt.Errorf("failed to write MachineId field: %s", err)
 	}
 	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
-		return fmt.Errorf("failed to write ProcessId field: " + err.Error())
+		return fmt.Errorf("failed to write ProcessId field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
@@ -788,10 +788,10 @@ func writeServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Endpoints field: " + err.Error())
+		return fmt.Errorf("failed to write Endpoints field: %s", err)
 	}
 	if err := basic.WriteString(s.SessionId, w); err != nil {
-		return fmt.Errorf("failed to write SessionId field: " + err.Error())
+		return fmt.Errorf("failed to write SessionId field: %s", err)
 	}
 	return nil
 }

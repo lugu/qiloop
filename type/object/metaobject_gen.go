@@ -16,10 +16,10 @@ type MetaMethodParameter struct {
 // readMetaMethodParameter unmarshalls MetaMethodParameter
 func readMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+		return s, fmt.Errorf("failed to read Name field: %s", err)
 	}
 	if s.Description, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Description field: " + err.Error())
+		return s, fmt.Errorf("failed to read Description field: %s", err)
 	}
 	return s, nil
 }
@@ -27,10 +27,10 @@ func readMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 // writeMetaMethodParameter marshalls MetaMethodParameter
 func writeMetaMethodParameter(s MetaMethodParameter, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
+		return fmt.Errorf("failed to write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.Description, w); err != nil {
-		return fmt.Errorf("failed to write Description field: " + err.Error())
+		return fmt.Errorf("failed to write Description field: %s", err)
 	}
 	return nil
 }
@@ -49,19 +49,19 @@ type MetaMethod struct {
 // readMetaMethod unmarshalls MetaMethod
 func readMetaMethod(r io.Reader) (s MetaMethod, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
+		return s, fmt.Errorf("failed to read Uid field: %s", err)
 	}
 	if s.ReturnSignature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read ReturnSignature field: " + err.Error())
+		return s, fmt.Errorf("failed to read ReturnSignature field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+		return s, fmt.Errorf("failed to read Name field: %s", err)
 	}
 	if s.ParametersSignature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read ParametersSignature field: " + err.Error())
+		return s, fmt.Errorf("failed to read ParametersSignature field: %s", err)
 	}
 	if s.Description, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Description field: " + err.Error())
+		return s, fmt.Errorf("failed to read Description field: %s", err)
 	}
 	if s.Parameters, err = func() (b []MetaMethodParameter, err error) {
 		size, err := basic.ReadUint32(r)
@@ -77,10 +77,10 @@ func readMetaMethod(r io.Reader) (s MetaMethod, err error) {
 		}
 		return b, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Parameters field: " + err.Error())
+		return s, fmt.Errorf("failed to read Parameters field: %s", err)
 	}
 	if s.ReturnDescription, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read ReturnDescription field: " + err.Error())
+		return s, fmt.Errorf("failed to read ReturnDescription field: %s", err)
 	}
 	return s, nil
 }
@@ -88,19 +88,19 @@ func readMetaMethod(r io.Reader) (s MetaMethod, err error) {
 // writeMetaMethod marshalls MetaMethod
 func writeMetaMethod(s MetaMethod, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
-		return fmt.Errorf("failed to write Uid field: " + err.Error())
+		return fmt.Errorf("failed to write Uid field: %s", err)
 	}
 	if err := basic.WriteString(s.ReturnSignature, w); err != nil {
-		return fmt.Errorf("failed to write ReturnSignature field: " + err.Error())
+		return fmt.Errorf("failed to write ReturnSignature field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
+		return fmt.Errorf("failed to write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.ParametersSignature, w); err != nil {
-		return fmt.Errorf("failed to write ParametersSignature field: " + err.Error())
+		return fmt.Errorf("failed to write ParametersSignature field: %s", err)
 	}
 	if err := basic.WriteString(s.Description, w); err != nil {
-		return fmt.Errorf("failed to write Description field: " + err.Error())
+		return fmt.Errorf("failed to write Description field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Parameters)), w)
@@ -115,10 +115,10 @@ func writeMetaMethod(s MetaMethod, w io.Writer) (err error) {
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Parameters field: " + err.Error())
+		return fmt.Errorf("failed to write Parameters field: %s", err)
 	}
 	if err := basic.WriteString(s.ReturnDescription, w); err != nil {
-		return fmt.Errorf("failed to write ReturnDescription field: " + err.Error())
+		return fmt.Errorf("failed to write ReturnDescription field: %s", err)
 	}
 	return nil
 }
@@ -133,13 +133,13 @@ type MetaSignal struct {
 // readMetaSignal unmarshalls MetaSignal
 func readMetaSignal(r io.Reader) (s MetaSignal, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
+		return s, fmt.Errorf("failed to read Uid field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+		return s, fmt.Errorf("failed to read Name field: %s", err)
 	}
 	if s.Signature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Signature field: " + err.Error())
+		return s, fmt.Errorf("failed to read Signature field: %s", err)
 	}
 	return s, nil
 }
@@ -147,13 +147,13 @@ func readMetaSignal(r io.Reader) (s MetaSignal, err error) {
 // writeMetaSignal marshalls MetaSignal
 func writeMetaSignal(s MetaSignal, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
-		return fmt.Errorf("failed to write Uid field: " + err.Error())
+		return fmt.Errorf("failed to write Uid field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
+		return fmt.Errorf("failed to write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.Signature, w); err != nil {
-		return fmt.Errorf("failed to write Signature field: " + err.Error())
+		return fmt.Errorf("failed to write Signature field: %s", err)
 	}
 	return nil
 }
@@ -168,13 +168,13 @@ type MetaProperty struct {
 // readMetaProperty unmarshalls MetaProperty
 func readMetaProperty(r io.Reader) (s MetaProperty, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Uid field: " + err.Error())
+		return s, fmt.Errorf("failed to read Uid field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: " + err.Error())
+		return s, fmt.Errorf("failed to read Name field: %s", err)
 	}
 	if s.Signature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Signature field: " + err.Error())
+		return s, fmt.Errorf("failed to read Signature field: %s", err)
 	}
 	return s, nil
 }
@@ -182,13 +182,13 @@ func readMetaProperty(r io.Reader) (s MetaProperty, err error) {
 // writeMetaProperty marshalls MetaProperty
 func writeMetaProperty(s MetaProperty, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
-		return fmt.Errorf("failed to write Uid field: " + err.Error())
+		return fmt.Errorf("failed to write Uid field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: " + err.Error())
+		return fmt.Errorf("failed to write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.Signature, w); err != nil {
-		return fmt.Errorf("failed to write Signature field: " + err.Error())
+		return fmt.Errorf("failed to write Signature field: %s", err)
 	}
 	return nil
 }
@@ -222,7 +222,7 @@ func readMetaObject(r io.Reader) (s MetaObject, err error) {
 		}
 		return m, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Methods field: " + err.Error())
+		return s, fmt.Errorf("failed to read Methods field: %s", err)
 	}
 	if s.Signals, err = func() (m map[uint32]MetaSignal, err error) {
 		size, err := basic.ReadUint32(r)
@@ -243,7 +243,7 @@ func readMetaObject(r io.Reader) (s MetaObject, err error) {
 		}
 		return m, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Signals field: " + err.Error())
+		return s, fmt.Errorf("failed to read Signals field: %s", err)
 	}
 	if s.Properties, err = func() (m map[uint32]MetaProperty, err error) {
 		size, err := basic.ReadUint32(r)
@@ -264,10 +264,10 @@ func readMetaObject(r io.Reader) (s MetaObject, err error) {
 		}
 		return m, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Properties field: " + err.Error())
+		return s, fmt.Errorf("failed to read Properties field: %s", err)
 	}
 	if s.Description, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Description field: " + err.Error())
+		return s, fmt.Errorf("failed to read Description field: %s", err)
 	}
 	return s, nil
 }
@@ -291,7 +291,7 @@ func writeMetaObject(s MetaObject, w io.Writer) (err error) {
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Methods field: " + err.Error())
+		return fmt.Errorf("failed to write Methods field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Signals)), w)
@@ -310,7 +310,7 @@ func writeMetaObject(s MetaObject, w io.Writer) (err error) {
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Signals field: " + err.Error())
+		return fmt.Errorf("failed to write Signals field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Properties)), w)
@@ -329,10 +329,10 @@ func writeMetaObject(s MetaObject, w io.Writer) (err error) {
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Properties field: " + err.Error())
+		return fmt.Errorf("failed to write Properties field: %s", err)
 	}
 	if err := basic.WriteString(s.Description, w); err != nil {
-		return fmt.Errorf("failed to write Description field: " + err.Error())
+		return fmt.Errorf("failed to write Description field: %s", err)
 	}
 	return nil
 }
@@ -349,19 +349,19 @@ type ObjectReference struct {
 // readObjectReference unmarshalls ObjectReference
 func readObjectReference(r io.Reader) (s ObjectReference, err error) {
 	if s.Boolean, err = basic.ReadBool(r); err != nil {
-		return s, fmt.Errorf("failed to read Boolean field: " + err.Error())
+		return s, fmt.Errorf("failed to read Boolean field: %s", err)
 	}
 	if s.MetaObject, err = readMetaObject(r); err != nil {
-		return s, fmt.Errorf("failed to read MetaObject field: " + err.Error())
+		return s, fmt.Errorf("failed to read MetaObject field: %s", err)
 	}
 	if s.MetaID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read MetaID field: " + err.Error())
+		return s, fmt.Errorf("failed to read MetaID field: %s", err)
 	}
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceID field: " + err.Error())
+		return s, fmt.Errorf("failed to read ServiceID field: %s", err)
 	}
 	if s.ObjectID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ObjectID field: " + err.Error())
+		return s, fmt.Errorf("failed to read ObjectID field: %s", err)
 	}
 	return s, nil
 }
@@ -369,19 +369,19 @@ func readObjectReference(r io.Reader) (s ObjectReference, err error) {
 // writeObjectReference marshalls ObjectReference
 func writeObjectReference(s ObjectReference, w io.Writer) (err error) {
 	if err := basic.WriteBool(s.Boolean, w); err != nil {
-		return fmt.Errorf("failed to write Boolean field: " + err.Error())
+		return fmt.Errorf("failed to write Boolean field: %s", err)
 	}
 	if err := writeMetaObject(s.MetaObject, w); err != nil {
-		return fmt.Errorf("failed to write MetaObject field: " + err.Error())
+		return fmt.Errorf("failed to write MetaObject field: %s", err)
 	}
 	if err := basic.WriteUint32(s.MetaID, w); err != nil {
-		return fmt.Errorf("failed to write MetaID field: " + err.Error())
+		return fmt.Errorf("failed to write MetaID field: %s", err)
 	}
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
-		return fmt.Errorf("failed to write ServiceID field: " + err.Error())
+		return fmt.Errorf("failed to write ServiceID field: %s", err)
 	}
 	if err := basic.WriteUint32(s.ObjectID, w); err != nil {
-		return fmt.Errorf("failed to write ObjectID field: " + err.Error())
+		return fmt.Errorf("failed to write ObjectID field: %s", err)
 	}
 	return nil
 }

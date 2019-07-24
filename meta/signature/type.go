@@ -853,13 +853,19 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 			jen.Id("s."+v.Title()+", err =").Add(v.Type.Unmarshal("r")),
 			jen.Id("err != nil")).Block(
 			jen.Return(jen.Id("s"),
-				jen.Qual("fmt", "Errorf").Call(jen.Lit(`failed to read `+v.Title()+` field: `).Op("+").Id("err").Dot("Error").Call())),
+				jen.Qual("fmt", "Errorf").Call(
+					jen.Lit(`failed to read `+v.Title()+` field: %s`),
+					jen.Id("err"),
+				)),
 		)
 		writeFields[i] = jen.If(
 			jen.Id("err :=").Add(v.Type.Marshal("s."+v.Title(), "w")),
 			jen.Err().Op("!=").Nil(),
 		).Block(
-			jen.Return(jen.Qual("fmt", "Errorf").Call(jen.Lit(`failed to write ` + v.Title() + ` field: `).Op("+").Id("err").Dot("Error").Call())),
+			jen.Return(jen.Qual("fmt", "Errorf").Call(
+				jen.Lit(`failed to write `+v.Title()+` field: %s`),
+				jen.Id("err"),
+			)),
 		)
 	}
 	readFields[len(s.Members)] = jen.Return(jen.Id("s"), jen.Nil())

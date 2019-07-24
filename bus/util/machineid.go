@@ -1,11 +1,13 @@
 package util
 
 import (
-	"github.com/denisbrodbeck/machineid"
 	"log"
 	"os"
+
+	"github.com/denisbrodbeck/machineid"
 )
 
+// MachineID returns a fixed ID specific to an application.
 func MachineID() string {
 	id, err := machineid.ProtectedID("qi-messaging")
 	if err != nil {
@@ -14,6 +16,7 @@ func MachineID() string {
 	return id
 }
 
+// ProcessID return the PID.
 func ProcessID() uint32 {
 	return uint32(os.Getpid())
 }

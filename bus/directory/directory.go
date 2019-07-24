@@ -303,10 +303,12 @@ func (s *directorySession) Destroy() error {
 	return nil
 }
 
+// ReadServiceInfo unmarshal a ServiceInfo struct.
 func ReadServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	return readServiceInfo(r)
 }
 
+// WriteServiceInfo marshal a ServiceInfo struct.
 func WriteServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	return writeServiceInfo(s, w)
 }
