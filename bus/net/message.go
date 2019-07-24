@@ -173,18 +173,13 @@ func (m *Message) Write(w io.Writer) error {
 		return fmt.Errorf("failed to serialize header: %s", err)
 	}
 
-	if size, err := buf.Write(m.Payload); err != nil {
-		return fmt.Errorf("failed to write payload: %s", err)
-	} else if size != int(m.Header.Size) {
-		return fmt.Errorf("failed to write payload (%d instead of %d)",
-			size, m.Header.Size)
+	if err := basic.WriteN(buf, m.Payload, int(m.Header.Size)); err != nil {
+		return fmt.Errorf("write payload: %s", err)
 	}
 
-	if size, err := w.Write(buf.Bytes()); err != nil {
-		return fmt.Errorf("failed to send message: %s", err)
-	} else if size != int(m.Header.Size+HeaderSize) {
-		return fmt.Errorf("message not completly wrote (%d instead of %d)",
-			size, m.Header.Size+HeaderSize)
+	err := basic.WriteN(w, buf.Bytes(), int(m.Header.Size+HeaderSize))
+	if err != nil {
+		return fmt.Errorf("write message: %s", err)
 	}
 	return nil
 }
@@ -196,12 +191,8 @@ func (m *Message) Read(r io.Reader) error {
 
 	// Read the complete header, then parse the fields.
 	b := make([]byte, HeaderSize)
-	if size, err := r.Read(b); err != nil {
-		return err // won't process reader issues.
-	} else if size != int(HeaderSize) {
-		// BUG: must re-try to read from the reader until the
-		// header is read.
-		return fmt.Errorf("full header not received (%d instead of %d)", size, HeaderSize)
+	if err := basic.ReadN(r, b, HeaderSize); err != nil {
+		return fmt.Errorf("read header: %s", err)
 	}
 
 	if err := m.Header.Read(bytes.NewBuffer(b)); err != nil {
@@ -214,14 +205,9 @@ func (m *Message) Read(r io.Reader) error {
 		return nil
 	}
 	m.Payload = make([]byte, m.Header.Size)
-	size := 0
-	for size < int(m.Header.Size) {
-		read, err := r.Read(m.Payload[size:])
-		size += read
-		if err != nil && size < int(m.Header.Size) {
-			return fmt.Errorf("failed to read message payload (%d instead of %d): %s",
-				size, m.Header.Size, err)
-		}
+	err := basic.ReadN(r, m.Payload, int(m.Header.Size))
+	if err != nil {
+		return fmt.Errorf("read payload %s", err)
 	}
 	return nil
 }

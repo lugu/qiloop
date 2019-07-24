@@ -10,7 +10,9 @@ import (
 // MaxStringSize the longest string allowed.
 const MaxStringSize = uint32(10 * 1024 * 1024)
 
-func readN(r io.Reader, buf []byte, length int) error {
+// ReadN tries and retries to read length bytes from r. Reading length
+// with io.EOF is not considered an error.
+func ReadN(r io.Reader, buf []byte, length int) error {
 	size := 0
 	for size < length {
 		read, err := r.Read(buf[size:])
@@ -28,7 +30,9 @@ func readN(r io.Reader, buf []byte, length int) error {
 	return nil
 }
 
-func writeN(w io.Writer, buf []byte, length int) error {
+// WriteN tries and retries to write length bytes into w. Writing
+// length with io.EOF is not considered an error.
+func WriteN(w io.Writer, buf []byte, length int) error {
 	size := 0
 	for size < length {
 		write, err := w.Write(buf[size:])
@@ -49,7 +53,7 @@ func writeN(w io.Writer, buf []byte, length int) error {
 // ReadUint8 read an uint8
 func ReadUint8(r io.Reader) (uint8, error) {
 	buf := []byte{0}
-	err := readN(r, buf, 1)
+	err := ReadN(r, buf, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -59,7 +63,7 @@ func ReadUint8(r io.Reader) (uint8, error) {
 // WriteUint8 an uint8
 func WriteUint8(i uint8, w io.Writer) error {
 	buf := []byte{i}
-	err := writeN(w, buf, 1)
+	err := WriteN(w, buf, 1)
 	if err != nil {
 		return err
 	}
@@ -80,7 +84,7 @@ func WriteInt8(i int8, w io.Writer) error {
 // ReadUint16 reads a little endian uint16
 func ReadUint16(r io.Reader) (uint16, error) {
 	buf := []byte{0, 0}
-	err := readN(r, buf, 2)
+	err := ReadN(r, buf, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -91,7 +95,7 @@ func ReadUint16(r io.Reader) (uint16, error) {
 func WriteUint16(i uint16, w io.Writer) error {
 	buf := []byte{0, 0}
 	binary.LittleEndian.PutUint16(buf, i)
-	err := writeN(w, buf, 2)
+	err := WriteN(w, buf, 2)
 	if err != nil {
 		return err
 	}
@@ -112,7 +116,7 @@ func WriteInt16(i int16, w io.Writer) error {
 // ReadUint32 reads a little endian uint32
 func ReadUint32(r io.Reader) (uint32, error) {
 	buf := []byte{0, 0, 0, 0}
-	err := readN(r, buf, 4)
+	err := ReadN(r, buf, 4)
 	if err != nil {
 		return 0, err
 	}
@@ -123,7 +127,7 @@ func ReadUint32(r io.Reader) (uint32, error) {
 func WriteUint32(i uint32, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0}
 	binary.LittleEndian.PutUint32(buf, i)
-	err := writeN(w, buf, 4)
+	err := WriteN(w, buf, 4)
 	if err != nil {
 		return err
 	}
@@ -144,7 +148,7 @@ func WriteInt32(i int32, w io.Writer) error {
 // ReadUint64 read a little endian uint64
 func ReadUint64(r io.Reader) (uint64, error) {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
-	err := readN(r, buf, 8)
+	err := ReadN(r, buf, 8)
 	if err != nil {
 		return 0, err
 	}
@@ -155,7 +159,7 @@ func ReadUint64(r io.Reader) (uint64, error) {
 func WriteUint64(i uint64, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
 	binary.LittleEndian.PutUint64(buf, i)
-	err := writeN(w, buf, 8)
+	err := WriteN(w, buf, 8)
 	if err != nil {
 		return err
 	}
@@ -176,7 +180,7 @@ func WriteInt64(i int64, w io.Writer) error {
 // ReadFloat32 read a little endian float32
 func ReadFloat32(r io.Reader) (float32, error) {
 	buf := []byte{0, 0, 0, 0}
-	err := readN(r, buf, 4)
+	err := ReadN(r, buf, 4)
 	if err != nil {
 		return 0, err
 	}
@@ -189,7 +193,7 @@ func WriteFloat32(f float32, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0}
 	bits := math.Float32bits(f)
 	binary.LittleEndian.PutUint32(buf, bits)
-	err := writeN(w, buf, 4)
+	err := WriteN(w, buf, 4)
 	if err != nil {
 		return err
 	}
@@ -199,7 +203,7 @@ func WriteFloat32(f float32, w io.Writer) error {
 // ReadFloat64 read a little endian float64
 func ReadFloat64(r io.Reader) (float64, error) {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
-	err := readN(r, buf, 8)
+	err := ReadN(r, buf, 8)
 	if err != nil {
 		return 0, err
 	}
@@ -212,7 +216,7 @@ func WriteFloat64(f float64, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
 	bits := math.Float64bits(f)
 	binary.LittleEndian.PutUint64(buf, bits)
-	err := writeN(w, buf, 8)
+	err := WriteN(w, buf, 8)
 	if err != nil {
 		return err
 	}
@@ -250,7 +254,7 @@ func ReadString(r io.Reader) (string, error) {
 		return "", fmt.Errorf("invalid string size: %d", size)
 	}
 	buf := make([]byte, size)
-	err = readN(r, buf, int(size))
+	err = ReadN(r, buf, int(size))
 	if err != nil {
 		return "", fmt.Errorf("read string: %s", err)
 	}
@@ -263,7 +267,7 @@ func WriteString(s string, w io.Writer) error {
 	if err := WriteUint32(uint32(len(s)), w); err != nil {
 		return fmt.Errorf("write string size: %s", err)
 	}
-	err := writeN(w, []byte(s), len(s))
+	err := WriteN(w, []byte(s), len(s))
 	if err != nil {
 		return err
 	}
