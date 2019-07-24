@@ -7,14 +7,51 @@ import (
 	"math"
 )
 
+// MaxStringSize the longest string allowed.
+const MaxStringSize = uint32(10 * 1024 * 1024)
+
+func readN(r io.Reader, buf []byte, length int) error {
+	size := 0
+	for size < length {
+		read, err := r.Read(buf[size:])
+		size += read
+		if err == nil && read != 0 {
+			continue
+		} else if err == io.EOF && size == length {
+			break
+		} else {
+			return fmt.Errorf(
+				"read %d instead of %d: %s",
+				size, length, err)
+		}
+	}
+	return nil
+}
+
+func writeN(w io.Writer, buf []byte, length int) error {
+	size := 0
+	for size < length {
+		write, err := w.Write(buf[size:])
+		size += write
+		if err == nil && write != 0 {
+			continue
+		} else if err == io.EOF && size == length {
+			break
+		} else {
+			return fmt.Errorf(
+				"write %d instead of %d: %s",
+				size, length, err)
+		}
+	}
+	return nil
+}
+
 // ReadUint8 read an uint8
 func ReadUint8(r io.Reader) (uint8, error) {
 	buf := []byte{0}
-	bytes, err := r.Read(buf)
-	if err != nil && err != io.EOF {
+	err := readN(r, buf, 1)
+	if err != nil {
 		return 0, err
-	} else if bytes != 1 {
-		return 0, fmt.Errorf("failed to read uint8 (%d instead of 1)", bytes)
 	}
 	return uint8(buf[0]), nil
 }
@@ -22,11 +59,9 @@ func ReadUint8(r io.Reader) (uint8, error) {
 // WriteUint8 an uint8
 func WriteUint8(i uint8, w io.Writer) error {
 	buf := []byte{i}
-	bytes, err := w.Write(buf)
+	err := writeN(w, buf, 1)
 	if err != nil {
 		return err
-	} else if bytes != 1 {
-		return fmt.Errorf("failed to write uint16 (%d instead of 1)", bytes)
 	}
 	return nil
 }
@@ -45,11 +80,9 @@ func WriteInt8(i int8, w io.Writer) error {
 // ReadUint16 reads a little endian uint16
 func ReadUint16(r io.Reader) (uint16, error) {
 	buf := []byte{0, 0}
-	bytes, err := r.Read(buf)
-	if err != nil && err != io.EOF {
+	err := readN(r, buf, 2)
+	if err != nil {
 		return 0, err
-	} else if bytes != 2 {
-		return 0, fmt.Errorf("failed to read uint16 (%d instead of 2)", bytes)
 	}
 	return binary.LittleEndian.Uint16(buf), nil
 }
@@ -58,11 +91,9 @@ func ReadUint16(r io.Reader) (uint16, error) {
 func WriteUint16(i uint16, w io.Writer) error {
 	buf := []byte{0, 0}
 	binary.LittleEndian.PutUint16(buf, i)
-	bytes, err := w.Write(buf)
+	err := writeN(w, buf, 2)
 	if err != nil {
 		return err
-	} else if bytes != 2 {
-		return fmt.Errorf("failed to write uint16 (%d instead of 2)", bytes)
 	}
 	return nil
 }
@@ -81,11 +112,9 @@ func WriteInt16(i int16, w io.Writer) error {
 // ReadUint32 reads a little endian uint32
 func ReadUint32(r io.Reader) (uint32, error) {
 	buf := []byte{0, 0, 0, 0}
-	bytes, err := r.Read(buf)
-	if err != nil && err != io.EOF {
+	err := readN(r, buf, 4)
+	if err != nil {
 		return 0, err
-	} else if bytes != 4 {
-		return 0, fmt.Errorf("failed to read uint32 (%d instead of 4)", bytes)
 	}
 	return binary.LittleEndian.Uint32(buf), nil
 }
@@ -94,36 +123,9 @@ func ReadUint32(r io.Reader) (uint32, error) {
 func WriteUint32(i uint32, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0}
 	binary.LittleEndian.PutUint32(buf, i)
-	bytes, err := w.Write(buf)
+	err := writeN(w, buf, 4)
 	if err != nil {
 		return err
-	} else if bytes != 4 {
-		return fmt.Errorf("failed to write uint32 (%d instead of 4)", bytes)
-	}
-	return nil
-}
-
-// ReadUint64 read a little endian uint64
-func ReadUint64(r io.Reader) (uint64, error) {
-	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
-	bytes, err := r.Read(buf)
-	if err != nil && err != io.EOF {
-		return 0, err
-	} else if bytes != 8 {
-		return 0, fmt.Errorf("failed to read uint32 (%d instead of 8)", bytes)
-	}
-	return binary.LittleEndian.Uint64(buf), nil
-}
-
-// WriteUint64 writes a little endian uint64
-func WriteUint64(i uint64, w io.Writer) error {
-	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
-	binary.LittleEndian.PutUint64(buf, i)
-	bytes, err := w.Write(buf)
-	if err != nil {
-		return err
-	} else if bytes != 8 {
-		return fmt.Errorf("failed to write uint32 (%d instead of 8)", bytes)
 	}
 	return nil
 }
@@ -137,6 +139,27 @@ func ReadInt32(r io.Reader) (int32, error) {
 // WriteInt32 writes a little endian int32
 func WriteInt32(i int32, w io.Writer) error {
 	return WriteUint32(uint32(i), w)
+}
+
+// ReadUint64 read a little endian uint64
+func ReadUint64(r io.Reader) (uint64, error) {
+	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+	err := readN(r, buf, 8)
+	if err != nil {
+		return 0, err
+	}
+	return binary.LittleEndian.Uint64(buf), nil
+}
+
+// WriteUint64 writes a little endian uint64
+func WriteUint64(i uint64, w io.Writer) error {
+	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+	binary.LittleEndian.PutUint64(buf, i)
+	err := writeN(w, buf, 8)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ReadInt64 reads a little endian int64
@@ -153,11 +176,9 @@ func WriteInt64(i int64, w io.Writer) error {
 // ReadFloat32 read a little endian float32
 func ReadFloat32(r io.Reader) (float32, error) {
 	buf := []byte{0, 0, 0, 0}
-	bytes, err := r.Read(buf)
-	if err != nil && err != io.EOF {
+	err := readN(r, buf, 4)
+	if err != nil {
 		return 0, err
-	} else if bytes != 4 {
-		return 0, fmt.Errorf("failed to read float32 (%d instead of 4)", bytes)
 	}
 	bits := binary.LittleEndian.Uint32(buf)
 	return math.Float32frombits(bits), nil
@@ -168,11 +189,9 @@ func WriteFloat32(f float32, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0}
 	bits := math.Float32bits(f)
 	binary.LittleEndian.PutUint32(buf, bits)
-	bytes, err := w.Write(buf)
+	err := writeN(w, buf, 4)
 	if err != nil {
 		return err
-	} else if bytes != 4 {
-		return fmt.Errorf("failed to write float32 (%d instead of 4)", bytes)
 	}
 	return nil
 }
@@ -180,11 +199,9 @@ func WriteFloat32(f float32, w io.Writer) error {
 // ReadFloat64 read a little endian float64
 func ReadFloat64(r io.Reader) (float64, error) {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
-	bytes, err := r.Read(buf)
-	if err != nil && err != io.EOF {
+	err := readN(r, buf, 8)
+	if err != nil {
 		return 0, err
-	} else if bytes != 8 {
-		return 0, fmt.Errorf("failed to read float64 (%d instead of 4)", bytes)
 	}
 	bits := binary.LittleEndian.Uint64(buf)
 	return math.Float64frombits(bits), nil
@@ -195,11 +212,9 @@ func WriteFloat64(f float64, w io.Writer) error {
 	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
 	bits := math.Float64bits(f)
 	binary.LittleEndian.PutUint64(buf, bits)
-	bytes, err := w.Write(buf)
+	err := writeN(w, buf, 8)
 	if err != nil {
 		return err
-	} else if bytes != 8 {
-		return fmt.Errorf("failed to write float64 (%d instead of 4)", bytes)
 	}
 	return nil
 }
@@ -225,21 +240,19 @@ func WriteBool(b bool, w io.Writer) error {
 // using ReadUint32, then the bytes of the string.
 func ReadString(r io.Reader) (string, error) {
 	size, err := ReadUint32(r)
-	if err != nil && err != io.EOF {
-		return "", fmt.Errorf("failed to read string size: %s", err)
+	if err != nil {
+		return "", fmt.Errorf("read string size: %s", err)
 	}
 	if size == 0 {
 		return "", nil
 	}
-	// FIXME: do not allocate everything at one, read by block of
-	// 4094 until either the reader fail or size is reached.
+	if size > MaxStringSize {
+		return "", fmt.Errorf("invalid string size: %d", size)
+	}
 	buf := make([]byte, size)
-	bytes, err := r.Read(buf)
-	if err != nil && err != io.EOF {
-		return "", err
-	} else if uint32(bytes) != size {
-		return "", fmt.Errorf("failed to read string: %d instead of %d",
-			bytes, size)
+	err = readN(r, buf, int(size))
+	if err != nil {
+		return "", fmt.Errorf("read string: %s", err)
 	}
 	return string(buf), nil
 }
@@ -248,13 +261,11 @@ func ReadString(r io.Reader) (string, error) {
 // written using WriteUint32, then the bytes of the string.
 func WriteString(s string, w io.Writer) error {
 	if err := WriteUint32(uint32(len(s)), w); err != nil {
-		return fmt.Errorf("failed to write string size: %s", err)
+		return fmt.Errorf("write string size: %s", err)
 	}
-	bytes, err := w.Write([]byte(s))
+	err := writeN(w, []byte(s), len(s))
 	if err != nil {
 		return err
-	} else if bytes != len(s) {
-		return fmt.Errorf("failed to write string data (%d instead of %d)", bytes, len(s))
 	}
 	return nil
 }
