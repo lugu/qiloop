@@ -18,6 +18,7 @@ var (
 	proxyCommand     *flaggy.Subcommand
 	stubCommand      *flaggy.Subcommand
 	directoryCommand *flaggy.Subcommand
+	traceCommand     *flaggy.Subcommand
 
 	serverURL   string = "tcp://localhost:9559"
 	serviceName string = ""
@@ -72,12 +73,19 @@ func init() {
 	directoryCommand.String(&serverURL, "r", "qi-url",
 		"server URL (default: tcp://localhost:9559)")
 
+	traceCommand = flaggy.NewSubcommand("trace")
+	traceCommand.Description = "Connect a server and traces services"
+	traceCommand.String(&serverURL, "r", "qi-url",
+		"server URL (default: tcp://localhost:9559)")
+	traceCommand.String(&serviceName, "s", "service", "optional service name")
+
 	flaggy.AttachSubcommand(infoCommand, 1)
 	flaggy.AttachSubcommand(logCommand, 1)
 	flaggy.AttachSubcommand(scanCommand, 1)
 	flaggy.AttachSubcommand(proxyCommand, 1)
 	flaggy.AttachSubcommand(stubCommand, 1)
 	flaggy.AttachSubcommand(directoryCommand, 1)
+	flaggy.AttachSubcommand(traceCommand, 1)
 
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
 	flaggy.SetVersion(version)
@@ -97,6 +105,8 @@ func main() {
 		logger(serverURL)
 	} else if directoryCommand.Used {
 		directory(serverURL)
+	} else if traceCommand.Used {
+		trace(serverURL, serviceName)
 	} else {
 		flaggy.DefaultParser.ShowHelpAndExit("missing command")
 	}

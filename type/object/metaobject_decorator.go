@@ -8,6 +8,25 @@ import (
 	"strings"
 )
 
+func (m *MetaObject) ActionName(id uint32) (string, error) {
+	for k, method := range m.Methods {
+		if k == id {
+			return method.Name, nil
+		}
+	}
+	for k, signal := range m.Signals {
+		if k == id {
+			return signal.Name, nil
+		}
+	}
+	for k, property := range m.Properties {
+		if k == id {
+			return property.Name, nil
+		}
+	}
+	return "", fmt.Errorf("action not found: %d", id)
+}
+
 // MethodID returns the ID of a method given its name.
 func (m *MetaObject) MethodID(name string) (uint32, error) {
 	for k, method := range m.Methods {
