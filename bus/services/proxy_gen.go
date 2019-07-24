@@ -33,10 +33,10 @@ type ServiceAdded struct {
 // readServiceAdded unmarshalls ServiceAdded
 func readServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceID field: %s", err)
+		return s, fmt.Errorf("read ServiceID field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("read Name field: %s", err)
 	}
 	return s, nil
 }
@@ -44,10 +44,10 @@ func readServiceAdded(r io.Reader) (s ServiceAdded, err error) {
 // writeServiceAdded marshalls ServiceAdded
 func writeServiceAdded(s ServiceAdded, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
-		return fmt.Errorf("failed to write ServiceID field: %s", err)
+		return fmt.Errorf("write ServiceID field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("write Name field: %s", err)
 	}
 	return nil
 }
@@ -61,10 +61,10 @@ type ServiceRemoved struct {
 // readServiceRemoved unmarshalls ServiceRemoved
 func readServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceID field: %s", err)
+		return s, fmt.Errorf("read ServiceID field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("read Name field: %s", err)
 	}
 	return s, nil
 }
@@ -72,10 +72,10 @@ func readServiceRemoved(r io.Reader) (s ServiceRemoved, err error) {
 // writeServiceRemoved marshalls ServiceRemoved
 func writeServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
-		return fmt.Errorf("failed to write ServiceID field: %s", err)
+		return fmt.Errorf("write ServiceID field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("write Name field: %s", err)
 	}
 	return nil
 }
@@ -126,7 +126,7 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 	proxy, err := c.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeServiceDirectory(c.session, proxy), nil
 }
@@ -137,7 +137,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	var ret ServiceInfo
 	var buf bytes.Buffer
 	if err = basic.WriteString(name, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize name: %s", err)
+		return ret, fmt.Errorf("serialize name: %s", err)
 	}
 	response, err := p.Call("service", buf.Bytes())
 	if err != nil {
@@ -146,7 +146,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = readServiceInfo(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse service response: %s", err)
+		return ret, fmt.Errorf("parse service response: %s", err)
 	}
 	return ret, nil
 }
@@ -164,19 +164,19 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	ret, err = func() (b []ServiceInfo, err error) {
 		size, err := basic.ReadUint32(resp)
 		if err != nil {
-			return b, fmt.Errorf("failed to read slice size: %s", err)
+			return b, fmt.Errorf("read slice size: %s", err)
 		}
 		b = make([]ServiceInfo, size)
 		for i := 0; i < int(size); i++ {
 			b[i], err = readServiceInfo(resp)
 			if err != nil {
-				return b, fmt.Errorf("failed to read slice value: %s", err)
+				return b, fmt.Errorf("read slice value: %s", err)
 			}
 		}
 		return b, nil
 	}()
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse services response: %s", err)
+		return ret, fmt.Errorf("parse services response: %s", err)
 	}
 	return ret, nil
 }
@@ -187,7 +187,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	var ret uint32
 	var buf bytes.Buffer
 	if err = writeServiceInfo(info, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize info: %s", err)
+		return ret, fmt.Errorf("serialize info: %s", err)
 	}
 	response, err := p.Call("registerService", buf.Bytes())
 	if err != nil {
@@ -196,7 +196,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadUint32(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse registerService response: %s", err)
+		return ret, fmt.Errorf("parse registerService response: %s", err)
 	}
 	return ret, nil
 }
@@ -206,7 +206,7 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
-		return fmt.Errorf("failed to serialize serviceID: %s", err)
+		return fmt.Errorf("serialize serviceID: %s", err)
 	}
 	_, err = p.Call("unregisterService", buf.Bytes())
 	if err != nil {
@@ -220,7 +220,7 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
-		return fmt.Errorf("failed to serialize serviceID: %s", err)
+		return fmt.Errorf("serialize serviceID: %s", err)
 	}
 	_, err = p.Call("serviceReady", buf.Bytes())
 	if err != nil {
@@ -234,7 +234,7 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	var err error
 	var buf bytes.Buffer
 	if err = writeServiceInfo(info, &buf); err != nil {
-		return fmt.Errorf("failed to serialize info: %s", err)
+		return fmt.Errorf("serialize info: %s", err)
 	}
 	_, err = p.Call("updateServiceInfo", buf.Bytes())
 	if err != nil {
@@ -255,7 +255,7 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadString(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse machineId response: %s", err)
+		return ret, fmt.Errorf("parse machineId response: %s", err)
 	}
 	return ret, nil
 }
@@ -266,7 +266,7 @@ func (p *proxyServiceDirectory) SocketOfService(serviceID uint32) (object.Object
 	var ret object.ObjectReference
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize serviceID: %s", err)
+		return ret, fmt.Errorf("serialize serviceID: %s", err)
 	}
 	response, err := p.Call("_socketOfService", buf.Bytes())
 	if err != nil {
@@ -275,7 +275,7 @@ func (p *proxyServiceDirectory) SocketOfService(serviceID uint32) (object.Object
 	resp := bytes.NewBuffer(response)
 	ret, err = object.ReadObjectReference(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse _socketOfService response: %s", err)
+		return ret, fmt.Errorf("parse _socketOfService response: %s", err)
 	}
 	return ret, nil
 }
@@ -289,12 +289,12 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceAdded", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceAdded", err)
 	}
 	ch := make(chan ServiceAdded)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -309,7 +309,7 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			_ = buf // discard unused variable error
 			e, err := readServiceAdded(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -327,12 +327,12 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "serviceRemoved", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -347,7 +347,7 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			_ = buf // discard unused variable error
 			e, err := readServiceRemoved(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -369,35 +369,35 @@ type ServiceInfo struct {
 // readServiceInfo unmarshalls ServiceInfo
 func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("read Name field: %s", err)
 	}
 	if s.ServiceId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ServiceId field: %s", err)
+		return s, fmt.Errorf("read ServiceId field: %s", err)
 	}
 	if s.MachineId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read MachineId field: %s", err)
+		return s, fmt.Errorf("read MachineId field: %s", err)
 	}
 	if s.ProcessId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read ProcessId field: %s", err)
+		return s, fmt.Errorf("read ProcessId field: %s", err)
 	}
 	if s.Endpoints, err = func() (b []string, err error) {
 		size, err := basic.ReadUint32(r)
 		if err != nil {
-			return b, fmt.Errorf("failed to read slice size: %s", err)
+			return b, fmt.Errorf("read slice size: %s", err)
 		}
 		b = make([]string, size)
 		for i := 0; i < int(size); i++ {
 			b[i], err = basic.ReadString(r)
 			if err != nil {
-				return b, fmt.Errorf("failed to read slice value: %s", err)
+				return b, fmt.Errorf("read slice value: %s", err)
 			}
 		}
 		return b, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Endpoints field: %s", err)
+		return s, fmt.Errorf("read Endpoints field: %s", err)
 	}
 	if s.SessionId, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read SessionId field: %s", err)
+		return s, fmt.Errorf("read SessionId field: %s", err)
 	}
 	return s, nil
 }
@@ -405,34 +405,34 @@ func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 // writeServiceInfo marshalls ServiceInfo
 func writeServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("write Name field: %s", err)
 	}
 	if err := basic.WriteUint32(s.ServiceId, w); err != nil {
-		return fmt.Errorf("failed to write ServiceId field: %s", err)
+		return fmt.Errorf("write ServiceId field: %s", err)
 	}
 	if err := basic.WriteString(s.MachineId, w); err != nil {
-		return fmt.Errorf("failed to write MachineId field: %s", err)
+		return fmt.Errorf("write MachineId field: %s", err)
 	}
 	if err := basic.WriteUint32(s.ProcessId, w); err != nil {
-		return fmt.Errorf("failed to write ProcessId field: %s", err)
+		return fmt.Errorf("write ProcessId field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Endpoints)), w)
 		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
+			return fmt.Errorf("write slice size: %s", err)
 		}
 		for _, v := range s.Endpoints {
 			err = basic.WriteString(v, w)
 			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
+				return fmt.Errorf("write slice value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Endpoints field: %s", err)
+		return fmt.Errorf("write Endpoints field: %s", err)
 	}
 	if err := basic.WriteString(s.SessionId, w); err != nil {
-		return fmt.Errorf("failed to write SessionId field: %s", err)
+		return fmt.Errorf("write SessionId field: %s", err)
 	}
 	return nil
 }
@@ -445,7 +445,7 @@ type LogLevel struct {
 // readLogLevel unmarshalls LogLevel
 func readLogLevel(r io.Reader) (s LogLevel, err error) {
 	if s.Level, err = basic.ReadInt32(r); err != nil {
-		return s, fmt.Errorf("failed to read Level field: %s", err)
+		return s, fmt.Errorf("read Level field: %s", err)
 	}
 	return s, nil
 }
@@ -453,7 +453,7 @@ func readLogLevel(r io.Reader) (s LogLevel, err error) {
 // writeLogLevel marshalls LogLevel
 func writeLogLevel(s LogLevel, w io.Writer) (err error) {
 	if err := basic.WriteInt32(s.Level, w); err != nil {
-		return fmt.Errorf("failed to write Level field: %s", err)
+		return fmt.Errorf("write Level field: %s", err)
 	}
 	return nil
 }
@@ -466,7 +466,7 @@ type TimePoint struct {
 // readTimePoint unmarshalls TimePoint
 func readTimePoint(r io.Reader) (s TimePoint, err error) {
 	if s.Ns, err = basic.ReadUint64(r); err != nil {
-		return s, fmt.Errorf("failed to read Ns field: %s", err)
+		return s, fmt.Errorf("read Ns field: %s", err)
 	}
 	return s, nil
 }
@@ -474,7 +474,7 @@ func readTimePoint(r io.Reader) (s TimePoint, err error) {
 // writeTimePoint marshalls TimePoint
 func writeTimePoint(s TimePoint, w io.Writer) (err error) {
 	if err := basic.WriteUint64(s.Ns, w); err != nil {
-		return fmt.Errorf("failed to write Ns field: %s", err)
+		return fmt.Errorf("write Ns field: %s", err)
 	}
 	return nil
 }
@@ -494,28 +494,28 @@ type LogMessage struct {
 // readLogMessage unmarshalls LogMessage
 func readLogMessage(r io.Reader) (s LogMessage, err error) {
 	if s.Source, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Source field: %s", err)
+		return s, fmt.Errorf("read Source field: %s", err)
 	}
 	if s.Level, err = readLogLevel(r); err != nil {
-		return s, fmt.Errorf("failed to read Level field: %s", err)
+		return s, fmt.Errorf("read Level field: %s", err)
 	}
 	if s.Category, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Category field: %s", err)
+		return s, fmt.Errorf("read Category field: %s", err)
 	}
 	if s.Location, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Location field: %s", err)
+		return s, fmt.Errorf("read Location field: %s", err)
 	}
 	if s.Message, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Message field: %s", err)
+		return s, fmt.Errorf("read Message field: %s", err)
 	}
 	if s.Id, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Id field: %s", err)
+		return s, fmt.Errorf("read Id field: %s", err)
 	}
 	if s.Date, err = readTimePoint(r); err != nil {
-		return s, fmt.Errorf("failed to read Date field: %s", err)
+		return s, fmt.Errorf("read Date field: %s", err)
 	}
 	if s.SystemDate, err = readTimePoint(r); err != nil {
-		return s, fmt.Errorf("failed to read SystemDate field: %s", err)
+		return s, fmt.Errorf("read SystemDate field: %s", err)
 	}
 	return s, nil
 }
@@ -523,28 +523,28 @@ func readLogMessage(r io.Reader) (s LogMessage, err error) {
 // writeLogMessage marshalls LogMessage
 func writeLogMessage(s LogMessage, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Source, w); err != nil {
-		return fmt.Errorf("failed to write Source field: %s", err)
+		return fmt.Errorf("write Source field: %s", err)
 	}
 	if err := writeLogLevel(s.Level, w); err != nil {
-		return fmt.Errorf("failed to write Level field: %s", err)
+		return fmt.Errorf("write Level field: %s", err)
 	}
 	if err := basic.WriteString(s.Category, w); err != nil {
-		return fmt.Errorf("failed to write Category field: %s", err)
+		return fmt.Errorf("write Category field: %s", err)
 	}
 	if err := basic.WriteString(s.Location, w); err != nil {
-		return fmt.Errorf("failed to write Location field: %s", err)
+		return fmt.Errorf("write Location field: %s", err)
 	}
 	if err := basic.WriteString(s.Message, w); err != nil {
-		return fmt.Errorf("failed to write Message field: %s", err)
+		return fmt.Errorf("write Message field: %s", err)
 	}
 	if err := basic.WriteUint32(s.Id, w); err != nil {
-		return fmt.Errorf("failed to write Id field: %s", err)
+		return fmt.Errorf("write Id field: %s", err)
 	}
 	if err := writeTimePoint(s.Date, w); err != nil {
-		return fmt.Errorf("failed to write Date field: %s", err)
+		return fmt.Errorf("write Date field: %s", err)
 	}
 	if err := writeTimePoint(s.SystemDate, w); err != nil {
-		return fmt.Errorf("failed to write SystemDate field: %s", err)
+		return fmt.Errorf("write SystemDate field: %s", err)
 	}
 	return nil
 }
@@ -581,7 +581,7 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 func (c Constructor) LogProvider() (LogProviderProxy, error) {
 	proxy, err := c.session.Proxy("LogProvider", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogProvider(c.session, proxy), nil
 }
@@ -591,7 +591,7 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	var err error
 	var buf bytes.Buffer
 	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("failed to serialize level: %s", err)
+		return fmt.Errorf("serialize level: %s", err)
 	}
 	_, err = p.Call("setVerbosity", buf.Bytes())
 	if err != nil {
@@ -605,10 +605,10 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteString(category, &buf); err != nil {
-		return fmt.Errorf("failed to serialize category: %s", err)
+		return fmt.Errorf("serialize category: %s", err)
 	}
 	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("failed to serialize level: %s", err)
+		return fmt.Errorf("serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
 	if err != nil {
@@ -624,21 +624,21 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
 	if err = func() error {
 		err := basic.WriteUint32(uint32(len(filters)), &buf)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range filters {
 			err = basic.WriteString(k, &buf)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = basic.WriteInt32(v, &buf)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to serialize filters: %s", err)
+		return fmt.Errorf("serialize filters: %s", err)
 	}
 	_, err = p.Call("clearAndSet", buf.Bytes())
 	if err != nil {
@@ -691,7 +691,7 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 func (c Constructor) LogListener() (LogListenerProxy, error) {
 	proxy, err := c.session.Proxy("LogListener", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogListener(c.session, proxy), nil
 }
@@ -701,10 +701,10 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteString(category, &buf); err != nil {
-		return fmt.Errorf("failed to serialize category: %s", err)
+		return fmt.Errorf("serialize category: %s", err)
 	}
 	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("failed to serialize level: %s", err)
+		return fmt.Errorf("serialize level: %s", err)
 	}
 	_, err = p.Call("setCategory", buf.Bytes())
 	if err != nil {
@@ -733,12 +733,12 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "onLogMessage", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessage", err)
 	}
 	ch := make(chan LogMessage)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -753,7 +753,7 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			_ = buf // discard unused variable error
 			e, err := readLogMessage(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -809,12 +809,12 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "verbosity", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "verbosity", err)
 	}
 	ch := make(chan LogLevel)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -829,7 +829,7 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			_ = buf // discard unused variable error
 			e, err := readLogLevel(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -863,17 +863,17 @@ func (p *proxyLogListener) GetFilters() (ret map[string]int32, err error) {
 	ret, err = func() (m map[string]int32, err error) {
 		size, err := basic.ReadUint32(&buf)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
+			return m, fmt.Errorf("read map size: %s", err)
 		}
 		m = make(map[string]int32, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(&buf)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
+				return m, fmt.Errorf("read map key: %s", err)
 			}
 			v, err := basic.ReadInt32(&buf)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
+				return m, fmt.Errorf("read map value: %s", err)
 			}
 			m[k] = v
 		}
@@ -889,16 +889,16 @@ func (p *proxyLogListener) SetFilters(update map[string]int32) error {
 	err := func() error {
 		err := basic.WriteUint32(uint32(len(update)), &buf)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range update {
 			err = basic.WriteString(k, &buf)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = basic.WriteInt32(v, &buf)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
@@ -919,12 +919,12 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "filters", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "filters", err)
 	}
 	ch := make(chan map[string]int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -940,24 +940,24 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 			e, err := func() (m map[string]int32, err error) {
 				size, err := basic.ReadUint32(buf)
 				if err != nil {
-					return m, fmt.Errorf("failed to read map size: %s", err)
+					return m, fmt.Errorf("read map size: %s", err)
 				}
 				m = make(map[string]int32, size)
 				for i := 0; i < int(size); i++ {
 					k, err := basic.ReadString(buf)
 					if err != nil {
-						return m, fmt.Errorf("failed to read map key: %s", err)
+						return m, fmt.Errorf("read map key: %s", err)
 					}
 					v, err := basic.ReadInt32(buf)
 					if err != nil {
-						return m, fmt.Errorf("failed to read map value: %s", err)
+						return m, fmt.Errorf("read map value: %s", err)
 					}
 					m[k] = v
 				}
 				return m, nil
 			}()
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -1002,7 +1002,7 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 func (c Constructor) LogManager() (LogManagerProxy, error) {
 	proxy, err := c.session.Proxy("LogManager", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogManager(c.session, proxy), nil
 }
@@ -1014,17 +1014,17 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 	if err = func() error {
 		err := basic.WriteUint32(uint32(len(messages)), &buf)
 		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
+			return fmt.Errorf("write slice size: %s", err)
 		}
 		for _, v := range messages {
 			err = writeLogMessage(v, &buf)
 			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
+				return fmt.Errorf("write slice value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to serialize messages: %s", err)
+		return fmt.Errorf("serialize messages: %s", err)
 	}
 	_, err = p.Call("log", buf.Bytes())
 	if err != nil {
@@ -1046,16 +1046,16 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	ret, err = func() (LogListenerProxy, error) {
 		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get meta: %s", err)
+			return nil, fmt.Errorf("get meta: %s", err)
 		}
 		proxy, err := p.session.Object(ref)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get proxy: %s", err)
+			return nil, fmt.Errorf("get proxy: %s", err)
 		}
 		return MakeLogListener(p.session, proxy), nil
 	}()
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse createListener response: %s", err)
+		return ret, fmt.Errorf("parse createListener response: %s", err)
 	}
 	return ret, nil
 }
@@ -1073,16 +1073,16 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	ret, err = func() (LogListenerProxy, error) {
 		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get meta: %s", err)
+			return nil, fmt.Errorf("get meta: %s", err)
 		}
 		proxy, err := p.session.Object(ref)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get proxy: %s", err)
+			return nil, fmt.Errorf("get proxy: %s", err)
 		}
 		return MakeLogListener(p.session, proxy), nil
 	}()
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse getListener response: %s", err)
+		return ret, fmt.Errorf("parse getListener response: %s", err)
 	}
 	return ret, nil
 }
@@ -1095,7 +1095,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	if err = func() error {
 		meta, err := source.MetaObject(source.ObjectID())
 		if err != nil {
-			return fmt.Errorf("failed to get meta: %s", err)
+			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			Boolean:    true,
@@ -1106,7 +1106,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
-		return ret, fmt.Errorf("failed to serialize source: %s", err)
+		return ret, fmt.Errorf("serialize source: %s", err)
 	}
 	response, err := p.Call("addProvider", buf.Bytes())
 	if err != nil {
@@ -1115,7 +1115,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadInt32(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse addProvider response: %s", err)
+		return ret, fmt.Errorf("parse addProvider response: %s", err)
 	}
 	return ret, nil
 }
@@ -1125,7 +1125,7 @@ func (p *proxyLogManager) RemoveProvider(providerID int32) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteInt32(providerID, &buf); err != nil {
-		return fmt.Errorf("failed to serialize providerID: %s", err)
+		return fmt.Errorf("serialize providerID: %s", err)
 	}
 	_, err = p.Call("removeProvider", buf.Bytes())
 	if err != nil {

@@ -51,16 +51,16 @@ func (d dictionary) Authenticate(user, token string) bool {
 func WriteCapabilityMap(m CapabilityMap, out io.Writer) error {
 	err := basic.WriteUint32(uint32(len(m)), out)
 	if err != nil {
-		return fmt.Errorf("failed to write map size: %s", err)
+		return fmt.Errorf("write map size: %s", err)
 	}
 	for k, v := range m {
 		err = basic.WriteString(k, out)
 		if err != nil {
-			return fmt.Errorf("failed to write map key: %s", err)
+			return fmt.Errorf("write map key: %s", err)
 		}
 		err = v.Write(out)
 		if err != nil {
-			return fmt.Errorf("failed to write map value: %s", err)
+			return fmt.Errorf("write map value: %s", err)
 		}
 	}
 	return nil
@@ -71,17 +71,17 @@ func ReadCapabilityMap(in io.Reader) (m CapabilityMap, err error) {
 
 	size, err := basic.ReadUint32(in)
 	if err != nil {
-		return m, fmt.Errorf("failed to read map size: %s", err)
+		return m, fmt.Errorf("read map size: %s", err)
 	}
 	m = make(map[string]value.Value, size)
 	for i := 0; i < int(size); i++ {
 		k, err := basic.ReadString(in)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map key: %s", err)
+			return m, fmt.Errorf("read map key: %s", err)
 		}
 		v, err := value.NewValue(in)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map value: %s", err)
+			return m, fmt.Errorf("read map value: %s", err)
 		}
 		m[k] = v
 	}

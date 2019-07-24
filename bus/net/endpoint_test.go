@@ -87,7 +87,7 @@ func TestReceiveOne(t *testing.T) {
 
 	msg, ok := <-msgChan
 	if !ok {
-		panic("failed to receive")
+		panic("receive")
 	}
 
 	if len(msg.Payload) != 2 {
@@ -110,11 +110,11 @@ func TestPingPong(t *testing.T) {
 	go func() {
 		m, ok := <-srvChan
 		if !ok {
-			t.Fatalf("failed to receive meesage")
+			t.Fatalf("receive meesage")
 		}
 		err = server.Send(*m)
 		if err != nil {
-			t.Errorf("failed to send meesage: %s", err)
+			t.Errorf("send meesage: %s", err)
 		}
 		wait.Done()
 	}()
@@ -125,14 +125,14 @@ func TestPingPong(t *testing.T) {
 	// server replied
 	cltChan, err := client.ReceiveAny()
 	if err != nil {
-		t.Fatalf("failed to receive net.")
+		t.Fatalf("receive net.")
 	}
 
 	// client send a message
 	h := net.NewHeader(net.Call, 1, 2, 3, 4)
 	mSent = net.NewMessage(h, []byte{0xab, 0xcd})
 	if err := client.Send(mSent); err != nil {
-		t.Errorf("failed to send paquet: %s", err)
+		t.Errorf("send paquet: %s", err)
 	}
 
 	mRcv, ok := <-cltChan
@@ -358,7 +358,7 @@ func TestEndPoint_DialQUIC(t *testing.T) {
 
 	msg2, ok := <-response
 	if !ok {
-		panic("failed to receive message")
+		panic("receive message")
 	}
 
 	if msg.Header != msg2.Header {

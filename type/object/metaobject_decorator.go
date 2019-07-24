@@ -34,7 +34,7 @@ func (m *MetaObject) MethodID(name string) (uint32, error) {
 			return k, nil
 		}
 	}
-	return 0, fmt.Errorf("failed to find method %s", name)
+	return 0, fmt.Errorf("find method %s", name)
 }
 
 // SignalID returns the ID of a signal
@@ -44,7 +44,7 @@ func (m *MetaObject) SignalID(name string) (uint32, error) {
 			return signal.Uid, nil
 		}
 	}
-	return 0, fmt.Errorf("failed to find signal %s", name)
+	return 0, fmt.Errorf("find signal %s", name)
 }
 
 // PropertyID returns the ID of a property
@@ -54,7 +54,7 @@ func (m *MetaObject) PropertyID(name string) (uint32, error) {
 			return property.Uid, nil
 		}
 	}
-	return 0, fmt.Errorf("failed to find property %s", name)
+	return 0, fmt.Errorf("find property %s", name)
 }
 
 func (m *MetaObject) PropertyName(id uint32) (string, error) {

@@ -57,12 +57,12 @@ func helpValueWrite(t *testing.T, expected value.Value) {
 	var buf bytes.Buffer
 	err := expected.Write(&buf)
 	if err != nil {
-		t.Errorf("failed to write: %s", err)
+		t.Errorf("write: %s", err)
 	}
 	size := len(buf.Bytes())
 	val, err := value.NewValue(&buf)
 	if err != nil {
-		t.Errorf("failed to read: %s", err)
+		t.Errorf("read: %s", err)
 	} else if !reflect.DeepEqual(val, expected) {
 		t.Errorf("value constructor error")
 	}
@@ -113,7 +113,7 @@ func helpParseValue(t *testing.T, b []byte, expected value.Value) {
 	buf := bytes.NewBuffer(b)
 	v, err := value.NewValue(buf)
 	if err != nil {
-		t.Errorf("failed to parse value: %s", err)
+		t.Errorf("parse value: %s", err)
 	}
 	if !reflect.DeepEqual(v, expected) {
 		t.Errorf("expected %#v, got %#v", expected, v)

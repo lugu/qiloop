@@ -22,7 +22,7 @@ func info(serverURL, serviceName string) {
 
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
-		log.Fatalf("failed to connect: %s", err)
+		log.Fatalf("connect: %s", err)
 	}
 	srv := services.Services(sess)
 
@@ -33,19 +33,19 @@ func info(serverURL, serviceName string) {
 		}
 		services, err := directory.Services()
 		if err != nil {
-			log.Fatalf("failed to list services: %s", err)
+			log.Fatalf("list services: %s", err)
 		}
 		Print(services)
 	} else {
 		proxy, err := sess.Proxy(serviceName, 1)
 		if err != nil {
-			log.Fatalf("failed to connect service (%s): %s",
+			log.Fatalf("connect service (%s): %s",
 				serviceName, err)
 		}
 		var obj object.Object = bus.MakeObject(proxy)
 		meta, err := obj.MetaObject(1)
 		if err != nil {
-			log.Fatalf("failed to get metaobject (%s): %s",
+			log.Fatalf("get metaobject (%s): %s",
 				serviceName, err)
 		}
 		Print(meta)

@@ -17,7 +17,7 @@ import (
 func getObject(sess bus.Session, info services.ServiceInfo) bus.ObjectProxy {
 	proxy, err := sess.Proxy(info.Name, 1)
 	if err != nil {
-		log.Fatalf("failed to connect service (%s): %s", info.Name, err)
+		log.Fatalf("connect service (%s): %s", info.Name, err)
 	}
 	return bus.MakeObject(proxy)
 }

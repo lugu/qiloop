@@ -74,17 +74,17 @@ func (p *stubServiceZero) Authenticate(msg *net.Message, c *Channel) error {
 	capability, err := func() (m map[string]value.Value, err error) {
 		size, err := basic.ReadUint32(buf)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
+			return m, fmt.Errorf("read map size: %s", err)
 		}
 		m = make(map[string]value.Value, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(buf)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
+				return m, fmt.Errorf("read map key: %s", err)
 			}
 			v, err := value.NewValue(buf)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
+				return m, fmt.Errorf("read map value: %s", err)
 			}
 			m[k] = v
 		}
@@ -106,16 +106,16 @@ func (p *stubServiceZero) Authenticate(msg *net.Message, c *Channel) error {
 	errOut := func() error {
 		err := basic.WriteUint32(uint32(len(ret)), &out)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range ret {
 			err = basic.WriteString(k, &out)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = v.Write(&out)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
@@ -404,12 +404,12 @@ func (p *stubObject) Properties(msg *net.Message, c *Channel) error {
 	errOut := func() error {
 		err := basic.WriteUint32(uint32(len(ret)), &out)
 		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
+			return fmt.Errorf("write slice size: %s", err)
 		}
 		for _, v := range ret {
 			err = basic.WriteString(v, &out)
 			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
+				return fmt.Errorf("write slice value: %s", err)
 			}
 		}
 		return nil
@@ -502,16 +502,16 @@ func (p *stubObject) Stats(msg *net.Message, c *Channel) error {
 	errOut := func() error {
 		err := basic.WriteUint32(uint32(len(ret)), &out)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range ret {
 			err = basic.WriteUint32(k, &out)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = writeMethodStatistics(v, &out)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
@@ -572,12 +572,12 @@ func (p *stubObject) EnableTrace(msg *net.Message, c *Channel) error {
 func (p *stubObject) SignalTraceObject(event EventTrace) error {
 	var buf bytes.Buffer
 	if err := writeEventTrace(event, &buf); err != nil {
-		return fmt.Errorf("failed to serialize event: %s", err)
+		return fmt.Errorf("serialize event: %s", err)
 	}
 	err := p.signal.UpdateSignal(uint32(0x56), buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("failed to update SignalTraceObject: %s", err)
+		return fmt.Errorf("update SignalTraceObject: %s", err)
 	}
 	return nil
 }
@@ -710,7 +710,7 @@ type proxyServiceZero struct {
 func (c Constructor) ServiceZero() (ServiceZeroProxy, error) {
 	proxy, err := c.session.Proxy("ServiceZero", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return &proxyServiceZero{proxy}, nil
 }
@@ -723,21 +723,21 @@ func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[
 	if err = func() error {
 		err := basic.WriteUint32(uint32(len(capability)), &buf)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range capability {
 			err = basic.WriteString(k, &buf)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = v.Write(&buf)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return ret, fmt.Errorf("failed to serialize capability: %s", err)
+		return ret, fmt.Errorf("serialize capability: %s", err)
 	}
 	response, err := p.Call("authenticate", buf.Bytes())
 	if err != nil {
@@ -747,24 +747,24 @@ func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[
 	ret, err = func() (m map[string]value.Value, err error) {
 		size, err := basic.ReadUint32(resp)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
+			return m, fmt.Errorf("read map size: %s", err)
 		}
 		m = make(map[string]value.Value, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(resp)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
+				return m, fmt.Errorf("read map key: %s", err)
 			}
 			v, err := value.NewValue(resp)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
+				return m, fmt.Errorf("read map value: %s", err)
 			}
 			m[k] = v
 		}
 		return m, nil
 	}()
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse authenticate response: %s", err)
+		return ret, fmt.Errorf("parse authenticate response: %s", err)
 	}
 	return ret, nil
 }
@@ -803,7 +803,7 @@ type proxyObject struct {
 func (c Constructor) Object() (ObjectProxy, error) {
 	proxy, err := c.session.Proxy("Object", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return &proxyObject{proxy}, nil
 }
@@ -814,13 +814,13 @@ func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler ui
 	var ret uint64
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
+		return ret, fmt.Errorf("serialize objectID: %s", err)
 	}
 	if err = basic.WriteUint32(actionID, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize actionID: %s", err)
+		return ret, fmt.Errorf("serialize actionID: %s", err)
 	}
 	if err = basic.WriteUint64(handler, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize handler: %s", err)
+		return ret, fmt.Errorf("serialize handler: %s", err)
 	}
 	response, err := p.Call("registerEvent", buf.Bytes())
 	if err != nil {
@@ -829,7 +829,7 @@ func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler ui
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadUint64(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse registerEvent response: %s", err)
+		return ret, fmt.Errorf("parse registerEvent response: %s", err)
 	}
 	return ret, nil
 }
@@ -839,13 +839,13 @@ func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler 
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return fmt.Errorf("failed to serialize objectID: %s", err)
+		return fmt.Errorf("serialize objectID: %s", err)
 	}
 	if err = basic.WriteUint32(actionID, &buf); err != nil {
-		return fmt.Errorf("failed to serialize actionID: %s", err)
+		return fmt.Errorf("serialize actionID: %s", err)
 	}
 	if err = basic.WriteUint64(handler, &buf); err != nil {
-		return fmt.Errorf("failed to serialize handler: %s", err)
+		return fmt.Errorf("serialize handler: %s", err)
 	}
 	_, err = p.Call("unregisterEvent", buf.Bytes())
 	if err != nil {
@@ -860,7 +860,7 @@ func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
 	var ret object.MetaObject
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
+		return ret, fmt.Errorf("serialize objectID: %s", err)
 	}
 	response, err := p.Call("metaObject", buf.Bytes())
 	if err != nil {
@@ -869,7 +869,7 @@ func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = object.ReadMetaObject(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse metaObject response: %s", err)
+		return ret, fmt.Errorf("parse metaObject response: %s", err)
 	}
 	return ret, nil
 }
@@ -879,7 +879,7 @@ func (p *proxyObject) Terminate(objectID uint32) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return fmt.Errorf("failed to serialize objectID: %s", err)
+		return fmt.Errorf("serialize objectID: %s", err)
 	}
 	_, err = p.Call("terminate", buf.Bytes())
 	if err != nil {
@@ -894,7 +894,7 @@ func (p *proxyObject) Property(name value.Value) (value.Value, error) {
 	var ret value.Value
 	var buf bytes.Buffer
 	if err = name.Write(&buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize name: %s", err)
+		return ret, fmt.Errorf("serialize name: %s", err)
 	}
 	response, err := p.Call("property", buf.Bytes())
 	if err != nil {
@@ -903,7 +903,7 @@ func (p *proxyObject) Property(name value.Value) (value.Value, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = value.NewValue(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse property response: %s", err)
+		return ret, fmt.Errorf("parse property response: %s", err)
 	}
 	return ret, nil
 }
@@ -913,10 +913,10 @@ func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
 	var err error
 	var buf bytes.Buffer
 	if err = name.Write(&buf); err != nil {
-		return fmt.Errorf("failed to serialize name: %s", err)
+		return fmt.Errorf("serialize name: %s", err)
 	}
 	if err = value.Write(&buf); err != nil {
-		return fmt.Errorf("failed to serialize value: %s", err)
+		return fmt.Errorf("serialize value: %s", err)
 	}
 	_, err = p.Call("setProperty", buf.Bytes())
 	if err != nil {
@@ -938,19 +938,19 @@ func (p *proxyObject) Properties() ([]string, error) {
 	ret, err = func() (b []string, err error) {
 		size, err := basic.ReadUint32(resp)
 		if err != nil {
-			return b, fmt.Errorf("failed to read slice size: %s", err)
+			return b, fmt.Errorf("read slice size: %s", err)
 		}
 		b = make([]string, size)
 		for i := 0; i < int(size); i++ {
 			b[i], err = basic.ReadString(resp)
 			if err != nil {
-				return b, fmt.Errorf("failed to read slice value: %s", err)
+				return b, fmt.Errorf("read slice value: %s", err)
 			}
 		}
 		return b, nil
 	}()
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse properties response: %s", err)
+		return ret, fmt.Errorf("parse properties response: %s", err)
 	}
 	return ret, nil
 }
@@ -961,16 +961,16 @@ func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint3
 	var ret uint64
 	var buf bytes.Buffer
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize objectID: %s", err)
+		return ret, fmt.Errorf("serialize objectID: %s", err)
 	}
 	if err = basic.WriteUint32(actionID, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize actionID: %s", err)
+		return ret, fmt.Errorf("serialize actionID: %s", err)
 	}
 	if err = basic.WriteUint64(handler, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize handler: %s", err)
+		return ret, fmt.Errorf("serialize handler: %s", err)
 	}
 	if err = basic.WriteString(P3, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P3: %s", err)
+		return ret, fmt.Errorf("serialize P3: %s", err)
 	}
 	response, err := p.Call("registerEventWithSignature", buf.Bytes())
 	if err != nil {
@@ -979,7 +979,7 @@ func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint3
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadUint64(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse registerEventWithSignature response: %s", err)
+		return ret, fmt.Errorf("parse registerEventWithSignature response: %s", err)
 	}
 	return ret, nil
 }
@@ -996,7 +996,7 @@ func (p *proxyObject) IsStatsEnabled() (bool, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadBool(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse isStatsEnabled response: %s", err)
+		return ret, fmt.Errorf("parse isStatsEnabled response: %s", err)
 	}
 	return ret, nil
 }
@@ -1006,7 +1006,7 @@ func (p *proxyObject) EnableStats(enabled bool) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteBool(enabled, &buf); err != nil {
-		return fmt.Errorf("failed to serialize enabled: %s", err)
+		return fmt.Errorf("serialize enabled: %s", err)
 	}
 	_, err = p.Call("enableStats", buf.Bytes())
 	if err != nil {
@@ -1028,24 +1028,24 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 	ret, err = func() (m map[uint32]MethodStatistics, err error) {
 		size, err := basic.ReadUint32(resp)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
+			return m, fmt.Errorf("read map size: %s", err)
 		}
 		m = make(map[uint32]MethodStatistics, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(resp)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
+				return m, fmt.Errorf("read map key: %s", err)
 			}
 			v, err := readMethodStatistics(resp)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
+				return m, fmt.Errorf("read map value: %s", err)
 			}
 			m[k] = v
 		}
 		return m, nil
 	}()
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse stats response: %s", err)
+		return ret, fmt.Errorf("parse stats response: %s", err)
 	}
 	return ret, nil
 }
@@ -1073,7 +1073,7 @@ func (p *proxyObject) IsTraceEnabled() (bool, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadBool(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse isTraceEnabled response: %s", err)
+		return ret, fmt.Errorf("parse isTraceEnabled response: %s", err)
 	}
 	return ret, nil
 }
@@ -1083,7 +1083,7 @@ func (p *proxyObject) EnableTrace(traced bool) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteBool(traced, &buf); err != nil {
-		return fmt.Errorf("failed to serialize traced: %s", err)
+		return fmt.Errorf("serialize traced: %s", err)
 	}
 	_, err = p.Call("enableTrace", buf.Bytes())
 	if err != nil {
@@ -1101,12 +1101,12 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "traceObject", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "traceObject", err)
 	}
 	ch := make(chan EventTrace)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -1121,7 +1121,7 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 			_ = buf // discard unused variable error
 			e, err := readEventTrace(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -1139,10 +1139,10 @@ type MetaMethodParameter struct {
 // readMetaMethodParameter unmarshalls MetaMethodParameter
 func readMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("read Name field: %s", err)
 	}
 	if s.Description, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Description field: %s", err)
+		return s, fmt.Errorf("read Description field: %s", err)
 	}
 	return s, nil
 }
@@ -1150,10 +1150,10 @@ func readMetaMethodParameter(r io.Reader) (s MetaMethodParameter, err error) {
 // writeMetaMethodParameter marshalls MetaMethodParameter
 func writeMetaMethodParameter(s MetaMethodParameter, w io.Writer) (err error) {
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.Description, w); err != nil {
-		return fmt.Errorf("failed to write Description field: %s", err)
+		return fmt.Errorf("write Description field: %s", err)
 	}
 	return nil
 }
@@ -1172,38 +1172,38 @@ type MetaMethod struct {
 // readMetaMethod unmarshalls MetaMethod
 func readMetaMethod(r io.Reader) (s MetaMethod, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Uid field: %s", err)
+		return s, fmt.Errorf("read Uid field: %s", err)
 	}
 	if s.ReturnSignature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read ReturnSignature field: %s", err)
+		return s, fmt.Errorf("read ReturnSignature field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("read Name field: %s", err)
 	}
 	if s.ParametersSignature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read ParametersSignature field: %s", err)
+		return s, fmt.Errorf("read ParametersSignature field: %s", err)
 	}
 	if s.Description, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Description field: %s", err)
+		return s, fmt.Errorf("read Description field: %s", err)
 	}
 	if s.Parameters, err = func() (b []MetaMethodParameter, err error) {
 		size, err := basic.ReadUint32(r)
 		if err != nil {
-			return b, fmt.Errorf("failed to read slice size: %s", err)
+			return b, fmt.Errorf("read slice size: %s", err)
 		}
 		b = make([]MetaMethodParameter, size)
 		for i := 0; i < int(size); i++ {
 			b[i], err = readMetaMethodParameter(r)
 			if err != nil {
-				return b, fmt.Errorf("failed to read slice value: %s", err)
+				return b, fmt.Errorf("read slice value: %s", err)
 			}
 		}
 		return b, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Parameters field: %s", err)
+		return s, fmt.Errorf("read Parameters field: %s", err)
 	}
 	if s.ReturnDescription, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read ReturnDescription field: %s", err)
+		return s, fmt.Errorf("read ReturnDescription field: %s", err)
 	}
 	return s, nil
 }
@@ -1211,37 +1211,37 @@ func readMetaMethod(r io.Reader) (s MetaMethod, err error) {
 // writeMetaMethod marshalls MetaMethod
 func writeMetaMethod(s MetaMethod, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
-		return fmt.Errorf("failed to write Uid field: %s", err)
+		return fmt.Errorf("write Uid field: %s", err)
 	}
 	if err := basic.WriteString(s.ReturnSignature, w); err != nil {
-		return fmt.Errorf("failed to write ReturnSignature field: %s", err)
+		return fmt.Errorf("write ReturnSignature field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.ParametersSignature, w); err != nil {
-		return fmt.Errorf("failed to write ParametersSignature field: %s", err)
+		return fmt.Errorf("write ParametersSignature field: %s", err)
 	}
 	if err := basic.WriteString(s.Description, w); err != nil {
-		return fmt.Errorf("failed to write Description field: %s", err)
+		return fmt.Errorf("write Description field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Parameters)), w)
 		if err != nil {
-			return fmt.Errorf("failed to write slice size: %s", err)
+			return fmt.Errorf("write slice size: %s", err)
 		}
 		for _, v := range s.Parameters {
 			err = writeMetaMethodParameter(v, w)
 			if err != nil {
-				return fmt.Errorf("failed to write slice value: %s", err)
+				return fmt.Errorf("write slice value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Parameters field: %s", err)
+		return fmt.Errorf("write Parameters field: %s", err)
 	}
 	if err := basic.WriteString(s.ReturnDescription, w); err != nil {
-		return fmt.Errorf("failed to write ReturnDescription field: %s", err)
+		return fmt.Errorf("write ReturnDescription field: %s", err)
 	}
 	return nil
 }
@@ -1256,13 +1256,13 @@ type MetaSignal struct {
 // readMetaSignal unmarshalls MetaSignal
 func readMetaSignal(r io.Reader) (s MetaSignal, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Uid field: %s", err)
+		return s, fmt.Errorf("read Uid field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("read Name field: %s", err)
 	}
 	if s.Signature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Signature field: %s", err)
+		return s, fmt.Errorf("read Signature field: %s", err)
 	}
 	return s, nil
 }
@@ -1270,13 +1270,13 @@ func readMetaSignal(r io.Reader) (s MetaSignal, err error) {
 // writeMetaSignal marshalls MetaSignal
 func writeMetaSignal(s MetaSignal, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
-		return fmt.Errorf("failed to write Uid field: %s", err)
+		return fmt.Errorf("write Uid field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.Signature, w); err != nil {
-		return fmt.Errorf("failed to write Signature field: %s", err)
+		return fmt.Errorf("write Signature field: %s", err)
 	}
 	return nil
 }
@@ -1291,13 +1291,13 @@ type MetaProperty struct {
 // readMetaProperty unmarshalls MetaProperty
 func readMetaProperty(r io.Reader) (s MetaProperty, err error) {
 	if s.Uid, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Uid field: %s", err)
+		return s, fmt.Errorf("read Uid field: %s", err)
 	}
 	if s.Name, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Name field: %s", err)
+		return s, fmt.Errorf("read Name field: %s", err)
 	}
 	if s.Signature, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Signature field: %s", err)
+		return s, fmt.Errorf("read Signature field: %s", err)
 	}
 	return s, nil
 }
@@ -1305,13 +1305,13 @@ func readMetaProperty(r io.Reader) (s MetaProperty, err error) {
 // writeMetaProperty marshalls MetaProperty
 func writeMetaProperty(s MetaProperty, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Uid, w); err != nil {
-		return fmt.Errorf("failed to write Uid field: %s", err)
+		return fmt.Errorf("write Uid field: %s", err)
 	}
 	if err := basic.WriteString(s.Name, w); err != nil {
-		return fmt.Errorf("failed to write Name field: %s", err)
+		return fmt.Errorf("write Name field: %s", err)
 	}
 	if err := basic.WriteString(s.Signature, w); err != nil {
-		return fmt.Errorf("failed to write Signature field: %s", err)
+		return fmt.Errorf("write Signature field: %s", err)
 	}
 	return nil
 }
@@ -1329,68 +1329,68 @@ func readMetaObject(r io.Reader) (s MetaObject, err error) {
 	if s.Methods, err = func() (m map[uint32]MetaMethod, err error) {
 		size, err := basic.ReadUint32(r)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
+			return m, fmt.Errorf("read map size: %s", err)
 		}
 		m = make(map[uint32]MetaMethod, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(r)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
+				return m, fmt.Errorf("read map key: %s", err)
 			}
 			v, err := readMetaMethod(r)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
+				return m, fmt.Errorf("read map value: %s", err)
 			}
 			m[k] = v
 		}
 		return m, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Methods field: %s", err)
+		return s, fmt.Errorf("read Methods field: %s", err)
 	}
 	if s.Signals, err = func() (m map[uint32]MetaSignal, err error) {
 		size, err := basic.ReadUint32(r)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
+			return m, fmt.Errorf("read map size: %s", err)
 		}
 		m = make(map[uint32]MetaSignal, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(r)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
+				return m, fmt.Errorf("read map key: %s", err)
 			}
 			v, err := readMetaSignal(r)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
+				return m, fmt.Errorf("read map value: %s", err)
 			}
 			m[k] = v
 		}
 		return m, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Signals field: %s", err)
+		return s, fmt.Errorf("read Signals field: %s", err)
 	}
 	if s.Properties, err = func() (m map[uint32]MetaProperty, err error) {
 		size, err := basic.ReadUint32(r)
 		if err != nil {
-			return m, fmt.Errorf("failed to read map size: %s", err)
+			return m, fmt.Errorf("read map size: %s", err)
 		}
 		m = make(map[uint32]MetaProperty, size)
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(r)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map key: %s", err)
+				return m, fmt.Errorf("read map key: %s", err)
 			}
 			v, err := readMetaProperty(r)
 			if err != nil {
-				return m, fmt.Errorf("failed to read map value: %s", err)
+				return m, fmt.Errorf("read map value: %s", err)
 			}
 			m[k] = v
 		}
 		return m, nil
 	}(); err != nil {
-		return s, fmt.Errorf("failed to read Properties field: %s", err)
+		return s, fmt.Errorf("read Properties field: %s", err)
 	}
 	if s.Description, err = basic.ReadString(r); err != nil {
-		return s, fmt.Errorf("failed to read Description field: %s", err)
+		return s, fmt.Errorf("read Description field: %s", err)
 	}
 	return s, nil
 }
@@ -1400,62 +1400,62 @@ func writeMetaObject(s MetaObject, w io.Writer) (err error) {
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Methods)), w)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range s.Methods {
 			err = basic.WriteUint32(k, w)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = writeMetaMethod(v, w)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Methods field: %s", err)
+		return fmt.Errorf("write Methods field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Signals)), w)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range s.Signals {
 			err = basic.WriteUint32(k, w)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = writeMetaSignal(v, w)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Signals field: %s", err)
+		return fmt.Errorf("write Signals field: %s", err)
 	}
 	if err := func() error {
 		err := basic.WriteUint32(uint32(len(s.Properties)), w)
 		if err != nil {
-			return fmt.Errorf("failed to write map size: %s", err)
+			return fmt.Errorf("write map size: %s", err)
 		}
 		for k, v := range s.Properties {
 			err = basic.WriteUint32(k, w)
 			if err != nil {
-				return fmt.Errorf("failed to write map key: %s", err)
+				return fmt.Errorf("write map key: %s", err)
 			}
 			err = writeMetaProperty(v, w)
 			if err != nil {
-				return fmt.Errorf("failed to write map value: %s", err)
+				return fmt.Errorf("write map value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("failed to write Properties field: %s", err)
+		return fmt.Errorf("write Properties field: %s", err)
 	}
 	if err := basic.WriteString(s.Description, w); err != nil {
-		return fmt.Errorf("failed to write Description field: %s", err)
+		return fmt.Errorf("write Description field: %s", err)
 	}
 	return nil
 }
@@ -1470,13 +1470,13 @@ type MinMaxSum struct {
 // readMinMaxSum unmarshalls MinMaxSum
 func readMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
 	if s.MinValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read MinValue field: %s", err)
+		return s, fmt.Errorf("read MinValue field: %s", err)
 	}
 	if s.MaxValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read MaxValue field: %s", err)
+		return s, fmt.Errorf("read MaxValue field: %s", err)
 	}
 	if s.CumulatedValue, err = basic.ReadFloat32(r); err != nil {
-		return s, fmt.Errorf("failed to read CumulatedValue field: %s", err)
+		return s, fmt.Errorf("read CumulatedValue field: %s", err)
 	}
 	return s, nil
 }
@@ -1484,13 +1484,13 @@ func readMinMaxSum(r io.Reader) (s MinMaxSum, err error) {
 // writeMinMaxSum marshalls MinMaxSum
 func writeMinMaxSum(s MinMaxSum, w io.Writer) (err error) {
 	if err := basic.WriteFloat32(s.MinValue, w); err != nil {
-		return fmt.Errorf("failed to write MinValue field: %s", err)
+		return fmt.Errorf("write MinValue field: %s", err)
 	}
 	if err := basic.WriteFloat32(s.MaxValue, w); err != nil {
-		return fmt.Errorf("failed to write MaxValue field: %s", err)
+		return fmt.Errorf("write MaxValue field: %s", err)
 	}
 	if err := basic.WriteFloat32(s.CumulatedValue, w); err != nil {
-		return fmt.Errorf("failed to write CumulatedValue field: %s", err)
+		return fmt.Errorf("write CumulatedValue field: %s", err)
 	}
 	return nil
 }
@@ -1506,16 +1506,16 @@ type MethodStatistics struct {
 // readMethodStatistics unmarshalls MethodStatistics
 func readMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
 	if s.Count, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Count field: %s", err)
+		return s, fmt.Errorf("read Count field: %s", err)
 	}
 	if s.Wall, err = readMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read Wall field: %s", err)
+		return s, fmt.Errorf("read Wall field: %s", err)
 	}
 	if s.User, err = readMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read User field: %s", err)
+		return s, fmt.Errorf("read User field: %s", err)
 	}
 	if s.System, err = readMinMaxSum(r); err != nil {
-		return s, fmt.Errorf("failed to read System field: %s", err)
+		return s, fmt.Errorf("read System field: %s", err)
 	}
 	return s, nil
 }
@@ -1523,16 +1523,16 @@ func readMethodStatistics(r io.Reader) (s MethodStatistics, err error) {
 // writeMethodStatistics marshalls MethodStatistics
 func writeMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Count, w); err != nil {
-		return fmt.Errorf("failed to write Count field: %s", err)
+		return fmt.Errorf("write Count field: %s", err)
 	}
 	if err := writeMinMaxSum(s.Wall, w); err != nil {
-		return fmt.Errorf("failed to write Wall field: %s", err)
+		return fmt.Errorf("write Wall field: %s", err)
 	}
 	if err := writeMinMaxSum(s.User, w); err != nil {
-		return fmt.Errorf("failed to write User field: %s", err)
+		return fmt.Errorf("write User field: %s", err)
 	}
 	if err := writeMinMaxSum(s.System, w); err != nil {
-		return fmt.Errorf("failed to write System field: %s", err)
+		return fmt.Errorf("write System field: %s", err)
 	}
 	return nil
 }
@@ -1546,10 +1546,10 @@ type Timeval struct {
 // readTimeval unmarshalls Timeval
 func readTimeval(r io.Reader) (s Timeval, err error) {
 	if s.Tvsec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tvsec field: %s", err)
+		return s, fmt.Errorf("read Tvsec field: %s", err)
 	}
 	if s.Tvusec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read Tvusec field: %s", err)
+		return s, fmt.Errorf("read Tvusec field: %s", err)
 	}
 	return s, nil
 }
@@ -1557,10 +1557,10 @@ func readTimeval(r io.Reader) (s Timeval, err error) {
 // writeTimeval marshalls Timeval
 func writeTimeval(s Timeval, w io.Writer) (err error) {
 	if err := basic.WriteInt64(s.Tvsec, w); err != nil {
-		return fmt.Errorf("failed to write Tvsec field: %s", err)
+		return fmt.Errorf("write Tvsec field: %s", err)
 	}
 	if err := basic.WriteInt64(s.Tvusec, w); err != nil {
-		return fmt.Errorf("failed to write Tvusec field: %s", err)
+		return fmt.Errorf("write Tvusec field: %s", err)
 	}
 	return nil
 }
@@ -1581,31 +1581,31 @@ type EventTrace struct {
 // readEventTrace unmarshalls EventTrace
 func readEventTrace(r io.Reader) (s EventTrace, err error) {
 	if s.Id, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read Id field: %s", err)
+		return s, fmt.Errorf("read Id field: %s", err)
 	}
 	if s.Kind, err = basic.ReadInt32(r); err != nil {
-		return s, fmt.Errorf("failed to read Kind field: %s", err)
+		return s, fmt.Errorf("read Kind field: %s", err)
 	}
 	if s.SlotId, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read SlotId field: %s", err)
+		return s, fmt.Errorf("read SlotId field: %s", err)
 	}
 	if s.Arguments, err = value.NewValue(r); err != nil {
-		return s, fmt.Errorf("failed to read Arguments field: %s", err)
+		return s, fmt.Errorf("read Arguments field: %s", err)
 	}
 	if s.Timestamp, err = readTimeval(r); err != nil {
-		return s, fmt.Errorf("failed to read Timestamp field: %s", err)
+		return s, fmt.Errorf("read Timestamp field: %s", err)
 	}
 	if s.UserUsTime, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read UserUsTime field: %s", err)
+		return s, fmt.Errorf("read UserUsTime field: %s", err)
 	}
 	if s.SystemUsTime, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("failed to read SystemUsTime field: %s", err)
+		return s, fmt.Errorf("read SystemUsTime field: %s", err)
 	}
 	if s.CallerContext, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read CallerContext field: %s", err)
+		return s, fmt.Errorf("read CallerContext field: %s", err)
 	}
 	if s.CalleeContext, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("failed to read CalleeContext field: %s", err)
+		return s, fmt.Errorf("read CalleeContext field: %s", err)
 	}
 	return s, nil
 }
@@ -1613,31 +1613,31 @@ func readEventTrace(r io.Reader) (s EventTrace, err error) {
 // writeEventTrace marshalls EventTrace
 func writeEventTrace(s EventTrace, w io.Writer) (err error) {
 	if err := basic.WriteUint32(s.Id, w); err != nil {
-		return fmt.Errorf("failed to write Id field: %s", err)
+		return fmt.Errorf("write Id field: %s", err)
 	}
 	if err := basic.WriteInt32(s.Kind, w); err != nil {
-		return fmt.Errorf("failed to write Kind field: %s", err)
+		return fmt.Errorf("write Kind field: %s", err)
 	}
 	if err := basic.WriteUint32(s.SlotId, w); err != nil {
-		return fmt.Errorf("failed to write SlotId field: %s", err)
+		return fmt.Errorf("write SlotId field: %s", err)
 	}
 	if err := s.Arguments.Write(w); err != nil {
-		return fmt.Errorf("failed to write Arguments field: %s", err)
+		return fmt.Errorf("write Arguments field: %s", err)
 	}
 	if err := writeTimeval(s.Timestamp, w); err != nil {
-		return fmt.Errorf("failed to write Timestamp field: %s", err)
+		return fmt.Errorf("write Timestamp field: %s", err)
 	}
 	if err := basic.WriteInt64(s.UserUsTime, w); err != nil {
-		return fmt.Errorf("failed to write UserUsTime field: %s", err)
+		return fmt.Errorf("write UserUsTime field: %s", err)
 	}
 	if err := basic.WriteInt64(s.SystemUsTime, w); err != nil {
-		return fmt.Errorf("failed to write SystemUsTime field: %s", err)
+		return fmt.Errorf("write SystemUsTime field: %s", err)
 	}
 	if err := basic.WriteUint32(s.CallerContext, w); err != nil {
-		return fmt.Errorf("failed to write CallerContext field: %s", err)
+		return fmt.Errorf("write CallerContext field: %s", err)
 	}
 	if err := basic.WriteUint32(s.CalleeContext, w); err != nil {
-		return fmt.Errorf("failed to write CalleeContext field: %s", err)
+		return fmt.Errorf("write CalleeContext field: %s", err)
 	}
 	return nil
 }

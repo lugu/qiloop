@@ -171,7 +171,7 @@ func extractMembersName(node Node) ([]string, error) {
 	for i, n := range membersList {
 		memberName, ok := n.(*parsec.Terminal)
 		if !ok {
-			return nil, fmt.Errorf("failed to convert member names %s", reflect.TypeOf(n))
+			return nil, fmt.Errorf("convert member names %s", reflect.TypeOf(n))
 		}
 		names[i] = memberName.GetValue()
 	}
@@ -182,11 +182,11 @@ func extractMembers(typesNode, namesNode Node) ([]MemberType, error) {
 
 	types, err := extractMembersTypes(typesNode)
 	if err != nil {
-		return nil, fmt.Errorf("failed to extract members types: %s", err)
+		return nil, fmt.Errorf("extract members types: %s", err)
 	}
 	names, err := extractMembersName(namesNode)
 	if err != nil {
-		return nil, fmt.Errorf("failed to extract members name: %s", err)
+		return nil, fmt.Errorf("extract members name: %s", err)
 	}
 
 	if len(types) != len(names) {
@@ -205,7 +205,7 @@ func nodifyTupleType(nodes []Node) Node {
 
 	types, err := extractMembersTypes(nodes[1])
 	if err != nil {
-		return fmt.Errorf("failed to extract tuple member type: %s", err)
+		return fmt.Errorf("extract tuple member type: %s", err)
 	}
 
 	return NewTupleType(types)
@@ -224,7 +224,7 @@ func nodifyStrucType(nodes []Node) Node {
 	name := terminal.GetValue()
 	members, err := extractMembers(nodes[1], nodes[5])
 	if err != nil {
-		return fmt.Errorf("failed to extract type definition: %s", err)
+		return fmt.Errorf("extract type definition: %s", err)
 	}
 
 	return NewStructType(name, members)
@@ -283,13 +283,13 @@ func Parse(input string) (Type, error) {
 
 	root, _ := typeSignature(parsec.NewScanner(text))
 	if root == nil {
-		return nil, fmt.Errorf("failed to parse signature: %s", input)
+		return nil, fmt.Errorf("parse signature: %s", input)
 	}
 	types, ok := root.([]Node)
 	if !ok {
 		err, ok := root.(error)
 		if !ok {
-			return nil, fmt.Errorf("failed to convert array: %+v",
+			return nil, fmt.Errorf("convert array: %+v",
 				reflect.TypeOf(root))
 		}
 		return nil, err
@@ -299,7 +299,7 @@ func Parse(input string) (Type, error) {
 	}
 	constructor, ok := types[0].(Type)
 	if !ok {
-		return nil, fmt.Errorf("failed to convert value: %+v",
+		return nil, fmt.Errorf("convert value: %+v",
 			reflect.TypeOf(types[0]))
 	}
 	return constructor, nil
@@ -314,7 +314,7 @@ func GenerateType(v Type, packageName string, w io.Writer) error {
 	v.RegisterTo(set)
 	set.Declare(file)
 	if err := file.Render(w); err != nil {
-		return fmt.Errorf("failed to render %s: %s", v.Signature(), err)
+		return fmt.Errorf("render %s: %s", v.Signature(), err)
 	}
 	return nil
 }

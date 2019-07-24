@@ -17,7 +17,7 @@ func open(filename string) io.WriteCloser {
 	case "":
 		file, err := os.Create(os.DevNull)
 		if err != nil {
-			log.Fatalf("failed to open %s: %s", os.DevNull, err)
+			log.Fatalf("open %s: %s", os.DevNull, err)
 		}
 		return file
 	case "-":
@@ -25,7 +25,7 @@ func open(filename string) io.WriteCloser {
 	default:
 		file, err := os.Create(filename)
 		if err != nil {
-			log.Fatalf("failed to open %s: %s", filename, err)
+			log.Fatalf("open %s: %s", filename, err)
 		}
 		return file
 	}
@@ -38,18 +38,18 @@ func scan(serverURL, serviceName, idlFile string) {
 
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
-		log.Fatalf("failed to create session: %s", err)
+		log.Fatalf("create session: %s", err)
 	}
 
 	// service direction id = 1
 	dir, err := services.Services(sess).ServiceDirectory()
 	if err != nil {
-		log.Fatalf("failed to create proxy: %s", err)
+		log.Fatalf("create proxy: %s", err)
 	}
 
 	serviceInfoList, err := dir.Services()
 	if err != nil {
-		log.Fatalf("failed to list services: %s", err)
+		log.Fatalf("list services: %s", err)
 	}
 
 	objects := make([]object.MetaObject, 0)
@@ -82,7 +82,7 @@ func scan(serverURL, serviceName, idlFile string) {
 			objects = append(objects, meta)
 			err = idl.GenerateIDL(output, s.Name, meta)
 			if err != nil {
-				log.Printf("failed to generate IDL of %s: %s",
+				log.Printf("generate IDL of %s: %s",
 					s.Name, err)
 			}
 			break

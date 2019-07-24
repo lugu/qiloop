@@ -180,7 +180,7 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 
 	body, err := methodBodyBlock(itf, method, methodName)
 	if err != nil {
-		return fmt.Errorf("failed to create method body: %s", err)
+		return fmt.Errorf("create method body: %s", err)
 	}
 
 	file.Func().Params(jen.Id("p").Op("*").Id(stubName(itf.Name))).Id(methodName).Params(
@@ -203,7 +203,7 @@ func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
 		code = jen.If(jen.Err().Op(":=").Add(
 			param.Type.Marshal(param.Name, "&buf"),
 		).Op(";").Err().Op("!=").Nil()).Block(
-			jen.Id(`return fmt.Errorf("failed to serialize ` +
+			jen.Id(`return fmt.Errorf("serialize ` +
 				param.Name + `: %s", err)`),
 		)
 		writing = append(writing, code)
@@ -216,7 +216,7 @@ func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
 	writing = append(writing, code)
 	code = jen.Id(`
 	if err != nil {
-	    return fmt.Errorf("failed to update ` +
+	    return fmt.Errorf("update ` +
 		signalName + `: %s", err)
 	}
 	return nil`)
@@ -237,7 +237,7 @@ func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 		code = jen.If(jen.Err().Op(":=").Add(
 			param.Type.Marshal(param.Name, "&buf"),
 		).Op(";").Err().Op("!=").Nil()).Block(
-			jen.Id(`return fmt.Errorf("failed to serialize ` +
+			jen.Id(`return fmt.Errorf("serialize ` +
 				param.Name + `: %s", err)`),
 		)
 		writing = append(writing, code)
@@ -250,7 +250,7 @@ func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 	writing = append(writing, code)
 	code = jen.Id(`
 	if err != nil {
-	    return fmt.Errorf("failed to update ` +
+	    return fmt.Errorf("update ` +
 		signalName + `: %s", err)
 	}
 	return nil`)
@@ -266,7 +266,7 @@ func generateSignalHelper(file *jen.File, itf *idl.InterfaceType,
 
 	body, err := signalBodyBlock(itf, signal, signalName)
 	if err != nil {
-		return fmt.Errorf("failed to create signal helper body: %s", err)
+		return fmt.Errorf("create signal helper body: %s", err)
 	}
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
@@ -280,7 +280,7 @@ func generatePropertyHelper(file *jen.File, itf *idl.InterfaceType,
 
 	body, err := propertyBodyBlock(itf, property, propertyName)
 	if err != nil {
-		return fmt.Errorf("failed to create property helper body: %s", err)
+		return fmt.Errorf("create property helper body: %s", err)
 	}
 	file.Func().Params(
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
@@ -294,7 +294,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 		method := itf.Methods[m.Uid]
 		err := generateMethodMarshal(file, itf, method, methodName)
 		if err != nil {
-			return fmt.Errorf("failed to create method marshall %s of %s: %s",
+			return fmt.Errorf("create method marshall %s of %s: %s",
 				method.Name, itf.Name, err)
 		}
 		return nil
@@ -304,7 +304,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 		signalName = "Signal" + signalName
 		err := generateSignalHelper(file, itf, signal, signalName)
 		if err != nil {
-			return fmt.Errorf("failed to create signal marshall %s of %s: %s",
+			return fmt.Errorf("create signal marshall %s of %s: %s",
 				signal.Name, itf.Name, err)
 		}
 		return nil
@@ -315,7 +315,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 		err := generatePropertyHelper(file, itf, property,
 			propertyName)
 		if err != nil {
-			return fmt.Errorf("failed to create property marshall %s of %s: %s",
+			return fmt.Errorf("create property marshall %s of %s: %s",
 				property.Name, itf.Name, err)
 		}
 		return nil
@@ -323,7 +323,7 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 
 	meta := itf.MetaObject()
 	if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate interface object %s: %s",
+		return fmt.Errorf("generate interface object %s: %s",
 			itf.Name, err)
 	}
 	return nil
@@ -505,7 +505,7 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 	meta := itf.MetaObject()
 	err := meta.ForEachMethodAndSignal(method, signal, property)
 	if err != nil {
-		return fmt.Errorf("failed to generate receive: %s: %s",
+		return fmt.Errorf("generate receive: %s: %s",
 			itf.Name, err)
 	}
 	code := jen.Default()
@@ -705,7 +705,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		method := itf.Methods[m.Uid]
 		def, err := generateMethodDef(itf, set, method, methodName)
 		if err != nil {
-			return fmt.Errorf("failed to render method definition %s of %s: %s",
+			return fmt.Errorf("render method definition %s of %s: %s",
 				method.Name, itf.Name, err)
 		}
 		definitions = append(definitions, def)
@@ -716,7 +716,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		signalName = "Signal" + signalName
 		def, err := generateSignalDef(itf, set, signal.Tuple(), signalName)
 		if err != nil {
-			return fmt.Errorf("failed to render %s of %s: %s",
+			return fmt.Errorf("render %s of %s: %s",
 				s.Name, itf.Name, err)
 		}
 		signalDefinitions = append(signalDefinitions, def)
@@ -739,7 +739,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 		signalName := "Update" + propertyName
 		def, err := generateSignalDef(itf, set, property.Tuple(), signalName)
 		if err != nil {
-			return fmt.Errorf("failed to render %s of %s: %s",
+			return fmt.Errorf("render %s of %s: %s",
 				p.Name, itf.Name, err)
 		}
 
@@ -749,7 +749,7 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 
 	meta := itf.MetaObject()
 	if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate interface object %s: %s",
+		return fmt.Errorf("generate interface object %s: %s",
 			itf.Name, err)
 	}
 

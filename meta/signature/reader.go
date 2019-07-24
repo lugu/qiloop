@@ -53,7 +53,7 @@ type valueReader struct{}
 func (v valueReader) Read(r io.Reader) ([]byte, error) {
 	sig, err := basic.ReadString(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read signature: %s", err)
+		return nil, fmt.Errorf("read signature: %s", err)
 	}
 	reader, err := MakeReader(sig)
 	if err != nil {
@@ -61,7 +61,7 @@ func (v valueReader) Read(r io.Reader) ([]byte, error) {
 	}
 	data, err := reader.Read(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read value: %s", err)
+		return nil, fmt.Errorf("read value: %s", err)
 	}
 	return append([]byte(sig), data...), err
 }
@@ -73,7 +73,7 @@ type varReader struct {
 func (v varReader) Read(r io.Reader) ([]byte, error) {
 	size, err := basic.ReadUint32(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read size: %s", err)
+		return nil, fmt.Errorf("read size: %s", err)
 	}
 	if int(size) < 0 {
 		return nil, fmt.Errorf("invalid size: %d", size)
@@ -81,22 +81,22 @@ func (v varReader) Read(r io.Reader) ([]byte, error) {
 	var buf bytes.Buffer
 	err = basic.WriteUint32(size, &buf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to write size %d: %s",
+		return nil, fmt.Errorf("write size %d: %s",
 			size, err)
 	}
 	for i := 0; i < int(size); i++ {
 		data, err := v.reader.Read(r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read %d/%d: %s",
+			return nil, fmt.Errorf("read %d/%d: %s",
 				i+1, size, err)
 		}
 		n, err := buf.Write(data)
 		if err != nil {
-			return nil, fmt.Errorf("failed to copy %d/%d: %s",
+			return nil, fmt.Errorf("copy %d/%d: %s",
 				i, size, err)
 		}
 		if n != len(data) {
-			return nil, fmt.Errorf("failed to copy %d/%d", i, size)
+			return nil, fmt.Errorf("copy %d/%d", i, size)
 		}
 	}
 	return buf.Bytes(), nil
@@ -109,16 +109,16 @@ func (v tupleReader) Read(r io.Reader) ([]byte, error) {
 	for name, reader := range v {
 		data, err := reader.Read(r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read %s: %s",
+			return nil, fmt.Errorf("read %s: %s",
 				name, err)
 		}
 		n, err := buf.Write(data)
 		if err != nil {
-			return nil, fmt.Errorf("failed to write %s: %s",
+			return nil, fmt.Errorf("write %s: %s",
 				name, err)
 		}
 		if n != len(data) {
-			return nil, fmt.Errorf("failed to write %d/%d",
+			return nil, fmt.Errorf("write %d/%d",
 				n, len(data))
 		}
 	}

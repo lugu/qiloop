@@ -41,7 +41,7 @@ func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err er
 	c := bus.NewClient(endpoint)
 	proxy, err := metaProxy(c, info.ServiceId, objectID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get service meta object (%s): %s", info.Name, err)
+		return nil, fmt.Errorf("get service meta object (%s): %s", info.Name, err)
 	}
 	return proxy, nil
 }
@@ -114,21 +114,21 @@ func NewSession(addr string) (bus.Session, error) {
 	var err error
 	s.Directory, err = services.Services(s).ServiceDirectory()
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact server: %s", err)
+		return nil, fmt.Errorf("contact server: %s", err)
 	}
 
 	s.serviceList, err = s.Directory.Services()
 	if err != nil {
-		return nil, fmt.Errorf("failed to list services: %s", err)
+		return nil, fmt.Errorf("list services: %s", err)
 	}
 	var cancelRemoved, cancelAdded func()
 	cancelRemoved, s.removed, err = s.Directory.SubscribeServiceRemoved()
 	if err != nil {
-		return nil, fmt.Errorf("failed to subscribe remove signal: %s", err)
+		return nil, fmt.Errorf("subscribe remove signal: %s", err)
 	}
 	cancelAdded, s.added, err = s.Directory.SubscribeServiceAdded()
 	if err != nil {
-		return nil, fmt.Errorf("failed to subscribe added signal: %s", err)
+		return nil, fmt.Errorf("subscribe added signal: %s", err)
 	}
 	s.cancel = func() {
 		cancelRemoved()

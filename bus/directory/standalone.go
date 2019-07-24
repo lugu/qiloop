@@ -16,7 +16,7 @@ func NewServer(addr string, auth bus.Authenticator) (bus.Server, error) {
 
 	listener, err := net.Listen(addr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open socket %s: %s", addr, err)
+		return nil, fmt.Errorf("open socket %s: %s", addr, err)
 	}
 
 	sd := ServiceDirectoryImpl()

@@ -22,7 +22,7 @@ func GetMetaObject(client Client, serviceID uint32, objectID uint32) (m object.M
 	ret := bytes.NewBuffer(response)
 	m, err = object.ReadMetaObject(ret)
 	if err != nil {
-		return m, fmt.Errorf("failed to parse metaObject response: %s", err)
+		return m, fmt.Errorf("parse metaObject response: %s", err)
 	}
 	return m, nil
 }
@@ -36,7 +36,7 @@ func MakeObject(proxy Proxy) ObjectProxy {
 func (s Constructor) ServiceServer() (ServiceZeroProxy, error) {
 	proxy, err := s.session.Proxy("ServiceZero", 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return &proxyServiceZero{proxy}, nil
 }

@@ -13,26 +13,26 @@ func logger(serverURL string) {
 
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
-		log.Fatalf("failed to connect: %s", err)
+		log.Fatalf("connect: %s", err)
 	}
 	srv := services.Services(sess)
 	logManager, err := srv.LogManager()
 	if err != nil {
-		log.Fatalf("failed to access LogManager service: %s", err)
+		log.Fatalf("access LogManager service: %s", err)
 	}
 	logListener, err := logManager.CreateListener()
 	if err != nil {
-		log.Fatalf("failed to create listener: %s", err)
+		log.Fatalf("create listener: %s", err)
 	}
 	defer logListener.Terminate(logListener.ObjectID())
 
 	err = logListener.ClearFilters()
 	if err != nil {
-		log.Fatalf("failed to clear filters: %s", err)
+		log.Fatalf("clear filters: %s", err)
 	}
 	cancel, logs, err := logListener.SubscribeOnLogMessage()
 	if err != nil {
-		log.Fatalf("failed to subscribe logs: %s", err)
+		log.Fatalf("subscribe logs: %s", err)
 	}
 	defer cancel()
 

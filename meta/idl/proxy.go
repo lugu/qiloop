@@ -23,13 +23,13 @@ func generateInterface(itf *InterfaceType, file *jen.File) error {
 	serviceName := signature.CleanName(itf.Name)
 	err := generateObjectInterface(itf, serviceName, file)
 	if err != nil {
-		return fmt.Errorf("failed to declare interface %s: %s",
+		return fmt.Errorf("declare interface %s: %s",
 			itf.Name, err)
 	}
 
 	err = generateProxyObject(itf, serviceName, file)
 	if err != nil {
-		return fmt.Errorf("failed to declare proxy %s: %s",
+		return fmt.Errorf("declare proxy %s: %s",
 			itf.Name, err)
 	}
 	return nil
@@ -62,7 +62,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 			methodName, &definitions)
 		if err != nil {
 			return fmt.Errorf(
-				"failed to render method definition %s of %s: %s",
+				"render method definition %s of %s: %s",
 				m.Name, serviceName, err)
 		}
 		return nil
@@ -77,7 +77,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 			signalName, &definitions)
 		if err != nil {
 			return fmt.Errorf(
-				"failed to render signal %s of %s: %s",
+				"render signal %s of %s: %s",
 				s.Name, serviceName, err)
 		}
 		return nil
@@ -95,7 +95,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 			&definitions)
 		if err != nil {
 			return fmt.Errorf(
-				"failed to render property %s of %s: %s",
+				"render property %s of %s: %s",
 				p.Name, serviceName, err)
 		}
 		return nil
@@ -103,7 +103,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 
 	metaObj := itf.MetaObject()
 	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate interface object %s: %s",
+		return fmt.Errorf("generate interface object %s: %s",
 			serviceName, err)
 	}
 
@@ -244,7 +244,7 @@ func generateProxyObject(itf *InterfaceType, serviceName string,
 
 	metaObj := itf.MetaObject()
 	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate proxy object %s: %s",
+		return fmt.Errorf("generate proxy object %s: %s",
 			serviceName, err)
 	}
 	return nil
@@ -304,7 +304,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 			jen.Return().List(
 				jen.Nil(),
 				jen.Qual("fmt", "Errorf").Call(
-					jen.Lit("failed to contact service: %s"),
+					jen.Lit("contact service: %s"),
 					jen.Err(),
 				),
 			),
@@ -329,7 +329,7 @@ func generateProxyMethod(file *jen.File, serviceName string,
 
 	body, err := methodBodyBlock(method, paramType, returnType)
 	if err != nil {
-		return fmt.Errorf("failed to generate body: %s", err)
+		return fmt.Errorf("generate body: %s", err)
 	}
 
 	returnCode := jen.Params(returnType.TypeName(), jen.Error())
@@ -369,7 +369,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 
 		handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to register event for %s: %s", "`+actionName+`", err)
+			return nil, nil, fmt.Errorf("register event for %s: %s", "`+actionName+`", err)
 		}`),
 		jen.Id("ch").Op(":=").Make(jen.Chan().Add(actionType.TypeName())),
 		jen.List(
@@ -378,7 +378,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			jen.Err(),
 		).Op(":=").Id("p.SubscribeID").Call(jen.Id("propertyID")),
 		jen.Id(`if err != nil {
-			return nil, nil, fmt.Errorf("failed to request property: %s", err)
+			return nil, nil, fmt.Errorf("request property: %s", err)
 		}`),
 		jen.Go().Func().Params().Block(jen.For().Block(
 			jen.List(jen.Id("payload"), jen.Id("ok")).Op(":=").Op("<-").Id("chPay"),
@@ -394,7 +394,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 				jen.Err()).Op(":=").Add(actionType.Unmarshal("buf")),
 			jen.If(jen.Id("err").Op("!=").Nil()).Block(
 				jen.Qual("log", "Printf").Call(
-					jen.Lit("failed to unmarshall tuple: %s"),
+					jen.Lit("unmarshall tuple: %s"),
 					jen.Id("err"),
 				),
 				jen.Continue(),
@@ -519,11 +519,11 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 	for _, v := range params.Members {
 		if ret.Signature() != "v" {
 			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Type.Marshal(v.Name, "&buf")).Op(";").Err().Op("!=").Nil()).Block(
-				jen.Id(`return ret, fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
+				jen.Id(`return ret, fmt.Errorf("serialize `+v.Name+`: %s", err)`),
 			))
 		} else {
 			writing = append(writing, jen.If(jen.Err().Op("=").Add(v.Type.Marshal(v.Name, "&buf")).Op(";").Err().Op("!=").Nil()).Block(
-				jen.Id(`return fmt.Errorf("failed to serialize `+v.Name+`: %s", err)`),
+				jen.Id(`return fmt.Errorf("serialize `+v.Name+`: %s", err)`),
 			))
 		}
 	}
@@ -545,7 +545,7 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 		writing = append(writing, jen.Id("resp := bytes.NewBuffer(response)"))
 		writing = append(writing, jen.Id("ret, err =").Add(ret.Unmarshal("resp")))
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
-			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("failed to parse %s response: %s", err)`, method.Name, "%s")),
+			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("parse %s response: %s", err)`, method.Name, "%s")),
 		))
 		writing = append(writing, jen.Return(jen.Id("ret"), jen.Nil()))
 	} else {

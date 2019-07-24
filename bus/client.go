@@ -63,7 +63,7 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 	if err := c.endpoint.Send(msg); err != nil {
 		c.endpoint.RemoveHandler(id)
 		return nil, fmt.Errorf(
-			"failed to call service %d, object %d, action %d: %s",
+			"call service %d, object %d, action %d: %s",
 			serviceID, objectID, actionID, err)
 	}
 

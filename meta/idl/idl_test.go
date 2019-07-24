@@ -25,7 +25,7 @@ func helpTestGenerate(t *testing.T, idlFileName, serviceName string,
 
 	var w strings.Builder
 	if err := GenerateIDL(&w, serviceName, metaObj); err != nil {
-		t.Errorf("failed to parse server: %s", err)
+		t.Errorf("parse server: %s", err)
 	}
 	if w.String() != expected {
 		t.Errorf("Got:\n%s\nExpecting:\n%s\n", w.String(), expected)

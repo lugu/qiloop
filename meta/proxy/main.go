@@ -26,17 +26,17 @@ func GenerateProxy(idlFileName, proxyFileName, packageName string) {
 	if proxyFileName != "-" {
 		output, err = os.Create(proxyFileName)
 		if err != nil {
-			log.Fatalf("failed to create %s: %s", proxyFileName, err)
+			log.Fatalf("create %s: %s", proxyFileName, err)
 		}
 		defer output.Close()
 	}
 
 	pkg, err := idl.ParsePackage([]byte(input))
 	if err != nil {
-		log.Fatalf("failed to parse %s: %s", idlFileName, err)
+		log.Fatalf("parse %s: %s", idlFileName, err)
 	}
 
 	if err := GeneratePackage(output, packageName, pkg); err != nil {
-		log.Fatalf("failed to generate output: %s", err)
+		log.Fatalf("generate output: %s", err)
 	}
 }

@@ -18,11 +18,11 @@ func generateMethod(writer io.Writer, set *signature.TypeSet,
 	// m.MetaMethodParameter.
 	paramType, err := signature.Parse(m.ParametersSignature)
 	if err != nil {
-		return fmt.Errorf("failed to parse parms of %s: %s", m.Name, err)
+		return fmt.Errorf("parse parms of %s: %s", m.Name, err)
 	}
 	retType, err := signature.Parse(m.ReturnSignature)
 	if err != nil {
-		return fmt.Errorf("failed to parse return of %s: %s", m.Name, err)
+		return fmt.Errorf("parse return of %s: %s", m.Name, err)
 	}
 
 	tupleType, ok := paramType.(*signature.TupleType)
@@ -64,7 +64,7 @@ func generateProperty(writer io.Writer, set *signature.TypeSet,
 
 	propertyType, err := signature.Parse(p.Signature)
 	if err != nil {
-		return fmt.Errorf("failed to parse property of %s: %s", p.Name, err)
+		return fmt.Errorf("parse property of %s: %s", p.Name, err)
 	}
 	propertyType.RegisterTo(set)
 	fmt.Fprintf(writer, "\tprop %s(param: %s) //uid:%d\n", p.Name,
@@ -79,7 +79,7 @@ func generateProperty(writer io.Writer, set *signature.TypeSet,
 func generateSignal(writer io.Writer, set *signature.TypeSet, s object.MetaSignal, methodName string) error {
 	signalType, err := signature.Parse(s.Signature)
 	if err != nil {
-		return fmt.Errorf("failed to parse signal of %s: %s", s.Name, err)
+		return fmt.Errorf("parse signal of %s: %s", s.Name, err)
 	}
 	signalType.RegisterTo(set)
 	fmt.Fprintf(writer, "\tsig %s(%s) //uid:%d\n", s.Name, signalType.SignatureIDL(), s.Uid)
@@ -123,12 +123,12 @@ func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject
 	}
 
 	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("failed to generate proxy object %s: %s", serviceName, err)
+		return fmt.Errorf("generate proxy object %s: %s", serviceName, err)
 	}
 	fmt.Fprintf(writer, "end\n")
 
 	if err := generateStructures(writer, set); err != nil {
-		return fmt.Errorf("failed to generate structures: %s", err)
+		return fmt.Errorf("generate structures: %s", err)
 	}
 	return nil
 }

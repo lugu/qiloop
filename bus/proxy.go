@@ -25,7 +25,7 @@ func (p proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
 func (p proxy) Call(action string, payload []byte) ([]byte, error) {
 	id, err := p.MethodID(action)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find call %s: %s", action, err)
+		return nil, fmt.Errorf("find call %s: %s", action, err)
 	}
 	return p.CallID(id, payload)
 }

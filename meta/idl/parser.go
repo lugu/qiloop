@@ -401,11 +401,11 @@ func nodifyDeclarationList(nodes []signature.Node) signature.Node {
 	typeList := make([]signature.Type, 0)
 	for i, node := range nodes {
 		if ok, err := checkError([]signature.Node{node}); ok {
-			return fmt.Errorf("failed to parse parameter %d: %s", i, err)
+			return fmt.Errorf("parse parameter %d: %s", i, err)
 		} else if typ, ok := node.(signature.Type); ok {
 			typeList = append(typeList, typ)
 		} else {
-			return fmt.Errorf("failed to parse type %d: got %+v: %+v",
+			return fmt.Errorf("parse type %d: got %+v: %+v",
 				i, reflect.TypeOf(node), node)
 		}
 	}
@@ -618,7 +618,7 @@ func nodifyBasicType(nodes []signature.Node) signature.Node {
 // nodifyMethod returns a Method or an error.
 func nodifyMethod(nodes []signature.Node) signature.Node {
 	if ok, err := checkError(nodes); ok {
-		return fmt.Errorf("failed to parse method: %s", err)
+		return fmt.Errorf("parse method: %s", err)
 	}
 	retNode := nodes[5]
 	paramNode := nodes[3]
@@ -648,7 +648,7 @@ func nodifyMethod(nodes []signature.Node) signature.Node {
 // nodifySignal returns either a Signal or an error.
 func nodifySignal(nodes []signature.Node) signature.Node {
 	if ok, err := checkError(nodes); ok {
-		return fmt.Errorf("failed to parse method: %s", err)
+		return fmt.Errorf("parse method: %s", err)
 	}
 	paramNode := nodes[3]
 	commentNode := nodes[5]
@@ -669,7 +669,7 @@ func nodifySignal(nodes []signature.Node) signature.Node {
 // nodifyProperty returns either a Property or an error.
 func nodifyProperty(nodes []signature.Node) signature.Node {
 	if ok, err := checkError(nodes); ok {
-		return fmt.Errorf("failed to parse method: %s", err)
+		return fmt.Errorf("parse method: %s", err)
 	}
 	paramNode := nodes[3]
 	commentNode := nodes[5]
@@ -748,7 +748,7 @@ func nodifyParam(nodes []signature.Node) signature.Node {
 			Type: typ,
 		}
 	}
-	return fmt.Errorf("failed to parse param: %s", nodes[2])
+	return fmt.Errorf("parse param: %s", nodes[2])
 }
 
 // nodifyParams returns an slice of Parameter
@@ -759,11 +759,11 @@ func nodifyParams(nodes []signature.Node) signature.Node {
 	params := make([]Parameter, len(nodes))
 	for i, node := range nodes {
 		if ok, err := checkError([]signature.Node{node}); ok {
-			return fmt.Errorf("failed to parse parameter %d: %s", i, err)
+			return fmt.Errorf("parse parameter %d: %s", i, err)
 		} else if member, ok := node.(Parameter); ok {
 			params[i] = member
 		} else {
-			return fmt.Errorf("failed to parse parameter %d: %s", i, node)
+			return fmt.Errorf("parse parameter %d: %s", i, node)
 		}
 	}
 	return params

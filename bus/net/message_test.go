@@ -118,11 +118,11 @@ func TestWriteReadMessage(t *testing.T) {
 	input := net.NewMessage(h, make([]byte, 99))
 	var buf bytes.Buffer
 	if err := input.Write(&buf); err != nil {
-		t.Errorf("failed to write net. %s", err)
+		t.Errorf("write net. %s", err)
 	}
 	var output net.Message
 	if err := output.Read(&buf); err != nil {
-		t.Errorf("failed to read net. %s", err)
+		t.Errorf("read net. %s", err)
 	}
 	if input.Header != output.Header {
 		t.Errorf("expected %#v, got %#v", input.Header, output.Header)

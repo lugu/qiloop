@@ -97,24 +97,24 @@ func (p *stubBomb) onPropertyChange(name string, data []byte) error {
 func (p *stubBomb) SignalBoom(energy int32) error {
 	var buf bytes.Buffer
 	if err := basic.WriteInt32(energy, &buf); err != nil {
-		return fmt.Errorf("failed to serialize energy: %s", err)
+		return fmt.Errorf("serialize energy: %s", err)
 	}
 	err := p.signal.UpdateSignal(uint32(0x64), buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("failed to update SignalBoom: %s", err)
+		return fmt.Errorf("update SignalBoom: %s", err)
 	}
 	return nil
 }
 func (p *stubBomb) UpdateDelay(duration int32) error {
 	var buf bytes.Buffer
 	if err := basic.WriteInt32(duration, &buf); err != nil {
-		return fmt.Errorf("failed to serialize duration: %s", err)
+		return fmt.Errorf("serialize duration: %s", err)
 	}
 	err := p.signal.UpdateProperty(uint32(0x65), "i", buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("failed to update UpdateDelay: %s", err)
+		return fmt.Errorf("update UpdateDelay: %s", err)
 	}
 	return nil
 }
@@ -225,7 +225,7 @@ func (p *stubSpacecraft) Shoot(msg *net.Message, c *bus.Channel) error {
 	errOut := func() error {
 		meta, err := ret.MetaObject(ret.ObjectID())
 		if err != nil {
-			return fmt.Errorf("failed to get meta: %s", err)
+			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			Boolean:    true,
@@ -246,7 +246,7 @@ func (p *stubSpacecraft) Ammo(msg *net.Message, c *bus.Channel) error {
 	ammo, err := func() (BombProxy, error) {
 		ref, err := object.ReadObjectReference(buf)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get meta: %s", err)
+			return nil, fmt.Errorf("get meta: %s", err)
 		}
 		if ref.ServiceID == p.serviceID && ref.ObjectID >= (1<<31) {
 			actor := bus.NewClientObject(ref.ObjectID, c)
@@ -257,7 +257,7 @@ func (p *stubSpacecraft) Ammo(msg *net.Message, c *bus.Channel) error {
 		}
 		proxy, err := p.session.Object(ref)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get proxy: %s", err)
+			return nil, fmt.Errorf("get proxy: %s", err)
 		}
 		return MakeBomb(p.session, proxy), nil
 	}()
@@ -342,7 +342,7 @@ func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 func (c Constructor) Bomb() (BombProxy, error) {
 	proxy, err := c.session.Proxy("Bomb", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeBomb(c.session, proxy), nil
 }
@@ -356,12 +356,12 @@ func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "boom", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "boom", err)
 	}
 	ch := make(chan int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -376,7 +376,7 @@ func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 			_ = buf // discard unused variable error
 			e, err := basic.ReadInt32(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -432,12 +432,12 @@ func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "delay", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "delay", err)
 	}
 	ch := make(chan int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -452,7 +452,7 @@ func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
 			_ = buf // discard unused variable error
 			e, err := basic.ReadInt32(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e
@@ -491,7 +491,7 @@ func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 func (c Constructor) Spacecraft() (SpacecraftProxy, error) {
 	proxy, err := c.session.Proxy("Spacecraft", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeSpacecraft(c.session, proxy), nil
 }
@@ -509,16 +509,16 @@ func (p *proxySpacecraft) Shoot() (BombProxy, error) {
 	ret, err = func() (BombProxy, error) {
 		ref, err := object.ReadObjectReference(resp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get meta: %s", err)
+			return nil, fmt.Errorf("get meta: %s", err)
 		}
 		proxy, err := p.session.Object(ref)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get proxy: %s", err)
+			return nil, fmt.Errorf("get proxy: %s", err)
 		}
 		return MakeBomb(p.session, proxy), nil
 	}()
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse shoot response: %s", err)
+		return ret, fmt.Errorf("parse shoot response: %s", err)
 	}
 	return ret, nil
 }
@@ -530,7 +530,7 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 	if err = func() error {
 		meta, err := ammo.MetaObject(ammo.ObjectID())
 		if err != nil {
-			return fmt.Errorf("failed to get meta: %s", err)
+			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			Boolean:    true,
@@ -541,7 +541,7 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
-		return fmt.Errorf("failed to serialize ammo: %s", err)
+		return fmt.Errorf("serialize ammo: %s", err)
 	}
 	_, err = p.Call("ammo", buf.Bytes())
 	if err != nil {

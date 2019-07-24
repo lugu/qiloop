@@ -101,7 +101,7 @@ loop:
 			}
 			err := h.consumer(msg)
 			if err != nil {
-				log.Printf("failed to consume message: %s", err)
+				log.Printf("consume message: %s", err)
 			}
 		case <-h.cancel:
 			break loop
@@ -160,7 +160,7 @@ func dialUNIX(name string) (EndPoint, error) {
 func dialTCP(addr string) (EndPoint, error) {
 	conn, err := gonet.Dial("tcp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect %s: %s", addr, err)
+		return nil, fmt.Errorf("connect %s: %s", addr, err)
 	}
 	return ConnEndPoint(conn), nil
 }
@@ -172,7 +172,7 @@ func dialTLS(addr string) (EndPoint, error) {
 	}
 	conn, err := tls.Dial("tcp", addr, conf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect %s: %s", addr, err)
+		return nil, fmt.Errorf("connect %s: %s", addr, err)
 	}
 	return ConnEndPoint(conn), nil
 }

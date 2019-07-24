@@ -20,7 +20,7 @@ func main() {
 
 		file, err := os.Create(filename)
 		if err != nil {
-			log.Fatalf("failed to open %s: %s", filename, err)
+			log.Fatalf("open %s: %s", filename, err)
 			return
 		}
 		output = file

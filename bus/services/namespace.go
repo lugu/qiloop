@@ -30,7 +30,7 @@ func Namespace(session bus.Session, endpoints []string) (bus.Namespace, error) {
 	services := Services(session)
 	directory, err := services.ServiceDirectory()
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect ServiceDirectory: %s",
+		return nil, fmt.Errorf("connect ServiceDirectory: %s",
 			err)
 	}
 	return &remoteNamespace{

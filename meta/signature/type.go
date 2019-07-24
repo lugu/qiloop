@@ -479,14 +479,14 @@ func (l *ListType) Marshal(listID string, writer string) *Statement {
 			jen.Id("len").Call(jen.Id(listID))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
-            return fmt.Errorf("failed to write slice size: %s", err)
+            return fmt.Errorf("write slice size: %s", err)
         }`),
 		jen.For(
 			jen.Id("_, v := range "+listID),
 		).Block(
 			jen.Err().Op("=").Add(l.value.Marshal("v", writer)),
 			jen.Id(`if (err != nil) {
-                return fmt.Errorf("failed to write slice value: %s", err)
+                return fmt.Errorf("write slice value: %s", err)
             }`),
 		),
 		jen.Return(jen.Nil()),
@@ -503,14 +503,14 @@ func (l *ListType) Unmarshal(reader string) *Statement {
 	).Block(
 		jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
 		jen.If(jen.Id("err != nil")).Block(
-			jen.Return(jen.Id("b"), jen.Qual("fmt", "Errorf").Call(jen.Id(`"failed to read slice size: %s", err`)))),
+			jen.Return(jen.Id("b"), jen.Qual("fmt", "Errorf").Call(jen.Id(`"read slice size: %s", err`)))),
 		jen.Id("b").Op("=").Id("make").Call(l.TypeName(), jen.Id("size")),
 		jen.For(
 			jen.Id("i := 0; i < int(size); i++"),
 		).Block(
 			jen.Id("b[i], err =").Add(l.value.Unmarshal(reader)),
 			jen.Id(`if (err != nil) {
-                return b, fmt.Errorf("failed to read slice value: %s", err)
+                return b, fmt.Errorf("read slice value: %s", err)
             }`),
 		),
 		jen.Return(jen.Id("b"), jen.Nil()),
@@ -585,18 +585,18 @@ func (m *MapType) Marshal(mapID string, writer string) *Statement {
 			jen.Id("len").Call(jen.Id(mapID))),
 			jen.Id(writer)),
 		jen.Id(`if (err != nil) {
-            return fmt.Errorf("failed to write map size: %s", err)
+            return fmt.Errorf("write map size: %s", err)
         }`),
 		jen.For(
 			jen.Id("k, v := range "+mapID),
 		).Block(
 			jen.Err().Op("=").Add(m.key.Marshal("k", writer)),
 			jen.Id(`if (err != nil) {
-                return fmt.Errorf("failed to write map key: %s", err)
+                return fmt.Errorf("write map key: %s", err)
             }`),
 			jen.Err().Op("=").Add(m.value.Marshal("v", writer)),
 			jen.Id(`if (err != nil) {
-                return fmt.Errorf("failed to write map value: %s", err)
+                return fmt.Errorf("write map value: %s", err)
             }`),
 		),
 		jen.Return(jen.Nil()),
@@ -613,18 +613,18 @@ func (m *MapType) Unmarshal(reader string) *Statement {
 	).Block(
 		jen.Id("size, err := basic.ReadUint32").Call(jen.Id(reader)),
 		jen.If(jen.Id("err != nil")).Block(
-			jen.Return(jen.Id("m"), jen.Qual("fmt", "Errorf").Call(jen.Id(`"failed to read map size: %s", err`)))),
+			jen.Return(jen.Id("m"), jen.Qual("fmt", "Errorf").Call(jen.Id(`"read map size: %s", err`)))),
 		jen.Id("m").Op("=").Id("make").Call(m.TypeName(), jen.Id("size")),
 		jen.For(
 			jen.Id("i := 0; i < int(size); i++"),
 		).Block(
 			jen.Id("k, err :=").Add(m.key.Unmarshal(reader)),
 			jen.Id(`if (err != nil) {
-                return m, fmt.Errorf("failed to read map key: %s", err)
+                return m, fmt.Errorf("read map key: %s", err)
             }`),
 			jen.Id("v, err :=").Add(m.value.Unmarshal(reader)),
 			jen.Id(`if (err != nil) {
-                return m, fmt.Errorf("failed to read map value: %s", err)
+                return m, fmt.Errorf("read map value: %s", err)
             }`),
 			jen.Id("m[k] = v"),
 		),
@@ -731,7 +731,7 @@ func (t *TupleType) Marshal(tupleID string, writer string) *Statement {
 	for _, typ := range t.Members {
 		s1 := jen.Err().Op("=").Add(typ.Type.Marshal(tupleID+"."+strings.Title(typ.Name), writer))
 		s2 := jen.Id(`if (err != nil) {
-			return fmt.Errorf("failed to write tuple member: %s", err)
+			return fmt.Errorf("write tuple member: %s", err)
 		}`)
 		statements = append(statements, s1)
 		statements = append(statements, s2)
@@ -750,7 +750,7 @@ func (t *TupleType) Unmarshal(reader string) *Statement {
 	for _, typ := range t.Members {
 		s1 := jen.List(jen.Id("s."+strings.Title(typ.Name)), jen.Err()).Op("=").Add(typ.Type.Unmarshal(reader))
 		s2 := jen.Id(`if (err != nil) {
-			return s, fmt.Errorf("failed to read tuple member: %s", err)
+			return s, fmt.Errorf("read tuple member: %s", err)
 		}`)
 		statements = append(statements, s1)
 		statements = append(statements, s2)
@@ -854,7 +854,7 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 			jen.Id("err != nil")).Block(
 			jen.Return(jen.Id("s"),
 				jen.Qual("fmt", "Errorf").Call(
-					jen.Lit(`failed to read `+v.Title()+` field: %s`),
+					jen.Lit(`read `+v.Title()+` field: %s`),
 					jen.Id("err"),
 				)),
 		)
@@ -863,7 +863,7 @@ func (s *StructType) TypeDeclaration(file *jen.File) {
 			jen.Err().Op("!=").Nil(),
 		).Block(
 			jen.Return(jen.Qual("fmt", "Errorf").Call(
-				jen.Lit(`failed to write `+v.Title()+` field: %s`),
+				jen.Lit(`write `+v.Title()+` field: %s`),
 				jen.Id("err"),
 			)),
 		)

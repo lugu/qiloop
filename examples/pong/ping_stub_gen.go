@@ -131,12 +131,12 @@ func (p *stubPingPong) Ping(msg *net.Message, c *bus.Channel) error {
 func (p *stubPingPong) SignalPong(a string) error {
 	var buf bytes.Buffer
 	if err := basic.WriteString(a, &buf); err != nil {
-		return fmt.Errorf("failed to serialize a: %s", err)
+		return fmt.Errorf("serialize a: %s", err)
 	}
 	err := p.signal.UpdateSignal(uint32(0x66), buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("failed to update SignalPong: %s", err)
+		return fmt.Errorf("update SignalPong: %s", err)
 	}
 	return nil
 }
@@ -208,7 +208,7 @@ func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 func (c Constructor) PingPong() (PingPongProxy, error) {
 	proxy, err := c.session.Proxy("PingPong", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakePingPong(c.session, proxy), nil
 }
@@ -219,7 +219,7 @@ func (p *proxyPingPong) Hello(a string) (string, error) {
 	var ret string
 	var buf bytes.Buffer
 	if err = basic.WriteString(a, &buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize a: %s", err)
+		return ret, fmt.Errorf("serialize a: %s", err)
 	}
 	response, err := p.Call("hello", buf.Bytes())
 	if err != nil {
@@ -228,7 +228,7 @@ func (p *proxyPingPong) Hello(a string) (string, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadString(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse hello response: %s", err)
+		return ret, fmt.Errorf("parse hello response: %s", err)
 	}
 	return ret, nil
 }
@@ -238,7 +238,7 @@ func (p *proxyPingPong) Ping(a string) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteString(a, &buf); err != nil {
-		return fmt.Errorf("failed to serialize a: %s", err)
+		return fmt.Errorf("serialize a: %s", err)
 	}
 	_, err = p.Call("ping", buf.Bytes())
 	if err != nil {
@@ -256,12 +256,12 @@ func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
 
 	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to register event for %s: %s", "pong", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "pong", err)
 	}
 	ch := make(chan string)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to request property: %s", err)
+		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
 	go func() {
 		for {
@@ -276,7 +276,7 @@ func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
 			_ = buf // discard unused variable error
 			e, err := basic.ReadString(buf)
 			if err != nil {
-				log.Printf("failed to unmarshall tuple: %s", err)
+				log.Printf("unmarshall tuple: %s", err)
 				continue
 			}
 			ch <- e

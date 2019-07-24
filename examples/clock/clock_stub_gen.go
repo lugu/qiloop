@@ -151,7 +151,7 @@ func MakeTimestamp(sess bus.Session, proxy bus.Proxy) TimestampProxy {
 func (c Constructor) Timestamp() (TimestampProxy, error) {
 	proxy, err := c.session.Proxy("Timestamp", 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to contact service: %s", err)
+		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeTimestamp(c.session, proxy), nil
 }
@@ -168,7 +168,7 @@ func (p *proxyTimestamp) Nanoseconds() (int64, error) {
 	resp := bytes.NewBuffer(response)
 	ret, err = basic.ReadInt64(resp)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse nanoseconds response: %s", err)
+		return ret, fmt.Errorf("parse nanoseconds response: %s", err)
 	}
 	return ret, nil
 }

@@ -30,7 +30,7 @@ func TestProxyCall(t *testing.T) {
 		m.Header.Type = net.Reply
 		err := serviceEndpoint.Send(*m)
 		if err != nil {
-			t.Errorf("failed to send meesage: %s", err)
+			t.Errorf("send meesage: %s", err)
 		}
 	}()
 

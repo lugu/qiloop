@@ -189,7 +189,7 @@ func proxyHello(P0 string) (string, error) {
 	var buf *bytes.Buffer
 	buf = bytes.NewBuffer(make([]byte, 0))
 	if err = basic.WriteString(P0, buf); err != nil {
-		return ret, fmt.Errorf("failed to serialize P0: %s", err)
+		return ret, fmt.Errorf("serialize P0: %s", err)
 	}
 	response, err := stubHello(buf.Bytes())
 	if err != nil {
@@ -198,7 +198,7 @@ func proxyHello(P0 string) (string, error) {
 	buf = bytes.NewBuffer(response)
 	ret, err = basic.ReadString(buf)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse hello response: %s", err)
+		return ret, fmt.Errorf("parse hello response: %s", err)
 	}
 	return ret, nil
 }

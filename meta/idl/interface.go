@@ -206,7 +206,7 @@ func (s *InterfaceType) TypeName() *jen.Statement {
 func (s *InterfaceType) TypeDeclaration(f *jen.File) {
 	err := generateInterface(s, f)
 	if err != nil {
-		panic("failed to render interface " + s.Name + " " + err.Error())
+		panic("render interface " + s.Name + " " + err.Error())
 	}
 }
 
@@ -235,7 +235,7 @@ func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
 		}
 		name = fmt.Sprintf("%s_%d", s.Name, i)
 	}
-	panic("failed to register " + name)
+	panic("register " + name)
 }
 
 func (itf *InterfaceType) registerMembers(set *signature.TypeSet) error {
@@ -265,7 +265,7 @@ func (itf *InterfaceType) registerMembers(set *signature.TypeSet) error {
 	}
 	err := metaObj.ForEachMethodAndSignal(method, signal, property)
 	if err != nil {
-		return fmt.Errorf("failed to generate interface object %s: %s",
+		return fmt.Errorf("generate interface object %s: %s",
 			itf.Name, err)
 	}
 	return nil
@@ -278,7 +278,7 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	return jen.Id(`func() error {
 	    meta, err := ` + id + `.MetaObject(` + id + `.ObjectID())
 	    if err != nil {
-		return fmt.Errorf("failed to get meta: %s", err)
+		return fmt.Errorf("get meta: %s", err)
 	    }
 	    ref := object.ObjectReference {
 		    Boolean: true,
@@ -315,11 +315,11 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	return jen.Func().Params().Params(s.TypeName(), jen.Error()).Block(
 		jen.Id(`ref, err := object.ReadObjectReference(` + reader + `)
 	    if err != nil {
-		return nil, fmt.Errorf("failed to get meta: %s", err)
+		return nil, fmt.Errorf("get meta: %s", err)
 	    }` + extra + `
 	    proxy, err := p.session.Object(ref)
 	    if err != nil {
-		    return nil, fmt.Errorf("failed to get proxy: %s", err)
+		    return nil, fmt.Errorf("get proxy: %s", err)
 	    }
 	    return Make` + s.Name + `(p.session, proxy), nil`),
 	).Call()

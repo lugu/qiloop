@@ -64,7 +64,7 @@ func (s *Cache) Lookup(name string, serviceID uint32) error {
 func NewCachedSession(addr string) (*Cache, error) {
 	endpoint, err := net.DialEndPoint(addr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect: %s", err)
+		return nil, fmt.Errorf("connect: %s", err)
 	}
 	err = Authenticate(endpoint)
 	if err != nil {

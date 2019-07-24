@@ -37,15 +37,15 @@ func helpStructName(t *testing.T, input string) {
 	text := []byte(input)
 	root, _ := structName()(parsec.NewScanner(text))
 	if root == nil {
-		t.Errorf("failed to parse signature: %s", input)
+		t.Errorf("parse signature: %s", input)
 	}
 	terminal, ok := root.(*parsec.Terminal)
 	if !ok {
-		t.Errorf("failed to parse signature: %s: %+v",
+		t.Errorf("parse signature: %s: %+v",
 			input, reflect.TypeOf(root))
 	}
 	if input != terminal.GetValue() {
-		t.Errorf("failed to parse signature name: %s instead of %s",
+		t.Errorf("parse signature name: %s instead of %s",
 			terminal.GetValue(), input)
 	}
 }
