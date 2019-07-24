@@ -3,13 +3,14 @@ package logger
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"log"
+
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
-	"io"
-	"log"
 )
 
 // LogProviderImplementor interface of the service implementation

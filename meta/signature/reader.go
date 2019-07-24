@@ -18,13 +18,9 @@ type constReader int
 
 func (c constReader) Read(r io.Reader) ([]byte, error) {
 	data := make([]byte, int(c))
-	n, err := r.Read(data)
+	err := basic.ReadN(r, data, int(c))
 	if err != nil {
 		return nil, err
-	}
-	if n != int(c) {
-		return nil, fmt.Errorf("type requires %d bytes, read %d byte",
-			int(c), n)
 	}
 	return data, nil
 }

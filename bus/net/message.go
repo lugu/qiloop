@@ -59,17 +59,15 @@ func NewHeader(typ uint8, service uint32, object uint32, action uint32, id uint3
 func (h *Header) writeMagic(w io.Writer) error {
 	buf := []byte{0, 0, 0, 0}
 	binary.BigEndian.PutUint32(buf, h.Magic)
-	if bytes, err := w.Write(buf); err != nil {
-		return err
-	} else if bytes != 4 {
-		return fmt.Errorf("failed to write magic (%d instead of 4)", bytes)
+	if err := basic.WriteN(w, buf, 4); err != nil {
+		return fmt.Errorf("write magic %s", err)
 	}
 	return nil
 }
 
 func (h *Header) Write(w io.Writer) (err error) {
 	wrap := func(field string, err error) error {
-		return fmt.Errorf("failed to write message %s: %s", field, err)
+		return fmt.Errorf("write message %s: %s", field, err)
 	}
 	if err = h.writeMagic(w); err != nil {
 		return wrap("magic", err)
@@ -103,50 +101,47 @@ func (h *Header) Write(w io.Writer) (err error) {
 
 func (h *Header) readMagic(r io.Reader) error {
 	buf := []byte{0, 0, 0, 0}
-	if bytes, err := r.Read(buf); err != nil {
+	if err := basic.ReadN(r, buf, 4); err != nil {
 		return err
-	} else if bytes != 4 {
-		return fmt.Errorf("failed to read magic (%d instead of 4)", bytes)
-	} else {
-		h.Magic = binary.BigEndian.Uint32(buf)
-		return nil
 	}
+	h.Magic = binary.BigEndian.Uint32(buf)
+	return nil
 }
 
 // Read parses a message header from an io.Reader.
 func (h *Header) Read(r io.Reader) (err error) {
 	if err = h.readMagic(r); err != nil {
-		return fmt.Errorf("failed to read message magic: %s", err)
+		return fmt.Errorf("read message magic: %s", err)
 	} else if h.Magic != Magic {
 		return fmt.Errorf("invalid message magic: %x", h.Magic)
 	}
 	if h.ID, err = basic.ReadUint32(r); err != nil {
-		return fmt.Errorf("failed to read message id: %s", err)
+		return fmt.Errorf("read message id: %s", err)
 	}
 	if h.Size, err = basic.ReadUint32(r); err != nil {
-		return fmt.Errorf("failed to read message size: %s", err)
+		return fmt.Errorf("read message size: %s", err)
 	}
 	if h.Version, err = basic.ReadUint16(r); err != nil {
-		return fmt.Errorf("failed to read message version: %s", err)
+		return fmt.Errorf("read message version: %s", err)
 	} else if h.Version != Version {
 		return fmt.Errorf("invalid message version: %d", h.Version)
 	}
 	if h.Type, err = basic.ReadUint8(r); err != nil {
-		return fmt.Errorf("failed to read message type: %s", err)
+		return fmt.Errorf("read message type: %s", err)
 	} else if h.Type == Unknown || h.Type > Cancelled {
 		return fmt.Errorf("invalid message type: %d", h.Type)
 	}
 	if h.Flags, err = basic.ReadUint8(r); err != nil {
-		return fmt.Errorf("failed to read message flags: %s", err)
+		return fmt.Errorf("read message flags: %s", err)
 	}
 	if h.Service, err = basic.ReadUint32(r); err != nil {
-		return fmt.Errorf("failed to read message service: %s", err)
+		return fmt.Errorf("read message service: %s", err)
 	}
 	if h.Object, err = basic.ReadUint32(r); err != nil {
-		return fmt.Errorf("failed to read message object: %s", err)
+		return fmt.Errorf("read message object: %s", err)
 	}
 	if h.Action, err = basic.ReadUint32(r); err != nil {
-		return fmt.Errorf("failed to read message action: %s", err)
+		return fmt.Errorf("read message action: %s", err)
 	}
 	return nil
 }
@@ -158,7 +153,8 @@ type Message struct {
 }
 
 // Write marshal a message into an io.Writer. The header and the
-// payload are written in a single write operation.
+// payload are written in a single write operation. Forwards io.EOF if
+// nothing was written.
 func (m *Message) Write(w io.Writer) error {
 
 	if uint32(len(m.Payload)) != m.Header.Size {
@@ -170,7 +166,7 @@ func (m *Message) Write(w io.Writer) error {
 	buf := bytes.NewBuffer(make([]byte, 0, HeaderSize+m.Header.Size))
 
 	if err := m.Header.Write(buf); err != nil {
-		return fmt.Errorf("failed to serialize header: %s", err)
+		return fmt.Errorf("serialize header: %s", err)
 	}
 
 	if err := basic.WriteN(buf, m.Payload, int(m.Header.Size)); err != nil {
@@ -179,6 +175,9 @@ func (m *Message) Write(w io.Writer) error {
 
 	err := basic.WriteN(w, buf.Bytes(), int(m.Header.Size+HeaderSize))
 	if err != nil {
+		if err == io.EOF {
+			return err
+		}
 		return fmt.Errorf("write message: %s", err)
 	}
 	return nil
@@ -186,17 +185,21 @@ func (m *Message) Write(w io.Writer) error {
 
 // Read unmarshal a message from io.Reader. First the header is read,
 // then if correct the payload is read. The payload will not be read
-// if the header is not considerred well formatted.
+// if the header is not considerred well formatted. Forwards io.EOF if
+// nothing was read.
 func (m *Message) Read(r io.Reader) error {
 
 	// Read the complete header, then parse the fields.
 	b := make([]byte, HeaderSize)
 	if err := basic.ReadN(r, b, HeaderSize); err != nil {
+		if err == io.EOF {
+			return err
+		}
 		return fmt.Errorf("read header: %s", err)
 	}
 
 	if err := m.Header.Read(bytes.NewBuffer(b)); err != nil {
-		return fmt.Errorf("failed to read message header: %s", err)
+		return fmt.Errorf("read message header: %s", err)
 	}
 	if m.Header.Size > MaxPayloadSize {
 		return fmt.Errorf("won't process message this large: %d", m.Header.Size)

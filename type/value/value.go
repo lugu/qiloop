@@ -72,12 +72,9 @@ func (o *OpaqueValue) Write(w io.Writer) error {
 	if err := basic.WriteString(o.sig, w); err != nil {
 		return err
 	}
-	bytes, err := w.Write(o.data)
+	err := basic.WriteN(w, o.data, len(o.data))
 	if err != nil {
-		return err
-	} else if bytes != len(o.data) {
-		return fmt.Errorf("failed to write value (%d instead of %d)",
-			bytes, len(o.data))
+		return fmt.Errorf("write value: %s", err)
 	}
 	return nil
 }
@@ -493,14 +490,9 @@ func newRaw(r io.Reader) (Value, error) {
 		return nil, fmt.Errorf("raw value too large (%d bytes)", size)
 	}
 	buf := make([]byte, size)
-	count := 0
-	for count < int(size) {
-		read, err := r.Read(buf[count:])
-		count += read
-		if err != nil && count < int(size) {
-			return nil, fmt.Errorf("raw read: %d instead of %d: %s",
-				count, size, err)
-		}
+	err = basic.ReadN(r, buf, int(size))
+	if err != nil {
+		return nil, fmt.Errorf("raw read: %s", err)
 	}
 	return RawValue(buf), nil
 }
@@ -522,14 +514,9 @@ func (b RawValue) Write(w io.Writer) error {
 	if err := basic.WriteUint32(uint32(len(b)), w); err != nil {
 		return err
 	}
-	count := 0
-	for count < int(len(b)) {
-		written, err := w.Write(b[count:])
-		count += written
-		if err != nil && count < int(len(b)) {
-			return fmt.Errorf("raw write: %d instead of %d: %s",
-				count, len(b), err)
-		}
+	err := basic.WriteN(w, b, len(b))
+	if err != nil {
+		return fmt.Errorf("raw write: %s", err)
 	}
 	return nil
 }

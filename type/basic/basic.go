@@ -11,7 +11,8 @@ import (
 const MaxStringSize = uint32(10 * 1024 * 1024)
 
 // ReadN tries and retries to read length bytes from r. Reading length
-// with io.EOF is not considered an error.
+// with io.EOF is not considered an error. Forwards io.EOF if nothing
+// was read.
 func ReadN(r io.Reader, buf []byte, length int) error {
 	size := 0
 	for size < length {
@@ -21,9 +22,13 @@ func ReadN(r io.Reader, buf []byte, length int) error {
 			continue
 		} else if err == io.EOF && size == length {
 			break
+		} else if err == io.EOF && size == 0 {
+			return io.EOF
 		} else {
-			return fmt.Errorf(
-				"read %d instead of %d: %s",
+			if err == nil {
+				err = fmt.Errorf("no progress")
+			}
+			return fmt.Errorf("read %d instead of %d: %s",
 				size, length, err)
 		}
 	}
@@ -31,7 +36,8 @@ func ReadN(r io.Reader, buf []byte, length int) error {
 }
 
 // WriteN tries and retries to write length bytes into w. Writing
-// length with io.EOF is not considered an error.
+// length with io.EOF is not considered an error. Forwards io.EOF if
+// nothing was written.
 func WriteN(w io.Writer, buf []byte, length int) error {
 	size := 0
 	for size < length {
@@ -41,9 +47,13 @@ func WriteN(w io.Writer, buf []byte, length int) error {
 			continue
 		} else if err == io.EOF && size == length {
 			break
+		} else if err == io.EOF && size == 0 {
+			return io.EOF
 		} else {
-			return fmt.Errorf(
-				"write %d instead of %d: %s",
+			if err == nil {
+				err = fmt.Errorf("no progress")
+			}
+			return fmt.Errorf("write %d instead of %d: %s",
 				size, length, err)
 		}
 	}

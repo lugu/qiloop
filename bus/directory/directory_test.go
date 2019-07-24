@@ -505,9 +505,9 @@ func (b *LimitedWriter) Write(buf []byte) (int, error) {
 		b.size -= len(buf)
 		return len(buf), nil
 	}
-	old_size := b.size
+	oldSize := b.size
 	b.size = 0
-	return old_size, io.EOF
+	return oldSize, io.EOF
 }
 
 func NewLimitedWriter(size int) io.Writer {
@@ -552,7 +552,7 @@ func TestReadHeaderError(t *testing.T) {
 		r := LimitedReader(info, i)
 		_, err := dir.ReadServiceInfo(r)
 		if err == nil {
-			t.Fatalf("not expecting a success at %d", i)
+			t.Fatalf("not expecting a success at %d/%d", i, max)
 		}
 	}
 	r := LimitedReader(info, max)
