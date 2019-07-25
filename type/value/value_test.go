@@ -57,14 +57,15 @@ func helpValueWrite(t *testing.T, expected value.Value) {
 	var buf bytes.Buffer
 	err := expected.Write(&buf)
 	if err != nil {
-		t.Errorf("write: %s", err)
+		t.Fatalf("write: %s", err)
 	}
 	size := len(buf.Bytes())
 	val, err := value.NewValue(&buf)
 	if err != nil {
-		t.Errorf("read: %s", err)
+		t.Fatalf("read: %s\n%#v", err, expected)
 	} else if !reflect.DeepEqual(val, expected) {
-		t.Errorf("value constructor error")
+		t.Fatalf("error: val different from expected:\n%#v\n%#v",
+			val, expected)
 	}
 
 	err = expected.Write(NewLimitedWriter(4))
@@ -107,6 +108,55 @@ func TestValueWriteRead(t *testing.T) {
 		}),
 	}))
 	helpValueWrite(t, value.Opaque("(b)", []byte{1}))
+	helpValueWrite(t, value.Opaque("(b)<Foo,a>", []byte{1}))
+	helpValueWrite(t, value.Opaque("(bi)<Foo,a,b>", []byte{1, 1, 2, 3, 4}))
+	helpValueWrite(t, value.Opaque("(b(i)<Bar,b>)<Foo,a,b>", []byte{1, 1, 2, 3, 4}))
+	helpValueWrite(t, value.Opaque("(s)<Foo,a>", []byte{3, 0, 0, 0, 'a', 'b', 'c'}))
+	helpValueWrite(t, value.Opaque("[(s)<Foo,a>]", []byte{
+		3, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+		3, 0, 0, 0, 'a', 'b', 'c',
+		3, 0, 0, 0, 'a', 'b', 'c',
+	}))
+	helpValueWrite(t, value.Opaque("[b]", []byte{
+		0, 0, 0, 0,
+	}))
+	helpValueWrite(t, value.Opaque("[b]", []byte{
+		5, 0, 0, 0,
+		1, 1, 1, 1, 1,
+	}))
+	helpValueWrite(t, value.Opaque("{ib}", []byte{
+		0, 0, 0, 0,
+	}))
+	helpValueWrite(t, value.Opaque("{ib}", []byte{
+		1, 0, 0, 0,
+		1, 0, 0, 1, 1,
+	}))
+	helpValueWrite(t, value.Opaque("{ib}", []byte{
+		2, 0, 0, 0,
+		1, 0, 0, 1, 0,
+		2, 0, 0, 2, 1,
+	}))
+	helpValueWrite(t, value.Opaque("{ib}", []byte{
+		6, 0, 0, 0,
+		1, 0, 0, 1, 0,
+		2, 0, 0, 2, 1,
+		3, 0, 0, 2, 0,
+		4, 0, 0, 2, 1,
+		5, 0, 0, 2, 0,
+		6, 0, 0, 2, 1,
+	}))
+	helpValueWrite(t, value.Opaque("{i(s)<Foo,a>}", []byte{
+		4, 0, 0, 0,
+		1, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+		2, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+		3, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+		4, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+	}))
 }
 
 func helpParseValue(t *testing.T, b []byte, expected value.Value) {

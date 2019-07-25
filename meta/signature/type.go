@@ -569,9 +569,15 @@ func (m *MapType) TypeDeclaration(file *jen.File) {
 // Reader returns a map TypeReader.
 func (m *MapType) Reader() TypeReader {
 	return varReader{
-		reader: tupleReader(map[string]TypeReader{
-			"key":   stringReader{},
-			"value": m.value.Reader(),
+		reader: tupleReader([]memberReader{
+			memberReader{
+				name:   "key",
+				reader: m.key.Reader(),
+			},
+			memberReader{
+				name:   "value",
+				reader: m.value.Reader(),
+			},
 		}),
 	}
 }
@@ -766,9 +772,12 @@ func (t *TupleType) Unmarshal(reader string) *Statement {
 
 // Reader returns a map TypeReader.
 func (t *TupleType) Reader() TypeReader {
-	readers := make(map[string]TypeReader)
-	for _, m := range t.Members {
-		readers[m.Name] = m.Type.Reader()
+	readers := make([]memberReader, len(t.Members))
+	for i, m := range t.Members {
+		readers[i] = memberReader{
+			name:   m.Name,
+			reader: m.Type.Reader(),
+		}
 	}
 	return tupleReader(readers)
 }
@@ -900,9 +909,12 @@ func (s *StructType) Unmarshal(reader string) *Statement {
 
 // Reader returns a struct TypeReader.
 func (s *StructType) Reader() TypeReader {
-	readers := make(map[string]TypeReader)
-	for _, m := range s.Members {
-		readers[m.Name] = m.Type.Reader()
+	readers := make([]memberReader, len(s.Members))
+	for i, m := range s.Members {
+		readers[i] = memberReader{
+			name:   m.Name,
+			reader: m.Type.Reader(),
+		}
 	}
 	return tupleReader(readers)
 }

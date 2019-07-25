@@ -99,11 +99,18 @@ func (v varReader) Read(r io.Reader) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-type tupleReader map[string]TypeReader
+type memberReader struct {
+	name   string
+	reader TypeReader
+}
+
+type tupleReader []memberReader
 
 func (v tupleReader) Read(r io.Reader) ([]byte, error) {
 	var buf bytes.Buffer
-	for name, reader := range v {
+	for _, member := range v {
+		name := member.name
+		reader := member.reader
 		data, err := reader.Read(r)
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %s",
