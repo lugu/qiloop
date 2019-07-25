@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"reflect"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
@@ -15,9 +17,8 @@ import (
 )
 
 var (
-	traces = make([]chan bus.EventTrace, 0)
-	infos  = make([]services.ServiceInfo, 0)
-	metas  = make([]object.MetaObject, 0)
+	infos = make([]services.ServiceInfo, 0)
+	metas = make([]object.MetaObject, 0)
 )
 
 func getObject(sess bus.Session, info services.ServiceInfo) bus.ObjectProxy {
@@ -28,38 +29,36 @@ func getObject(sess bus.Session, info services.ServiceInfo) bus.ObjectProxy {
 	return bus.MakeObject(proxy)
 }
 
-func print(chosen int, events []bus.EventTrace) {
-	info := infos[chosen]
-	meta := metas[chosen]
+func print(event bus.EventTrace, info *services.ServiceInfo,
+	meta *object.MetaObject) {
 
-	for _, event := range events {
-		var typ string = "unknown"
-		switch event.Kind {
-		case int32(net.Call):
-			typ = "call"
-		case int32(net.Reply):
-			typ = "reply"
-		}
-		var action = "unknown"
-		action, err := meta.ActionName(event.SlotId)
-		if err != nil {
-			action = "unknown"
-		}
-		var size int = -1
-		var buf bytes.Buffer
-		err = event.Arguments.Write(&buf)
-		if err == nil {
-			// read the signature back
-			_, err := basic.ReadString(&buf)
-			if err == nil {
-				data := buf.Bytes()
-				size = len(data)
-			}
-		}
-
-		fmt.Printf("[%s] %s.%s (%d bytes): %#v\n", typ, info.Name,
-			action, size, event.Arguments)
+	var typ string = "unknown"
+	switch event.Kind {
+	case int32(net.Call):
+		typ = "call "
+	case int32(net.Reply):
+		typ = "reply"
 	}
+	var action = "unknown"
+	action, err := meta.ActionName(event.SlotId)
+	if err != nil {
+		action = "unknown"
+	}
+	var size int = -1
+	var sig = "unknown"
+	var data = []byte{}
+	var buf bytes.Buffer
+	err = event.Arguments.Write(&buf)
+	if err == nil {
+		sig, err = basic.ReadString(&buf)
+		if err == nil {
+			data = buf.Bytes()
+			size = len(data)
+		}
+	}
+
+	fmt.Printf("[%s %4d bytes] %s.%s: %s: %v\n", typ, size, info.Name,
+		action, sig, data)
 }
 
 func trace(serverURL, serviceName string) {
@@ -81,60 +80,49 @@ func trace(serverURL, serviceName string) {
 		panic(err)
 	}
 
+	stop := make(chan struct{})
+
 	for _, info := range serviceList {
 
 		if serviceName != "" && serviceName != info.Name {
 			continue
 		}
 
-		obj := getObject(sess, info)
-		err = obj.EnableTrace(true)
-		if err != nil {
-			log.Fatalf("Failed to start traces: %s.", err)
-		}
-		defer obj.EnableTrace(false)
-
-		cancel, trace, err := obj.SubscribeTraceObject()
-		if err != nil {
-			log.Fatalf("Failed to stop stats: %s.", err)
-		}
-		defer cancel()
-
-		meta, err := obj.MetaObject(1)
-		if err != nil {
-			log.Fatalf("%s: MetaObject: %s.", info.Name, err)
-		}
-
-		metas = append(metas, meta)
-		traces = append(traces, trace)
-		infos = append(infos, info)
-	}
-
-	cases := make([]reflect.SelectCase, len(traces))
-	for i, trace := range traces {
-		cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(trace)}
-	}
-	for {
-		chosen, _, ok := reflect.Select(cases)
-		if !ok {
-			return
-		}
-		ch := traces[chosen]
-		events := make([]bus.EventTrace, 0)
-	loop:
-		for {
-			select {
-
-			case event := <-ch:
-				events = append(events, event)
-			default:
-				if len(events) == 0 {
-					log.Printf("missing events (%d)", chosen)
-					break loop
-				}
-				go print(chosen, events)
-				break loop
+		go func(info services.ServiceInfo) {
+			obj := getObject(sess, info)
+			err = obj.EnableTrace(true)
+			if err != nil {
+				log.Fatalf("Failed to start traces: %s.", err)
 			}
-		}
+			defer obj.EnableTrace(false)
+
+			cancel, trace, err := obj.SubscribeTraceObject()
+			if err != nil {
+				log.Fatalf("Failed to stop stats: %s.", err)
+			}
+			defer cancel()
+
+			meta, err := obj.MetaObject(1)
+			if err != nil {
+				log.Fatalf("%s: MetaObject: %s.", info.Name, err)
+			}
+
+			for {
+				select {
+				case event, ok := <-trace:
+					if !ok {
+						return
+					}
+					print(event, &info, &meta)
+				case <-stop:
+					return
+				}
+			}
+		}(info)
 	}
+	signalChannel := make(chan os.Signal, 2)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
+
+	<-signalChannel
+	close(stop)
 }
