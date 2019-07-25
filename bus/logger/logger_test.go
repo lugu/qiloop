@@ -221,7 +221,7 @@ func TestLogProvider(t *testing.T) {
 	var messageCount int
 	var wait sync.WaitGroup
 
-	wait.Add(1)
+	wait.Add(4)
 	go func() {
 		for msg := range messages {
 			if msg.Level.Level == LogLevelNone.Level {
@@ -230,6 +230,7 @@ func TestLogProvider(t *testing.T) {
 				t.Errorf("default level not respected: %#v", msg)
 			}
 			messageCount++
+			wait.Done()
 		}
 		wait.Done()
 	}()
@@ -242,6 +243,8 @@ func TestLogProvider(t *testing.T) {
 	logger2.Debug("pif")
 	logger2.Debug("pof")
 
+	wait.Wait()
+	wait.Add(1)
 	cancel()
 	wait.Wait()
 
