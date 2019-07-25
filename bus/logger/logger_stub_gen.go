@@ -142,11 +142,11 @@ func (p *stubLogProvider) ClearAndSet(msg *net.Message, c *bus.Channel) error {
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(buf)
 			if err != nil {
-				return m, fmt.Errorf("read map key: %s", err)
+				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 			}
 			v, err := readLogLevel(buf)
 			if err != nil {
-				return m, fmt.Errorf("read map value: %s", err)
+				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 			}
 			m[k] = v
 		}
@@ -295,11 +295,11 @@ func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 			for i := 0; i < int(size); i++ {
 				k, err := basic.ReadString(buf)
 				if err != nil {
-					return m, fmt.Errorf("read map key: %s", err)
+					return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 				}
 				v, err := readLogLevel(buf)
 				if err != nil {
-					return m, fmt.Errorf("read map value: %s", err)
+					return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 				}
 				m[k] = v
 			}
@@ -1152,11 +1152,11 @@ func (p *proxyLogListener) GetFilters() (ret map[string]LogLevel, err error) {
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(&buf)
 			if err != nil {
-				return m, fmt.Errorf("read map key: %s", err)
+				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 			}
 			v, err := readLogLevel(&buf)
 			if err != nil {
-				return m, fmt.Errorf("read map value: %s", err)
+				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 			}
 			m[k] = v
 		}
@@ -1229,11 +1229,11 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]LogLevel,
 				for i := 0; i < int(size); i++ {
 					k, err := basic.ReadString(buf)
 					if err != nil {
-						return m, fmt.Errorf("read map key: %s", err)
+						return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 					}
 					v, err := readLogLevel(buf)
 					if err != nil {
-						return m, fmt.Errorf("read map value: %s", err)
+						return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 					}
 					m[k] = v
 				}

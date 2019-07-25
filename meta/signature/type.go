@@ -620,11 +620,11 @@ func (m *MapType) Unmarshal(reader string) *Statement {
 		).Block(
 			jen.Id("k, err :=").Add(m.key.Unmarshal(reader)),
 			jen.Id(`if (err != nil) {
-                return m, fmt.Errorf("read map key: %s", err)
+                return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
             }`),
 			jen.Id("v, err :=").Add(m.value.Unmarshal(reader)),
 			jen.Id(`if (err != nil) {
-                return m, fmt.Errorf("read map value: %s", err)
+                return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
             }`),
 			jen.Id("m[k] = v"),
 		),

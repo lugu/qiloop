@@ -274,10 +274,19 @@ func ReadString(r io.Reader) (string, error) {
 // WriteString writes a string: first the size of the string is
 // written using WriteUint32, then the bytes of the string.
 func WriteString(s string, w io.Writer) error {
-	if err := WriteUint32(uint32(len(s)), w); err != nil {
+	data := []byte(s)
+	size := len(data)
+	if size > int(MaxStringSize) {
+		return fmt.Errorf("invalid string size: %d", size)
+	}
+	err := WriteUint32(uint32(size), w)
+	if err != nil {
 		return fmt.Errorf("write string size: %s", err)
 	}
-	err := WriteN(w, []byte(s), len(s))
+	if size == 0 {
+		return nil
+	}
+	err = WriteN(w, data, size)
 	if err != nil {
 		return err
 	}

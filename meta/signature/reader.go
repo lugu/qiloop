@@ -90,13 +90,10 @@ func (v varReader) Read(r io.Reader) ([]byte, error) {
 			return nil, fmt.Errorf("read %d/%d: %s",
 				i+1, size, err)
 		}
-		n, err := buf.Write(data)
+		err = basic.WriteN(&buf, data, len(data))
 		if err != nil {
-			return nil, fmt.Errorf("copy %d/%d: %s",
+			return nil, fmt.Errorf("read %d/%d: %s",
 				i, size, err)
-		}
-		if n != len(data) {
-			return nil, fmt.Errorf("copy %d/%d", i, size)
 		}
 	}
 	return buf.Bytes(), nil
@@ -112,14 +109,10 @@ func (v tupleReader) Read(r io.Reader) ([]byte, error) {
 			return nil, fmt.Errorf("read %s: %s",
 				name, err)
 		}
-		n, err := buf.Write(data)
+		basic.WriteN(&buf, data, len(data))
 		if err != nil {
 			return nil, fmt.Errorf("write %s: %s",
 				name, err)
-		}
-		if n != len(data) {
-			return nil, fmt.Errorf("write %d/%d",
-				n, len(data))
 		}
 	}
 	return buf.Bytes(), nil

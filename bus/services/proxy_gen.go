@@ -869,11 +869,11 @@ func (p *proxyLogListener) GetFilters() (ret map[string]int32, err error) {
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadString(&buf)
 			if err != nil {
-				return m, fmt.Errorf("read map key: %s", err)
+				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 			}
 			v, err := basic.ReadInt32(&buf)
 			if err != nil {
-				return m, fmt.Errorf("read map value: %s", err)
+				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 			}
 			m[k] = v
 		}
@@ -946,11 +946,11 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 				for i := 0; i < int(size); i++ {
 					k, err := basic.ReadString(buf)
 					if err != nil {
-						return m, fmt.Errorf("read map key: %s", err)
+						return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 					}
 					v, err := basic.ReadInt32(buf)
 					if err != nil {
-						return m, fmt.Errorf("read map value: %s", err)
+						return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 					}
 					m[k] = v
 				}

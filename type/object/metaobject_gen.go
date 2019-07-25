@@ -212,11 +212,11 @@ func readMetaObject(r io.Reader) (s MetaObject, err error) {
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(r)
 			if err != nil {
-				return m, fmt.Errorf("read map key: %s", err)
+				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 			}
 			v, err := readMetaMethod(r)
 			if err != nil {
-				return m, fmt.Errorf("read map value: %s", err)
+				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 			}
 			m[k] = v
 		}
@@ -233,11 +233,11 @@ func readMetaObject(r io.Reader) (s MetaObject, err error) {
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(r)
 			if err != nil {
-				return m, fmt.Errorf("read map key: %s", err)
+				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 			}
 			v, err := readMetaSignal(r)
 			if err != nil {
-				return m, fmt.Errorf("read map value: %s", err)
+				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 			}
 			m[k] = v
 		}
@@ -254,11 +254,11 @@ func readMetaObject(r io.Reader) (s MetaObject, err error) {
 		for i := 0; i < int(size); i++ {
 			k, err := basic.ReadUint32(r)
 			if err != nil {
-				return m, fmt.Errorf("read map key: %s", err)
+				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
 			}
 			v, err := readMetaProperty(r)
 			if err != nil {
-				return m, fmt.Errorf("read map value: %s", err)
+				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
 			}
 			m[k] = v
 		}
