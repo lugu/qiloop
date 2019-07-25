@@ -14,12 +14,52 @@ import (
 	"github.com/lugu/qiloop/type/object"
 )
 
+var (
+	traces = make([]chan bus.EventTrace, 0)
+	infos  = make([]services.ServiceInfo, 0)
+	metas  = make([]object.MetaObject, 0)
+)
+
 func getObject(sess bus.Session, info services.ServiceInfo) bus.ObjectProxy {
 	proxy, err := sess.Proxy(info.Name, 1)
 	if err != nil {
 		log.Fatalf("connect service (%s): %s", info.Name, err)
 	}
 	return bus.MakeObject(proxy)
+}
+
+func print(chosen int, events []bus.EventTrace) {
+	info := infos[chosen]
+	meta := metas[chosen]
+
+	for _, event := range events {
+		var typ string = "unknown"
+		switch event.Kind {
+		case int32(net.Call):
+			typ = "call"
+		case int32(net.Reply):
+			typ = "reply"
+		}
+		var action = "unknown"
+		action, err := meta.ActionName(event.SlotId)
+		if err != nil {
+			action = "unknown"
+		}
+		var size int = -1
+		var buf bytes.Buffer
+		err = event.Arguments.Write(&buf)
+		if err == nil {
+			// read the signature back
+			_, err := basic.ReadString(&buf)
+			if err == nil {
+				data := buf.Bytes()
+				size = len(data)
+			}
+		}
+
+		fmt.Printf("[%s] %s.%s (%d bytes): %#v\n", typ, info.Name,
+			action, size, event.Arguments)
+	}
 }
 
 func trace(serverURL, serviceName string) {
@@ -41,10 +81,6 @@ func trace(serverURL, serviceName string) {
 		panic(err)
 	}
 
-	traces := make([]chan bus.EventTrace, 0, len(serviceList))
-	infos := make([]services.ServiceInfo, 0, len(serviceList))
-	metas := make([]object.MetaObject, 0, len(serviceList))
-
 	for _, info := range serviceList {
 
 		if serviceName != "" && serviceName != info.Name {
@@ -64,13 +100,14 @@ func trace(serverURL, serviceName string) {
 		}
 		defer cancel()
 
-		traces = append(traces, trace)
-		infos = append(infos, info)
 		meta, err := obj.MetaObject(1)
 		if err != nil {
 			log.Fatalf("%s: MetaObject: %s.", info.Name, err)
 		}
+
 		metas = append(metas, meta)
+		traces = append(traces, trace)
+		infos = append(infos, info)
 	}
 
 	cases := make([]reflect.SelectCase, len(traces))
@@ -83,43 +120,19 @@ func trace(serverURL, serviceName string) {
 			return
 		}
 		ch := traces[chosen]
-		info := infos[chosen]
-		meta := metas[chosen]
-
+		events := make([]bus.EventTrace, 0)
 	loop:
 		for {
 			select {
 
 			case event := <-ch:
-				var typ string = "unknown"
-				switch event.Kind {
-				case int32(net.Call):
-					typ = "call"
-				case int32(net.Reply):
-					typ = "reply"
-				}
-				var action = "unknown"
-				if err == nil {
-					action, err = meta.ActionName(event.SlotId)
-					if err != nil {
-						action = "unknown"
-					}
-				}
-				var size int = -1
-				var buf bytes.Buffer
-				err = event.Arguments.Write(&buf)
-				if err == nil {
-					// read the signature back
-					_, err := basic.ReadString(&buf)
-					if err == nil {
-						data := buf.Bytes()
-						size = len(data)
-					}
-				}
-
-				fmt.Printf("[%s] %s.%s (%d bytes): %#v\n", typ, info.Name,
-					action, size, event.Arguments)
+				events = append(events, event)
 			default:
+				if len(events) == 0 {
+					log.Printf("missing events (%d)", chosen)
+					break loop
+				}
+				go print(chosen, events)
 				break loop
 			}
 		}
