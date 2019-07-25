@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// ActionName returns the name of the method, signal or property.
 func (m *MetaObject) ActionName(id uint32) (string, error) {
 	for k, method := range m.Methods {
 		if k == id {
@@ -34,7 +35,7 @@ func (m *MetaObject) MethodID(name string) (uint32, error) {
 			return k, nil
 		}
 	}
-	return 0, fmt.Errorf("find method %s", name)
+	return 0, fmt.Errorf("missing method %s", name)
 }
 
 // SignalID returns the ID of a signal

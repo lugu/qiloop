@@ -6,7 +6,7 @@ import (
 
 // AuthenticateActionID represents the action id of the authentication
 // process.
-const AuthenticateActionID = 8
+const AuthenticateActionID = uint32(8)
 
 // MetaService0 represents the service id "0" used during
 // authentication. It is a special service with only one method.
@@ -25,7 +25,8 @@ var MetaService0 MetaObject = MetaObject{
 			},
 		},
 	},
-	Signals: make(map[uint32]MetaSignal),
+	Signals:    make(map[uint32]MetaSignal),
+	Properties: make(map[uint32]MetaProperty),
 }
 
 // ObjectMetaObject represents the generic actions all services (and
@@ -125,4 +126,5 @@ var ObjectMetaObject MetaObject = MetaObject{
 			Signature: "((IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>)",
 		},
 	},
+	Properties: make(map[uint32]MetaProperty),
 }

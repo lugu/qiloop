@@ -1,9 +1,10 @@
 package object_test
 
 import (
-	"github.com/lugu/qiloop/type/object"
 	"strings"
 	"testing"
+
+	"github.com/lugu/qiloop/type/object"
 )
 
 func TestMetaObjectDecorator(t *testing.T) {
@@ -18,6 +19,14 @@ func TestMetaObjectDecorator(t *testing.T) {
 	_, err = service0.MethodID("unknown")
 	if err == nil {
 		panic("shall fail")
+	}
+
+	name, err := service0.ActionName(object.AuthenticateActionID)
+	if err != nil {
+		panic(err)
+	}
+	if name != "authenticate" {
+		panic("invalid name " + name)
 	}
 
 	obj := object.FullMetaObject(*service0)
