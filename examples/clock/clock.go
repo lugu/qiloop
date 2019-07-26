@@ -52,15 +52,33 @@ func SynchronizedTimestamper(session bus.Session) (Timestamper, error) {
 			fmt.Errorf("reference timestamp: %s", err)
 	}
 
-	delta1 := time.Since(ref)
-	ts, err := timestampProxy.Nanoseconds()
-	delta2 := time.Since(ref)
+	var offset time.Duration
+	var outlierMax time.Duration
+	var outlierMin time.Duration
 
-	if err != nil {
-		return Timestamper(ref),
-			fmt.Errorf("reference timestamp: %s", err)
+	for i := 0; i < 10; i++ {
+		delta1 := time.Since(ref)
+		ts, err := timestampProxy.Nanoseconds()
+		delta2 := time.Since(ref)
+
+		if err != nil {
+			return Timestamper(ref),
+				fmt.Errorf("reference timestamp: %s", err)
+		}
+		delta := ((delta1 + delta2) / 2) - time.Duration(ts)
+
+		if outlierMin == 0 && outlierMax == 0 {
+			outlierMin = delta
+			outlierMax = delta
+		} else if delta < outlierMin {
+			outlierMin = delta
+		} else if delta > outlierMax {
+			outlierMax = delta
+		}
+		offset += delta
 	}
+	offset = offset - outlierMax - outlierMin
+	offset = offset / 8
 
-	offset := ((delta1 + delta2) / 2) - time.Duration(ts)
 	return Timestamper(ref.Add(offset)), nil
 }
