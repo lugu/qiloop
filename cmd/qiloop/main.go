@@ -12,19 +12,19 @@ import (
 var version = "0.6"
 
 var (
-	infoCommand      *flaggy.Subcommand
-	logCommand       *flaggy.Subcommand
-	scanCommand      *flaggy.Subcommand
-	proxyCommand     *flaggy.Subcommand
-	stubCommand      *flaggy.Subcommand
-	directoryCommand *flaggy.Subcommand
-	traceCommand     *flaggy.Subcommand
+	infoCommand   *flaggy.Subcommand
+	logCommand    *flaggy.Subcommand
+	scanCommand   *flaggy.Subcommand
+	proxyCommand  *flaggy.Subcommand
+	stubCommand   *flaggy.Subcommand
+	serverCommand *flaggy.Subcommand
+	traceCommand  *flaggy.Subcommand
 
-	serverURL   string = "tcp://localhost:9559"
-	serviceName string = ""
-	inputFile   string = ""
-	outputFile  string = "-"
-	packageName string = ""
+	serverURL   = "tcp://localhost:9559"
+	serviceName = ""
+	inputFile   = ""
+	outputFile  = "-"
+	packageName = ""
 )
 
 func init() {
@@ -67,11 +67,11 @@ func init() {
 	stubCommand.String(&outputFile, "o", "output", "server stub file (output)")
 	stubCommand.String(&packageName, "p", "path", "optional package name")
 
-	directoryCommand = flaggy.NewSubcommand("directory")
-	directoryCommand.Description =
-		"Starts a service directory and listen to incomming connection"
-	directoryCommand.String(&serverURL, "r", "qi-url",
-		"server URL (default: tcp://localhost:9559)")
+	serverCommand = flaggy.NewSubcommand("server")
+	serverCommand.Description =
+		"Starts a server running service directory and log manager"
+	serverCommand.String(&serverURL, "l", "qi-url",
+		"Listening URL (default: tcp://localhost:9559)")
 
 	traceCommand = flaggy.NewSubcommand("trace")
 	traceCommand.Description = "Connect a server and traces services"
@@ -84,7 +84,7 @@ func init() {
 	flaggy.AttachSubcommand(scanCommand, 1)
 	flaggy.AttachSubcommand(proxyCommand, 1)
 	flaggy.AttachSubcommand(stubCommand, 1)
-	flaggy.AttachSubcommand(directoryCommand, 1)
+	flaggy.AttachSubcommand(serverCommand, 1)
 	flaggy.AttachSubcommand(traceCommand, 1)
 
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
@@ -103,8 +103,8 @@ func main() {
 		stub(inputFile, outputFile, packageName)
 	} else if logCommand.Used {
 		logger(serverURL)
-	} else if directoryCommand.Used {
-		directory(serverURL)
+	} else if serverCommand.Used {
+		server(serverURL)
 	} else if traceCommand.Used {
 		trace(serverURL, serviceName)
 	} else {
