@@ -152,8 +152,8 @@ type ObjectImplementor interface {
 	// during the Activate call.
 	Activate(activation Activation, helper ObjectSignalHelper) error
 	OnTerminate()
-	RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error)
-	UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error
+	RegisterEvent(msg *net.Message, c Channel) error
+	UnregisterEvent(msg *net.Message, c Channel) error
 	MetaObject(objectID uint32) (object.MetaObject, error)
 	Terminate(objectID uint32) error
 	Property(name value.Value) (value.Value, error)
@@ -216,9 +216,9 @@ func (p *stubObject) Receive(msg *net.Message, from Channel) error {
 	from = p.impl.Tracer(msg, from)
 	switch msg.Header.Action {
 	case uint32(0x0):
-		return p.signal.RegisterEvent(msg, from)
+		return p.RegisterEvent(msg, from)
 	case uint32(0x1):
-		return p.signal.UnregisterEvent(msg, from)
+		return p.UnregisterEvent(msg, from)
 	case uint32(0x2):
 		return p.MetaObject(msg, from)
 	case uint32(0x3):
@@ -253,61 +253,13 @@ func (p *stubObject) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
+
 func (p *stubObject) RegisterEvent(msg *net.Message, c Channel) error {
-	buf := bytes.NewBuffer(msg.Payload)
-	objectID, err := basic.ReadUint32(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
-	}
-	actionID, err := basic.ReadUint32(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read actionID: %s", err))
-	}
-	handler, err := basic.ReadUint64(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read handler: %s", err))
-	}
-	ret, callErr := p.impl.RegisterEvent(objectID, actionID, handler)
-
-	// do not respond to post messages.
-	if msg.Header.Type == net.Post {
-		return nil
-	}
-	if callErr != nil {
-		return c.SendError(msg, callErr)
-	}
-	var out bytes.Buffer
-	errOut := basic.WriteUint64(ret, &out)
-	if errOut != nil {
-		return c.SendError(msg, fmt.Errorf("cannot write response: %s", errOut))
-	}
-	return c.SendReply(msg, out.Bytes())
+	return p.impl.RegisterEvent(msg, c)
 }
-func (p *stubObject) UnregisterEvent(msg *net.Message, c Channel) error {
-	buf := bytes.NewBuffer(msg.Payload)
-	objectID, err := basic.ReadUint32(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read objectID: %s", err))
-	}
-	actionID, err := basic.ReadUint32(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read actionID: %s", err))
-	}
-	handler, err := basic.ReadUint64(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read handler: %s", err))
-	}
-	callErr := p.impl.UnregisterEvent(objectID, actionID, handler)
 
-	// do not respond to post messages.
-	if msg.Header.Type == net.Post {
-		return nil
-	}
-	if callErr != nil {
-		return c.SendError(msg, callErr)
-	}
-	var out bytes.Buffer
-	return c.SendReply(msg, out.Bytes())
+func (p *stubObject) UnregisterEvent(msg *net.Message, c Channel) error {
+	return p.impl.UnregisterEvent(msg, c)
 }
 func (p *stubObject) MetaObject(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)

@@ -86,6 +86,13 @@ func generateStub(f *jen.File, itf *idl.InterfaceType) error {
 func generateMethodDef(itf *idl.InterfaceType, set *signature.TypeSet,
 	method idl.Method, methodName string) (jen.Code, error) {
 
+	// RegisterEvent and UnregisterEvent are implemented in basicObject.
+	if methodName == "RegisterEvent" && method.ID == 0x0 {
+		return jen.Id(`RegisterEvent(msg *net.Message, c Channel) error`), nil
+	} else if methodName == "UnregisterEvent" && method.ID == 0x1 {
+		return jen.Id(`UnregisterEvent(msg *net.Message, c Channel) error`), nil
+	}
+
 	tuple := method.Tuple()
 	ret := method.Return
 	// resolve MetaObject references for Generic objet.
@@ -177,6 +184,21 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 
 func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 	method idl.Method, methodName string) error {
+
+	// RegisterEvent and UnregisterEvent are implemented in basicObject.
+	if methodName == "RegisterEvent" && method.ID == 0x0 {
+		file.Id(`
+ func (p *stubObject) RegisterEvent(msg *net.Message, c Channel) error {
+       return p.impl.RegisterEvent(msg, c)
+ }`)
+		return nil
+	} else if methodName == "UnregisterEvent" && method.ID == 0x1 {
+		file.Id(`
+ func (p *stubObject) UnregisterEvent(msg *net.Message, c Channel) error {
+       return p.impl.UnregisterEvent(msg, c)
+ }`)
+		return nil
+	}
 
 	body, err := methodBodyBlock(itf, method, methodName)
 	if err != nil {
@@ -478,24 +500,10 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 		code := jen.Case(jen.Lit(method.ID))
 		writing = append(writing, code)
 
-		// RegisterEvent and UnregisterEvent are implemented
-		// in basicObject.
-		if methodName == "RegisterEvent" && m.Uid == 0x0 {
-			code = jen.Return().Id("p").Dot("signal").Dot(methodName).Call(
-				jen.Id("msg"),
-				jen.Id("from"),
-			)
-		} else if methodName == "UnregisterEvent" && m.Uid == 0x1 {
-			code = jen.Return().Id("p").Dot("signal").Dot(methodName).Call(
-				jen.Id("msg"),
-				jen.Id("from"),
-			)
-		} else {
-			code = jen.Return().Id("p").Dot(methodName).Call(
-				jen.Id("msg"),
-				jen.Id("from"),
-			)
-		}
+		code = jen.Return().Id("p").Dot(methodName).Call(
+			jen.Id("msg"),
+			jen.Id("from"),
+		)
 		writing = append(writing, code)
 		return nil
 	}

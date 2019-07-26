@@ -97,14 +97,22 @@ func (o *objectImpl) OnTerminate() {
 	o.signalHandler.OnTerminate()
 }
 
-func (o *objectImpl) RegisterEvent(objectID uint32, actionID uint32,
-	handler uint64) (uint64, error) {
-	return 0, fmt.Errorf("Not implemented: see BasicObject")
+func (o *objectImpl) RegisterEvent(msg *net.Message, from Channel) error {
+
+	buf := bytes.NewBuffer(msg.Payload)
+	_, err := basic.ReadUint32(buf)
+	if err == nil {
+		signalID, err := basic.ReadUint32(buf)
+		if err == nil && signalID == 0x56 {
+			o.EnableTrace(true)
+		}
+	}
+
+	return o.signalHandler.RegisterEvent(msg, from)
 }
 
-func (o *objectImpl) UnregisterEvent(objectID uint32, actionID uint32,
-	handler uint64) error {
-	return fmt.Errorf("Not implemented: see BasicObject")
+func (o *objectImpl) UnregisterEvent(msg *net.Message, from Channel) error {
+	return o.signalHandler.UnregisterEvent(msg, from)
 }
 
 func (o *objectImpl) MetaObject(objectID uint32) (object.MetaObject, error) {

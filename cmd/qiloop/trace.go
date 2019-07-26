@@ -62,8 +62,8 @@ func print(event bus.EventTrace, info *services.ServiceInfo,
 		}
 	}
 
-	fmt.Printf("[%s %4d bytes] %s.%s: %s: %v\n", typ, size, info.Name,
-		action, sig, data[:10])
+	fmt.Printf("[%s %4d bytes] %s.%s: %s\n", typ, size, info.Name,
+		action, sig)
 }
 
 func trace(serverURL, serviceName string) {
@@ -95,6 +95,7 @@ func trace(serverURL, serviceName string) {
 
 		go func(info services.ServiceInfo) {
 			obj := getObject(sess, info)
+
 			err = obj.EnableTrace(true)
 			if err != nil {
 				log.Fatalf("Failed to start traces: %s.", err)
