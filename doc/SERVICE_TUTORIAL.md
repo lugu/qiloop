@@ -144,9 +144,9 @@ helper function for this.
         }
 
 In order to test it, we need a running instance of QiMessaging. We can
-create one with the `qiloop directory` command:
+create one with the `qiloop server` command:
 
-        $ qiloop directory
+        $ qiloop server
         2019/07/15 22:57:09 Listening at tcp://localhost:9559
 
 Now we can start the timestamp service with:
@@ -214,3 +214,6 @@ and synchronized timestamps.
 
 That's it. We have seen how to implement a QiMessaging service and
 acces it.
+
+The complete code can be found
+[here](https://github.com/lugu/qiloop/blob/master/examples/clock).

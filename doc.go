@@ -4,16 +4,17 @@
 // Introduction
 //
 // QiMessaging is a software bus which exposes services. Services have
-// methods (to be called), signals (to be watched). A naming service (the
-// service directory) is used to discover and register services. For
-// a detailed description of the protocol, please visit
+// methods (to be called), signals (to be watched) and properties
+// (signals with state). A naming service (the service directory) is
+// used to discover and register services. For a detailed description
+// of the protocol, please visit
 // https://github.com/lugu/qiloop/blob/master/doc/NOTES.md
 //
 // To connect to a service, a Session object is required: it represents
 // the connection to the service directory. Several transport
 // protocols are supported (currently TCP, TLS and UNIX socket).
 //
-// With a session, on can request a proxy object representing a remote
+// With a session, one can request a proxy object representing a remote
 // service. The proxy object contains the helper methods needed to make
 // the remote calls and to handle the incomming signal notifications.
 //

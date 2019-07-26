@@ -1,40 +1,98 @@
-# qiloop
+![qiloop](https://github.com/lugu/qiloop/blob/master/doc/logo.jpg)
 
 [![Build Status](https://travis-ci.org/lugu/qiloop.svg?branch=master)](https://travis-ci.org/lugu/qiloop)
-[![Documentation](https://godoc.org/github.com/lugu/qiloop?status.svg)](http://godoc.org/github.com/lugu/qiloop)
-[![license](https://img.shields.io/github/license/lugu/qiloop.svg?maxAge=2592000)](https://github.com/lugu/qiloop/blob/master/LICENSE)
-[![stability-unstable](https://img.shields.io/badge/stability-unstable-yellow.svg)](https://github.com/emersion/stability-badges#unstable)
-[![Release](https://img.shields.io/github/tag/lugu/qiloop.svg)](https://github.com/lugu/qiloop/releases)
-
 [![CircleCI](https://circleci.com/gh/lugu/qiloop/tree/master.svg?style=shield)](https://circleci.com/gh/lugu/qiloop/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lugu/qiloop)](https://goreportcard.com/report/github.com/lugu/qiloop)
 [![codecov](https://codecov.io/gh/lugu/qiloop/branch/master/graph/badge.svg)](https://codecov.io/gh/lugu/qiloop)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/b192466a26dbced44274/test_coverage)](https://codeclimate.com/github/lugu/qiloop/test_coverage)
 [![Maintainability](https://api.codeclimate.com/v1/badges/b192466a26dbced44274/maintainability)](https://codeclimate.com/github/lugu/qiloop/maintainability)
+[![Documentation](https://godoc.org/github.com/lugu/qiloop?status.svg)](http://godoc.org/github.com/lugu/qiloop)
+[![license](https://img.shields.io/github/license/lugu/qiloop.svg?maxAge=2592000)](https://github.com/lugu/qiloop/blob/master/LICENSE)
+[![stability-unstable](https://img.shields.io/badge/stability-unstable-yellow.svg)](https://github.com/emersion/stability-badges#unstable)
+[![Release](https://img.shields.io/github/tag/lugu/qiloop.svg)](https://github.com/lugu/qiloop/releases)
 
-**`qiloop`** is an implementation of QiMessaging written in [Go](https://golang.org).
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-QiMessaging is a network protocol used to build rich distributed
-applications. It was created by Aldebaran Robotics (currently
-[SoftBank Robotics](https://www.softbankrobotics.com/emea/en/index))
-and is the foundation of the NAOqi SDK. For more details about
-QiMessaging, visit this [analysis of the
-protocol](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
+- [About](#about)
+- [Usage](#usage)
+- [Status](#status)
+- [Go API](#go-api)
+- [Tutorials](#tutorials)
+- [Examples](#examples)
+- [command line interface](#command-line-interface)
+- [Authentication](#authentication)
 
-## Installation
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## About
+
+QiMessaging is a network protocol used to build rich distributed applications.
+It is created by [SoftBank Robotics](https://www.softbankrobotics.com/emea/en/index)
+and is the foundation of the [NAOqi SDK](http://doc.aldebaran.com/2-8/) and
+the [Pepper SDK](https://qisdk.softbankrobotics.com/).
+
+libqi is the implementation of QiMessaging used in Pepper and NAO.
+It is open-source and developped here:
+[https://github.com/aldebaran/libqi](https://github.com/aldebaran/libqi).
+
+QiLoop is another implementation of QiMessaging. It has two main goals:
+- being compatible with libqi
+- being a platform for experimenting with the protocol
+
+Disclaimer: QiLoop is not affiliated with SoftBank Robotics.
+
+## Usage
+
+QiMessaging exposes a software bus to interract with services. Services have
+methods (to be called), signals (to be watched) and properties (signals with
+state). A naming service (the service directory) is used to discover and
+register services. For a detailed description of the protocol, please visit
+this [analysis of
+QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
+
+To connect to a service, a Session object is required: it represents the
+connection to the service directory. Several transport protocols are supported
+(TCP, TLS and UNIX socket).
+
+With a session, one can request a proxy object representing a remote service.
+The proxy object contains the helper methods needed to make the remote calls
+and to handle the incomming signal notifications.
+
+Services have methods, signals and properties which are described in an IDL
+(Interface Description Language) format. This IDL file is process by the
+`qiloop` command to generate the Go code which allow remote access to the
+service (i.e. the proxy object).
+
+## Status
+
+Client and server sides are functional.
+
+Service directory and log manager are implemented as part of the
+standalone server (launched with `qiloop server`).
+
+Features:
+- type supported: object, struct, values, map, list, enum
+- actions: method, signals and properties are fully supported
+- cancellation: not yet implemented
+- transport: TCP, TLS, UNIX socket and QUIC (experimental)
+- authentication: read the credentials from `$HOME/.qi-auth.conf`
+- service introspection: generate IDL from a running instance (use `qiloop scan`)
+- IDL files: generate specialized proxy and service stub (use `qiloop stub`)
+
+## Go API
+
+Installation:
 
     go get github.com/lugu/qiloop/...
 
+Documentation: [http://godoc.org/github.com/lugu/qiloop](http://godoc.org/github.com/lugu/qiloop)
+
 ## Tutorials
 
-By default, `qiloop` comes with two proxies: ServiceDirectory and
-LogManager.
+- How to create a proxy to an existing service: follow the [ALVideoDevice tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md).
 
-Follow the [ALVideoDevice tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md)
-to learn how to create a proxy to an existing service.
-
-Follow the [clock tutorial](https://github.com/lugu/qiloop/blob/master/doc/SERVICE_TUTORIAL.md)
-to create your own service.
+- How to create your own service: follow the [clock tutorial](https://github.com/lugu/qiloop/blob/master/doc/SERVICE_TUTORIAL.md).
 
 ## Examples
 
@@ -58,25 +116,40 @@ illustrates some basic usages of qilooop:
 -   [clock service](https://github.com/lugu/qiloop/blob/master/examples/clock)
     completed version of the clock tutorial.
 
+## command line interface
+
+```
+    $ qiloop -h                                                                                                                                                            /home/ludo/qiloop
+    qiloop - an utility to explore QiMessaging
+
+	 ___T_
+	| 6=6 |
+	|__`__|
+     .-._/___\_.-.
+     ;   \___/   ;
+	 ]| |[
+	[_| |_]
+
+      Usage:
+	qiloop [info|log|scan|proxy|stub|server|trace]
+
+      Subcommands:
+	info - Connect a server and display services info
+	log - Connect a server and prints logs
+	scan - Connect a server and introspect a service to generate an IDL file
+	proxy - Parse an IDL file and generate the specialized proxy code
+	stub - Parse an IDL file and generate the specialized server code
+	server - Starts a service directory and a log manager
+	trace - Connect a server and traces services
+
+      Flags:
+	   --version  Displays the program version string.
+	-h --help  Displays help with available flag, subcommand, and positional value parameters.
+```
+
 ## Authentication
 
 If you need to provide a login and a password to authenticate yourself
 to a server, create a file `$HOME/.qi-auth.conf` with you login on the
 first line and your password on the second.
 
-## Status
-
-This is work in progress, you have been warned.
-
-The client and the server side are working: one can implement a
-service from an IDL and generate a specialized proxy for this service.
-A service directory is implemented as part of the standalone server.
-
-What is working:
-
--   TCP and TLS connections
--   client proxy generation
--   server stub generation
--   method, signals and properties
--   Authentication
--   IDL parsing and generation
