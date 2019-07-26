@@ -56,6 +56,7 @@ func (p *stubServiceZero) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubServiceZero) Receive(msg *net.Message, from Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	case uint32(0x8):
 		return p.Authenticate(msg, from)
@@ -165,6 +166,7 @@ type ObjectImplementor interface {
 	ClearStats() error
 	IsTraceEnabled() (bool, error)
 	EnableTrace(traced bool) error
+	Tracer(msg *net.Message, from Channel) Channel
 }
 
 // ObjectSignalHelper provided to Object a companion object
@@ -211,6 +213,7 @@ func (p *stubObject) OnTerminate() {
 	p.signal.OnTerminate()
 }
 func (p *stubObject) Receive(msg *net.Message, from Channel) error {
+	from = p.impl.Tracer(msg, from)
 	switch msg.Header.Action {
 	case uint32(0x0):
 		return p.signal.RegisterEvent(msg, from)

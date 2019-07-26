@@ -38,11 +38,16 @@ func print(event bus.EventTrace, info *services.ServiceInfo,
 		typ = "call "
 	case int32(net.Reply):
 		typ = "reply"
+	case int32(net.Error):
+		typ = "error"
+	case int32(net.Post):
+		typ = "post "
+	case int32(net.Event):
+		typ = "event"
 	}
-	var action = "unknown"
 	action, err := meta.ActionName(event.SlotId)
 	if err != nil {
-		action = "unknown"
+		action = fmt.Sprintf("unknown (%d)", event.SlotId)
 	}
 	var size int = -1
 	var sig = "unknown"
@@ -58,7 +63,7 @@ func print(event bus.EventTrace, info *services.ServiceInfo,
 	}
 
 	fmt.Printf("[%s %4d bytes] %s.%s: %s: %v\n", typ, size, info.Name,
-		action, sig, data)
+		action, sig, data[:10])
 }
 
 func trace(serverURL, serviceName string) {

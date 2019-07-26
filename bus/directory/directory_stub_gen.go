@@ -81,6 +81,7 @@ func (p *stubServiceDirectory) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubServiceDirectory) Receive(msg *net.Message, from bus.Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Service(msg, from)

@@ -61,6 +61,7 @@ type objectImpl struct {
 	statsLock        sync.RWMutex
 	traceEnabled     bool
 	traceMutex       sync.RWMutex
+	nextTrace        uint32
 }
 
 // NewBasicObject returns an BasicObject which implements Actor. It
@@ -268,39 +269,77 @@ func (o *objectImpl) EnableTrace(enable bool) error {
 	return nil
 }
 
-func (o *objectImpl) tracer() func(msg *net.Message) {
-	return func(msg *net.Message) {
-		o.trace(msg)
-	}
+type Tracer interface {
+	Trace(msg *net.Message, id uint32)
 }
 
-func (o *objectImpl) trace(msg *net.Message) {
-	o.traceMutex.RLock()
-	enabled := o.traceEnabled
-	o.traceMutex.RUnlock()
-	if !enabled {
-		return
+func signature(msg *net.Message, meta *object.MetaObject) string {
+	if msg.Header.Type == net.Call ||
+		msg.Header.Type == net.Post ||
+		msg.Header.Type == net.Reply {
+		m, ok := meta.Methods[msg.Header.Action]
+		if !ok {
+			return "X"
+		}
+		if msg.Header.Type == net.Reply {
+			return m.ReturnSignature
+		} else {
+			return m.ParametersSignature
+		}
+	} else if msg.Header.Type == net.Event {
+		s, ok := meta.Signals[msg.Header.Action]
+		if ok {
+			return s.Signature
+		} else {
+			p, ok := meta.Properties[msg.Header.Action]
+			if ok {
+				return p.Signature
+			}
+		}
 	}
+	return "X"
+}
+
+func (o *objectImpl) Trace(msg *net.Message, id uint32) {
+
 	// do not trace traceObject signal
-	if msg.Header.Action == 86 {
+	if msg.Header.Action == 0x56 {
 		return
 	}
+
 	now := time.Now()
+	arguments := value.Opaque(signature(msg, &o.meta), msg.Payload)
 	timeval := Timeval{
 		Tvsec:  int64(now.Second()),
 		Tvusec: int64(now.Nanosecond() / 1000),
 	}
 	event := EventTrace{
-		Id:        msg.Header.Action,
+		Id:        o.nextTrace,
 		Kind:      int32(msg.Header.Type),
-		SlotId:    msg.Header.ID,
-		Arguments: value.Void(),
+		SlotId:    msg.Header.Action,
+		Arguments: arguments,
 		Timestamp: timeval,
 	}
 	err := o.signal.SignalTraceObject(event)
 	if err != nil {
 		log.Printf("trace error: %s", err)
 	}
+}
+
+func (o *objectImpl) Tracer(msg *net.Message, from Channel) Channel {
+	o.traceMutex.RLock()
+	enabled := o.traceEnabled
+	o.traceMutex.RUnlock()
+
+	if !enabled {
+		return from
+	}
+
+	traceID := o.nextTrace
+	o.nextTrace++
+	o.Trace(msg, traceID)
+
+	return &tracedChannel{from, o, traceID}
 }
 
 // clientObject implements Actor. It is used to forward incomming

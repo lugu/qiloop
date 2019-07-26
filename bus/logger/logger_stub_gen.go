@@ -74,6 +74,7 @@ func (p *stubLogProvider) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubLogProvider) Receive(msg *net.Message, from bus.Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.SetVerbosity(msg, from)
@@ -266,6 +267,7 @@ func (p *stubLogListener) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubLogListener) Receive(msg *net.Message, from bus.Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	case uint32(0x65):
 		return p.SetCategory(msg, from)
@@ -501,6 +503,7 @@ func (p *stubLogManager) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubLogManager) Receive(msg *net.Message, from bus.Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Log(msg, from)

@@ -76,6 +76,7 @@ func (p *stubBomb) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubBomb) Receive(msg *net.Message, from bus.Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -196,6 +197,7 @@ func (p *stubSpacecraft) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubSpacecraft) Receive(msg *net.Message, from bus.Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Shoot(msg, from)

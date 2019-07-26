@@ -1,8 +1,10 @@
 package bus
 
 import (
+	"bytes"
+
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/util"
+	"github.com/lugu/qiloop/type/value"
 )
 
 type Channel interface {
@@ -30,11 +32,19 @@ func NewContext(e net.EndPoint) Channel {
 	}
 }
 
+func errorPaylad(err error) []byte {
+	var buf bytes.Buffer
+	val := value.String(err.Error())
+	val.Write(&buf)
+	return buf.Bytes()
+}
+
 // SendError send a error message in response to msg.
 func (c *channel) SendError(msg *net.Message, err error) error {
-	// FIXME: missing trace here.
-	// o.trace(msg)
-	return util.ReplyError(c.endpoint, msg, err)
+	hdr := net.NewHeader(net.Error, msg.Header.Service, msg.Header.Object,
+		msg.Header.Action, msg.Header.ID)
+	mError := net.NewMessage(hdr, errorPaylad(err))
+	return c.Send(&mError)
 }
 
 // SendReply send a reply message in response to msg.
@@ -42,15 +52,11 @@ func (c *channel) SendReply(msg *net.Message, response []byte) error {
 	hdr := msg.Header
 	hdr.Type = net.Reply
 	reply := net.NewMessage(hdr, response)
-	// FIXME: missing trace here.
-	// o.trace(&reply)
-	return c.endpoint.Send(reply)
+	return c.Send(&reply)
 }
 
 // Send send a reply message in response to msg.
 func (c *channel) Send(msg *net.Message) error {
-	// FIXME: missing trace here.
-	// o.trace(&reply)
 	return c.endpoint.Send(*msg)
 }
 
@@ -72,4 +78,31 @@ func (c *channel) Cap() CapabilityMap {
 // EndPoint returns the other side endpoint.
 func (c *channel) EndPoint() net.EndPoint {
 	return c.endpoint
+}
+
+// tracedChannel notify a Tracer each time a message is directly sent using
+// SendReply, SendError or Send.
+type tracedChannel struct {
+	Channel
+	tracer Tracer
+	id     uint32
+}
+
+func (c *tracedChannel) Send(msg *net.Message) error {
+	c.tracer.Trace(msg, c.id)
+	return c.Channel.Send(msg)
+}
+
+func (c *tracedChannel) SendError(msg *net.Message, err error) error {
+	hdr := net.NewHeader(net.Error, msg.Header.Service, msg.Header.Object,
+		msg.Header.Action, msg.Header.ID)
+	mError := net.NewMessage(hdr, errorPaylad(err))
+	return c.Send(&mError)
+}
+
+func (c *tracedChannel) SendReply(msg *net.Message, response []byte) error {
+	hdr := msg.Header
+	hdr.Type = net.Reply
+	reply := net.NewMessage(hdr, response)
+	return c.Send(&reply)
 }

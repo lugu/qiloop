@@ -467,6 +467,12 @@ func generateStubObject(file *jen.File, itf *idl.InterfaceType) error {
 
 func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 	writing := make([]jen.Code, 0)
+
+	prelude := jen.Comment("action dispatch")
+	if itf.Name == "Object" {
+		prelude = jen.Id(`from = p.impl.Tracer(msg, from)`)
+	}
+
 	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
 		code := jen.Case(jen.Lit(method.ID))
@@ -530,6 +536,7 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
 		jen.Id("from").Qual("github.com/lugu/qiloop/bus", "Channel"),
 	).Params(jen.Error()).Block(
+		prelude,
 		jen.Switch(jen.Id("msg.Header.Action")).Block(
 			writing...,
 		),
@@ -751,6 +758,11 @@ func generateObjectInterface(file *jen.File, set *signature.TypeSet,
 	if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
 		return fmt.Errorf("generate interface object %s: %s",
 			itf.Name, err)
+	}
+
+	if itf.Name == "Object" {
+		code := jen.Id(`Tracer(msg *net.Message, from Channel) Channel`)
+		definitions = append(definitions, code)
 	}
 
 	file.Commentf("%s interface of the service implementation",

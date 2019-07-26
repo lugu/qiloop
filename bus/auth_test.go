@@ -113,18 +113,19 @@ func NewServer(response func(user, token string) bus.CapabilityMap) net.EndPoint
 }
 
 func (s *ServerMock) Receive(m *net.Message) error {
+	channel := bus.NewContext(s.EndPoint)
 	if m.Header.Action != object.AuthenticateActionID {
-		return util.ReplyError(s.EndPoint, m, bus.ErrActionNotFound)
+		return channel.SendError(m, bus.ErrActionNotFound)
 	}
 
 	if s.Response == nil {
-		return util.ReplyError(s.EndPoint, m,
+		return channel.SendError(m,
 			fmt.Errorf("service unavailable"))
 	}
 
 	response, err := s.wrapAuthenticate(m.Payload)
 	if err != nil {
-		return util.ReplyError(s.EndPoint, m, err)
+		return channel.SendError(m, err)
 	}
 	hdr := net.NewHeader(net.Reply, 0, 0, object.AuthenticateActionID,
 		m.Header.ID)

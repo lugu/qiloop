@@ -73,6 +73,7 @@ func (p *stubPingPong) OnTerminate() {
 	p.impl.OnTerminate()
 }
 func (p *stubPingPong) Receive(msg *net.Message, from bus.Channel) error {
+	// action dispatch
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Hello(msg, from)
