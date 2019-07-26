@@ -109,7 +109,7 @@ func (o *objectImpl) UnregisterEvent(objectID uint32, actionID uint32,
 
 func (o *objectImpl) MetaObject(objectID uint32) (object.MetaObject, error) {
 	// remote objects don't know their real object id.
-	if o.objectID < (1<<31) && objectID != o.objectID {
+	if objectID != 0 && o.objectID < (1<<31) && objectID != o.objectID {
 		return o.meta, ErrWrongObjectID
 	}
 	return o.meta, nil
@@ -117,7 +117,7 @@ func (o *objectImpl) MetaObject(objectID uint32) (object.MetaObject, error) {
 
 func (o *objectImpl) Terminate(objectID uint32) error {
 	// remote objects don't know their real object id.
-	if o.objectID < (1<<31) && objectID != o.objectID {
+	if objectID != 0 && o.objectID < (1<<31) && objectID != o.objectID {
 		return ErrWrongObjectID
 	}
 	o.terminate()

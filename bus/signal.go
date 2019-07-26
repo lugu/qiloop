@@ -94,7 +94,7 @@ func (o *signalHandler) RegisterEvent(msg *net.Message, from Channel) error {
 		return from.SendError(msg, err)
 	}
 	// remote objects don't know their real object id.
-	if o.objectID < (1<<31) && objectID != o.objectID {
+	if objectID != 0 && o.objectID < (1<<31) && objectID != o.objectID {
 		err := fmt.Errorf("wrong object id, expecting %d, got %d",
 			msg.Header.Object, objectID)
 		return from.SendError(msg, err)
@@ -129,7 +129,7 @@ func (o *signalHandler) UnregisterEvent(msg *net.Message, from Channel) error {
 		return from.SendError(msg, err)
 	}
 	// remote objects don't know their real object id.
-	if o.objectID < (1<<31) && objectID != o.objectID {
+	if objectID != 0 && o.objectID < (1<<31) && objectID != o.objectID {
 		err := fmt.Errorf("wrong object id, expecting %d, got %d",
 			msg.Header.Object, objectID)
 		return from.SendError(msg, err)

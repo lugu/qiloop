@@ -607,23 +607,28 @@ Here is a list of methods shared by almost every object:
 
 - 0: `fn registerEvent(objectID: uint32, signalID: uint32, handler:
   uint64) uint64`: subscribes to a signal. The new values of the
-  signal will be sent the client using messages of type `event`.
+  signal will be sent the client using messages of type `event`. If
+  objectID is zero, the object is considered the subject.
 
-- 1: `fn unregisterEvent(objectID: uint32, signalID: uint32, handler: uint64) void`: unsubscribes
-  from a signal.
 
-- 2: `metaObject(objectID: uint32) MetaObject`: introspects an object. It
-  returns structure called `MetaObject` which describe an object. This
-  structure contains the list of methods, signal and properties as
-  well as the signature of the associated types. When communicating
+- 1: `fn unregisterEvent(objectID: uint32, signalID: uint32, handler:
+  uint64) void`: unsubscribes from a signal. If objectID is zero, the
+  object is considered the subject.
+
+- 2: `metaObject(objectID: uint32) MetaObject`: introspects an object.
+  It returns structure called `MetaObject` which describe an object.
+  This structure contains the list of methods, signal and properties
+  as well as the signature of the associated types. When communicating
   with an object, the method `metaObject` is often the first method
   called because it allows the client to associate the name of the
-  method with the action ID.
+  method with the action ID.If objectID is zero, the object is
+  considered the subjet.
 
 - 3: `terminate(objectID: uint32) void`: informs a object it is not used
   anymore. This allows the object to be destroyed. It is used in the
   context of objects returned by methods. In such situation life cycle
-  of the object is controlled by the client.
+  of the object is controlled by the client. If objectID is zero, the
+  object is considered the subjet.
 
 - 5: `property(Value) Value`: returns the value associated with the
   property.
