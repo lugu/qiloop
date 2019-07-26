@@ -161,7 +161,23 @@ func WriteObjectReference(s ObjectReference, w io.Writer) (err error) {
 }
 
 // FullMetaObject fills the meta object with generic objects methods.
-func FullMetaObject(meta MetaObject) MetaObject {
+func FullMetaObject(from MetaObject) MetaObject {
+
+	var meta MetaObject
+	meta.Description = from.Description
+	meta.Methods = make(map[uint32]MetaMethod)
+	meta.Signals = make(map[uint32]MetaSignal)
+	meta.Properties = make(map[uint32]MetaProperty)
+	for id, m := range from.Methods {
+		meta.Methods[id] = m
+	}
+	for id, s := range from.Signals {
+		meta.Signals[id] = s
+	}
+	for id, p := range from.Properties {
+		meta.Properties[id] = p
+	}
+
 	for i, method := range ObjectMetaObject.Methods {
 		meta.Methods[i] = method
 	}

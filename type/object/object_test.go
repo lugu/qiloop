@@ -8,7 +8,7 @@ import (
 )
 
 func TestMetaObjectDecorator(t *testing.T) {
-	service0 := &object.MetaService0
+	service0 := object.MetaService0
 	id, err := service0.MethodID("authenticate")
 	if err != nil {
 		panic(err)
@@ -29,7 +29,7 @@ func TestMetaObjectDecorator(t *testing.T) {
 		panic("invalid name " + name)
 	}
 
-	obj := object.FullMetaObject(*service0)
+	obj := object.FullMetaObject(service0)
 	id, err = obj.SignalID("traceObject")
 	if err != nil {
 		panic(err)
