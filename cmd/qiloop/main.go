@@ -30,7 +30,7 @@ var (
 func init() {
 	flaggy.SetName("qiloop")
 	description := fmt.Sprintf("%s\n\n%s",
-		"Utility to process QiMessaing IDL files",
+		"an utility to explore QiMessaging",
 		asciibot.Random())
 	flaggy.SetDescription(description)
 
@@ -69,7 +69,7 @@ func init() {
 
 	serverCommand = flaggy.NewSubcommand("server")
 	serverCommand.Description =
-		"Starts a server running service directory and log manager"
+		"Start a service directory and a log manager"
 	serverCommand.String(&serverURL, "l", "qi-url",
 		"Listening URL (default: tcp://localhost:9559)")
 

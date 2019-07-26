@@ -70,19 +70,19 @@ func trace(serverURL, serviceName string) {
 
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
-		panic(err)
+		log.Fatalf("%s: %s", serverURL, err)
 	}
 
 	proxies := services.Services(sess)
 
 	directory, err := proxies.ServiceDirectory()
 	if err != nil {
-		panic(err)
+		log.Fatalf("directory: %s", err)
 	}
 
 	serviceList, err := directory.Services()
 	if err != nil {
-		panic(err)
+		log.Fatalf("services: %s", err)
 	}
 
 	stop := make(chan struct{})
