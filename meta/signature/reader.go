@@ -44,8 +44,7 @@ func (v UnknownReader) Read(r io.Reader) ([]byte, error) {
 type objectReader struct{}
 
 func (v objectReader) Read(r io.Reader) ([]byte, error) {
-	// TODO: hand make reader, save metaobject reader.
-	panic("not yet imple")
+	return nil, fmt.Errorf("not yet supported")
 }
 
 type valueReader struct{}
