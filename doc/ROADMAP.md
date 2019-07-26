@@ -1,4 +1,4 @@
-for v0.6
+for v0.7
 --------
 
 - visual doc: diagram which shows a bus
