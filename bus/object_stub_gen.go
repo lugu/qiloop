@@ -55,7 +55,7 @@ func (p *stubServiceZero) Activate(activation Activation) error {
 func (p *stubServiceZero) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubServiceZero) Receive(msg *net.Message, from *Channel) error {
+func (p *stubServiceZero) Receive(msg *net.Message, from Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x8):
 		return p.Authenticate(msg, from)
@@ -69,7 +69,7 @@ func (p *stubServiceZero) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubServiceZero) Authenticate(msg *net.Message, c *Channel) error {
+func (p *stubServiceZero) Authenticate(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	capability, err := func() (m map[string]value.Value, err error) {
 		size, err := basic.ReadUint32(buf)
@@ -210,7 +210,7 @@ func (p *stubObject) OnTerminate() {
 	p.impl.OnTerminate()
 	p.signal.OnTerminate()
 }
-func (p *stubObject) Receive(msg *net.Message, from *Channel) error {
+func (p *stubObject) Receive(msg *net.Message, from Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x0):
 		return p.signal.RegisterEvent(msg, from)
@@ -250,7 +250,7 @@ func (p *stubObject) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubObject) RegisterEvent(msg *net.Message, c *Channel) error {
+func (p *stubObject) RegisterEvent(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -280,7 +280,7 @@ func (p *stubObject) RegisterEvent(msg *net.Message, c *Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) UnregisterEvent(msg *net.Message, c *Channel) error {
+func (p *stubObject) UnregisterEvent(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -306,7 +306,7 @@ func (p *stubObject) UnregisterEvent(msg *net.Message, c *Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) MetaObject(msg *net.Message, c *Channel) error {
+func (p *stubObject) MetaObject(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -328,7 +328,7 @@ func (p *stubObject) MetaObject(msg *net.Message, c *Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Terminate(msg *net.Message, c *Channel) error {
+func (p *stubObject) Terminate(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -346,7 +346,7 @@ func (p *stubObject) Terminate(msg *net.Message, c *Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Property(msg *net.Message, c *Channel) error {
+func (p *stubObject) Property(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
@@ -368,7 +368,7 @@ func (p *stubObject) Property(msg *net.Message, c *Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) SetProperty(msg *net.Message, c *Channel) error {
+func (p *stubObject) SetProperty(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	name, err := value.NewValue(buf)
 	if err != nil {
@@ -390,7 +390,7 @@ func (p *stubObject) SetProperty(msg *net.Message, c *Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Properties(msg *net.Message, c *Channel) error {
+func (p *stubObject) Properties(msg *net.Message, c Channel) error {
 	ret, callErr := p.impl.Properties()
 
 	// do not respond to post messages.
@@ -419,7 +419,7 @@ func (p *stubObject) Properties(msg *net.Message, c *Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) RegisterEventWithSignature(msg *net.Message, c *Channel) error {
+func (p *stubObject) RegisterEventWithSignature(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -453,7 +453,7 @@ func (p *stubObject) RegisterEventWithSignature(msg *net.Message, c *Channel) er
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) IsStatsEnabled(msg *net.Message, c *Channel) error {
+func (p *stubObject) IsStatsEnabled(msg *net.Message, c Channel) error {
 	ret, callErr := p.impl.IsStatsEnabled()
 
 	// do not respond to post messages.
@@ -470,7 +470,7 @@ func (p *stubObject) IsStatsEnabled(msg *net.Message, c *Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) EnableStats(msg *net.Message, c *Channel) error {
+func (p *stubObject) EnableStats(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	enabled, err := basic.ReadBool(buf)
 	if err != nil {
@@ -488,7 +488,7 @@ func (p *stubObject) EnableStats(msg *net.Message, c *Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) Stats(msg *net.Message, c *Channel) error {
+func (p *stubObject) Stats(msg *net.Message, c Channel) error {
 	ret, callErr := p.impl.Stats()
 
 	// do not respond to post messages.
@@ -521,7 +521,7 @@ func (p *stubObject) Stats(msg *net.Message, c *Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) ClearStats(msg *net.Message, c *Channel) error {
+func (p *stubObject) ClearStats(msg *net.Message, c Channel) error {
 	callErr := p.impl.ClearStats()
 
 	// do not respond to post messages.
@@ -534,7 +534,7 @@ func (p *stubObject) ClearStats(msg *net.Message, c *Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) IsTraceEnabled(msg *net.Message, c *Channel) error {
+func (p *stubObject) IsTraceEnabled(msg *net.Message, c Channel) error {
 	ret, callErr := p.impl.IsTraceEnabled()
 
 	// do not respond to post messages.
@@ -551,7 +551,7 @@ func (p *stubObject) IsTraceEnabled(msg *net.Message, c *Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubObject) EnableTrace(msg *net.Message, c *Channel) error {
+func (p *stubObject) EnableTrace(msg *net.Message, c Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	traced, err := basic.ReadBool(buf)
 	if err != nil {

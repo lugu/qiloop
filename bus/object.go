@@ -308,7 +308,7 @@ func (o *objectImpl) trace(msg *net.Message) {
 type clientObject struct {
 	serviceID uint32
 	remoteID  uint32
-	channel   *Channel
+	channel   Channel
 	client    Client
 }
 
@@ -334,15 +334,15 @@ type clientObject struct {
 // 1. client side request the service to lend her an object id.
 // 2. service allocate an id for the client and setup a route.
 // 3. client side can share its "official" reference to anyone.
-func NewClientObject(remoteID uint32, from *Channel) Actor {
+func NewClientObject(remoteID uint32, from Channel) Actor {
 	return &clientObject{
 		remoteID: remoteID,
 		channel:  from,
-		client:   NewClient(from.EndPoint),
+		client:   NewClient(from.EndPoint()),
 	}
 }
 
-func (c *clientObject) handleRegister(msg *net.Message, from *Channel) error {
+func (c *clientObject) handleRegister(msg *net.Message, from Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -373,7 +373,7 @@ func (c *clientObject) handleRegister(msg *net.Message, from *Channel) error {
 	return nil
 }
 
-func (c *clientObject) handleCall(msg *net.Message, from *Channel) error {
+func (c *clientObject) handleCall(msg *net.Message, from Channel) error {
 	resp, err := c.client.Call(msg.Header.Service, c.remoteID,
 		msg.Header.Action, msg.Payload)
 	if err != nil {
@@ -382,7 +382,7 @@ func (c *clientObject) handleCall(msg *net.Message, from *Channel) error {
 	return from.SendReply(msg, resp)
 }
 
-func (c *clientObject) Receive(msg *net.Message, from *Channel) error {
+func (c *clientObject) Receive(msg *net.Message, from Channel) error {
 	// call to RegisterEvent
 	if msg.Header.Type == net.Call && msg.Header.Action == 0x0 {
 		go c.handleRegister(msg, from)

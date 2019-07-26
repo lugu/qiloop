@@ -16,7 +16,7 @@ type signalUser struct {
 	signalID  uint32
 	messageID uint32
 	clientID  uint64
-	context   *Channel
+	context   Channel
 }
 
 // signalHandler implements the Actor interface. It implements the
@@ -56,7 +56,7 @@ func newSignalHandler() *signalHandler {
 // addSignalUser register the context as a client of event signalID.
 // TODO: check if the signalID is valid
 func (o *signalHandler) addSignalUser(signalID, messageID uint32,
-	from *Channel) uint64 {
+	from Channel) uint64 {
 
 	clientID := rand.Uint64()
 	newUser := signalUser{
@@ -85,7 +85,7 @@ func (o *signalHandler) removeSignalUser(clientID uint64) error {
 	return nil
 }
 
-func (o *signalHandler) RegisterEvent(msg *net.Message, from *Channel) error {
+func (o *signalHandler) RegisterEvent(msg *net.Message, from Channel) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
@@ -120,7 +120,7 @@ func (o *signalHandler) RegisterEvent(msg *net.Message, from *Channel) error {
 	return from.SendReply(msg, out.Bytes())
 }
 
-func (o *signalHandler) UnregisterEvent(msg *net.Message, from *Channel) error {
+func (o *signalHandler) UnregisterEvent(msg *net.Message, from Channel) error {
 
 	buf := bytes.NewBuffer(msg.Payload)
 	objectID, err := basic.ReadUint32(buf)
@@ -193,7 +193,7 @@ func (o *signalHandler) replyEvent(client *signalUser, signal uint32,
 	hdr := o.newHeader(net.Event, signal, client.messageID)
 	msg := net.NewMessage(hdr, value)
 	o.trace(&msg)
-	return client.context.EndPoint.Send(msg)
+	return client.context.Send(&msg)
 }
 
 func (o *signalHandler) sendTerminate(client *signalUser, signal uint32) error {
@@ -204,7 +204,7 @@ func (o *signalHandler) sendTerminate(client *signalUser, signal uint32) error {
 	msg := net.NewMessage(hdr, buf.Bytes())
 
 	o.trace(&msg)
-	return client.context.EndPoint.Send(msg)
+	return client.context.Send(&msg)
 }
 
 func (o *signalHandler) OnTerminate() {

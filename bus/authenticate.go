@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
@@ -92,19 +91,19 @@ type serviceAuthenticate struct {
 	auth Authenticator
 }
 
-func (s *serviceAuthenticate) Receive(m *net.Message, from *Channel) error {
+func (s *serviceAuthenticate) Receive(m *net.Message, from Channel) error {
 	if m.Header.Action != object.AuthenticateActionID {
-		return util.ReplyError(from.EndPoint, m, ErrActionNotFound)
+		return from.SendError(m, ErrActionNotFound)
 	}
 	response, err := s.wrapAuthenticate(from, m.Payload)
 
 	if err != nil {
-		return util.ReplyError(from.EndPoint, m, err)
+		return from.SendError(m, err)
 	}
 	hdr := net.NewHeader(net.Reply, 0, 0, object.AuthenticateActionID,
 		m.Header.ID)
 	reply := net.NewMessage(hdr, response)
-	return from.EndPoint.Send(reply)
+	return from.Send(&reply)
 }
 
 func (s *serviceAuthenticate) Activate(activation Activation) error {
@@ -114,7 +113,7 @@ func (s *serviceAuthenticate) Activate(activation Activation) error {
 func (s *serviceAuthenticate) OnTerminate() {
 }
 
-func (s *serviceAuthenticate) wrapAuthenticate(from *Channel, payload []byte) ([]byte, error) {
+func (s *serviceAuthenticate) wrapAuthenticate(from Channel, payload []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	m, err := ReadCapabilityMap(buf)
 	if err != nil {
@@ -135,7 +134,7 @@ func (s *serviceAuthenticate) capError() CapabilityMap {
 	}
 }
 
-func (s *serviceAuthenticate) Authenticate(from *Channel, cap CapabilityMap) CapabilityMap {
+func (s *serviceAuthenticate) Authenticate(from Channel, cap CapabilityMap) CapabilityMap {
 	var user, token string
 	if userValue, ok := cap[KeyUser]; ok {
 		if userStr, ok := userValue.(value.StringValue); ok {
@@ -153,7 +152,7 @@ func (s *serviceAuthenticate) Authenticate(from *Channel, cap CapabilityMap) Cap
 	}
 	if s.auth.Authenticate(user, token) {
 		from.SetAuthenticated()
-		return from.Cap
+		return from.Cap()
 	}
 	return s.capError()
 }

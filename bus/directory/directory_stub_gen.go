@@ -80,7 +80,7 @@ func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
 func (p *stubServiceDirectory) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubServiceDirectory) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubServiceDirectory) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Service(msg, from)
@@ -108,7 +108,7 @@ func (p *stubServiceDirectory) onPropertyChange(name string, data []byte) error 
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubServiceDirectory) Service(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) Service(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	name, err := basic.ReadString(buf)
 	if err != nil {
@@ -130,7 +130,7 @@ func (p *stubServiceDirectory) Service(msg *net.Message, c *bus.Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) Services(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) Services(msg *net.Message, c bus.Channel) error {
 	ret, callErr := p.impl.Services()
 
 	// do not respond to post messages.
@@ -159,7 +159,7 @@ func (p *stubServiceDirectory) Services(msg *net.Message, c *bus.Channel) error 
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) RegisterService(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) RegisterService(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	info, err := readServiceInfo(buf)
 	if err != nil {
@@ -181,7 +181,7 @@ func (p *stubServiceDirectory) RegisterService(msg *net.Message, c *bus.Channel)
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) UnregisterService(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) UnregisterService(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -199,7 +199,7 @@ func (p *stubServiceDirectory) UnregisterService(msg *net.Message, c *bus.Channe
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) ServiceReady(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) ServiceReady(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {
@@ -217,7 +217,7 @@ func (p *stubServiceDirectory) ServiceReady(msg *net.Message, c *bus.Channel) er
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) UpdateServiceInfo(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) UpdateServiceInfo(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	info, err := readServiceInfo(buf)
 	if err != nil {
@@ -235,7 +235,7 @@ func (p *stubServiceDirectory) UpdateServiceInfo(msg *net.Message, c *bus.Channe
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) MachineId(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) MachineId(msg *net.Message, c bus.Channel) error {
 	ret, callErr := p.impl.MachineId()
 
 	// do not respond to post messages.
@@ -252,7 +252,7 @@ func (p *stubServiceDirectory) MachineId(msg *net.Message, c *bus.Channel) error
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubServiceDirectory) _socketOfService(msg *net.Message, c *bus.Channel) error {
+func (p *stubServiceDirectory) _socketOfService(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	serviceID, err := basic.ReadUint32(buf)
 	if err != nil {

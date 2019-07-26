@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/bus/util"
 )
 
 // ErrServiceNotFound is returned with a message refers to an unknown
@@ -40,8 +39,6 @@ type Activation struct {
 	Session   Session
 	Terminate func()
 	Service   Service
-	// TODO: offer a means to create client objects
-	// Route(id uint32, to *Channel) (uint32, error)
 }
 
 func objectTerminator(service Service, objectID uint32) func() {
@@ -79,7 +76,7 @@ func objectActivation(service *serviceImpl, session Session, serviceID, objectID
 
 // Receiver handles incomming messages.
 type Receiver interface {
-	Receive(m *net.Message, from *Channel) error
+	Receive(m *net.Message, from Channel) error
 }
 
 // Actor interface used by Server to manipulate services.
@@ -91,7 +88,7 @@ type Actor interface {
 
 type pendingObject struct{}
 
-func (p pendingObject) Receive(m *net.Message, from *Channel) error {
+func (p pendingObject) Receive(m *net.Message, from Channel) error {
 	return ErrObjectNotFound
 }
 
@@ -205,15 +202,14 @@ func (s *serviceImpl) Remove(objectID uint32) error {
 }
 
 // Dispatch forwards the message to the appropriate object.
-func (s *serviceImpl) Dispatch(m *net.Message, from *Channel) error {
+func (s *serviceImpl) Dispatch(m *net.Message, from Channel) error {
 	s.RLock()
 	o, ok := s.objects[m.Header.Object]
 	s.RUnlock()
 	if ok {
 		return o.Receive(m, from)
 	}
-	// TODO: check the message type. Only reply to call messages.
-	return util.ReplyError(from.EndPoint, m, ErrObjectNotFound)
+	return from.SendError(m, ErrObjectNotFound)
 }
 
 // Terminate calls OnTerminate on all its objects.
@@ -319,20 +315,19 @@ func (r *Router) Remove(serviceID uint32) error {
 
 // Dispatch process a message. The message will be replied if the
 // router can not found the destination.
-func (r *Router) Dispatch(m *net.Message, from *Channel) error {
+func (r *Router) Dispatch(m *net.Message, from Channel) error {
 	r.RLock()
 	s, ok := r.services[m.Header.Service]
 	r.RUnlock()
 	if ok {
 		return s.Dispatch(m, from)
 	}
-	// TODO: check the message type. Only reply to call messages.
-	return util.ReplyError(from.EndPoint, m, ErrServiceNotFound)
+	return from.SendError(m, ErrServiceNotFound)
 }
 
 // firewall ensures an endpoint talks only to autorized services.
 // Especially, it ensure authentication is passed.
-func firewall(m *net.Message, from *Channel) error {
+func firewall(m *net.Message, from Channel) error {
 	if from.Authenticated() == false && m.Header.Service != 0 {
 		return ErrNotAuthenticated
 	}
@@ -346,7 +341,7 @@ type server struct {
 	addrs         []string
 	namespace     Namespace
 	Router        *Router
-	contexts      map[*Channel]bool
+	contexts      map[Channel]bool
 	contextsMutex sync.Mutex
 	closeChan     chan int
 	waitChan      chan error
@@ -365,7 +360,7 @@ func NewServer(listener net.Listener, auth Authenticator,
 		listen:        listener,
 		namespace:     namespace,
 		Router:        router,
-		contexts:      make(map[*Channel]bool),
+		contexts:      make(map[Channel]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
 		waitChan:      make(chan error, 1),
@@ -397,7 +392,7 @@ func StandAloneServer(listener net.Listener, auth Authenticator,
 		listen:        listener,
 		namespace:     namespace,
 		Router:        router,
-		contexts:      make(map[*Channel]bool),
+		contexts:      make(map[Channel]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
 		waitChan:      make(chan error, 1),
@@ -464,8 +459,8 @@ func (s *server) NewService(name string, object Actor) (Service, error) {
 
 func (s *server) handle(stream net.Stream, authenticated bool) {
 
-	context := &Channel{
-		Cap: PreferedCap("", ""),
+	context := &channel{
+		capability: PreferedCap("", ""),
 	}
 	if authenticated {
 		context.SetAuthenticated()
@@ -477,8 +472,8 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 		err := firewall(msg, context)
 		if err != nil {
 			log.Printf("missing authentication from %s: %#v",
-				context.EndPoint.String(), msg.Header)
-			return util.ReplyError(context.EndPoint, msg, err)
+				context.EndPoint().String(), msg.Header)
+			return context.SendError(msg, err)
 		}
 		return s.Router.Dispatch(msg, context)
 	}
@@ -490,7 +485,7 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 		}
 	}
 	finalize := func(e net.EndPoint) {
-		context.EndPoint = e
+		context.endpoint = e
 		e.AddHandler(filter, consumer, closer)
 		s.contextsMutex.Lock()
 		s.contexts[context] = true
@@ -539,7 +534,7 @@ func (s *server) closeAll() error {
 	s.contextsMutex.Lock()
 	defer s.contextsMutex.Unlock()
 	for context := range s.contexts {
-		err := context.EndPoint.Close()
+		err := context.EndPoint().Close()
 		if err != nil && ret == nil {
 			ret = err
 		}

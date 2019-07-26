@@ -72,7 +72,7 @@ func (p *stubPingPong) Activate(activation bus.Activation) error {
 func (p *stubPingPong) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubPingPong) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubPingPong) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Hello(msg, from)
@@ -88,7 +88,7 @@ func (p *stubPingPong) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubPingPong) Hello(msg *net.Message, c *bus.Channel) error {
+func (p *stubPingPong) Hello(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	a, err := basic.ReadString(buf)
 	if err != nil {
@@ -110,7 +110,7 @@ func (p *stubPingPong) Hello(msg *net.Message, c *bus.Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubPingPong) Ping(msg *net.Message, c *bus.Channel) error {
+func (p *stubPingPong) Ping(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	a, err := basic.ReadString(buf)
 	if err != nil {

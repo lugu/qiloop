@@ -34,7 +34,7 @@ type clientService struct {
 	objectsHandlers map[uint32]int
 	objectsMutex    sync.RWMutex
 	session         Session
-	context         *Channel
+	context         Channel
 }
 
 // NewServiceReference returns a remove reference to a service. This
@@ -88,7 +88,7 @@ func (c *clientService) Add(obj Actor) (uint32, error) {
 
 	c.objectsMutex.Lock()
 	defer c.objectsMutex.Unlock()
-	c.objectsHandlers[id] = c.context.EndPoint.AddHandler(filter, consumer, closer)
+	c.objectsHandlers[id] = c.context.EndPoint().AddHandler(filter, consumer, closer)
 	return id, nil
 }
 
@@ -101,7 +101,7 @@ func (c *clientService) Remove(objectID uint32) error {
 	}
 	delete(c.objectsHandlers, objectID)
 	c.objectsMutex.RUnlock()
-	return c.context.EndPoint.RemoveHandler(handlerID)
+	return c.context.EndPoint().RemoveHandler(handlerID)
 }
 
 func (c *clientService) Terminate() error {

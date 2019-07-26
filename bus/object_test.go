@@ -10,7 +10,7 @@ import (
 
 type dummyActor struct{}
 
-func (d dummyActor) Receive(m *net.Message, from *Channel) error {
+func (d dummyActor) Receive(m *net.Message, from Channel) error {
 	return nil
 }
 func (d dummyActor) Activate(activation Activation) error {

@@ -68,7 +68,7 @@ func (p *stubTimestamp) Activate(activation bus.Activation) error {
 func (p *stubTimestamp) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubTimestamp) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubTimestamp) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Nanoseconds(msg, from)
@@ -82,7 +82,7 @@ func (p *stubTimestamp) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubTimestamp) Nanoseconds(msg *net.Message, c *bus.Channel) error {
+func (p *stubTimestamp) Nanoseconds(msg *net.Message, c bus.Channel) error {
 	ret, callErr := p.impl.Nanoseconds()
 
 	// do not respond to post messages.

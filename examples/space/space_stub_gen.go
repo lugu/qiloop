@@ -75,7 +75,7 @@ func (p *stubBomb) Activate(activation bus.Activation) error {
 func (p *stubBomb) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubBomb) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubBomb) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -195,7 +195,7 @@ func (p *stubSpacecraft) Activate(activation bus.Activation) error {
 func (p *stubSpacecraft) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubSpacecraft) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubSpacecraft) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Shoot(msg, from)
@@ -211,7 +211,7 @@ func (p *stubSpacecraft) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubSpacecraft) Shoot(msg *net.Message, c *bus.Channel) error {
+func (p *stubSpacecraft) Shoot(msg *net.Message, c bus.Channel) error {
 	ret, callErr := p.impl.Shoot()
 
 	// do not respond to post messages.
@@ -241,7 +241,7 @@ func (p *stubSpacecraft) Shoot(msg *net.Message, c *bus.Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubSpacecraft) Ammo(msg *net.Message, c *bus.Channel) error {
+func (p *stubSpacecraft) Ammo(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	ammo, err := func() (BombProxy, error) {
 		ref, err := object.ReadObjectReference(buf)

@@ -73,7 +73,7 @@ func (p *stubLogProvider) Activate(activation bus.Activation) error {
 func (p *stubLogProvider) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubLogProvider) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubLogProvider) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.SetVerbosity(msg, from)
@@ -91,7 +91,7 @@ func (p *stubLogProvider) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubLogProvider) SetVerbosity(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogProvider) SetVerbosity(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	level, err := readLogLevel(buf)
 	if err != nil {
@@ -109,7 +109,7 @@ func (p *stubLogProvider) SetVerbosity(msg *net.Message, c *bus.Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogProvider) SetCategory(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogProvider) SetCategory(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	category, err := basic.ReadString(buf)
 	if err != nil {
@@ -131,7 +131,7 @@ func (p *stubLogProvider) SetCategory(msg *net.Message, c *bus.Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogProvider) ClearAndSet(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogProvider) ClearAndSet(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	filters, err := func() (m map[string]LogLevel, err error) {
 		size, err := basic.ReadUint32(buf)
@@ -265,7 +265,7 @@ func (p *stubLogListener) Activate(activation bus.Activation) error {
 func (p *stubLogListener) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubLogListener) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubLogListener) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x65):
 		return p.SetCategory(msg, from)
@@ -313,7 +313,7 @@ func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubLogListener) SetCategory(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogListener) SetCategory(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	category, err := basic.ReadString(buf)
 	if err != nil {
@@ -335,7 +335,7 @@ func (p *stubLogListener) SetCategory(msg *net.Message, c *bus.Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogListener) ClearFilters(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogListener) ClearFilters(msg *net.Message, c bus.Channel) error {
 	callErr := p.impl.ClearFilters()
 
 	// do not respond to post messages.
@@ -500,7 +500,7 @@ func (p *stubLogManager) Activate(activation bus.Activation) error {
 func (p *stubLogManager) OnTerminate() {
 	p.impl.OnTerminate()
 }
-func (p *stubLogManager) Receive(msg *net.Message, from *bus.Channel) error {
+func (p *stubLogManager) Receive(msg *net.Message, from bus.Channel) error {
 	switch msg.Header.Action {
 	case uint32(0x64):
 		return p.Log(msg, from)
@@ -522,7 +522,7 @@ func (p *stubLogManager) onPropertyChange(name string, data []byte) error {
 		return fmt.Errorf("unknown property %s", name)
 	}
 }
-func (p *stubLogManager) Log(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogManager) Log(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	messages, err := func() (b []LogMessage, err error) {
 		size, err := basic.ReadUint32(buf)
@@ -553,7 +553,7 @@ func (p *stubLogManager) Log(msg *net.Message, c *bus.Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) CreateListener(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogManager) CreateListener(msg *net.Message, c bus.Channel) error {
 	ret, callErr := p.impl.CreateListener()
 
 	// do not respond to post messages.
@@ -583,7 +583,7 @@ func (p *stubLogManager) CreateListener(msg *net.Message, c *bus.Channel) error 
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) GetListener(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogManager) GetListener(msg *net.Message, c bus.Channel) error {
 	ret, callErr := p.impl.GetListener()
 
 	// do not respond to post messages.
@@ -613,7 +613,7 @@ func (p *stubLogManager) GetListener(msg *net.Message, c *bus.Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) AddProvider(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogManager) AddProvider(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	source, err := func() (LogProviderProxy, error) {
 		ref, err := object.ReadObjectReference(buf)
@@ -652,7 +652,7 @@ func (p *stubLogManager) AddProvider(msg *net.Message, c *bus.Channel) error {
 	}
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogManager) RemoveProvider(msg *net.Message, c *bus.Channel) error {
+func (p *stubLogManager) RemoveProvider(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	sourceID, err := basic.ReadInt32(buf)
 	if err != nil {

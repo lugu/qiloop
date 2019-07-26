@@ -185,7 +185,7 @@ func generateMethodMarshal(file *jen.File, itf *idl.InterfaceType,
 
 	file.Func().Params(jen.Id("p").Op("*").Id(stubName(itf.Name))).Id(methodName).Params(
 		jen.Id("msg *net.Message"),
-		jen.Id("c").Op("*").Qual("github.com/lugu/qiloop/bus", "Channel"),
+		jen.Id("c").Qual("github.com/lugu/qiloop/bus", "Channel"),
 	).Params(
 		jen.Id("error"),
 	).Add(body)
@@ -528,7 +528,7 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 		jen.Id("p").Op("*").Id(stubName(itf.Name)),
 	).Id("Receive").Params(
 		jen.Id("msg").Op("*").Qual("github.com/lugu/qiloop/bus/net", "Message"),
-		jen.Id("from").Op("*").Qual("github.com/lugu/qiloop/bus", "Channel"),
+		jen.Id("from").Qual("github.com/lugu/qiloop/bus", "Channel"),
 	).Params(jen.Error()).Block(
 		jen.Switch(jen.Id("msg.Header.Action")).Block(
 			writing...,
