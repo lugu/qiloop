@@ -71,7 +71,7 @@ func (p *stubTimestamp) OnTerminate() {
 func (p *stubTimestamp) Receive(msg *net.Message, from bus.Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x64):
+	case 100:
 		return p.Nanoseconds(msg, from)
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -103,11 +103,11 @@ func (p *stubTimestamp) Nanoseconds(msg *net.Message, c bus.Channel) error {
 func (p *stubTimestamp) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Timestamp",
-		Methods: map[uint32]object.MetaMethod{uint32(0x64): {
+		Methods: map[uint32]object.MetaMethod{100: {
 			Name:                "nanoseconds",
 			ParametersSignature: "()",
 			ReturnSignature:     "l",
-			Uid:                 uint32(0x64),
+			Uid:                 100,
 		}},
 		Properties: map[uint32]object.MetaProperty{},
 		Signals:    map[uint32]object.MetaSignal{},

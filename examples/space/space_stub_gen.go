@@ -100,7 +100,7 @@ func (p *stubBomb) SignalBoom(energy int32) error {
 	if err := basic.WriteInt32(energy, &buf); err != nil {
 		return fmt.Errorf("serialize energy: %s", err)
 	}
-	err := p.signal.UpdateSignal(uint32(0x64), buf.Bytes())
+	err := p.signal.UpdateSignal(100, buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update SignalBoom: %s", err)
@@ -112,7 +112,7 @@ func (p *stubBomb) UpdateDelay(duration int32) error {
 	if err := basic.WriteInt32(duration, &buf); err != nil {
 		return fmt.Errorf("serialize duration: %s", err)
 	}
-	err := p.signal.UpdateProperty(uint32(0x65), "i", buf.Bytes())
+	err := p.signal.UpdateProperty(101, "i", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update UpdateDelay: %s", err)
@@ -123,15 +123,15 @@ func (p *stubBomb) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Bomb",
 		Methods:     map[uint32]object.MetaMethod{},
-		Properties: map[uint32]object.MetaProperty{uint32(0x65): {
+		Properties: map[uint32]object.MetaProperty{101: {
 			Name:      "delay",
 			Signature: "i",
-			Uid:       uint32(0x65),
+			Uid:       101,
 		}},
-		Signals: map[uint32]object.MetaSignal{uint32(0x64): {
+		Signals: map[uint32]object.MetaSignal{100: {
 			Name:      "boom",
 			Signature: "i",
-			Uid:       uint32(0x64),
+			Uid:       100,
 		}},
 	}
 }
@@ -199,9 +199,9 @@ func (p *stubSpacecraft) OnTerminate() {
 func (p *stubSpacecraft) Receive(msg *net.Message, from bus.Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x64):
+	case 100:
 		return p.Shoot(msg, from)
-	case uint32(0x65):
+	case 101:
 		return p.Ammo(msg, from)
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -282,17 +282,17 @@ func (p *stubSpacecraft) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Spacecraft",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x64): {
+			100: {
 				Name:                "shoot",
 				ParametersSignature: "()",
 				ReturnSignature:     "o",
-				Uid:                 uint32(0x64),
+				Uid:                 100,
 			},
-			uint32(0x65): {
+			101: {
 				Name:                "ammo",
 				ParametersSignature: "(o)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x65),
+				Uid:                 101,
 			},
 		},
 		Properties: map[uint32]object.MetaProperty{},

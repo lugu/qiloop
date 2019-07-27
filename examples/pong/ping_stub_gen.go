@@ -75,9 +75,9 @@ func (p *stubPingPong) OnTerminate() {
 func (p *stubPingPong) Receive(msg *net.Message, from bus.Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x64):
+	case 100:
 		return p.Hello(msg, from)
-	case uint32(0x65):
+	case 101:
 		return p.Ping(msg, from)
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -134,7 +134,7 @@ func (p *stubPingPong) SignalPong(a string) error {
 	if err := basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("serialize a: %s", err)
 	}
-	err := p.signal.UpdateSignal(uint32(0x66), buf.Bytes())
+	err := p.signal.UpdateSignal(102, buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update SignalPong: %s", err)
@@ -145,24 +145,24 @@ func (p *stubPingPong) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "PingPong",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x64): {
+			100: {
 				Name:                "hello",
 				ParametersSignature: "(s)",
 				ReturnSignature:     "s",
-				Uid:                 uint32(0x64),
+				Uid:                 100,
 			},
-			uint32(0x65): {
+			101: {
 				Name:                "ping",
 				ParametersSignature: "(s)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x65),
+				Uid:                 101,
 			},
 		},
 		Properties: map[uint32]object.MetaProperty{},
-		Signals: map[uint32]object.MetaSignal{uint32(0x66): {
+		Signals: map[uint32]object.MetaSignal{102: {
 			Name:      "pong",
 			Signature: "s",
-			Uid:       uint32(0x66),
+			Uid:       102,
 		}},
 	}
 }

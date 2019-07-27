@@ -58,7 +58,7 @@ func (p *stubServiceZero) OnTerminate() {
 func (p *stubServiceZero) Receive(msg *net.Message, from Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x8):
+	case 8:
 		return p.Authenticate(msg, from)
 	default:
 		return from.SendError(msg, ErrActionNotFound)
@@ -129,11 +129,11 @@ func (p *stubServiceZero) Authenticate(msg *net.Message, c Channel) error {
 func (p *stubServiceZero) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "ServiceZero",
-		Methods: map[uint32]object.MetaMethod{uint32(0x8): {
+		Methods: map[uint32]object.MetaMethod{8: {
 			Name:                "authenticate",
 			ParametersSignature: "({sm})",
 			ReturnSignature:     "{sm}",
-			Uid:                 uint32(0x8),
+			Uid:                 8,
 		}},
 		Properties: map[uint32]object.MetaProperty{},
 		Signals:    map[uint32]object.MetaSignal{},
@@ -215,33 +215,33 @@ func (p *stubObject) OnTerminate() {
 func (p *stubObject) Receive(msg *net.Message, from Channel) error {
 	from = p.impl.Tracer(msg, from)
 	switch msg.Header.Action {
-	case uint32(0x0):
+	case 0:
 		return p.RegisterEvent(msg, from)
-	case uint32(0x1):
+	case 1:
 		return p.UnregisterEvent(msg, from)
-	case uint32(0x2):
+	case 2:
 		return p.MetaObject(msg, from)
-	case uint32(0x3):
+	case 3:
 		return p.Terminate(msg, from)
-	case uint32(0x5):
+	case 5:
 		return p.Property(msg, from)
-	case uint32(0x6):
+	case 6:
 		return p.SetProperty(msg, from)
-	case uint32(0x7):
+	case 7:
 		return p.Properties(msg, from)
-	case uint32(0x8):
+	case 8:
 		return p.RegisterEventWithSignature(msg, from)
-	case uint32(0x50):
+	case 80:
 		return p.IsStatsEnabled(msg, from)
-	case uint32(0x51):
+	case 81:
 		return p.EnableStats(msg, from)
-	case uint32(0x52):
+	case 82:
 		return p.Stats(msg, from)
-	case uint32(0x53):
+	case 83:
 		return p.ClearStats(msg, from)
-	case uint32(0x54):
+	case 84:
 		return p.IsTraceEnabled(msg, from)
-	case uint32(0x55):
+	case 85:
 		return p.EnableTrace(msg, from)
 	default:
 		return p.obj.Receive(msg, from)
@@ -529,7 +529,7 @@ func (p *stubObject) SignalTraceObject(event EventTrace) error {
 	if err := writeEventTrace(event, &buf); err != nil {
 		return fmt.Errorf("serialize event: %s", err)
 	}
-	err := p.signal.UpdateSignal(uint32(0x56), buf.Bytes())
+	err := p.signal.UpdateSignal(86, buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update SignalTraceObject: %s", err)
@@ -540,96 +540,96 @@ func (p *stubObject) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "Object",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x0): {
+			0: {
 				Name:                "registerEvent",
 				ParametersSignature: "(IIL)",
 				ReturnSignature:     "L",
-				Uid:                 uint32(0x0),
+				Uid:                 0,
 			},
-			uint32(0x1): {
+			1: {
 				Name:                "unregisterEvent",
 				ParametersSignature: "(IIL)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x1),
+				Uid:                 1,
 			},
-			uint32(0x2): {
+			2: {
 				Name:                "metaObject",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>",
-				Uid:                 uint32(0x2),
+				Uid:                 2,
 			},
-			uint32(0x3): {
+			3: {
 				Name:                "terminate",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x3),
+				Uid:                 3,
 			},
-			uint32(0x5): {
+			5: {
 				Name:                "property",
 				ParametersSignature: "(m)",
 				ReturnSignature:     "m",
-				Uid:                 uint32(0x5),
+				Uid:                 5,
 			},
-			uint32(0x50): {
-				Name:                "isStatsEnabled",
-				ParametersSignature: "()",
-				ReturnSignature:     "b",
-				Uid:                 uint32(0x50),
-			},
-			uint32(0x51): {
-				Name:                "enableStats",
-				ParametersSignature: "(b)",
-				ReturnSignature:     "v",
-				Uid:                 uint32(0x51),
-			},
-			uint32(0x52): {
-				Name:                "stats",
-				ParametersSignature: "()",
-				ReturnSignature:     "{I(I(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>)<MethodStatistics,count,wall,user,system>}",
-				Uid:                 uint32(0x52),
-			},
-			uint32(0x53): {
-				Name:                "clearStats",
-				ParametersSignature: "()",
-				ReturnSignature:     "v",
-				Uid:                 uint32(0x53),
-			},
-			uint32(0x54): {
-				Name:                "isTraceEnabled",
-				ParametersSignature: "()",
-				ReturnSignature:     "b",
-				Uid:                 uint32(0x54),
-			},
-			uint32(0x55): {
-				Name:                "enableTrace",
-				ParametersSignature: "(b)",
-				ReturnSignature:     "v",
-				Uid:                 uint32(0x55),
-			},
-			uint32(0x6): {
+			6: {
 				Name:                "setProperty",
 				ParametersSignature: "(mm)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x6),
+				Uid:                 6,
 			},
-			uint32(0x7): {
+			7: {
 				Name:                "properties",
 				ParametersSignature: "()",
 				ReturnSignature:     "[s]",
-				Uid:                 uint32(0x7),
+				Uid:                 7,
 			},
-			uint32(0x8): {
+			8: {
 				Name:                "registerEventWithSignature",
 				ParametersSignature: "(IILs)",
 				ReturnSignature:     "L",
-				Uid:                 uint32(0x8),
+				Uid:                 8,
+			},
+			80: {
+				Name:                "isStatsEnabled",
+				ParametersSignature: "()",
+				ReturnSignature:     "b",
+				Uid:                 80,
+			},
+			81: {
+				Name:                "enableStats",
+				ParametersSignature: "(b)",
+				ReturnSignature:     "v",
+				Uid:                 81,
+			},
+			82: {
+				Name:                "stats",
+				ParametersSignature: "()",
+				ReturnSignature:     "{I(I(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>)<MethodStatistics,count,wall,user,system>}",
+				Uid:                 82,
+			},
+			83: {
+				Name:                "clearStats",
+				ParametersSignature: "()",
+				ReturnSignature:     "v",
+				Uid:                 83,
+			},
+			84: {
+				Name:                "isTraceEnabled",
+				ParametersSignature: "()",
+				ReturnSignature:     "b",
+				Uid:                 84,
+			},
+			85: {
+				Name:                "enableTrace",
+				ParametersSignature: "(b)",
+				ReturnSignature:     "v",
+				Uid:                 85,
 			},
 		},
 		Properties: map[uint32]object.MetaProperty{},
-		Signals: map[uint32]object.MetaSignal{uint32(0x56): {
+		Signals: map[uint32]object.MetaSignal{86: {
 			Name:      "traceObject",
 			Signature: "(IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>",
-			Uid:       uint32(0x56),
+			Uid:       86,
 		}},
 	}
 }

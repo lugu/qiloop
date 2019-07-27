@@ -83,21 +83,21 @@ func (p *stubServiceDirectory) OnTerminate() {
 func (p *stubServiceDirectory) Receive(msg *net.Message, from bus.Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x64):
+	case 100:
 		return p.Service(msg, from)
-	case uint32(0x65):
+	case 101:
 		return p.Services(msg, from)
-	case uint32(0x66):
+	case 102:
 		return p.RegisterService(msg, from)
-	case uint32(0x67):
+	case 103:
 		return p.UnregisterService(msg, from)
-	case uint32(0x68):
+	case 104:
 		return p.ServiceReady(msg, from)
-	case uint32(0x69):
+	case 105:
 		return p.UpdateServiceInfo(msg, from)
-	case uint32(0x6c):
+	case 108:
 		return p.MachineId(msg, from)
-	case uint32(0x6d):
+	case 109:
 		return p._socketOfService(msg, from)
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -283,7 +283,7 @@ func (p *stubServiceDirectory) SignalServiceAdded(serviceID uint32, name string)
 	if err := basic.WriteString(name, &buf); err != nil {
 		return fmt.Errorf("serialize name: %s", err)
 	}
-	err := p.signal.UpdateSignal(uint32(0x6a), buf.Bytes())
+	err := p.signal.UpdateSignal(106, buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update SignalServiceAdded: %s", err)
@@ -298,7 +298,7 @@ func (p *stubServiceDirectory) SignalServiceRemoved(serviceID uint32, name strin
 	if err := basic.WriteString(name, &buf); err != nil {
 		return fmt.Errorf("serialize name: %s", err)
 	}
-	err := p.signal.UpdateSignal(uint32(0x6b), buf.Bytes())
+	err := p.signal.UpdateSignal(107, buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update SignalServiceRemoved: %s", err)
@@ -309,66 +309,66 @@ func (p *stubServiceDirectory) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "ServiceDirectory",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x64): {
+			100: {
 				Name:                "service",
 				ParametersSignature: "(s)",
 				ReturnSignature:     "(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>",
-				Uid:                 uint32(0x64),
+				Uid:                 100,
 			},
-			uint32(0x65): {
+			101: {
 				Name:                "services",
 				ParametersSignature: "()",
 				ReturnSignature:     "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]",
-				Uid:                 uint32(0x65),
+				Uid:                 101,
 			},
-			uint32(0x66): {
+			102: {
 				Name:                "registerService",
 				ParametersSignature: "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)",
 				ReturnSignature:     "I",
-				Uid:                 uint32(0x66),
+				Uid:                 102,
 			},
-			uint32(0x67): {
+			103: {
 				Name:                "unregisterService",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x67),
+				Uid:                 103,
 			},
-			uint32(0x68): {
+			104: {
 				Name:                "serviceReady",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x68),
+				Uid:                 104,
 			},
-			uint32(0x69): {
+			105: {
 				Name:                "updateServiceInfo",
 				ParametersSignature: "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x69),
+				Uid:                 105,
 			},
-			uint32(0x6c): {
+			108: {
 				Name:                "machineId",
 				ParametersSignature: "()",
 				ReturnSignature:     "s",
-				Uid:                 uint32(0x6c),
+				Uid:                 108,
 			},
-			uint32(0x6d): {
+			109: {
 				Name:                "_socketOfService",
 				ParametersSignature: "(I)",
 				ReturnSignature:     "o",
-				Uid:                 uint32(0x6d),
+				Uid:                 109,
 			},
 		},
 		Properties: map[uint32]object.MetaProperty{},
 		Signals: map[uint32]object.MetaSignal{
-			uint32(0x6a): {
+			106: {
 				Name:      "serviceAdded",
 				Signature: "(Is)<serviceAdded,serviceID,name>",
-				Uid:       uint32(0x6a),
+				Uid:       106,
 			},
-			uint32(0x6b): {
+			107: {
 				Name:      "serviceRemoved",
 				Signature: "(Is)<serviceRemoved,serviceID,name>",
-				Uid:       uint32(0x6b),
+				Uid:       107,
 			},
 		},
 	}

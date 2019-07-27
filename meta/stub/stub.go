@@ -231,7 +231,7 @@ func propertyBodyBlock(itf *idl.InterfaceType, property idl.Property,
 		writing = append(writing, code)
 	}
 	code = jen.Id("err := p.signal.UpdateProperty").Call(
-		jen.Lit(property.ID),
+		jen.Lit(int(property.ID)),
 		jen.Lit(property.Type().Signature()),
 		jen.Id("buf.Bytes()"),
 	)
@@ -266,7 +266,7 @@ func signalBodyBlock(itf *idl.InterfaceType, signal idl.Signal,
 	}
 	// if has not return value
 	code = jen.Id("err := p.signal.UpdateSignal").Call(
-		jen.Lit(signal.ID),
+		jen.Lit(int(signal.ID)),
 		jen.Id("buf.Bytes()"),
 	)
 	writing = append(writing, code)
@@ -353,8 +353,8 @@ func generateStubMethods(file *jen.File, itf *idl.InterfaceType) error {
 func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 	metaMethods := func(d jen.Dict) {
 		for _, method := range itf.Methods {
-			d[jen.Lit(method.ID)] = jen.Values(jen.Dict{
-				jen.Id("Uid"): jen.Lit(method.ID),
+			d[jen.Lit(int(method.ID))] = jen.Values(jen.Dict{
+				jen.Id("Uid"): jen.Lit(int(method.ID)),
 				jen.Id("ReturnSignature"): jen.Lit(
 					method.Return.Signature(),
 				),
@@ -367,8 +367,8 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	metaSignals := func(d jen.Dict) {
 		for _, signal := range itf.Signals {
-			d[jen.Lit(signal.ID)] = jen.Values(jen.Dict{
-				jen.Id("Uid"):  jen.Lit(signal.ID),
+			d[jen.Lit(int(signal.ID))] = jen.Values(jen.Dict{
+				jen.Id("Uid"):  jen.Lit(int(signal.ID)),
 				jen.Id("Name"): jen.Lit(signal.Name),
 				jen.Id("Signature"): jen.Lit(
 					signal.Type().Signature(),
@@ -378,8 +378,8 @@ func generateStubMetaObject(file *jen.File, itf *idl.InterfaceType) error {
 	}
 	metaProperties := func(d jen.Dict) {
 		for _, property := range itf.Properties {
-			d[jen.Lit(property.ID)] = jen.Values(jen.Dict{
-				jen.Id("Uid"):  jen.Lit(property.ID),
+			d[jen.Lit(int(property.ID))] = jen.Values(jen.Dict{
+				jen.Id("Uid"):  jen.Lit(int(property.ID)),
 				jen.Id("Name"): jen.Lit(property.Name),
 				jen.Id("Signature"): jen.Lit(
 					property.Type().Signature(),
@@ -497,7 +497,7 @@ func generateReceiveMethod(file *jen.File, itf *idl.InterfaceType) error {
 
 	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
-		code := jen.Case(jen.Lit(method.ID))
+		code := jen.Case(jen.Lit(int(method.ID)))
 		writing = append(writing, code)
 
 		code = jen.Return().Id("p").Dot(methodName).Call(

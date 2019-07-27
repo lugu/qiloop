@@ -76,11 +76,11 @@ func (p *stubLogProvider) OnTerminate() {
 func (p *stubLogProvider) Receive(msg *net.Message, from bus.Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x64):
+	case 100:
 		return p.SetVerbosity(msg, from)
-	case uint32(0x65):
+	case 101:
 		return p.SetCategory(msg, from)
-	case uint32(0x66):
+	case 102:
 		return p.ClearAndSet(msg, from)
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -172,23 +172,23 @@ func (p *stubLogProvider) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "LogProvider",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x64): {
+			100: {
 				Name:                "setVerbosity",
 				ParametersSignature: "((i)<LogLevel,level>)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x64),
+				Uid:                 100,
 			},
-			uint32(0x65): {
+			101: {
 				Name:                "setCategory",
 				ParametersSignature: "(s(i)<LogLevel,level>)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x65),
+				Uid:                 101,
 			},
-			uint32(0x66): {
+			102: {
 				Name:                "clearAndSet",
 				ParametersSignature: "({s(i)<LogLevel,level>})",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x66),
+				Uid:                 102,
 			},
 		},
 		Properties: map[uint32]object.MetaProperty{},
@@ -269,9 +269,9 @@ func (p *stubLogListener) OnTerminate() {
 func (p *stubLogListener) Receive(msg *net.Message, from bus.Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x65):
+	case 101:
 		return p.SetCategory(msg, from)
-	case uint32(0x66):
+	case 102:
 		return p.ClearFilters(msg, from)
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -355,7 +355,7 @@ func (p *stubLogListener) SignalOnLogMessage(msg LogMessage) error {
 	if err := writeLogMessage(msg, &buf); err != nil {
 		return fmt.Errorf("serialize msg: %s", err)
 	}
-	err := p.signal.UpdateSignal(uint32(0x67), buf.Bytes())
+	err := p.signal.UpdateSignal(103, buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update SignalOnLogMessage: %s", err)
@@ -367,7 +367,7 @@ func (p *stubLogListener) UpdateVerbosity(level LogLevel) error {
 	if err := writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	err := p.signal.UpdateProperty(uint32(0x68), "(i)<LogLevel,level>", buf.Bytes())
+	err := p.signal.UpdateProperty(104, "(i)<LogLevel,level>", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update UpdateVerbosity: %s", err)
@@ -395,7 +395,7 @@ func (p *stubLogListener) UpdateFilters(filters map[string]LogLevel) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize filters: %s", err)
 	}
-	err := p.signal.UpdateProperty(uint32(0x69), "{s(i)<LogLevel,level>}", buf.Bytes())
+	err := p.signal.UpdateProperty(105, "{s(i)<LogLevel,level>}", buf.Bytes())
 
 	if err != nil {
 		return fmt.Errorf("update UpdateFilters: %s", err)
@@ -406,35 +406,35 @@ func (p *stubLogListener) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "LogListener",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x65): {
+			101: {
 				Name:                "setCategory",
 				ParametersSignature: "(s(i)<LogLevel,level>)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x65),
+				Uid:                 101,
 			},
-			uint32(0x66): {
+			102: {
 				Name:                "clearFilters",
 				ParametersSignature: "()",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x66),
+				Uid:                 102,
 			},
 		},
 		Properties: map[uint32]object.MetaProperty{
-			uint32(0x68): {
+			104: {
 				Name:      "verbosity",
 				Signature: "(i)<LogLevel,level>",
-				Uid:       uint32(0x68),
+				Uid:       104,
 			},
-			uint32(0x69): {
+			105: {
 				Name:      "filters",
 				Signature: "{s(i)<LogLevel,level>}",
-				Uid:       uint32(0x69),
+				Uid:       105,
 			},
 		},
-		Signals: map[uint32]object.MetaSignal{uint32(0x67): {
+		Signals: map[uint32]object.MetaSignal{103: {
 			Name:      "onLogMessage",
 			Signature: "(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>",
-			Uid:       uint32(0x67),
+			Uid:       103,
 		}},
 	}
 }
@@ -505,15 +505,15 @@ func (p *stubLogManager) OnTerminate() {
 func (p *stubLogManager) Receive(msg *net.Message, from bus.Channel) error {
 	// action dispatch
 	switch msg.Header.Action {
-	case uint32(0x64):
+	case 100:
 		return p.Log(msg, from)
-	case uint32(0x65):
+	case 101:
 		return p.CreateListener(msg, from)
-	case uint32(0x66):
+	case 102:
 		return p.GetListener(msg, from)
-	case uint32(0x67):
+	case 103:
 		return p.AddProvider(msg, from)
-	case uint32(0x68):
+	case 104:
 		return p.RemoveProvider(msg, from)
 	default:
 		return from.SendError(msg, bus.ErrActionNotFound)
@@ -677,35 +677,35 @@ func (p *stubLogManager) metaObject() object.MetaObject {
 	return object.MetaObject{
 		Description: "LogManager",
 		Methods: map[uint32]object.MetaMethod{
-			uint32(0x64): {
+			100: {
 				Name:                "log",
 				ParametersSignature: "([(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>])",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x64),
+				Uid:                 100,
 			},
-			uint32(0x65): {
+			101: {
 				Name:                "createListener",
 				ParametersSignature: "()",
 				ReturnSignature:     "o",
-				Uid:                 uint32(0x65),
+				Uid:                 101,
 			},
-			uint32(0x66): {
+			102: {
 				Name:                "getListener",
 				ParametersSignature: "()",
 				ReturnSignature:     "o",
-				Uid:                 uint32(0x66),
+				Uid:                 102,
 			},
-			uint32(0x67): {
+			103: {
 				Name:                "addProvider",
 				ParametersSignature: "(o)",
 				ReturnSignature:     "i",
-				Uid:                 uint32(0x67),
+				Uid:                 103,
 			},
-			uint32(0x68): {
+			104: {
 				Name:                "removeProvider",
 				ParametersSignature: "(i)",
 				ReturnSignature:     "v",
-				Uid:                 uint32(0x68),
+				Uid:                 104,
 			},
 		},
 		Properties: map[uint32]object.MetaProperty{},
