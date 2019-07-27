@@ -15,8 +15,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [About](#about)
-- [Usage](#usage)
 - [Status](#status)
+- [Usage](#usage)
 - [Go API](#go-api)
 - [Tutorials](#tutorials)
 - [Examples](#examples)
@@ -42,6 +42,23 @@ QiLoop is another implementation of QiMessaging. It has two main goals:
 
 Disclaimer: QiLoop is not affiliated with SoftBank Robotics.
 
+## Status
+
+Client and server sides are functional.
+
+Service directory and log manager are implemented as part of the
+standalone server (launched with `qiloop server`).
+
+Features:
+- type supported: object, struct, values, map, list, enum
+- actions: method, signals and properties are fully supported
+- cancellation: not yet implemented
+- transport: TCP, TLS, UNIX socket and QUIC (experimental)
+- authentication: read the credentials from `$HOME/.qi-auth.conf`
+- service introspection: generate IDL from a running instance (use `qiloop scan`)
+- IDL files: generate specialized proxy and service stub (use `qiloop stub`)
+- partial support for stats and traces
+
 ## Usage
 
 QiMessaging exposes a software bus to interract with services. Services have
@@ -63,22 +80,6 @@ Services have methods, signals and properties which are described in an IDL
 (Interface Description Language) format. This IDL file is process by the
 `qiloop` command to generate the Go code which allow remote access to the
 service (i.e. the proxy object).
-
-## Status
-
-Client and server sides are functional.
-
-Service directory and log manager are implemented as part of the
-standalone server (launched with `qiloop server`).
-
-Features:
-- type supported: object, struct, values, map, list, enum
-- actions: method, signals and properties are fully supported
-- cancellation: not yet implemented
-- transport: TCP, TLS, UNIX socket and QUIC (experimental)
-- authentication: read the credentials from `$HOME/.qi-auth.conf`
-- service introspection: generate IDL from a running instance (use `qiloop scan`)
-- IDL files: generate specialized proxy and service stub (use `qiloop stub`)
 
 ## Go API
 
