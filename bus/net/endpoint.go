@@ -338,10 +338,10 @@ func (e *endPoint) process() {
 		err = e.dispatch(msg)
 		if err != nil {
 			if msg.Header.Type == Error {
-				log.Printf("%s: %#v, %s", err, msg.Header,
+				log.Printf("%s: %v, %s", err, msg.Header,
 					readError(msg))
 			} else {
-				log.Printf("%s: %#v", err, msg.Header)
+				log.Printf("%s: %v", err, msg.Header)
 			}
 		}
 	}

@@ -146,6 +146,33 @@ func (h *Header) Read(r io.Reader) (err error) {
 	return nil
 }
 
+func (h Header) String() string {
+
+	var typ = "unknown"
+	switch h.Type {
+	case Unknown:
+		typ = "unknown"
+	case Call:
+		typ = "call"
+	case Reply:
+		typ = "reply"
+	case Error:
+		typ = "error"
+	case Post:
+		typ = "post"
+	case Event:
+		typ = "event"
+	case Capability:
+		typ = "capability"
+	case Cancel:
+		typ = "cancel"
+	case Cancelled:
+		typ = "cancelled"
+	}
+	return fmt.Sprintf("[Type: %s, ID: %d, Service: %d, Object: %d, Action: %d, Size: %d]",
+		typ, h.ID, h.Service, h.Object, h.Action, h.Size)
+}
+
 // Message represents a QiMessaging message.
 type Message struct {
 	Header  Header

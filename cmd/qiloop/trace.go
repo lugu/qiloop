@@ -32,7 +32,7 @@ func getObject(sess bus.Session, info services.ServiceInfo) bus.ObjectProxy {
 func print(event bus.EventTrace, info *services.ServiceInfo,
 	meta *object.MetaObject) {
 
-	var typ string = "unknown"
+	var typ = "unknown"
 	switch event.Kind {
 	case int32(net.Call):
 		typ = "call "
@@ -44,6 +44,12 @@ func print(event bus.EventTrace, info *services.ServiceInfo,
 		typ = "post "
 	case int32(net.Event):
 		typ = "event"
+	case int32(net.Capability):
+		typ = "capability"
+	case int32(net.Cancel):
+		typ = "cancel"
+	case int32(net.Cancelled):
+		typ = "cancelled"
 	}
 	action, err := meta.ActionName(event.SlotId)
 	if err != nil {
