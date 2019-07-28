@@ -21,12 +21,12 @@ var (
 	metas = make([]object.MetaObject, 0)
 )
 
-func getObject(sess bus.Session, info services.ServiceInfo) bus.ObjectProxy {
+func getObject(sess bus.Session, info services.ServiceInfo) (bus.ObjectProxy, error) {
 	proxy, err := sess.Proxy(info.Name, 1)
 	if err != nil {
-		log.Fatalf("connect service (%s): %s", info.Name, err)
+	    return nil, fmt.Errorf("connect service (%s): %s", info.Name, err)
 	}
-	return bus.MakeObject(proxy)
+	return bus.MakeObject(proxy), nil
 }
 
 func print(event bus.EventTrace, info *services.ServiceInfo,
@@ -99,8 +99,13 @@ func trace(serverURL, serviceName string) {
 			continue
 		}
 
-		go func(info services.ServiceInfo) {
-			obj := getObject(sess, info)
+		obj, err := getObject(sess, info)
+		if err != nil {
+		    log.Printf("cannot trace %s: %s", info.Name, err)
+		    continue
+		}
+
+		go func(info services.ServiceInfo, obj bus.ObjectProxy) {
 
 			err = obj.EnableTrace(true)
 			if err != nil {
@@ -130,7 +135,7 @@ func trace(serverURL, serviceName string) {
 					return
 				}
 			}
-		}(info)
+		}(info, obj)
 	}
 	signalChannel := make(chan os.Signal, 2)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
