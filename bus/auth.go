@@ -65,8 +65,9 @@ func PreferedCap(user, token string) CapabilityMap {
 	permissions := CapabilityMap{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
-		"MetaObjectCache":       value.Bool(true),
-		"RemoteCancelableCalls": value.Bool(true),
+		"MetaObjectCache":       value.Bool(false),
+		"RemoteCancelableCalls": value.Bool(false),
+		"ObjectPtrUID":          value.Bool(false),
 	}
 	if user != "" {
 		permissions[KeyUser] = value.String(user)
