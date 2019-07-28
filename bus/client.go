@@ -113,13 +113,16 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 			hdr.Action == actionID {
 			if hdr.Type == net.Error {
 				// unsubscribe on error
-				return false, false
+				return true, false
 			}
 			return true, true
 		}
 		return false, true
 	}
 	consumer := func(msg *net.Message) error {
+		if msg.Header.Type == net.Error {
+			return nil
+		}
 		events <- msg.Payload
 		return nil
 	}

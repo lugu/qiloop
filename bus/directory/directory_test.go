@@ -357,6 +357,7 @@ func TestStub(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	defer session.Terminate()
 	services := proxy.Services(session)
 	directory, err := services.ServiceDirectory()
 	if err != nil {
