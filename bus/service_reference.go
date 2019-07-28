@@ -74,7 +74,7 @@ func (c *clientService) Add(obj Actor) (uint32, error) {
 	})
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
-		if hdr.Type == net.Call && hdr.Service == c.serviceID && hdr.Object == id {
+		if hdr.Service == c.serviceID && hdr.Object == id {
 			return true, true
 		}
 		return false, true

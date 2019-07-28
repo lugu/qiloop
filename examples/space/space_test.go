@@ -126,6 +126,7 @@ func TestClientBomb(t *testing.T) {
 	}
 
 	session := srv.Session()
+	defer session.Terminate()
 	proxies := space.Services(session)
 
 	spacecraft, err := proxies.Spacecraft()

@@ -448,15 +448,5 @@ func (c *clientObject) Activate(activation Activation) error {
 	return nil
 }
 
-// OnTerminate post a terminate message to the client object.
 func (c *clientObject) OnTerminate() {
-	var out bytes.Buffer
-	err := basic.WriteUint32(c.remoteID, &out)
-	if err != nil {
-		return
-	}
-	terminateID := uint32(0x3)
-	hdr := net.NewHeader(net.Post, c.serviceID, c.remoteID, terminateID, 0)
-	m := net.NewMessage(hdr, out.Bytes())
-	c.channel.Send(&m)
 }
