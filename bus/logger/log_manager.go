@@ -65,6 +65,18 @@ func (l *logManager) Log(messages []LogMessage) error {
 	return nil
 }
 
+func (l *logManager) terminateListener(listener *logListenerImpl) error {
+	l.listenersMutex.Lock()
+	defer l.listenersMutex.Unlock()
+	for index, myListener := range l.listeners {
+		if listener == myListener {
+			delete(l.listeners, index)
+			return nil
+		}
+	}
+	return fmt.Errorf("Listener not found")
+}
+
 func (l *logManager) CreateListener() (LogListenerProxy, error) {
 	l.listenersMutex.Lock()
 	index := l.listenersNext

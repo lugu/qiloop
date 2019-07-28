@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"sync"
 
@@ -65,6 +66,10 @@ func (l *logListenerImpl) Messages(messages []LogMessage) {
 }
 
 func (l *logListenerImpl) OnTerminate() {
+	err := l.manager.terminateListener(l)
+	if err != nil {
+		log.Printf("failed to remove listener: %s", err)
+	}
 }
 
 func validateLevel(level LogLevel) error {

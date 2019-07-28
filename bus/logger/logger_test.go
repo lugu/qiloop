@@ -110,6 +110,7 @@ func TestLogListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer logListener.Terminate(0)
 
 	err = logListener.SetVerbosity(LogLevelWarning)
 	if err != nil {
@@ -179,13 +180,15 @@ func TestLogProvider(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer srv.Terminate()
 
 	session := srv.Session()
+	defer session.Terminate()
+
 	_, err = srv.NewService("LogManager", NewLogManager())
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer srv.Terminate()
 
 	constructor := Services(session)
 	logManager, err := constructor.LogManager()
@@ -203,11 +206,13 @@ func TestLogProvider(t *testing.T) {
 	defer logManager.RemoveProvider(id)
 
 	logger2, err := NewLogger(session, "test")
+	defer logger2.Terminate()
 
 	logListener, err := logManager.GetListener()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer logListener.Terminate(0)
 	err = logListener.SetVerbosity(LogLevelVerbose)
 	if err != nil {
 		t.Fatal(err)

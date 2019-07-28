@@ -17,6 +17,7 @@ var ErrNotImplemented = fmt.Errorf("Not supported")
 
 type logProvider struct {
 	manager        LogManager
+	id             int32
 	location       string
 	category       string
 	logger         Logger
@@ -36,6 +37,7 @@ type Logger interface {
 	Info(format string, v ...interface{})
 	Verbose(format string, v ...interface{})
 	Debug(format string, v ...interface{})
+	Terminate()
 }
 
 func newLogMessage(level LogLevel, location, category,
@@ -60,7 +62,7 @@ func newLogMessage(level LogLevel, location, category,
 	}
 }
 
-func newLogProviderImpl(category string) (LogProviderImplementor, Logger) {
+func newLogProviderImpl(category string) (LogProviderImplementor, *logProvider) {
 	location := fmt.Sprintf("%s:%d", util.MachineID(), util.ProcessID())
 	impl := &logProvider{
 		location:  location,
@@ -113,6 +115,10 @@ func (l *logProvider) Debug(format string, v ...interface{}) {
 	l.logf(LogLevelDebug, format, v...)
 }
 
+func (l *logProvider) Terminate() {
+	l.manager.RemoveProvider(l.id)
+}
+
 func (l *logProvider) Activate(activation bus.Activation,
 	helper LogProviderSignalHelper) (err error) {
 	services := Services(activation.Session)
@@ -155,7 +161,7 @@ func NewLogger(session bus.Session, category string) (Logger, error) {
 	service := logManager.ProxyService(session)
 	impl, logger := newLogProviderImpl(category)
 	proxy, err := constructor.NewLogProvider(service, impl)
-	_, err = logManager.AddProvider(proxy)
+	logger.id, err = logManager.AddProvider(proxy)
 	if err != nil {
 		return nil, err
 	}
