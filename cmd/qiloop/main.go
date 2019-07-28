@@ -9,7 +9,7 @@ import (
 
 // Set version with:
 // % go build -ldflags='-X main.version=1.0'
-var version = "0.6"
+var version = "0.7"
 
 var (
 	infoCommand   *flaggy.Subcommand
