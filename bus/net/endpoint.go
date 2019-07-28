@@ -2,6 +2,7 @@ package net
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -177,6 +178,13 @@ func dialTLS(addr string) (EndPoint, error) {
 	return ConnEndPoint(conn), nil
 }
 
+type KeyNetContext uint32
+
+const (
+	DialAddress KeyNetContext = iota
+	ListenAddress
+)
+
 // dialQUIC connects regardless of the certificate.
 // TOOD: does not multiplex sessions
 func dialQUIC(addr string) (EndPoint, error) {
@@ -187,7 +195,8 @@ func dialQUIC(addr string) (EndPoint, error) {
 	if err != nil {
 		return nil, err
 	}
-	stream, err := session.OpenStreamSync()
+	ctx := context.WithValue(context.TODO(), DialAddress, addr)
+	stream, err := session.OpenStreamSync(ctx)
 	if err != nil {
 		return nil, err
 	}

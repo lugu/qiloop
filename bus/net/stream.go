@@ -86,14 +86,14 @@ type quicListener struct {
 	errors  chan error
 }
 
-func newQuicListener(l quic.Listener) (Listener, error) {
+func newQuicListener(l quic.Listener, ctx context.Context) (Listener, error) {
 	q := &quicListener{
 		l:       l,
 		streams: make(chan Stream),
 		closer:  make(chan struct{}),
 		errors:  make(chan error),
 	}
-	go q.bg()
+	go q.bg(ctx)
 	return q, nil
 }
 
@@ -114,18 +114,18 @@ func (q quicListener) Close() error {
 	return err
 }
 
-func (q quicListener) bg() {
+func (q quicListener) bg(ctx context.Context) {
 	for {
-		sess, err := q.l.Accept()
+		sess, err := q.l.Accept(ctx)
 		if err != nil {
 			q.errors <- err
 			return
 		}
-		q.handleSession(sess)
+		q.handleSession(sess, ctx)
 	}
 }
 
-func (q quicListener) handleSession(sess quic.Session) {
+func (q quicListener) handleSession(sess quic.Session, ctx context.Context) {
 	cancel := make(chan struct{})
 	go func() {
 		select {
@@ -137,7 +137,7 @@ func (q quicListener) handleSession(sess quic.Session) {
 	// send stream of streams into streams
 	go func() {
 		for {
-			stream, err := sess.AcceptStream()
+			stream, err := sess.AcceptStream(ctx)
 			if err != nil {
 				log.Printf("Session error: %s <-> %s : %s",
 					sess.LocalAddr().String(),
@@ -174,5 +174,6 @@ func listenQUIC(addr string) (Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newQuicListener(listener)
+	ctx := context.WithValue(context.TODO(), ListenAddress, addr)
+	return newQuicListener(listener, ctx)
 }
