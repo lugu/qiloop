@@ -299,7 +299,7 @@ func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
 	return bus.MakeObject(proxy), nil
 }
 
-func (s *directorySession) Destroy() error {
+func (s *directorySession) Terminate() error {
 	return nil
 }
 

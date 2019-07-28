@@ -32,8 +32,8 @@ func (s *Cache) Object(ref object.ObjectReference) (o Proxy, err error) {
 	return o, fmt.Errorf("Not yet implemented")
 }
 
-// Destroy closes the connection.
-func (s *Cache) Destroy() error {
+// Terminate closes the connection.
+func (s *Cache) Terminate() error {
 	return s.Endpoint.Close()
 }
 

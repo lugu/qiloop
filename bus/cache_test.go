@@ -27,7 +27,7 @@ func TestCache(t *testing.T) {
 		panic(err)
 	}
 	cache := bus.NewCache(endpoint)
-	defer cache.Destroy()
+	defer cache.Terminate()
 	cache.AddService("Server", 0, object.MetaService0)
 
 	err = cache.Lookup("ServiceDirectory", 1)
@@ -50,7 +50,7 @@ func TestServerProxy(t *testing.T) {
 		panic(err)
 	}
 	cache := bus.NewCache(endpoint)
-	defer cache.Destroy()
+	defer cache.Terminate()
 
 	_, err = bus.Services(cache).ServiceServer()
 	if err == nil {
@@ -83,7 +83,7 @@ func TestLookup(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	defer cache.Destroy()
+	defer cache.Terminate()
 	cache.AddService("Server", 0, object.MetaService0)
 
 	services := services.Services(cache)
@@ -150,7 +150,7 @@ func TestServerError(t *testing.T) {
 	}()
 
 	cache := bus.NewCache(net.ConnEndPoint(clt))
-	defer cache.Destroy()
+	defer cache.Terminate()
 	cache.AddService("ServiceZero", 0, object.MetaService0)
 
 	services := bus.Services(cache)

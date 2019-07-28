@@ -46,7 +46,7 @@ type Proxy interface {
 type Session interface {
 	Proxy(name string, objectID uint32) (Proxy, error)
 	Object(ref object.ObjectReference) (Proxy, error)
-	Destroy() error
+	Terminate() error
 }
 
 // Server represents a local server. A server can provide with clients

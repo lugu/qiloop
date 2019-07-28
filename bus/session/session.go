@@ -142,7 +142,7 @@ func (s *Session) updateServiceList() {
 	if err != nil {
 		log.Printf("error: failed to update service directory list: %s", err)
 		log.Printf("error: closing session.")
-		if err := s.Destroy(); err != nil {
+		if err := s.Terminate(); err != nil {
 			log.Printf("error: session destruction: %s", err)
 		}
 	}
@@ -151,8 +151,8 @@ func (s *Session) updateServiceList() {
 	s.serviceListMutex.Unlock()
 }
 
-// Destroy close the session.
-func (s *Session) Destroy() error {
+// Terminate close the session.
+func (s *Session) Terminate() error {
 	s.cancel()
 	return s.Directory.Disconnect()
 }

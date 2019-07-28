@@ -450,7 +450,7 @@ func TestSession(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer session.Destroy()
+	defer session.Terminate()
 	services := proxy.Services(session)
 	directory, err := services.ServiceDirectory()
 	if err != nil {

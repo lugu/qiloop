@@ -35,6 +35,7 @@ func TestPingPong(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	defer session.Terminate()
 	services := pong.Services(session)
 	client, err := services.PingPong()
 	if err != nil {
@@ -45,6 +46,7 @@ func TestPingPong(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	defer cancel()
 
 	response, err := client.Hello("hello")
 	if err != nil {
@@ -59,7 +61,6 @@ func TestPingPong(t *testing.T) {
 	if answer != "hello" {
 		panic(err)
 	}
-	cancel()
 }
 
 func testRemoteAddr(b *testing.B, addr string) {

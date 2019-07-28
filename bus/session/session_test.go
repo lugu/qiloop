@@ -1,10 +1,11 @@
 package session
 
 import (
+	"testing"
+
 	"github.com/lugu/qiloop/bus"
 	dir "github.com/lugu/qiloop/bus/directory"
 	"github.com/lugu/qiloop/bus/util"
-	"testing"
 )
 
 func TestNewSession(t *testing.T) {
@@ -19,7 +20,7 @@ func TestNewSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sess.Destroy()
+	sess.Terminate()
 }
 
 func TestNewSessionError(t *testing.T) {

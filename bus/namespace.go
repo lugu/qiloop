@@ -126,6 +126,6 @@ func (s *localSession) Object(ref object.ObjectReference) (Proxy,
 		ref.ObjectID)
 	return MakeObject(proxy), nil
 }
-func (s *localSession) Destroy() error {
+func (s *localSession) Terminate() error {
 	return nil
 }
