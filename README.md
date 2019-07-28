@@ -20,7 +20,7 @@
 - [Go API](#go-api)
 - [Tutorials](#tutorials)
 - [Examples](#examples)
-- [command line interface](#command-line-interface)
+- [Command line interface](#command-line-interface)
 - [Authentication](#authentication)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -117,7 +117,7 @@ illustrates some basic usages of qilooop:
 -   [clock service](https://github.com/lugu/qiloop/blob/master/examples/clock)
     completed version of the clock tutorial.
 
-## command line interface
+## Command line interface
 
 ```
     $ qiloop -h                                                                                                                                                            /home/ludo/qiloop
