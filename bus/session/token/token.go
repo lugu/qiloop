@@ -40,7 +40,7 @@ func readUserToken() (string, string) {
 	if err != io.EOF && err != nil {
 		return "", ""
 	}
-	return strings.TrimSpace(user), pwd
+	return strings.TrimSpace(user), strings.TrimSpace(pwd)
 }
 
 // WriteUserToken save the user credentials.
