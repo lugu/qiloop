@@ -466,6 +466,10 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 		context.SetAuthenticated()
 	}
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
+		if hdr.Type == net.Reply || hdr.Type == net.Error ||
+			hdr.Type == net.Event || hdr.Type == net.Cancelled {
+			return false, true
+		}
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {
