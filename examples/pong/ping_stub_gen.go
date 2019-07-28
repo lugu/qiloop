@@ -283,5 +283,9 @@ func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }

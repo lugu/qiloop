@@ -1045,7 +1045,11 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // GetVerbosity updates the property value
@@ -1121,7 +1125,11 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // GetFilters updates the property value
@@ -1249,7 +1257,11 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]LogLevel,
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // LogManager is the abstract interface of the service

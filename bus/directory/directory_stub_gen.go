@@ -675,7 +675,11 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // SubscribeServiceRemoved subscribe to a remote property
@@ -713,7 +717,11 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // ServiceInfo is serializable

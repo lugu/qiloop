@@ -401,7 +401,11 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			),
 			jen.Id(`ch<- e`),
 		)).Call(),
-		jen.Return(jen.Id("cancel"), jen.Id("ch"), jen.Nil()),
+		jen.Id(`
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil`),
 	)
 
 	file.Comment(methodName + " subscribe to a remote property")

@@ -89,8 +89,8 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 }
 
 // Subscribe returns a channel which returns the future value of a
-// given signal. To stop the stream one must send a value in the
-// cancel channel. Do not close the message channel.
+// given signal. Use the cancel method to stop the stream.
+// Do not close the events channel.
 //
 // BUG: signal cancel is racy: the Handler.run() can be
 // running after a call to RemoveHandler due to channel

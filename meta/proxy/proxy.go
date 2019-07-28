@@ -2,11 +2,12 @@ package proxy
 
 import (
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/meta/signature"
-	"io"
-	"strings"
 )
 
 // GeneratePackage generate the proxy for the package declaration.
@@ -36,6 +37,7 @@ func GeneratePackage(w io.Writer, packagePath string,
 	return file.Render(w)
 }
 
+// GenerateNewServices declares the constructor object.
 func GenerateNewServices(file *jen.File) {
 	file.Comment("Constructor gives access to remote services")
 	file.Type().Id(

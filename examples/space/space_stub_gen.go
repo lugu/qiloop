@@ -384,7 +384,11 @@ func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // GetDelay updates the property value
@@ -460,7 +464,11 @@ func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // Spacecraft is the abstract interface of the service

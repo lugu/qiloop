@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/lugu/qiloop/bus/services"
-	"github.com/lugu/qiloop/bus/session"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/session"
 )
 
 func logger(serverURL string) {

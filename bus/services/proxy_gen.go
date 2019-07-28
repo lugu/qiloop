@@ -315,7 +315,11 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // SubscribeServiceRemoved subscribe to a remote property
@@ -353,7 +357,11 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // ServiceInfo is serializable
@@ -759,7 +767,11 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // GetVerbosity updates the property value
@@ -835,7 +847,11 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // GetFilters updates the property value
@@ -963,7 +979,11 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // LogManager is the abstract interface of the service

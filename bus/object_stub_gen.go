@@ -1082,7 +1082,11 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 			ch <- e
 		}
 	}()
-	return cancel, ch, nil
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
 }
 
 // MetaMethodParameter is serializable
