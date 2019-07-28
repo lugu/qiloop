@@ -189,9 +189,7 @@ func TestReadMetaObjectError(t *testing.T) {
 
 func newObjectReference() object.ObjectReference {
 	return object.ObjectReference{
-		Boolean:    true,
 		MetaObject: newMetaObject(),
-		MetaID:     1,
 		ServiceID:  1,
 		ObjectID:   2,
 	}

@@ -1118,9 +1118,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			Boolean:    true,
 			MetaObject: meta,
-			MetaID:     0,
 			ServiceID:  source.ServiceID(),
 			ObjectID:   source.ObjectID(),
 		}

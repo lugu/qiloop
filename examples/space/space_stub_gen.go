@@ -230,9 +230,7 @@ func (p *stubSpacecraft) Shoot(msg *net.Message, c bus.Channel) error {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			Boolean:    true,
 			MetaObject: meta,
-			MetaID:     0,
 			ServiceID:  ret.ServiceID(),
 			ObjectID:   ret.ObjectID(),
 		}
@@ -543,9 +541,7 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
-			Boolean:    true,
 			MetaObject: meta,
-			MetaID:     0,
 			ServiceID:  ammo.ServiceID(),
 			ObjectID:   ammo.ObjectID(),
 		}

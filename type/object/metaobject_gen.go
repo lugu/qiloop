@@ -339,23 +339,15 @@ func writeMetaObject(s MetaObject, w io.Writer) (err error) {
 
 // ObjectReference is serializable
 type ObjectReference struct {
-	Boolean    bool
 	MetaObject MetaObject
-	MetaID     uint32
 	ServiceID  uint32
 	ObjectID   uint32
 }
 
 // readObjectReference unmarshalls ObjectReference
 func readObjectReference(r io.Reader) (s ObjectReference, err error) {
-	if s.Boolean, err = basic.ReadBool(r); err != nil {
-		return s, fmt.Errorf("read Boolean field: %s", err)
-	}
 	if s.MetaObject, err = readMetaObject(r); err != nil {
 		return s, fmt.Errorf("read MetaObject field: %s", err)
-	}
-	if s.MetaID, err = basic.ReadUint32(r); err != nil {
-		return s, fmt.Errorf("read MetaID field: %s", err)
 	}
 	if s.ServiceID, err = basic.ReadUint32(r); err != nil {
 		return s, fmt.Errorf("read ServiceID field: %s", err)
@@ -368,14 +360,8 @@ func readObjectReference(r io.Reader) (s ObjectReference, err error) {
 
 // writeObjectReference marshalls ObjectReference
 func writeObjectReference(s ObjectReference, w io.Writer) (err error) {
-	if err := basic.WriteBool(s.Boolean, w); err != nil {
-		return fmt.Errorf("write Boolean field: %s", err)
-	}
 	if err := writeMetaObject(s.MetaObject, w); err != nil {
 		return fmt.Errorf("write MetaObject field: %s", err)
-	}
-	if err := basic.WriteUint32(s.MetaID, w); err != nil {
-		return fmt.Errorf("write MetaID field: %s", err)
 	}
 	if err := basic.WriteUint32(s.ServiceID, w); err != nil {
 		return fmt.Errorf("write ServiceID field: %s", err)

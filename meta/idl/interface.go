@@ -281,9 +281,7 @@ func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 		return fmt.Errorf("get meta: %s", err)
 	    }
 	    ref := object.ObjectReference {
-		    Boolean: true,
 		    MetaObject: meta,
-		    MetaID: 0,
 		    ServiceID: ` + id + `.ServiceID(),
 		    ObjectID: ` + id + `.ObjectID(),
 	    }

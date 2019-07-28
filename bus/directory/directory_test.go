@@ -66,9 +66,7 @@ func (h *mockServiceDirectorySignalHelper) SignalServiceRemoved(
 
 func newObjectRef(serviceID uint32) object.ObjectReference {
 	return object.ObjectReference{
-		Boolean:    true,
 		MetaObject: object.ObjectMetaObject,
-		MetaID:     0,
 		ServiceID:  serviceID,
 		ObjectID:   1,
 	}
