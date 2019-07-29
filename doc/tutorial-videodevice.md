@@ -1,62 +1,87 @@
-# proxy generation tutorial
+# How to write a client application
 
-This guide will show you how to generate a proxy for ALVideoDevice.
+This guide will show you how to write a client application which
+connects to a service.
+
+To illustrate this, we will write an application which connects to
+the service ALVideoDevice and request an image from a camera.
 
 ## Requirements
 
-A running instance of QiMessaging. For example a NAOqi running on your
-desktop inside Choregraph or a Pepper or Nao robot.
-
-In this tutorial we assume the address to be tcp://127.0.0.1:9559.
-If the port 9559 is not open, try 9503 or 9443 using tcps.
+We need a running instance of the NAOqi SDK. It can either be on a
+real robot (Pepper or NAO) or a virtual robot running on your desktop
+(ex: using Choregraphe).
 
 ## Installation
 
-Refer to [the Go website](https://golang.org) for the installation of
-Go.
-
-Install qiloop with:
+Install the `qiloop` command line interface with
 
 ```
-go get github.com/lugu/qiloop/...
+$ go get -u github.com/lugu/qiloop/cmd/qiloop
+$ qiloop --version
+Version: 0.8
 ```
 
-## Create a package
+## Prerequisite
+
+On NAO, the service directory URL is `tcp://<ROBOT_IP>:9559`
+(replace `<ROBOT_IP>` with the robot IP address).
+
+On Pepper, the connection to the service directory is encrypted and
+authenticated. The service directory URL is `tcps://<ROBOT_IP>:9503`.
+The user login is `nao` and the password is the password of the UNIX
+account `nao` on the robot. Create a file called ~/.qiloop-auth.conf with
+the two lines (replace `<YOUR_PASSWORD>` with your password):
 
 ```
-mkdir -p $GOPATH/src/demo
-cd $GOPATH/src/demo
+nao
+<YOUR_PASSWORD>
+```
+
+Test the connection to the service ALVideoDevice on the robot:
+
+On NAO:
+
+```
+$ qiloop --qi-url tcp://<ROBOT_IP>:9559 info --service ALVideoDevice
+```
+
+On Pepper:
+
+```
+$ qiloop --qi-url tcps://<ROBOT_IP>:9503 info --service ALVideoDevice
 ```
 
 ## Generate the proxy
 
-Two steps:
-- contact the running instance of ALVideoDevice to generate an IDL
-  file. This is done using the `qiloop scan` command.
+Let's write this application!
 
-- generate the specialized proxy of ALVideoDevice from the IDL file.
-  This is done using the `qiloop proxy` command.
-
-The following example generates a proxy for ALVideoDevice (`demo/video_proxy.go`):
+First we will **scan** the service ALVideoDevice to extract its
+interface in an IDL file. This is done using the `qiloop scan`
+command:
 
 ```
-$GOPATH/bin/qiloop scan --qi-url tcp://127.0.0.1:9559 --idl demo/video_device.idl --service ALVideoDevice
+qiloop scan --qi-url tcp://127.0.0.1:9559 --idl video_device.qi.idl --service ALVideoDevice
 ```
+
+This produced a file called `video_device.qi.idl` with the list of
+methods, signals and properties of ALVideoDevice.
 
 Add one line at the top of the IDL file video_device.idl to specify a
-package name:
-'package main`
+package name: 'package main`
 
-Then generate the proxy with:
-```
-$GOPATH/bin/qiloop proxy --idl demo/video_device.idl --output video_proxy.go
-```
+Using this file, we will generate the Go code to access to the
+service. The command `qiloop proxy` will read the IDL file and
+generate a specialized proxy object for ALVideoDevice.
 
+```
+qiloop proxy --idl video_device.qi.idl --output video_proxy.go
+```
 
 ## Proxy usage
 
-Finally, the main program (`demo/main.go`) which uses the proxy of
-ALVideoDevice to obtain a image from a camera:
+Finally, the main program which uses the proxy of ALVideoDevice to
+obtain a image from a camera:
 
 ```golang
 package main
@@ -75,47 +100,58 @@ const (
 )
 
 func main() {
+	// A Session object is used to connect the service directory.
 	sess, err := session.NewSession("tcp://127.0.0.1:9559")
 	if err != nil {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
+	// Using this session, let's instanciate our service
+	// constructor.
 	services := Services(sess)
+
+	// Using the constructor, we request a proxy to ALVideoDevice
 	videoDevice, err := services.ALVideoDevice()
 	if err != nil {
 		log.Fatalf("failed to create video device: %s", err)
 	}
 
+	// Configure the camera
 	id, err := videoDevice.Subscribe("me", topCam, vga, rgb)
 	if err != nil {
 		log.Fatalf("failed to initialize camera: %s", err)
 	}
 
+	// Request an image
 	img, err := videoDevice.GetImageRemote(id)
 	if err != nil {
 		log.Fatalf("failed to retrieve image: %s", err)
 	}
+
+	// GetImageRemote returns an value, let's cast it into a list
+	// of values:
 	values, ok := img.(value.ListValue)
 	if !ok {
 		log.Fatalf("invalid return type")
 	}
+	// Let's extract the image data.
 	width := values[0].(value.IntValue).Value()
 	heigh := values[1].(value.IntValue).Value()
 	pixels := values[6].(value.RawValue).Value()
 
-	log.Printf("resolution: %dx%d", width, heigh)
+	log.Printf("camera resolution: %dx%d\n", width, heigh)
 	file, err := os.Create("image.rgb")
 	if err != nil {
-		log.Fatalf("can not create file")
+		log.Fatalf("cannot create image: %s", err)
 	}
+	defer file.Close()
 	file.Write(pixels)
-        file.Close()
 }
 ```
 
 Since a lot of code is generated, use `go doc` to browse the
 documentation of ALVideoDevice:
 ```
-go doc demo
+go doc .
 
 ```

@@ -3,13 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/type/object"
-	"log"
 )
 
+// Print shows i marshall in JSON.
 func Print(i interface{}) {
 	json, err := json.MarshalIndent(i, "", "    ")
 	if err != nil {
