@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/lugu/qiloop/bus"
@@ -21,10 +22,12 @@ var (
 	metas = make([]object.MetaObject, 0)
 )
 
-func getObject(sess bus.Session, info services.ServiceInfo) (bus.ObjectProxy, error) {
-	proxy, err := sess.Proxy(info.Name, 1)
+func getObject(sess bus.Session, info services.ServiceInfo,
+	objectID uint32) bus.ObjectProxy {
+
+	proxy, err := sess.Proxy(info.Name, objectID)
 	if err != nil {
-	    return nil, fmt.Errorf("connect service (%s): %s", info.Name, err)
+		return nil, fmt.Errorf("connect service (%s): %s", info.Name, err)
 	}
 	return bus.MakeObject(proxy), nil
 }
@@ -55,7 +58,7 @@ func print(event bus.EventTrace, info *services.ServiceInfo,
 	if err != nil {
 		action = fmt.Sprintf("unknown (%d)", event.SlotId)
 	}
-	var size int = -1
+	var size = -1
 	var sig = "unknown"
 	var data = []byte{}
 	var buf bytes.Buffer
@@ -72,7 +75,7 @@ func print(event bus.EventTrace, info *services.ServiceInfo,
 		action, sig)
 }
 
-func trace(serverURL, serviceName string) {
+func trace(serverURL, serviceName string, objectID uint32) {
 
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
@@ -93,18 +96,30 @@ func trace(serverURL, serviceName string) {
 
 	stop := make(chan struct{})
 
+	serviceCount := 0
+
+	serviceID, err := strconv.Atoi(serviceName)
+	if err != nil {
+		serviceID = -1
+	} else {
+		serviceName = ""
+	}
+
 	for _, info := range serviceList {
 
-		if serviceName != "" && serviceName != info.Name {
+		if serviceID != -1 && uint32(serviceID) != info.ServiceId {
+			continue
+		} else if serviceName != "" && serviceName != info.Name {
 			continue
 		}
 
 		obj, err := getObject(sess, info)
 		if err != nil {
-		    log.Printf("cannot trace %s: %s", info.Name, err)
-		    continue
+			log.Printf("cannot trace %s: %s", info.Name, err)
+			continue
 		}
 
+		serviceCount++
 		go func(info services.ServiceInfo, obj bus.ObjectProxy) {
 
 			err = obj.EnableTrace(true)
@@ -119,7 +134,7 @@ func trace(serverURL, serviceName string) {
 			}
 			defer cancel()
 
-			meta, err := obj.MetaObject(1)
+			meta, err := obj.MetaObject(objectID)
 			if err != nil {
 				log.Fatalf("%s: MetaObject: %s.", info.Name, err)
 			}
@@ -137,6 +152,12 @@ func trace(serverURL, serviceName string) {
 			}
 		}(info, obj)
 	}
+
+	if serviceCount == 0 {
+		log.Fatalf("Service not found")
+		return
+	}
+
 	signalChannel := make(chan os.Signal, 2)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
 

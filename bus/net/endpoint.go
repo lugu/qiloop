@@ -178,10 +178,13 @@ func dialTLS(addr string) (EndPoint, error) {
 	return ConnEndPoint(conn), nil
 }
 
+// KeyNetContext represents an entry in the sream context.
 type KeyNetContext uint32
 
 const (
+	// DialAddress is the addressed dialed.
 	DialAddress KeyNetContext = iota
+	// ListenAddress is the addressed listen.
 	ListenAddress
 )
 

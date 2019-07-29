@@ -22,6 +22,7 @@ var (
 
 	serverURL   = "tcp://localhost:9559"
 	serviceName = ""
+	objectID    = uint32(1)
 	inputFile   = ""
 	outputFile  = "-"
 	packageName = ""
@@ -78,6 +79,7 @@ func init() {
 	traceCommand.String(&serverURL, "r", "qi-url",
 		"server URL (default: tcp://localhost:9559)")
 	traceCommand.String(&serviceName, "s", "service", "optional service name")
+	traceCommand.UInt32(&objectID, "o", "object", "optional object id")
 
 	flaggy.AttachSubcommand(infoCommand, 1)
 	flaggy.AttachSubcommand(logCommand, 1)
@@ -106,7 +108,7 @@ func main() {
 	} else if serverCommand.Used {
 		server(serverURL)
 	} else if traceCommand.Used {
-		trace(serverURL, serviceName)
+		trace(serverURL, serviceName, objectID)
 	} else {
 		flaggy.DefaultParser.ShowHelpAndExit("missing command")
 	}
