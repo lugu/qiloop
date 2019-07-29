@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/integrii/flaggy"
+	"github.com/lugu/qiloop/bus/session/token"
 	asciibot "github.com/mattes/go-asciibot"
 )
 
@@ -35,16 +36,20 @@ func init() {
 		asciibot.Random())
 	flaggy.SetDescription(description)
 
+	authDescription := fmt.Sprintf("credentials (default: %s)", token.AuthFile)
+
 	infoCommand = flaggy.NewSubcommand("info")
 	infoCommand.Description = "Connect a server and display services info"
 	infoCommand.String(&serverURL, "r", "qi-url",
 		"server URL (default: tcp://localhost:9559)")
 	infoCommand.String(&serviceName, "s", "service", "optional service name")
+	infoCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	logCommand = flaggy.NewSubcommand("log")
 	logCommand.Description = "Connect a server and prints logs"
 	logCommand.String(&serverURL, "r", "qi-url",
 		"server URL (default: tcp://localhost:9559)")
+	logCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	scanCommand = flaggy.NewSubcommand("scan")
 	scanCommand.Description =
@@ -53,6 +58,7 @@ func init() {
 		"server URL (default: tcp://localhost:9559)")
 	scanCommand.String(&serviceName, "s", "service", "optional service name")
 	scanCommand.String(&outputFile, "i", "idl", "IDL file (output)")
+	scanCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	proxyCommand = flaggy.NewSubcommand("proxy")
 	proxyCommand.Description =
@@ -71,8 +77,9 @@ func init() {
 	serverCommand = flaggy.NewSubcommand("server")
 	serverCommand.Description =
 		"Start a service directory and a log manager"
-	serverCommand.String(&serverURL, "l", "qi-url",
+	serverCommand.String(&serverURL, "l", "qi-listen-url",
 		"Listening URL (default: tcp://localhost:9559)")
+	serverCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	traceCommand = flaggy.NewSubcommand("trace")
 	traceCommand.Description = "Connect a server and traces services"
@@ -80,6 +87,7 @@ func init() {
 		"server URL (default: tcp://localhost:9559)")
 	traceCommand.String(&serviceName, "s", "service", "optional service name")
 	traceCommand.UInt32(&objectID, "o", "object", "optional object id")
+	traceCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	flaggy.AttachSubcommand(infoCommand, 1)
 	flaggy.AttachSubcommand(logCommand, 1)
