@@ -55,7 +55,7 @@ Features:
 - actions: method, signals and properties are fully supported
 - cancellation: not yet implemented
 - transport: TCP, TLS, UNIX socket and QUIC (experimental)
-- authentication: read the credentials from `$HOME/.qi-auth.conf`
+- authentication: read the credentials from `$HOME/.qiloop-auth.conf`
 - service introspection: generate IDL from a running instance (use `qiloop scan`)
 - IDL files: generate specialized proxy and service stub (use `qiloop stub`)
 - partial support for stats and traces
@@ -152,6 +152,6 @@ illustrates some basic usages of qilooop:
 ## Authentication
 
 If you need to provide a login and a password to authenticate yourself
-to a server, create a file `$HOME/.qi-auth.conf` with you login on the
+to a server, create a file `$HOME/.qiloop-auth.conf` with you login on the
 first line and your password on the second.
 

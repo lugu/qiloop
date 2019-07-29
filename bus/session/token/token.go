@@ -12,6 +12,12 @@ import (
 var userLogin = ""
 var userToken = ""
 
+// AuthFile contains the user credentials. The format is:
+// First line: user login
+// Second line: user token
+// Leading and trailing spaces are trimmed.
+var AuthFile = ".qiloop-auth.conf"
+
 func init() {
 	userLogin, userToken = readUserToken()
 }
@@ -26,7 +32,7 @@ func readUserToken() (string, string) {
 	if err != nil {
 		return "", ""
 	}
-	file, err := os.Open(usr.HomeDir + "/.qi-auth.conf")
+	file, err := os.Open(usr.HomeDir + "/" + AuthFile)
 	if err != nil {
 		return "", ""
 	}
@@ -51,7 +57,7 @@ func WriteUserToken(login string, token string) error {
 	}
 
 	var flag = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	file, err := os.OpenFile(usr.HomeDir+"/.qi-auth.conf", flag, 0600)
+	file, err := os.OpenFile(usr.HomeDir+"/"+AuthFile, flag, 0600)
 	if err != nil {
 		return fmt.Errorf("Failed to open auth file: %s", err)
 	}
