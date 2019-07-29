@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/integrii/flaggy v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/lucas-clemente/quic-go v0.11.1
+	github.com/lucas-clemente/quic-go v0.7.1-0.20190720163105-7a294f6a78fb
 	github.com/mattes/go-asciibot v0.0.0-20190603170252-3fa6d766c482
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
