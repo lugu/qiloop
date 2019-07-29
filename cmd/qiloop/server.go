@@ -6,13 +6,15 @@ import (
 	"github.com/lugu/qiloop/bus"
 	dir "github.com/lugu/qiloop/bus/directory"
 	qilog "github.com/lugu/qiloop/bus/logger"
+	"github.com/lugu/qiloop/bus/session/token"
 )
 
 func server(serverURL string) {
-	server, err := dir.NewServer(serverURL, bus.Yes{})
-	if err != nil {
-		log.Fatalf("Failed to listen at %s: %s", serverURL, err)
-	}
+	user, token := token.GetUserToken()
+	server, err := dir.NewServer(serverURL, bus.Dictionary(
+		map[string]string{
+			user: token,
+		}))
 	defer server.Terminate()
 
 	_, err = server.NewService("LogManager", qilog.NewLogManager())

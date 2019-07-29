@@ -23,7 +23,7 @@ var (
 )
 
 func getObject(sess bus.Session, info services.ServiceInfo,
-	objectID uint32) bus.ObjectProxy {
+	objectID uint32) (bus.ObjectProxy, error) {
 
 	proxy, err := sess.Proxy(info.Name, objectID)
 	if err != nil {
@@ -113,7 +113,7 @@ func trace(serverURL, serviceName string, objectID uint32) {
 			continue
 		}
 
-		obj, err := getObject(sess, info)
+		obj, err := getObject(sess, info, objectID)
 		if err != nil {
 			log.Printf("cannot trace %s: %s", info.Name, err)
 			continue
