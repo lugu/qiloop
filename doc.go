@@ -8,7 +8,7 @@
 // (signals with state). A naming service (the service directory) is
 // used to discover and register services. For a detailed description
 // of the protocol, please visit
-// https://github.com/lugu/qiloop/blob/master/doc/NOTES.md
+// https://github.com/lugu/qiloop/blob/master/doc/about-qimessaging.md
 //
 // To connect to a service, a Session object is required: it represents
 // the connection to the service directory. Several transport

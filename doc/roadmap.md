@@ -14,7 +14,7 @@ for later
 - transport: fifo / pipe
 - transport: socketpair
 - transport: websocket
-- remove concurrent actor access (see DOC/INTERNAL.md)
+- remove concurrent actor access (see doc/internal-design.md)
 - gateway implementation
 - implement raw data type (signature, Type and IDL)
 - get ride of implicit tokens when creating a session (Option)

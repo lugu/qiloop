@@ -67,7 +67,7 @@ methods (to be called), signals (to be watched) and properties (signals with
 state). A naming service (the service directory) is used to discover and
 register services. For a detailed description of the protocol, please visit
 this [analysis of
-QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/NOTES.md).
+QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/about-qimessaging.md).
 
 To connect to a service, a Session object is required: it represents the
 connection to the service directory. Several transport protocols are supported
@@ -86,15 +86,15 @@ service (i.e. the proxy object).
 
 Installation:
 
-    go get github.com/lugu/qiloop/...
+    go get -u github.com/lugu/qiloop/...
 
 Documentation: [http://godoc.org/github.com/lugu/qiloop](http://godoc.org/github.com/lugu/qiloop)
 
 ## Tutorials
 
-- How to create a proxy to an existing service: follow the [ALVideoDevice tutorial](https://github.com/lugu/qiloop/blob/master/doc/TUTORIAL.md).
+- How to create a proxy to an existing service: follow the [ALVideoDevice tutorial](https://github.com/lugu/qiloop/blob/master/doc/tutorial-videodevice.md).
 
-- How to create your own service: follow the [clock tutorial](https://github.com/lugu/qiloop/blob/master/doc/SERVICE_TUTORIAL.md).
+- How to create your own service: follow the [clock tutorial](https://github.com/lugu/qiloop/blob/master/doc/tutorial-clock.md).
 
 ## Examples
 
