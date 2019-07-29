@@ -193,6 +193,7 @@ const (
 func dialQUIC(addr string) (EndPoint, error) {
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
+		NextProtos:         []string{"qi-messaging"},
 	}
 	session, err := quic.DialAddr(addr, conf, nil)
 	if err != nil {

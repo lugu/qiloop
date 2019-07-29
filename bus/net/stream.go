@@ -168,7 +168,10 @@ func listenQUIC(addr string) (Listener, error) {
 		}
 	}
 
-	conf := &tls.Config{Certificates: []tls.Certificate{cer}}
+	conf := &tls.Config{
+		Certificates: []tls.Certificate{cer},
+		NextProtos:   []string{"qi-messaging"},
+	}
 
 	listener, err := quic.ListenAddr(addr, conf, nil)
 	if err != nil {

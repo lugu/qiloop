@@ -67,6 +67,7 @@ func listenUNIX(name string) (Listener, error) {
 	return connListener{conn}, nil
 }
 
+// Listener accepts incomming connections in the form of Stream.
 type Listener interface {
 	Accept() (Stream, error)
 	Close() error
