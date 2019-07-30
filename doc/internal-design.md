@@ -46,12 +46,12 @@ stage.
 Each incoming connection generates a new endpoint. Traffic from the various
 endpoints is process in parallel.
 
-Incoming messages are sent to the router (see Router.Dispatch). The
-router dispatch of the messages to the various services. Each service
-dispatch the messages its objects.
+Incoming messages from an endpoint are sent to the router (see
+Router.Dispatch). The router dispatches of the messages to the various
+services. Each service dispatch the messages its objects.
 
-At this stage the messages have been sent to handler queue and then
-process synchronously.
+At this stage the messages have been sent to handler queue of the
+endpoing and then process synchronously.
 
 This has two consequences:
 
