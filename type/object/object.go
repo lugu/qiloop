@@ -4,8 +4,10 @@ import (
 	"github.com/lugu/qiloop/type/value"
 )
 
+// MetaObjectMethodID is the action id of the method MetaObject.
 const MetaObjectMethodID = 2
 
+// MinUserActionID is the first custom action id.
 const MinUserActionID = 100
 
 // Object represents an object on QiMessaging. Every services
