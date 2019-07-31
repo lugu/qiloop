@@ -385,7 +385,6 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			jen.Id(`if !ok {
 					// connection lost or cancellation.
 					close(ch)
-					p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 					return
 				}`),
 			jen.Id("buf := bytes.NewBuffer(payload)"),

@@ -302,7 +302,6 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
@@ -344,7 +343,6 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
@@ -754,7 +752,6 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
@@ -834,7 +831,6 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
@@ -948,7 +944,6 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)

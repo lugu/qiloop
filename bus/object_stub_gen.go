@@ -1069,7 +1069,6 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 			if !ok {
 				// connection lost or cancellation.
 				close(ch)
-				p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
 				return
 			}
 			buf := bytes.NewBuffer(payload)
