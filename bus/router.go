@@ -24,9 +24,6 @@ func NewRouter(authenticator Actor, namespace Namespace) *Router {
 				objects: map[uint32]Actor{
 					0: authenticator,
 				},
-				boxes: map[uint32]MailBox{
-					0: NewMailBox(authenticator),
-				},
 			},
 		},
 		namespace: namespace,
