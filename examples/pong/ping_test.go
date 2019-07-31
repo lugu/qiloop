@@ -80,6 +80,8 @@ func testRemoteAddr(b *testing.B, addr string) {
 	if err != nil {
 		panic(err)
 	}
+	defer session.Terminate()
+
 	services := pong.Services(session)
 	client, err := services.PingPong()
 	if err != nil {
