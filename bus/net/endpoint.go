@@ -102,7 +102,7 @@ loop:
 			}
 			err := h.consumer(msg)
 			if err != nil {
-				log.Printf("consume message: %s", err)
+				log.Printf("consumer: %s", err)
 			}
 		case <-h.cancel:
 			break loop

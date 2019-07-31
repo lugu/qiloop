@@ -205,7 +205,10 @@ func (m *Message) Write(w io.Writer) error {
 		if err == io.EOF {
 			return err
 		}
-		return fmt.Errorf("write message: %s", err)
+		if m.Header.Type == Error {
+			err = fmt.Errorf("%v: %v", readError(m), err)
+		}
+		return fmt.Errorf("write message %v: %s", m.Header, err)
 	}
 	return nil
 }
