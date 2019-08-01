@@ -4,7 +4,6 @@ import (
 	"fmt"
 	io "io"
 	"sort"
-	"sync"
 
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/util"
@@ -13,7 +12,6 @@ import (
 
 // serviceDirectory implements ServiceDirectoryImplementor
 type serviceDirectory struct {
-	sync.RWMutex
 	staging  map[uint32]ServiceInfo
 	services map[uint32]ServiceInfo
 	lastID   uint32
@@ -31,8 +29,6 @@ func ServiceDirectoryImpl() *serviceDirectory {
 
 func (s *serviceDirectory) Activate(activation bus.Activation,
 	helper ServiceDirectorySignalHelper) error {
-	s.Lock()
-	defer s.Unlock()
 	s.signal = helper
 	return nil
 }
@@ -62,8 +58,6 @@ func checkServiceInfo(i ServiceInfo) error {
 }
 
 func (s *serviceDirectory) info(serviceID uint32) (ServiceInfo, error) {
-	s.RLock()
-	defer s.RUnlock()
 	info, ok := s.services[serviceID]
 	if !ok {
 		return info, fmt.Errorf("service %d not found", serviceID)
@@ -72,8 +66,6 @@ func (s *serviceDirectory) info(serviceID uint32) (ServiceInfo, error) {
 }
 
 func (s *serviceDirectory) Service(service string) (info ServiceInfo, err error) {
-	s.RLock()
-	defer s.RUnlock()
 	for _, info = range s.services {
 		if info.Name == service {
 			return info, nil
@@ -89,12 +81,10 @@ func (a serviceList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a serviceList) Less(i, j int) bool { return a[i].ServiceId < a[j].ServiceId }
 
 func (s *serviceDirectory) Services() ([]ServiceInfo, error) {
-	s.RLock()
 	list := make([]ServiceInfo, 0, len(s.services))
 	for _, info := range s.services {
 		list = append(list, info)
 	}
-	s.RUnlock()
 	sort.Sort(serviceList(list))
 	return list, nil
 }
@@ -103,8 +93,6 @@ func (s *serviceDirectory) RegisterService(newInfo ServiceInfo) (uint32, error) 
 	if err := checkServiceInfo(newInfo); err != nil {
 		return 0, err
 	}
-	s.Lock()
-	defer s.Unlock()
 	for _, info := range s.staging {
 		if info.Name == newInfo.Name {
 			return 0, fmt.Errorf("Service name already staging: %s", info.Name)
@@ -122,12 +110,10 @@ func (s *serviceDirectory) RegisterService(newInfo ServiceInfo) (uint32, error) 
 }
 
 func (s *serviceDirectory) UnregisterService(id uint32) error {
-	s.Lock()
 	i, ok := s.services[id]
 	if ok {
 		delete(s.services, id)
 		signal := s.signal
-		s.Unlock()
 		if signal != nil {
 			signal.SignalServiceRemoved(id, i.Name)
 		}
@@ -136,27 +122,22 @@ func (s *serviceDirectory) UnregisterService(id uint32) error {
 	_, ok = s.staging[id]
 	if ok {
 		delete(s.staging, id)
-		s.Unlock()
 		return nil
 	}
-	s.Unlock()
 	return fmt.Errorf("Service not found: %d", id)
 }
 
 func (s *serviceDirectory) ServiceReady(id uint32) error {
-	s.Lock()
 	i, ok := s.staging[id]
 	if ok {
 		delete(s.staging, id)
 		s.services[id] = i
 		signal := s.signal
-		s.Unlock()
 		if signal != nil {
 			signal.SignalServiceAdded(id, i.Name)
 		}
 		return nil
 	}
-	s.Unlock()
 	return fmt.Errorf("Service id not found: %d", id)
 }
 
@@ -165,8 +146,6 @@ func (s *serviceDirectory) UpdateServiceInfo(i ServiceInfo) error {
 		return err
 	}
 
-	s.Lock()
-	defer s.Unlock()
 	info, ok := s.services[i.ServiceId]
 	if !ok {
 		return fmt.Errorf("Service not found: %d (%s)", i.ServiceId, i.Name)
@@ -180,6 +159,7 @@ func (s *serviceDirectory) UpdateServiceInfo(i ServiceInfo) error {
 	return nil
 }
 
+// MachineId returns a machine identifier.
 func (s *serviceDirectory) MachineId() (string, error) {
 	return util.MachineID(), nil
 }
