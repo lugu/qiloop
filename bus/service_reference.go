@@ -8,17 +8,19 @@ import (
 )
 
 // DirectClient creates a pipe and connect obj to a client.
-// FIXME: this will send messages to obj in a concurrent way.
 func DirectClient(obj Actor) Client {
 	proxy, server := net.Pipe()
 	context := NewContext(server)
 	context.SetAuthenticated()
 
+	box := NewMailBox(obj)
+
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true
 	}
 	consumer := func(msg *net.Message) error {
-		return obj.Receive(msg, context)
+		box <- NewMail(msg, context)
+		return nil
 	}
 	closer := func(err error) {
 	}
