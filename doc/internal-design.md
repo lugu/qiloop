@@ -47,18 +47,14 @@ Each incoming connection generates a new endpoint. Traffic from the various
 endpoints is process in parallel.
 
 Incoming messages from an endpoint are sent to the router (see
-Router.Dispatch). The router dispatches of the messages to the various
-services. Each service dispatch the messages its objects.
+Router.Receive). The router dispatches of the messages to the various
+services. Each service dispatch the messages the mailbox of the
+object. Each object has its mailbox which is process sequentially.
 
 At this stage the messages have been sent to handler queue of the
-endpoing and then process synchronously.
+endpoing and then to the object mailbox.
 
 This has two consequences:
 
-    - messages from an endpoint are processed sequentially
-    - objects receive messages in parallel from different endpoint
-
-Improvement: we want the opposite:
-
-    - messages from an endpoint processed in parallel
-    - objects receive one message at a time
+    - messages from an endpoint are post in order to the mailbox.
+    - objects receive one message at a time.

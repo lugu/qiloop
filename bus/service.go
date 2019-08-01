@@ -59,6 +59,7 @@ func (p pendingObject) OnTerminate() {
 type serviceImpl struct {
 	sync.RWMutex
 	objects   map[uint32]Actor
+	boxes     map[uint32]MailBox
 	terminate func()
 	session   Session
 	serviceID uint32
@@ -69,6 +70,9 @@ func NewService(o Actor, activation Activation) (ServiceReceiver, error) {
 	s := &serviceImpl{
 		objects: map[uint32]Actor{
 			activation.ObjectID: o,
+		},
+		boxes: map[uint32]MailBox{
+			activation.ObjectID: NewMailBox(o),
 		},
 	}
 	return s, s.activate(activation)
@@ -96,6 +100,7 @@ func (s *serviceImpl) Add(obj Actor) (index uint32, err error) {
 		return
 	}
 	s.objects[index] = pendingObject{}
+	s.boxes[index] = NewMailBox(s.objects[index])
 	s.Unlock()
 
 	a := objectActivation(s, s.session, s.serviceID, index)
@@ -106,6 +111,7 @@ func (s *serviceImpl) Add(obj Actor) (index uint32, err error) {
 		s.objects[index] = nil
 	} else {
 		s.objects[index] = obj
+		s.boxes[index] = NewMailBox(obj)
 	}
 	s.Unlock()
 	return
@@ -159,12 +165,13 @@ func (s *serviceImpl) Remove(objectID uint32) error {
 // Receive forwards the message to the appropriate object.
 func (s *serviceImpl) Receive(m *net.Message, from Channel) error {
 	s.RLock()
-	o, ok := s.objects[m.Header.Object]
+	box, ok := s.boxes[m.Header.Object]
 	s.RUnlock()
-	if ok {
-		return o.Receive(m, from)
+	if !ok {
+		return from.SendError(m, ErrObjectNotFound)
 	}
-	return from.SendError(m, ErrObjectNotFound)
+	box <- NewMail(m, from)
+	return nil
 }
 
 // Terminate calls OnTerminate on all its objects.
