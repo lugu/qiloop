@@ -58,9 +58,7 @@ type objectImpl struct {
 	propertiesMutex  sync.RWMutex
 	terminate        func()
 	stats            map[uint32]MethodStatistics
-	statsLock        sync.RWMutex
 	traceEnabled     bool
-	traceMutex       sync.RWMutex
 	nextTrace        uint32
 }
 
@@ -214,8 +212,6 @@ func (o *objectImpl) RegisterEventWithSignature(objectID uint32,
 }
 
 func (o *objectImpl) IsStatsEnabled() (bool, error) {
-	o.statsLock.RLock()
-	defer o.statsLock.RUnlock()
 	return o.stats != nil, nil
 }
 
@@ -233,8 +229,6 @@ func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 }
 
 func (o *objectImpl) EnableStats(enabled bool) error {
-	o.statsLock.Lock()
-	defer o.statsLock.Unlock()
 	if enabled && o.stats == nil {
 		o.stats = make(map[uint32]MethodStatistics)
 	} else if !enabled && o.stats != nil {
@@ -245,8 +239,6 @@ func (o *objectImpl) EnableStats(enabled bool) error {
 
 func (o *objectImpl) Stats() (map[uint32]MethodStatistics, error) {
 	stats := make(map[uint32]MethodStatistics)
-	o.statsLock.RLock()
-	defer o.statsLock.RUnlock()
 	if o.stats != nil {
 		for id, stat := range o.stats {
 			stats[id] = stat
@@ -256,8 +248,6 @@ func (o *objectImpl) Stats() (map[uint32]MethodStatistics, error) {
 }
 
 func (o *objectImpl) ClearStats() error {
-	o.statsLock.Lock()
-	defer o.statsLock.Unlock()
 	if o.stats != nil {
 		o.stats = make(map[uint32]MethodStatistics)
 	}
@@ -265,18 +255,15 @@ func (o *objectImpl) ClearStats() error {
 }
 
 func (o *objectImpl) IsTraceEnabled() (bool, error) {
-	o.traceMutex.RLock()
-	defer o.traceMutex.RUnlock()
 	return o.traceEnabled, nil
 }
 
 func (o *objectImpl) EnableTrace(enable bool) error {
-	o.traceMutex.RLock()
-	defer o.traceMutex.RUnlock()
 	o.traceEnabled = enable
 	return nil
 }
 
+// Tracer records the arrival or departure of the message.
 type Tracer interface {
 	Trace(msg *net.Message, id uint32)
 }
@@ -291,18 +278,16 @@ func signature(msg *net.Message, meta *object.MetaObject) string {
 		}
 		if msg.Header.Type == net.Reply {
 			return m.ReturnSignature
-		} else {
-			return m.ParametersSignature
 		}
+		return m.ParametersSignature
 	} else if msg.Header.Type == net.Event {
 		s, ok := meta.Signals[msg.Header.Action]
 		if ok {
 			return s.Signature
-		} else {
-			p, ok := meta.Properties[msg.Header.Action]
-			if ok {
-				return p.Signature
-			}
+		}
+		p, ok := meta.Properties[msg.Header.Action]
+		if ok {
+			return p.Signature
 		}
 	}
 	return "X"
@@ -335,11 +320,8 @@ func (o *objectImpl) Trace(msg *net.Message, id uint32) {
 }
 
 func (o *objectImpl) Tracer(msg *net.Message, from Channel) Channel {
-	o.traceMutex.RLock()
-	enabled := o.traceEnabled
-	o.traceMutex.RUnlock()
 
-	if !enabled {
+	if !o.traceEnabled {
 		return from
 	}
 
