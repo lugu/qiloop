@@ -11,51 +11,32 @@ import (
 // before calling NewService.
 type Router struct {
 	sync.RWMutex
-	services  map[uint32]*serviceImpl
+	services  map[uint32]ServiceReceiver
 	namespace Namespace
-	session   Session // nil until activation
+	session   Session
 }
 
 // NewRouter construct a router with the service zero passed.
-func NewRouter(authenticator Actor, namespace Namespace) *Router {
-	return &Router{
-		services: map[uint32]*serviceImpl{
-			0: {
-				objects: map[uint32]Actor{
-					0: authenticator,
-				},
-			},
-		},
+func NewRouter(authenticator Actor, namespace Namespace, session Session) *Router {
+	r := &Router{
+		services:  make(map[uint32]ServiceReceiver),
 		namespace: namespace,
-		session:   nil,
+		session:   session,
 	}
-}
-
-// Activate calls the Activate method on all the services. Only after
-// the router can process messages.
-func (r *Router) Activate(session Session) error {
-	r.Lock()
-	if r.session != nil {
-		r.Unlock()
-		return fmt.Errorf("router already activated")
+	activation := Activation{
+		ServiceID: 0,
+		ObjectID:  0,
 	}
-	r.session = session
-	r.Unlock()
-	for serviceID, service := range r.services {
-		activation := serviceActivation(r, session, serviceID)
-		err := service.Activate(activation)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	service, _ := NewService(authenticator, activation)
+	r.Add(0, service)
+	return r
 }
 
 // Terminate terminates all the services.
 func (r *Router) Terminate() error {
 	r.Lock()
 	services := r.services
-	r.services = make(map[uint32]*serviceImpl)
+	r.services = make(map[uint32]ServiceReceiver)
 	r.Unlock()
 
 	var ret error
@@ -71,7 +52,7 @@ func (r *Router) Terminate() error {
 
 // Add Add a service ot a router. This does not call the Activate()
 // method on the service.
-func (r *Router) Add(serviceID uint32, s *serviceImpl) error {
+func (r *Router) Add(serviceID uint32, s ServiceReceiver) error {
 	r.Lock()
 	_, ok := r.services[serviceID]
 	if ok {
@@ -94,14 +75,14 @@ func (r *Router) Remove(serviceID uint32) error {
 	return fmt.Errorf("Router: cannot remove service %d", serviceID)
 }
 
-// Dispatch process a message. The message will be replied if the
+// Receive process a message. The message will be replied if the
 // router can not found the destination.
-func (r *Router) Dispatch(m *net.Message, from Channel) error {
+func (r *Router) Receive(m *net.Message, from Channel) error {
 	r.RLock()
 	s, ok := r.services[m.Header.Service]
 	r.RUnlock()
 	if ok {
-		return s.Dispatch(m, from)
+		return s.Receive(m, from)
 	}
 	return from.SendError(m, ErrServiceNotFound)
 }

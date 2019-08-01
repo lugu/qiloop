@@ -54,8 +54,8 @@ func (p pendingObject) Activate(activation Activation) error {
 func (p pendingObject) OnTerminate() {
 }
 
-// serviceImpl implements Service. It allows a service to manage the
-// object within its domain.
+// serviceImpl implements Service and Receiver. It allows a service to
+// manage the object within its domain.
 type serviceImpl struct {
 	sync.RWMutex
 	objects   map[uint32]Actor
@@ -64,14 +64,14 @@ type serviceImpl struct {
 	serviceID uint32
 }
 
-// newService returns a service with the given object associated with
-// object id 1.
-func newService(o Actor) *serviceImpl {
-	return &serviceImpl{
+// NewService returns a service basedon the given object.
+func NewService(o Actor, activation Activation) (ServiceReceiver, error) {
+	s := &serviceImpl{
 		objects: map[uint32]Actor{
-			1: o,
+			activation.ObjectID: o,
 		},
 	}
+	return s, s.activate(activation)
 }
 
 func (s *serviceImpl) ServiceID() uint32 {
@@ -111,9 +111,9 @@ func (s *serviceImpl) Add(obj Actor) (index uint32, err error) {
 	return
 }
 
-// Activate informs the service it will become active and shall be
+// activate informs the service it will become active and shall be
 // ready to handle requests. activation.Service is nil.
-func (s *serviceImpl) Activate(activation Activation) error {
+func (s *serviceImpl) activate(activation Activation) error {
 	var wait sync.WaitGroup
 	s.terminate = activation.Terminate
 	s.session = activation.Session
@@ -156,8 +156,8 @@ func (s *serviceImpl) Remove(objectID uint32) error {
 	return fmt.Errorf("cannot remove object %d", objectID)
 }
 
-// Dispatch forwards the message to the appropriate object.
-func (s *serviceImpl) Dispatch(m *net.Message, from Channel) error {
+// Receive forwards the message to the appropriate object.
+func (s *serviceImpl) Receive(m *net.Message, from Channel) error {
 	s.RLock()
 	o, ok := s.objects[m.Header.Object]
 	s.RUnlock()

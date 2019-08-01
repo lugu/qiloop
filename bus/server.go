@@ -2,7 +2,6 @@ package bus
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	gonet "net"
 	"sync"
@@ -81,23 +80,16 @@ func NewServer(listener net.Listener, auth Authenticator,
 
 	service0 := ServiceAuthenticate(auth)
 
-	router := NewRouter(service0, namespace)
-
 	s := &server{
 		listen:        listener,
 		namespace:     namespace,
-		Router:        router,
 		contexts:      make(map[Channel]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
 		waitChan:      make(chan error, 1),
 	}
-	err := s.activate()
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = s.NewService("ServiceDirectory", service1)
+	s.Router = NewRouter(service0, namespace, s.Session())
+	_, err := s.NewService("ServiceDirectory", service1)
 	if err != nil {
 		s.Terminate()
 		return nil, err
@@ -113,21 +105,15 @@ func StandAloneServer(listener net.Listener, auth Authenticator,
 
 	service0 := ServiceAuthenticate(auth)
 
-	router := NewRouter(service0, namespace)
-
 	s := &server{
 		listen:        listener,
 		namespace:     namespace,
-		Router:        router,
 		contexts:      make(map[Channel]bool),
 		contextsMutex: sync.Mutex{},
 		closeChan:     make(chan int, 1),
 		waitChan:      make(chan error, 1),
 	}
-	err := s.activate()
-	if err != nil {
-		return nil, err
-	}
+	s.Router = NewRouter(service0, namespace, s.Session())
 	go s.run()
 	return s, nil
 }
@@ -138,6 +124,12 @@ type Service interface {
 	Add(o Actor) (uint32, error)
 	Remove(objectID uint32) error
 	Terminate() error
+}
+
+// ServiceReceiver represents the service used by the Server.
+type ServiceReceiver interface {
+	Service
+	Receiver
 }
 
 // NewService returns a new service. The service is activated as part
@@ -153,28 +145,25 @@ func (s *server) NewService(name string, object Actor) (Service, error) {
 	session := s.Router.session
 	s.Router.RUnlock()
 
-	// if the router is not yet activated, this is an error
-	if session == nil {
-		return nil, fmt.Errorf("cannot create service prior to activation")
-	}
-
 	// 1. reserve the name
 	serviceID, err := s.namespace.Reserve(name)
 	if err != nil {
 		return nil, err
 	}
-	service := newService(object)
 
 	// 2. activate the service
-	err = service.Activate(serviceActivation(s.Router, session, serviceID))
+	activation := serviceActivation(s.Router, session, serviceID)
+	service, err := NewService(object, activation)
 	if err != nil {
 		return nil, err
 	}
+
 	// 3. make it available
 	err = s.Router.Add(serviceID, service)
 	if err != nil {
 		return nil, err
 	}
+
 	// 4. advertize it
 	err = s.namespace.Enable(serviceID)
 	if err != nil {
@@ -206,7 +195,7 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 				context.EndPoint().String(), msg.Header)
 			return context.SendError(msg, err)
 		}
-		return s.Router.Dispatch(msg, context)
+		return s.Router.Receive(msg, context)
 	}
 	closer := func(err error) {
 		s.contextsMutex.Lock()
@@ -223,14 +212,6 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 		s.contextsMutex.Unlock()
 	}
 	net.EndPointFinalizer(stream, finalize)
-}
-
-func (s *server) activate() error {
-	err := s.Router.Activate(s.Session())
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (s *server) run() {
