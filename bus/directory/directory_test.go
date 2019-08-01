@@ -1,4 +1,4 @@
-package directory_test
+package directory
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/lugu/qiloop/bus"
-	dir "github.com/lugu/qiloop/bus/directory"
 	proxy "github.com/lugu/qiloop/bus/services"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
@@ -16,7 +15,7 @@ import (
 func TestNewServer(t *testing.T) {
 	addr := util.NewUnixAddr()
 
-	server, err := dir.NewServer(addr, nil)
+	server, err := NewServer(addr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +46,7 @@ type mockServiceDirectorySignalHelper struct {
 }
 
 func newServiceDirectorySignalHelper(t *testing.T, name string,
-	uid uint32) dir.ServiceDirectorySignalHelper {
+	uid uint32) ServiceDirectorySignalHelper {
 	return &mockServiceDirectorySignalHelper{
 		t:            t,
 		expectedName: name,
@@ -83,8 +82,8 @@ func newClientInfo(name string) proxy.ServiceInfo {
 	}
 }
 
-func newInfo(name string) dir.ServiceInfo {
-	return dir.ServiceInfo{
+func newInfo(name string) ServiceInfo {
+	return ServiceInfo{
 		Name:      name,
 		MachineId: util.MachineID(),
 		ProcessId: util.ProcessID(),
@@ -94,7 +93,7 @@ func newInfo(name string) dir.ServiceInfo {
 	}
 }
 
-func compareInfo(t *testing.T, observed, expected dir.ServiceInfo) {
+func compareInfo(t *testing.T, observed, expected ServiceInfo) {
 	if observed.Name != expected.Name {
 		t.Errorf("unexpected expected: %#v, expecting %#v", observed, expected)
 	}
@@ -117,7 +116,7 @@ func compareInfo(t *testing.T, observed, expected dir.ServiceInfo) {
 
 func TestServerDirectory(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
-	impl := dir.ServiceDirectoryImpl()
+	impl := serviceDirectoryImpl()
 	activation := bus.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
@@ -198,7 +197,7 @@ func TestServerDirectory(t *testing.T) {
 
 func TestServiceDirectoryInfo(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
-	impl := dir.ServiceDirectoryImpl()
+	impl := serviceDirectoryImpl()
 	activation := bus.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
@@ -291,7 +290,7 @@ func TestServiceDirectoryInfo(t *testing.T) {
 }
 func TestNamespace(t *testing.T) {
 	helper := newServiceDirectorySignalHelper(t, "test", 2)
-	impl := dir.ServiceDirectoryImpl()
+	impl := serviceDirectoryImpl()
 	activation := bus.Activation{
 		ServiceID: 1,
 		ObjectID:  1,
@@ -345,7 +344,7 @@ func TestNamespace(t *testing.T) {
 func TestStub(t *testing.T) {
 	addr := util.NewUnixAddr()
 
-	server, err := dir.NewServer(addr, nil)
+	server, err := NewServer(addr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -439,7 +438,7 @@ func TestStub(t *testing.T) {
 func TestSession(t *testing.T) {
 	addr := util.NewUnixAddr()
 
-	server, err := dir.NewServer(addr, nil)
+	server, err := NewServer(addr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -483,9 +482,9 @@ func TestSession(t *testing.T) {
 	}
 }
 
-func LimitedReader(s dir.ServiceInfo, size int) io.Reader {
+func LimitedReader(s ServiceInfo, size int) io.Reader {
 	var buf bytes.Buffer
-	err := dir.WriteServiceInfo(s, &buf)
+	err := WriteServiceInfo(s, &buf)
 	if err != nil {
 		panic(err)
 	}
@@ -518,7 +517,7 @@ func NewLimitedWriter(size int) io.Writer {
 func TestWriterServiceInfo(t *testing.T) {
 	info := newInfo("test")
 	var buf bytes.Buffer
-	err := dir.WriteServiceInfo(info, &buf)
+	err := WriteServiceInfo(info, &buf)
 	if err != nil {
 		t.Error(err)
 	}
@@ -526,13 +525,13 @@ func TestWriterServiceInfo(t *testing.T) {
 
 	for i := 0; i < max-1; i++ {
 		w := NewLimitedWriter(i)
-		err := dir.WriteServiceInfo(info, w)
+		err := WriteServiceInfo(info, w)
 		if err == nil {
 			t.Fatalf("not expecting a success at %d", i)
 		}
 	}
 	w := NewLimitedWriter(max)
-	err = dir.WriteServiceInfo(info, w)
+	err = WriteServiceInfo(info, w)
 	if err != nil {
 		t.Error(err)
 	}
@@ -541,7 +540,7 @@ func TestWriterServiceInfo(t *testing.T) {
 func TestReadHeaderError(t *testing.T) {
 	info := newInfo("test")
 	var buf bytes.Buffer
-	err := dir.WriteServiceInfo(info, &buf)
+	err := WriteServiceInfo(info, &buf)
 	if err != nil {
 		t.Error(err)
 	}
@@ -549,20 +548,20 @@ func TestReadHeaderError(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		r := LimitedReader(info, i)
-		_, err := dir.ReadServiceInfo(r)
+		_, err := ReadServiceInfo(r)
 		if err == nil {
 			t.Fatalf("not expecting a success at %d/%d", i, max)
 		}
 	}
 	r := LimitedReader(info, max)
-	_, err = dir.ReadServiceInfo(r)
+	_, err = ReadServiceInfo(r)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestStandalone(t *testing.T) {
-	_, err := dir.NewServer("", nil)
+	_, err := NewServer("", nil)
 	if err == nil {
 		t.Fatalf("shall fail")
 	}

@@ -2,7 +2,7 @@ package directory
 
 import (
 	"fmt"
-	io "io"
+	"io"
 	"sort"
 
 	"github.com/lugu/qiloop/bus"
@@ -18,8 +18,8 @@ type serviceDirectory struct {
 	signal   ServiceDirectorySignalHelper
 }
 
-// ServiceDirectoryImpl returns an implementation of ServiceDirectory
-func ServiceDirectoryImpl() *serviceDirectory {
+// serviceDirectoryImpl returns an implementation of ServiceDirectory
+func serviceDirectoryImpl() *serviceDirectory {
 	return &serviceDirectory{
 		staging:  make(map[uint32]ServiceInfo),
 		services: make(map[uint32]ServiceInfo),
