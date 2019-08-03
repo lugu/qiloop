@@ -254,7 +254,7 @@ func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
 			}
 		}
 	}
-	endpoint, err := bus.SelectEndPoint(info.Endpoints)
+	endpoint, err := bus.SelectEndPoint(info.Endpoints, "", "")
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)

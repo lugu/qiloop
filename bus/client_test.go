@@ -1,13 +1,14 @@
 package bus_test
 
 import (
+	"testing"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/directory"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
-	"testing"
 )
 
 func TestProxyCall(t *testing.T) {
@@ -130,7 +131,7 @@ func TestSelectEndPoint(t *testing.T) {
 		"tcp://198.18.0.1:12",
 		addr,
 		"tcps://192.168.0.1:12",
-	})
+	}, "", "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -139,7 +140,7 @@ func TestSelectEndPoint(t *testing.T) {
 	_, err = bus.SelectEndPoint([]string{
 		"tcp://198.18.1.0",
 		"tcps://192.168.0.0",
-	})
+	}, "", "")
 	if err == nil {
 		t.Fatalf("shall not be able to connect")
 	}
@@ -165,13 +166,13 @@ func TestSelectError(t *testing.T) {
 		"tcp://198.18.0.1:12",
 		addr,
 		"tcps://192.168.0.1:12",
-	})
+	}, "", "")
 	defer endpoint.Close()
 	if err == nil {
 		t.Fatalf("shall fail to authenticate")
 	}
 	// shall refuse to connect to empty list
-	_, err = bus.SelectEndPoint(make([]string, 0))
+	_, err = bus.SelectEndPoint(make([]string, 0), "", "")
 	if err == nil {
 		t.Fatalf("empty list")
 	}

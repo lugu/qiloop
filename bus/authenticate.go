@@ -96,14 +96,10 @@ func (s *serviceAuthenticate) Receive(m *net.Message, from Channel) error {
 		return from.SendError(m, ErrActionNotFound)
 	}
 	response, err := s.wrapAuthenticate(from, m.Payload)
-
 	if err != nil {
 		return from.SendError(m, err)
 	}
-	hdr := net.NewHeader(net.Reply, 0, 0, object.AuthenticateActionID,
-		m.Header.ID)
-	reply := net.NewMessage(hdr, response)
-	return from.Send(&reply)
+	return from.SendReply(m, response)
 }
 
 func (s *serviceAuthenticate) Activate(activation Activation) error {

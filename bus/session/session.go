@@ -20,10 +20,12 @@ type Session struct {
 	cancel           func()
 	added            chan services.ServiceAdded
 	removed          chan services.ServiceRemoved
+	userName         string
+	userToken        string
 }
 
-func newObject(info services.ServiceInfo, ref object.ObjectReference) (bus.ObjectProxy, error) {
-	endpoint, err := bus.SelectEndPoint(info.Endpoints)
+func (s *Session) newObject(info services.ServiceInfo, ref object.ObjectReference) (bus.ObjectProxy, error) {
+	endpoint, err := bus.SelectEndPoint(info.Endpoints, s.userName, s.userToken)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)
@@ -33,8 +35,8 @@ func newObject(info services.ServiceInfo, ref object.ObjectReference) (bus.Objec
 	return bus.MakeObject(proxy), nil
 }
 
-func newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
-	endpoint, err := bus.SelectEndPoint(info.Endpoints)
+func (s *Session) newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
+	endpoint, err := bus.SelectEndPoint(info.Endpoints, s.userName, s.userToken)
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
 	}
@@ -74,7 +76,7 @@ func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
 	if err != nil {
 		return p, err
 	}
-	return newService(info, objectID)
+	return s.newService(info, objectID)
 }
 
 // Object returns a reference to ref.
@@ -83,7 +85,7 @@ func (s *Session) Object(ref object.ObjectReference) (o bus.Proxy, err error) {
 	if err != nil {
 		return o, err
 	}
-	return newObject(info, ref)
+	return s.newObject(info, ref)
 }
 
 // metaProxy is to create proxies to the directory and server
@@ -96,10 +98,12 @@ func metaProxy(c bus.Client, serviceID, objectID uint32) (p bus.Proxy, err error
 	return bus.NewProxy(c, meta, serviceID, objectID), nil
 }
 
-// NewSession connects an address and return a new session.
-func NewSession(addr string) (bus.Session, error) {
+// NewAuthSession connects an address and return a new session.
+func NewAuthSession(addr, user, token string) (bus.Session, error) {
 
 	s := new(Session)
+	s.userName = user
+	s.userToken = token
 	// Manually create a serviceList with just the ServiceInfo
 	// needed to contact ServiceDirectory.
 	s.serviceList = []services.ServiceInfo{
@@ -135,6 +139,11 @@ func NewSession(addr string) (bus.Session, error) {
 		cancelAdded()
 	}
 	return s, nil
+}
+
+// NewSession connects an address and return a new session.
+func NewSession(addr string) (bus.Session, error) {
+	return NewAuthSession(addr, "", "")
 }
 
 func (s *Session) updateServiceList() {

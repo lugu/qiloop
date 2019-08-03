@@ -153,7 +153,9 @@ func NewClient(endpoint net.EndPoint) Client {
 // SelectEndPoint connect to a remote peer using the list of
 // addresses. It tries local addresses first and refuses to connect
 // invalid IP addresses such as test ranges (198.18.0.x).
-func SelectEndPoint(addrs []string) (endpoint net.EndPoint, err error) {
+// User and token are user during Authentication. If user and token
+// are empty, the file .qiloop-auth.conf is read.
+func SelectEndPoint(addrs []string, user, token string) (endpoint net.EndPoint, err error) {
 	if len(addrs) == 0 {
 		return endpoint, fmt.Errorf("empty address list")
 	}
@@ -169,7 +171,11 @@ func SelectEndPoint(addrs []string) (endpoint net.EndPoint, err error) {
 		if err != nil {
 			continue
 		}
-		err = Authenticate(endpoint)
+		if user == "" && token == "" {
+			err = Authenticate(endpoint)
+		} else {
+			err = AuthenticateUser(endpoint, user, token)
+		}
 		if err != nil {
 			return endpoint, fmt.Errorf("authentication error: %s",
 				err)

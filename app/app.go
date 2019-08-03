@@ -33,10 +33,6 @@ func init() {
 // strings to connect a session.
 func SessionFromFlag() (bus.Session, error) {
 
-	if listenURL == "" {
-		listenURL = util.NewUnixAddr()
-	}
-
 	if userName != "" && userToken == "" {
 		fmt.Println("Your token: ")
 		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))

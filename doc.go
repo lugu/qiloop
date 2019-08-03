@@ -80,8 +80,7 @@ import (
 // required, else provide empty strings. Example of address:
 // "tcp://localhost:9559", "tcps://localhost:9443".
 func NewSession(addr, user, token string) (bus.Session, error) {
-	// TODO: get ride of bus/session/token
-	return session.NewSession(addr)
+	return session.NewAuthSession(addr, user, token)
 }
 
 // Authenticator decides if a user/token tuple is valid. It is used to
