@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/integrii/flaggy"
 	"github.com/lugu/qiloop/bus/session/token"
@@ -103,6 +104,8 @@ func init() {
 }
 
 func main() {
+	log.SetFlags(0)
+
 	if infoCommand.Used {
 		info(serverURL, serviceName)
 	} else if scanCommand.Used {

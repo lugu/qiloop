@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
 
 	"github.com/lugu/qiloop/bus"
 	dir "github.com/lugu/qiloop/bus/directory"
@@ -24,8 +26,15 @@ func server(serverURL string) {
 
 	log.Printf("Listening at %s", serverURL)
 
-	err = <-server.WaitTerminate()
-	if err != nil {
-		log.Fatalf("Server terminate: %s", err)
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	select {
+	case err = <-server.WaitTerminate():
+		if err != nil {
+			log.Fatalf("Server: %s", err)
+		}
+	case s := <-interrupt:
+		log.Printf("%v: quitting.", s)
 	}
 }
