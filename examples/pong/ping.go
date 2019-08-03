@@ -1,4 +1,4 @@
-// This files contains the implementation of the PingPong service.
+// Package pong contains the implementation of the PingPong service.
 //
 // The file ping_stub_gen.go is generated with:
 //

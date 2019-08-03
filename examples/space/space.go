@@ -1,11 +1,10 @@
-// This files contains the implementation of the Spacecraft and Bomb
+// Package space contains the implementation of the Spacecraft and Bomb
 // objects.
 //
 // The file space_stub_gen.go is generated with:
 //
 // 	$ qiloop stub --idl space.qi.idl --output space_stub_gen.go
 //
-
 package space
 
 import (

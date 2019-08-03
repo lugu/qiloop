@@ -8,6 +8,8 @@ import (
 	"github.com/lugu/qiloop/meta/idl"
 )
 
+// GenerateStub write a Go file containing the generated code from the
+// IDL.
 func GenerateStub(idlFileName, stubFileName, packageName string) {
 
 	file, err := os.Open(idlFileName)
