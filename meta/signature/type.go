@@ -422,10 +422,18 @@ func NewUnknownType() Type {
 		signatureIDL: "unknown",
 		typeName:     jen.Id("interface{}"),
 		marshal: func(id string, writer string) *Statement {
-			return jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type serialization not supported: %v"), jen.Id(id))
+			return jen.Qual("fmt", "Errorf").Call(
+				jen.Lit("marshal unknown type: %v"),
+				jen.Id(id),
+			)
 		},
 		unmarshal: func(reader string) *Statement {
-			return jen.List(jen.Nil(), jen.Qual("fmt", "Errorf").Call(jen.Lit("unknown type deserialization not supported")))
+			return jen.List(jen.Nil(),
+				jen.Qual("fmt", "Errorf").Call(
+					jen.Lit("unmarshal unknown type: %v"),
+					jen.Id(reader),
+				),
+			)
 		},
 		reader: UnknownReader("X"),
 	}

@@ -2,13 +2,14 @@ package idl
 
 import (
 	"fmt"
-	"github.com/lugu/qiloop/meta/signature"
-	"github.com/lugu/qiloop/type/object"
-	parsec "github.com/prataprc/goparsec"
 	"io"
 	"io/ioutil"
 	"reflect"
 	"strconv"
+
+	"github.com/lugu/qiloop/meta/signature"
+	"github.com/lugu/qiloop/type/object"
+	parsec "github.com/prataprc/goparsec"
 )
 
 func basicType() parsec.Parser {
@@ -24,7 +25,8 @@ func basicType() parsec.Parser {
 		parsec.Atom("bool", ""),
 		parsec.Atom("str", ""),
 		parsec.Atom("obj", ""),
-		parsec.Atom("any", ""))
+		parsec.Atom("any", ""),
+		parsec.Atom("unknown", ""))
 }
 
 // Context catures the current state of the parser.
@@ -610,6 +612,8 @@ func nodifyBasicType(nodes []signature.Node) signature.Node {
 		return signature.NewValueType()
 	case "obj":
 		return signature.NewObjectType()
+	case "unknown":
+		return signature.NewUnknownType()
 	default:
 		return fmt.Errorf("unknown type: %s", sig)
 	}
