@@ -1,0 +1,6 @@
+package main
+
+interface ALVideoDevice
+	fn subscribeCamera(name: str,cameraIndex: int32,resolution: int32,colorSpace: int32,fps: int32) -> str
+	fn getImageRemote(name: str) -> any
+end

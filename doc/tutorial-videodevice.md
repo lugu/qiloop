@@ -4,7 +4,8 @@ This guide will show you how to write a client application which
 connects to a service.
 
 To illustrate this, we will write an application which connects to
-the service ALVideoDevice and request an image from a camera.
+the service ALVideoDevice and request an image from a camera. It is based on
+the [video example](https://github.com/lugu/qiloop/blob/master/examples/video).
 
 ## Requirements
 
@@ -87,21 +88,25 @@ obtain a image from a camera:
 package main
 
 import (
-	"github.com/lugu/qiloop/bus/session"
-	"github.com/lugu/qiloop/type/value"
+	"flag"
 	"log"
 	"os"
+
+	"github.com/lugu/qiloop/app"
+	"github.com/lugu/qiloop/type/value"
 )
 
 const (
 	topCam = 0
 	vga    = 1
 	rgb    = 13
+	fps    = 30
 )
 
 func main() {
+	flag.Parse()
 	// A Session object is used to connect the service directory.
-	sess, err := session.NewSession("tcp://127.0.0.1:9559")
+	sess, err := app.SessionFromFlag()
 	if err != nil {
 		log.Fatalf("failed to connect: %s", err)
 	}
@@ -117,7 +122,7 @@ func main() {
 	}
 
 	// Configure the camera
-	id, err := videoDevice.Subscribe("me", topCam, vga, rgb)
+	id, err := videoDevice.SubscribeCamera("me", topCam, vga, rgb, fps)
 	if err != nil {
 		log.Fatalf("failed to initialize camera: %s", err)
 	}
@@ -147,6 +152,12 @@ func main() {
 	defer file.Close()
 	file.Write(pixels)
 }
+```
+
+You can convert the generate image into PNG format with:
+
+```
+ffmpeg -s 320x240 -pix_fmt rgb24 -i image.rgb image.png
 ```
 
 Since a lot of code is generated, use `go doc` to browse the
