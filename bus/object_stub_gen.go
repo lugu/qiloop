@@ -1497,28 +1497,28 @@ func writeMethodStatistics(s MethodStatistics, w io.Writer) (err error) {
 
 // Timeval is serializable
 type Timeval struct {
-	Tvsec  int64
-	Tvusec int64
+	Tv_sec  int64
+	Tv_usec int64
 }
 
 // readTimeval unmarshalls Timeval
 func readTimeval(r io.Reader) (s Timeval, err error) {
-	if s.Tvsec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("read Tvsec field: %s", err)
+	if s.Tv_sec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("read Tv_sec field: %s", err)
 	}
-	if s.Tvusec, err = basic.ReadInt64(r); err != nil {
-		return s, fmt.Errorf("read Tvusec field: %s", err)
+	if s.Tv_usec, err = basic.ReadInt64(r); err != nil {
+		return s, fmt.Errorf("read Tv_usec field: %s", err)
 	}
 	return s, nil
 }
 
 // writeTimeval marshalls Timeval
 func writeTimeval(s Timeval, w io.Writer) (err error) {
-	if err := basic.WriteInt64(s.Tvsec, w); err != nil {
-		return fmt.Errorf("write Tvsec field: %s", err)
+	if err := basic.WriteInt64(s.Tv_sec, w); err != nil {
+		return fmt.Errorf("write Tv_sec field: %s", err)
 	}
-	if err := basic.WriteInt64(s.Tvusec, w); err != nil {
-		return fmt.Errorf("write Tvusec field: %s", err)
+	if err := basic.WriteInt64(s.Tv_usec, w); err != nil {
+		return fmt.Errorf("write Tv_usec field: %s", err)
 	}
 	return nil
 }

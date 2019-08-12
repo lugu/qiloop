@@ -398,6 +398,7 @@ Types are documented as part of [libqi documentation](http://doc.aldebaran.com/2
 - 'b': bool: boolean value
 - 's': string: string of character
 - 'r': raw data: array of bytes
+- 'X': unknown: no information
 
 When describing the return type of a method:
 - 'v': void: the method is not returning a result other than the

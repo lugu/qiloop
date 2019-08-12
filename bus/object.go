@@ -303,8 +303,8 @@ func (o *objectImpl) Trace(msg *net.Message, id uint32) {
 	now := time.Now()
 	arguments := value.Opaque(signature(msg, &o.meta), msg.Payload)
 	timeval := Timeval{
-		Tvsec:  int64(now.Second()),
-		Tvusec: int64(now.Nanosecond() / 1000),
+		Tv_sec:  int64(now.Second()),
+		Tv_usec: int64(now.Nanosecond() / 1000),
 	}
 	event := EventTrace{
 		Id:        o.nextTrace,

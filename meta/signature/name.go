@@ -7,6 +7,6 @@ import (
 
 // CleanName remove funky character from a name
 func CleanName(name string) string {
-	exp := regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	exp := regexp.MustCompile(`[^_a-zA-Z0-9]+`)
 	return strings.Title(exp.ReplaceAllString(name, ""))
 }
