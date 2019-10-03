@@ -2,5 +2,6 @@ package main
 
 interface ALVideoDevice
 	fn subscribeCamera(name: str,cameraIndex: int32,resolution: int32,colorSpace: int32,fps: int32) -> str
+	fn unsubscribe(nameId: str) -> bool //uid:116
 	fn getImageRemote(name: str) -> any
 end

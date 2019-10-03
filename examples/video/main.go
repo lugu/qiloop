@@ -17,10 +17,24 @@ import (
 )
 
 const (
-	topCam = 0
-	vga    = 1
-	rgb    = 13
-	fps    = 30
+	// cameras
+	topCam    = 0
+	bottomCam = 1
+	depthCam  = 2
+	stereoCam = 3
+
+	// cameras
+	qvga = 1
+	vga  = 2
+	vga4 = 3
+
+	// colorspace
+	yuv  = 10
+	rgb  = 11
+	hsv  = 12
+	dist = 21
+
+	fps = 10
 )
 
 func main() {
@@ -46,6 +60,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize camera: %s", err)
 	}
+	defer videoDevice.Unsubscribe(id)
 
 	// Request an image
 	img, err := videoDevice.GetImageRemote(id)
@@ -57,7 +72,7 @@ func main() {
 	// of values:
 	values, ok := img.(value.ListValue)
 	if !ok {
-		log.Fatalf("invalid return type")
+		log.Fatalf("invalid return type: %#v", img)
 	}
 	// Let's extract the image data.
 	width := values[0].(value.IntValue).Value()
