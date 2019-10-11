@@ -1,11 +1,24 @@
 package value
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/basic"
+)
+
+const (
+	rawValueMaxSize  = 10 * 1024 * 1024
+	listValueMaxSize = 4096
+)
+
+var (
+	// ErrListValueTooLong is returned when reading a list value.
+	ErrListValueTooLong = errors.New("list value too long")
+	// ErrRawValueTooLong is returned when reading a raw value.
+	ErrRawValueTooLong = errors.New("raw value too long")
 )
 
 // Value represents a value whose type in unknown at compile time. The
@@ -432,6 +445,9 @@ func newList(r io.Reader) (Value, error) {
 	if err != nil {
 		return nil, err
 	}
+	if size > listValueMaxSize {
+		return nil, ErrListValueTooLong
+	}
 	list := make([]Value, size)
 	for i := range list {
 		list[i], err = NewValue(r)
@@ -475,19 +491,13 @@ func (l ListValue) Value() []Value {
 // RawValue represents an array of byte.
 type RawValue []byte
 
-const (
-	// RawValueMaxSize is the implementation maximum size of a raw
-	// value.
-	RawValueMaxSize = 10 * 1024 * 1024
-)
-
 func newRaw(r io.Reader) (Value, error) {
 	size, err := basic.ReadUint32(r)
 	if err != nil {
 		return nil, err
 	}
-	if size > RawValueMaxSize {
-		return nil, fmt.Errorf("raw value too large (%d bytes)", size)
+	if size > rawValueMaxSize {
+		return nil, ErrRawValueTooLong
 	}
 	buf := make([]byte, size)
 	err = basic.ReadN(r, buf, int(size))

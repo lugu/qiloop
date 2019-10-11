@@ -2,6 +2,7 @@ package bus
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 
@@ -9,6 +10,15 @@ import (
 	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
+)
+
+const (
+	capabilityMapSizeMax = 4096
+)
+
+var (
+	// ErrCapabilityTooLong is returned when a capability map.
+	ErrCapabilityTooLong = errors.New("capability map too long")
 )
 
 // Authenticator decides if a user/token tuple is valid. It is used to
@@ -71,6 +81,9 @@ func ReadCapabilityMap(in io.Reader) (m CapabilityMap, err error) {
 	size, err := basic.ReadUint32(in)
 	if err != nil {
 		return m, fmt.Errorf("read map size: %s", err)
+	}
+	if size > capabilityMapSizeMax {
+		return m, ErrCapabilityTooLong
 	}
 	m = make(map[string]value.Value, size)
 	for i := 0; i < int(size); i++ {
