@@ -12,6 +12,8 @@ import (
 const (
 	rawValueMaxSize  = 10 * 1024 * 1024
 	listValueMaxSize = 4096
+
+	ObjectReferenceSignature = "(({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>II)<ObjectReference,metaObject,serviceID,objectID>"
 )
 
 var (
@@ -93,6 +95,9 @@ func (o *OpaqueValue) Write(w io.Writer) error {
 }
 
 func newOpaque(sig string, r io.Reader) (Value, error) {
+	if sig == "o" {
+		return newOpaque(ObjectReferenceSignature, r)
+	}
 	reader, err := signature.MakeReader(sig)
 	if err != nil {
 		return nil, fmt.Errorf("Invalid signature %s: %s", sig, err)
