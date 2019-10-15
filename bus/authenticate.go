@@ -3,11 +3,9 @@ package bus
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/type/basic"
 	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/type/value"
 )
@@ -58,46 +56,15 @@ func (d dictionary) Authenticate(user, token string) bool {
 
 // WriteCapabilityMap marshals the capability map.
 func WriteCapabilityMap(m CapabilityMap, out io.Writer) error {
-	err := basic.WriteUint32(uint32(len(m)), out)
-	if err != nil {
-		return fmt.Errorf("write map size: %s", err)
-	}
-	for k, v := range m {
-		err = basic.WriteString(k, out)
-		if err != nil {
-			return fmt.Errorf("write map key: %s", err)
-		}
-		err = v.Write(out)
-		if err != nil {
-			return fmt.Errorf("write map value: %s", err)
-		}
-	}
-	return nil
+	return write_capabilityMap(_capabilityMap{
+		Properties: m,
+	}, out)
 }
 
 // ReadCapabilityMap unmarshals the capability map.
 func ReadCapabilityMap(in io.Reader) (m CapabilityMap, err error) {
-
-	size, err := basic.ReadUint32(in)
-	if err != nil {
-		return m, fmt.Errorf("read map size: %s", err)
-	}
-	if size > capabilityMapSizeMax {
-		return m, ErrCapabilityTooLong
-	}
-	m = make(map[string]value.Value, size)
-	for i := 0; i < int(size); i++ {
-		k, err := basic.ReadString(in)
-		if err != nil {
-			return m, fmt.Errorf("read map key: %s", err)
-		}
-		v, err := value.NewValue(in)
-		if err != nil {
-			return m, fmt.Errorf("read map value: %s", err)
-		}
-		m[k] = v
-	}
-	return m, nil
+	caps, err := read_capabilityMap(in)
+	return caps.Properties, err
 }
 
 type serviceAuthenticate struct {
