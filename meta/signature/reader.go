@@ -41,12 +41,6 @@ func (v UnknownReader) Read(r io.Reader) ([]byte, error) {
 	return nil, fmt.Errorf("Unknown type '%v'", v)
 }
 
-type objectReader struct{}
-
-func (v objectReader) Read(r io.Reader) ([]byte, error) {
-	return nil, fmt.Errorf("not yet supported")
-}
-
 type valueReader struct{}
 
 func (v valueReader) Read(r io.Reader) ([]byte, error) {

@@ -401,6 +401,9 @@ func NewMetaObjectType() Type {
 
 // NewObjectType is a contructor for the representation of a Value.
 func NewObjectType() Type {
+	sig := "(({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>II)<ObjectReference,metaObject,serviceID,objectID>"
+
+	reader, _ := MakeReader(sig)
 	return &typeConstructor{
 		signature:    "o",
 		signatureIDL: "obj",
@@ -411,7 +414,7 @@ func NewObjectType() Type {
 		unmarshal: func(reader string) *Statement {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadObjectReference").Call(jen.Id(reader))
 		},
-		reader: objectReader{},
+		reader: reader,
 	}
 }
 

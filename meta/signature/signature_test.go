@@ -2,10 +2,11 @@ package signature
 
 import (
 	"bytes"
-	parsec "github.com/prataprc/goparsec"
 	"reflect"
 	"strings"
 	"testing"
+
+	parsec "github.com/prataprc/goparsec"
 )
 
 func testUtil(t *testing.T, input string, expected Type) {
@@ -150,6 +151,8 @@ func TestParseEmbeddedDefinitionSignature(t *testing.T) {
 	testSignature(t, "([(s)<test2,b>])<test,a>")
 	testSignature(t, "(s[(s)<test2,b>])<test,a,b>")
 	testSignature(t, "([(s)<test2,b>]s)<test,a,b>")
+	testSignature(t, "(b(s)<b,one>)<a,one,two>")
+	testSignature(t, "(b(o(iW)<c,one,two>)<b,one,two>m)<a,one,two,three>")
 }
 
 func TestParseMetaSignal(t *testing.T) {
