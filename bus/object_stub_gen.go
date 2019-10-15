@@ -644,61 +644,6 @@ func Services(s Session) Constructor {
 	return Constructor{session: s}
 }
 
-// _capabilityMap is serializable
-type _capabilityMap struct {
-	Properties map[string]value.Value
-}
-
-// read_capabilityMap unmarshalls _capabilityMap
-func read_capabilityMap(r io.Reader) (s _capabilityMap, err error) {
-	if s.Properties, err = func() (m map[string]value.Value, err error) {
-		size, err := basic.ReadUint32(r)
-		if err != nil {
-			return m, fmt.Errorf("read map size: %s", err)
-		}
-		m = make(map[string]value.Value, size)
-		for i := 0; i < int(size); i++ {
-			k, err := basic.ReadString(r)
-			if err != nil {
-				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
-			}
-			v, err := value.NewValue(r)
-			if err != nil {
-				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
-			}
-			m[k] = v
-		}
-		return m, nil
-	}(); err != nil {
-		return s, fmt.Errorf("read Properties field: %s", err)
-	}
-	return s, nil
-}
-
-// write_capabilityMap marshalls _capabilityMap
-func write_capabilityMap(s _capabilityMap, w io.Writer) (err error) {
-	if err := func() error {
-		err := basic.WriteUint32(uint32(len(s.Properties)), w)
-		if err != nil {
-			return fmt.Errorf("write map size: %s", err)
-		}
-		for k, v := range s.Properties {
-			err = basic.WriteString(k, w)
-			if err != nil {
-				return fmt.Errorf("write map key: %s", err)
-			}
-			err = v.Write(w)
-			if err != nil {
-				return fmt.Errorf("write map value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("write Properties field: %s", err)
-	}
-	return nil
-}
-
 // ServiceZero is the abstract interface of the service
 type ServiceZero interface {
 	// Authenticate calls the remote procedure

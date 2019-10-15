@@ -1,9 +1,5 @@
 package bus
 
-struct _capabilityMap
-        properties: Map<str,any>
-end
-
 interface ServiceZero
 	fn authenticate(capability: Map<str,any>) -> Map<str,any> //uid:8
 end
