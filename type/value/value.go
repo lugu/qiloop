@@ -1,6 +1,7 @@
 package value
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -32,6 +33,15 @@ type Value interface {
 	Write(w io.Writer) error
 }
 
+// Bytes returns the content of the value (i.e. without the
+// signature).
+func Bytes(v Value) []byte {
+	var buf bytes.Buffer
+	v.Write(&buf)
+	basic.ReadString(&buf)
+	return buf.Bytes()
+}
+
 // NewValue reads a value from a reader. The value is constructed in
 // two times: first the signature of the value is read from the
 // reader, then depending on the actual type, the value is read.
@@ -55,6 +65,7 @@ func NewValue(r io.Reader) (Value, error) {
 		"[m]": newList,
 		"r":   newRaw,
 		"v":   newVoid,
+		"m":   NewValue,
 	}
 	f, ok := solve[s]
 	if ok {

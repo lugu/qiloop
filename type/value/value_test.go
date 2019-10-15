@@ -234,3 +234,48 @@ func TestParseVoidValue(t *testing.T) {
 	bytes := []byte{1, 0, 0, 0, 0x76}
 	helpParseValue(t, bytes, value.Void())
 }
+
+func TestBytes(t *testing.T) {
+
+	if !reflect.DeepEqual(
+		value.Bytes(value.Bool(true)),
+		[]byte{1},
+	) {
+		t.Errorf("true is not one")
+	}
+	if !reflect.DeepEqual(
+		value.Bytes(value.Bool(false)),
+		[]byte{0},
+	) {
+		t.Errorf("false is not zero")
+	}
+	if !reflect.DeepEqual(
+		value.Bytes(value.Int(8)),
+		[]byte{8, 0, 0, 0},
+	) {
+		t.Errorf("8 is not 8")
+	}
+	if !reflect.DeepEqual(
+		value.Bytes(value.Opaque("boo", []byte{1, 2, 3})),
+		[]byte{1, 2, 3},
+	) {
+		t.Errorf("123 is not 123")
+	}
+	data := []byte{
+		4, 0, 0, 0,
+		1, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+		2, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+		3, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+		4, 0, 0, 0,
+		3, 0, 0, 0, 'a', 'b', 'c',
+	}
+	if !reflect.DeepEqual(
+		value.Bytes(value.Opaque("{i(s)<Foo,a>}", data)),
+		data,
+	) {
+		t.Errorf("data does not match")
+	}
+}
