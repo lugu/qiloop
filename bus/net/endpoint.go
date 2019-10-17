@@ -9,9 +9,11 @@ import (
 	"log"
 	gonet "net"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 
+	"github.com/ftrvxmtrx/fd"
 	quic "github.com/lucas-clemente/quic-go"
 	"github.com/lugu/qiloop/type/value"
 )
@@ -178,6 +180,37 @@ func dialTLS(addr string) (EndPoint, error) {
 	return ConnEndPoint(conn), nil
 }
 
+// dialPipe connects a unix socket and echange file descriptors to
+// communiate.
+func dialPipe(name string) (EndPoint, error) {
+
+	addr := gonet.UnixAddr{
+		Name: name,
+		Net:  "unix",
+	}
+	conn, err := gonet.DialUnix("unix", nil, &addr)
+	if err != nil {
+		return nil, fmt.Errorf(`failed to connect unix socket "%s": %s`,
+			name, err)
+	}
+	r, w, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+	err = fd.Put(conn, r)
+	if err != nil {
+		return nil, err
+	}
+	fds, err := fd.Get(conn, 1, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(fds) != 1 {
+		return nil, fmt.Errorf("missing fd")
+	}
+	return NewEndPoint(PipeStream(fds[0], w)), nil
+}
+
 // KeyNetContext represents an entry in the sream context.
 type KeyNetContext uint32
 
@@ -222,6 +255,8 @@ func DialEndPoint(addr string) (EndPoint, error) {
 		return dialQUIC(u.Host)
 	case "unix":
 		return dialUNIX(strings.TrimPrefix(addr, "unix://"))
+	case "pipe":
+		return dialPipe(strings.TrimPrefix(addr, "pipe://"))
 	default:
 		return nil, fmt.Errorf("unknown URL scheme: %s", addr)
 	}

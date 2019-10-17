@@ -115,6 +115,10 @@ func BenchmarkPingPongUnix(b *testing.B) {
 	testRemoteAddr(b, util.NewUnixAddr())
 }
 
+func BenchmarkPingPongPipe(b *testing.B) {
+	testRemoteAddr(b, util.NewPipeAddr())
+}
+
 func BenchmarkPingPongTCP(b *testing.B) {
 	testRemoteAddr(b, "tcp://localhost:12345")
 }

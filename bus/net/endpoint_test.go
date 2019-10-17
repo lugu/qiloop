@@ -402,6 +402,38 @@ func TestEndPoint_DialUnix(t *testing.T) {
 	}
 }
 
+func TestEndPoint_DialPipe(t *testing.T) {
+	addr := util.NewPipeAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		panic(err)
+	}
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+		conn.Close()
+	}()
+	defer listener.Close()
+	endpoint, err := net.DialEndPoint(addr)
+	if err != nil {
+		panic(err)
+	}
+	defer endpoint.Close()
+
+	addr = "pipe:///test"
+	_, err = net.Listen(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+
+	_, err = net.DialEndPoint(addr)
+	if err == nil {
+		panic("shall fail")
+	}
+}
+
 func TestLoadCertificateError(t *testing.T) {
 	os.Setenv("QILOOP_CERT_CONF", "incorrect")
 	addr := "tcps://localhost:23432"

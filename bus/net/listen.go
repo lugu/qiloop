@@ -6,7 +6,10 @@ import (
 	"log"
 	gonet "net"
 	"net/url"
+	"os"
 	"strings"
+
+	"github.com/ftrvxmtrx/fd"
 
 	"github.com/lugu/qiloop/bus/net/cert"
 )
@@ -67,6 +70,50 @@ func listenUNIX(name string) (Listener, error) {
 	return connListener{conn}, nil
 }
 
+type pipeListener struct {
+	l *gonet.UnixListener
+}
+
+func (c pipeListener) Accept() (Stream, error) {
+	conn, err := c.l.AcceptUnix()
+	if err != nil {
+		return nil, err
+	}
+	fds, err := fd.Get(conn, 1, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(fds) != 1 {
+		return nil, fmt.Errorf("missing fd")
+	}
+	r, w, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+	err = fd.Put(conn, r)
+	if err != nil {
+		return nil, err
+	}
+	return PipeStream(fds[0], w), nil
+}
+
+func (c pipeListener) Close() error {
+	return c.l.Close()
+}
+
+func listenPipe(name string) (Listener, error) {
+
+	addr := gonet.UnixAddr{
+		Name: name,
+		Net:  "unix",
+	}
+	conn, err := gonet.ListenUnix("unix", &addr)
+	if err != nil {
+		return nil, err
+	}
+	return pipeListener{conn}, nil
+}
+
 // Listener accepts incomming connections in the form of Stream.
 type Listener interface {
 	Accept() (Stream, error)
@@ -89,6 +136,8 @@ func Listen(addr string) (Listener, error) {
 		return listenQUIC(u.Host)
 	case "unix":
 		return listenUNIX(strings.TrimPrefix(addr, "unix://"))
+	case "pipe":
+		return listenPipe(strings.TrimPrefix(addr, "pipe://"))
 	default:
 		return nil, fmt.Errorf("unknown URL scheme: %s", addr)
 	}

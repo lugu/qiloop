@@ -19,9 +19,16 @@ func makeTempFileName() string {
 	return name
 }
 
-// NewUnixAddr returns a unused UNIX socket address inluding the
+// NewUnixAddr returns an unused UNIX socket address inluding the
 // prefix unix://. The socket file will be collected when the program
-// exit.
+// exits.
 func NewUnixAddr() string {
 	return "unix://" + makeTempFileName()
+}
+
+// NewPipeAddr returns an unused UNIX socket address including the
+// prefix pipe://. The socket file will be collected when the program
+// extis.
+func NewPipeAddr() string {
+	return "pipe://" + makeTempFileName()
 }

@@ -3,6 +3,7 @@ module github.com/lugu/qiloop
 require (
 	github.com/dave/jennifer v1.3.0
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/ftrvxmtrx/fd v0.0.0-20150925145434-c6d800382fff
 	github.com/golang/mock v1.3.1 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/integrii/flaggy v1.2.0
@@ -19,3 +20,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
+
+go 1.13
