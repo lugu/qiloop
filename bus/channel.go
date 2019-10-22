@@ -2,6 +2,7 @@ package bus
 
 import (
 	"bytes"
+	"time"
 
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/value"
@@ -101,6 +102,32 @@ func (c *tracedChannel) SendError(msg *net.Message, err error) error {
 }
 
 func (c *tracedChannel) SendReply(msg *net.Message, response []byte) error {
+	hdr := msg.Header
+	hdr.Type = net.Reply
+	reply := net.NewMessage(hdr, response)
+	return c.Send(&reply)
+}
+
+// statChannel updates the method statistics each time a call is made.
+type statChannel struct {
+	Channel
+	since time.Time
+	o     *objectImpl
+}
+
+func (c *statChannel) Send(msg *net.Message) error {
+	c.o.updateMethodStatistics(msg.Header.Action, time.Since(c.since))
+	return c.Channel.Send(msg)
+}
+
+func (c *statChannel) SendError(msg *net.Message, err error) error {
+	hdr := net.NewHeader(net.Error, msg.Header.Service, msg.Header.Object,
+		msg.Header.Action, msg.Header.ID)
+	mError := net.NewMessage(hdr, errorPaylad(err))
+	return c.Send(&mError)
+}
+
+func (c *statChannel) SendReply(msg *net.Message, response []byte) error {
 	hdr := msg.Header
 	hdr.Type = net.Reply
 	reply := net.NewMessage(hdr, response)

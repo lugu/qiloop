@@ -58,6 +58,8 @@ type objectImpl struct {
 	propertiesMutex  sync.RWMutex
 	terminate        func()
 	stats            map[uint32]MethodStatistics
+	statsMutex       sync.RWMutex
+	statsEnabled     bool
 	traceEnabled     bool
 	nextTrace        uint32
 }
@@ -73,7 +75,14 @@ func NewBasicObject(obj Actor, meta object.MetaObject,
 		onPropertyChange: onPropertyChange,
 		signalHandler:    newSignalHandler(),
 		properties:       make(map[string]value.Value),
+		stats:            make(map[uint32]MethodStatistics),
 	}
+
+	for uid, _ := range impl.meta.Methods {
+		var m MethodStatistics
+		impl.stats[uid] = m
+	}
+
 	return &stubObject{
 		impl:   impl,
 		obj:    obj,
@@ -212,7 +221,7 @@ func (o *objectImpl) RegisterEventWithSignature(objectID uint32,
 }
 
 func (o *objectImpl) IsStatsEnabled() (bool, error) {
-	return o.stats != nil, nil
+	return o.statsEnabled, nil
 }
 
 func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
@@ -229,27 +238,27 @@ func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 }
 
 func (o *objectImpl) EnableStats(enabled bool) error {
-	if enabled && o.stats == nil {
-		o.stats = make(map[uint32]MethodStatistics)
-	} else if !enabled && o.stats != nil {
-		o.stats = nil
-	}
-	panic("not yet implemented")
+	o.statsEnabled = enabled
+	return nil
 }
 
 func (o *objectImpl) Stats() (map[uint32]MethodStatistics, error) {
+	o.statsMutex.Lock()
+	defer o.statsMutex.Unlock()
 	stats := make(map[uint32]MethodStatistics)
-	if o.stats != nil {
-		for id, stat := range o.stats {
-			stats[id] = stat
-		}
+	for id, stat := range o.stats {
+		stats[id] = stat
 	}
 	return stats, nil
 }
 
 func (o *objectImpl) ClearStats() error {
-	if o.stats != nil {
-		o.stats = make(map[uint32]MethodStatistics)
+	o.statsMutex.Lock()
+	defer o.statsMutex.Unlock()
+	o.stats = make(map[uint32]MethodStatistics)
+	for uid, _ := range o.meta.Methods {
+		var m MethodStatistics
+		o.stats[uid] = m
 	}
 	return nil
 }
@@ -319,7 +328,20 @@ func (o *objectImpl) Trace(msg *net.Message, id uint32) {
 	}
 }
 
+func (o *objectImpl) updateMethodStatistics(uid uint32, d time.Duration) {
+	o.statsMutex.Lock()
+	defer o.statsMutex.Unlock()
+	stat, ok := o.stats[uid]
+	if ok {
+		o.stats[uid] = stat.updateWith(d)
+	}
+}
+
 func (o *objectImpl) Tracer(msg *net.Message, from Channel) Channel {
+
+	if o.statsEnabled {
+		from = &statChannel{from, time.Now(), o}
+	}
 
 	if !o.traceEnabled {
 		return from
