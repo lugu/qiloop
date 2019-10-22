@@ -28,6 +28,29 @@ var (
 	LogLevelDebug = LogLevel{Level: 6}
 )
 
+func (level LogLevel) String() string {
+	switch level {
+	case LogLevelNone:
+		return "none "
+	case LogLevelFatal:
+		return "fatal"
+	case LogLevelError:
+		return "error"
+	case LogLevelInfo:
+		return "info "
+	case LogLevelVerbose:
+		return "verb "
+	case LogLevelDebug:
+		return "debug"
+	default:
+		return "unknown"
+	}
+}
+
+func (log LogMessage) String() string {
+	return fmt.Sprintf("[%s] %s %s %s", log.Level, log.Category, log.Source, log.Message)
+}
+
 type logManager struct {
 	activation     bus.Activation
 	providersMutex sync.RWMutex

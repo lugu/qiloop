@@ -1,12 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/lugu/qiloop/bus/services"
+	qilog "github.com/lugu/qiloop/bus/logger"
 	"github.com/lugu/qiloop/bus/session"
 )
 
@@ -16,7 +17,7 @@ func logger(serverURL string) {
 	if err != nil {
 		log.Fatalf("connect: %s", err)
 	}
-	srv := services.Services(sess)
+	srv := qilog.Services(sess)
 	logManager, err := srv.LogManager()
 	if err != nil {
 		log.Fatalf("access LogManager service: %s", err)
@@ -26,6 +27,9 @@ func logger(serverURL string) {
 		log.Fatalf("create listener: %s", err)
 	}
 	defer logListener.Terminate(logListener.ObjectID())
+
+	m, err := logListener.MetaObject(0)
+	fmt.Printf("Meta: %s\n", m.JSON())
 
 	err = logListener.ClearFilters()
 	if err != nil {
@@ -37,6 +41,11 @@ func logger(serverURL string) {
 	}
 	defer cancel()
 
+	err = logListener.SetLevel(qilog.LogLevelDebug)
+	if err != nil {
+		log.Fatalf("set verbosity: %s", err)
+	}
+
 	signalChannel := make(chan os.Signal, 2)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
 
@@ -45,7 +54,7 @@ func logger(serverURL string) {
 		case _ = <-signalChannel:
 			return
 		case log := <-logs:
-			Print(log)
+			fmt.Printf("%s\n", log.String())
 		}
 	}
 }

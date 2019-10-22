@@ -115,6 +115,16 @@ func (l *logListenerImpl) OnVerbosityChange(level LogLevel) error {
 	l.manager.UpdateVerbosity()
 	return nil
 }
+func (l *logListenerImpl) SetLevel(level LogLevel) error {
+	if err := validateLevel(level); err != nil {
+		return err
+	}
+	l.filtersMutex.Lock()
+	l.defaultLevel = level
+	l.filtersMutex.Unlock()
+	l.manager.UpdateVerbosity()
+	return nil
+}
 
 func (l *logListenerImpl) OnFiltersChange(filters map[string]LogLevel) error {
 

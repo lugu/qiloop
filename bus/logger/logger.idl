@@ -25,7 +25,20 @@ interface LogProvider
         fn clearAndSet(filters: Map<str,LogLevel>) //uid:102
 end
 
+
+// TODO
+interface LogListener2
+        fn setLevel(level: LogLevel)
+        fn addFilter(category: str, level: LogLevel)
+        fn clearFilters()
+        sig onLogMessage(log: LogMessage)
+        sig onLogMessages(logs: Vec<LogMessage>)
+        sig onLogMessagesWithBacklog(logs: Vec<LogMessage>)
+        prop logLevel(level: LogLevel)
+end
+
 interface LogListener
+        fn setLevel(level: LogLevel) //uid:100
         fn setCategory(category: str, level: LogLevel) //uid:101
         fn clearFilters() //uid:102
         sig onLogMessage(msg: LogMessage) //uid:103

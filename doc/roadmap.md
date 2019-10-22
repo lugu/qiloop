@@ -10,6 +10,8 @@ for v0.8
 for later
 ---------
 
+- logger: update listerner interface
+- trace: implements statistics
 - transport: socketpair
 - transport: websocket
 - remove concurrent actor access (see doc/internal-design.md)
