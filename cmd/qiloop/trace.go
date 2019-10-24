@@ -32,11 +32,11 @@ func getObject(sess bus.Session, info services.ServiceInfo,
 	return bus.MakeObject(proxy), nil
 }
 
-func print(event bus.EventTrace, info *services.ServiceInfo,
+func printEvent(e bus.EventTrace, info *services.ServiceInfo,
 	meta *object.MetaObject) {
 
 	var typ = "unknown"
-	switch event.Kind {
+	switch e.Kind {
 	case int32(net.Call):
 		typ = "call "
 	case int32(net.Reply):
@@ -54,15 +54,15 @@ func print(event bus.EventTrace, info *services.ServiceInfo,
 	case int32(net.Cancelled):
 		typ = "cancelled"
 	}
-	action, err := meta.ActionName(event.SlotId)
+	action, err := meta.ActionName(e.SlotId)
 	if err != nil {
-		action = fmt.Sprintf("unknown (%d)", event.SlotId)
+		action = fmt.Sprintf("unknown (%d)", e.SlotId)
 	}
 	var size = -1
 	var sig = "unknown"
 	var data = []byte{}
 	var buf bytes.Buffer
-	err = event.Arguments.Write(&buf)
+	err = e.Arguments.Write(&buf)
 	if err == nil {
 		sig, err = basic.ReadString(&buf)
 		if err == nil {
@@ -145,7 +145,7 @@ func trace(serverURL, serviceName string, objectID uint32) {
 					if !ok {
 						return
 					}
-					print(event, &info, &meta)
+					printEvent(event, &info, &meta)
 				case <-stop:
 					return
 				}

@@ -7,9 +7,37 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/aybabtme/rgbterm"
 	qilog "github.com/lugu/qiloop/bus/logger"
 	"github.com/lugu/qiloop/bus/session"
 )
+
+func level(l qilog.LogLevel) string {
+	switch l {
+	case qilog.LogLevelFatal:
+		return "{#ff0000}[FATAL]"
+	case qilog.LogLevelError:
+		return "{#ff0000}[ERROR]"
+	case qilog.LogLevelWarning:
+		return "{#ffaa00}[WARN ]"
+	case qilog.LogLevelInfo:
+		return "{#00ff00}[INFO ]"
+	case qilog.LogLevelVerbose:
+		return "{#ffffff}[VERB ]"
+	case qilog.LogLevelDebug:
+		return "{#0000ff}[DEBUG]"
+	default:
+		return "{#ff0000}[UNEXP]"
+	}
+}
+
+func printLog(m qilog.LogMessage) {
+	if m.Level == qilog.LogLevelNone {
+		return
+	}
+	fmt.Fprintln(rgbterm.ColorOut, level(m.Level),
+		m.Category, m.Source, m.Message, "{}")
+}
 
 func logger(serverURL string) {
 
@@ -27,9 +55,6 @@ func logger(serverURL string) {
 		log.Fatalf("create listener: %s", err)
 	}
 	defer logListener.Terminate(logListener.ObjectID())
-
-	m, err := logListener.MetaObject(0)
-	fmt.Printf("Meta: %s\n", m.JSON())
 
 	err = logListener.ClearFilters()
 	if err != nil {
@@ -54,7 +79,7 @@ func logger(serverURL string) {
 		case _ = <-signalChannel:
 			return
 		case log := <-logs:
-			fmt.Printf("%s\n", log.String())
+			printLog(log)
 		}
 	}
 }
