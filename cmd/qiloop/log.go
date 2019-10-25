@@ -39,7 +39,7 @@ func printLog(m qilog.LogMessage) {
 		m.Category, m.Source, m.Message, "{}")
 }
 
-func logger(serverURL string) {
+func logger(serverURL string, level uint32) {
 
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
@@ -66,7 +66,7 @@ func logger(serverURL string) {
 	}
 	defer cancel()
 
-	err = logListener.SetLevel(qilog.LogLevelDebug)
+	err = logListener.SetLevel(qilog.LogLevel{int32(level)})
 	if err != nil {
 		log.Fatalf("set verbosity: %s", err)
 	}

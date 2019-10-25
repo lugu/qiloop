@@ -25,6 +25,7 @@ var (
 	serverURL   = "tcp://localhost:9559"
 	serviceName = ""
 	objectID    = uint32(1)
+	logLevel    = uint32(4) // LogLevelInfo
 	inputFile   = ""
 	outputFile  = "-"
 	packageName = ""
@@ -51,6 +52,8 @@ func init() {
 	logCommand.String(&serverURL, "r", "qi-url",
 		"server URL (default: tcp://localhost:9559)")
 	logCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
+	levelInfo := "log level, 1:fatal, 2:error, 3:warning, 4:info, 5:verbose, 6:debug (default: 4)"
+	logCommand.UInt32(&logLevel, "l", "level", levelInfo)
 
 	scanCommand = flaggy.NewSubcommand("scan")
 	scanCommand.Description =
@@ -115,7 +118,7 @@ func main() {
 	} else if stubCommand.Used {
 		stub(inputFile, outputFile, packageName)
 	} else if logCommand.Used {
-		logger(serverURL)
+		logger(serverURL, logLevel)
 	} else if serverCommand.Used {
 		server(serverURL)
 	} else if traceCommand.Used {
