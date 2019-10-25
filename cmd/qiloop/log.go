@@ -12,34 +12,40 @@ import (
 	"github.com/lugu/qiloop/bus/session"
 )
 
-func level(l qilog.LogLevel) string {
+func label(l qilog.LogLevel) (color, label string) {
 	switch l {
 	case qilog.LogLevelFatal:
-		return "{#ff0000}[FATAL]"
+		return "{#0000ff}", "[F]"
 	case qilog.LogLevelError:
-		return "{#ff0000}[ERROR]"
+		return "{#ff0000}", "[E]"
 	case qilog.LogLevelWarning:
-		return "{#ffaa00}[WARN ]"
+		return "{#ff8800}", "[W]"
 	case qilog.LogLevelInfo:
-		return "{#00ff00}[INFO ]"
+		return "{#ffcc00}", "[I]"
 	case qilog.LogLevelVerbose:
-		return "{#ffffff}[VERB ]"
+		return "{#bbbbbb}", "[V]"
 	case qilog.LogLevelDebug:
-		return "{#0000ff}[DEBUG]"
+		return "{#ffffff}", "[D]"
 	default:
-		return "{#ff0000}[UNEXP]"
+		return "{#ff0000}", "[?]"
 	}
 }
 
-func printLog(m qilog.LogMessage) {
-	if m.Level == qilog.LogLevelNone {
-		return
-	}
-	fmt.Fprintln(rgbterm.ColorOut, level(m.Level),
-		m.Category, m.Source, m.Message, "{}")
+func printColor(m qilog.LogMessage) {
 }
 
 func logger(serverURL string, level uint32) {
+
+	stat, err := os.Stdout.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	mode := stat.Mode()
+
+	colored := true
+	if (mode&os.ModeDevice == 0) || (mode&os.ModeCharDevice == 0) {
+		colored = false
+	}
 
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
@@ -78,8 +84,22 @@ func logger(serverURL string, level uint32) {
 		select {
 		case _ = <-signalChannel:
 			return
-		case log := <-logs:
-			printLog(log)
+		case m := <-logs:
+			if m.Level == qilog.LogLevelNone {
+				return
+			}
+			color, info := label(m.Level)
+			nocolor := "{}"
+			out := rgbterm.ColorOut
+			if !colored {
+				color = ""
+				nocolor = ""
+				out = os.Stdout
+			}
+			fmt.Fprintf(out, "%s%s %f %d %s %s%s\n",
+				color, info,
+				float64(m.SystemDate.Ns/1000)/10000000.0,
+				m.Id, m.Category, m.Message, nocolor)
 		}
 	}
 }

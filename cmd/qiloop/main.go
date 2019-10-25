@@ -25,7 +25,7 @@ var (
 	serverURL   = "tcp://localhost:9559"
 	serviceName = ""
 	objectID    = uint32(1)
-	logLevel    = uint32(4) // LogLevelInfo
+	logLevel    = uint32(5) // LogLevelVerbose
 	inputFile   = ""
 	outputFile  = "-"
 	packageName = ""
