@@ -9,6 +9,7 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"log"
+	"math/rand"
 )
 
 // BombImplementor interface of the service implementation
@@ -338,7 +339,7 @@ func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 	return &proxyBomb{bus.MakeObject(proxy), sess}
 }
 
-// Bomb returns a proxy to a remote service
+// Bomb returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) Bomb(closer func(error)) (BombProxy, error) {
 	proxy, err := c.session.Proxy("Bomb", 1)
 	if err != nil {
@@ -358,8 +359,9 @@ func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "boom", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "boom", err)
 	}
@@ -437,8 +439,9 @@ func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "delay", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "delay", err)
 	}
@@ -498,7 +501,7 @@ func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 	return &proxySpacecraft{bus.MakeObject(proxy), sess}
 }
 
-// Spacecraft returns a proxy to a remote service
+// Spacecraft returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) Spacecraft(closer func(error)) (SpacecraftProxy, error) {
 	proxy, err := c.session.Proxy("Spacecraft", 1)
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
+	"math/rand"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -482,7 +483,7 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }
 
-// ServiceDirectory returns a proxy to a remote service
+// ServiceDirectory returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) ServiceDirectory(closer func(error)) (ServiceDirectoryProxy, error) {
 	proxy, err := c.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
@@ -651,8 +652,9 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceAdded", err)
 	}
@@ -692,8 +694,9 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceRemoved", err)
 	}

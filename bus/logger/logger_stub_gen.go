@@ -10,6 +10,7 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
+	"math/rand"
 )
 
 // LogProviderImplementor interface of the service implementation
@@ -1154,7 +1155,7 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
 
-// LogProvider returns a proxy to a remote service
+// LogProvider returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) LogProvider(closer func(error)) (LogProviderProxy, error) {
 	proxy, err := c.session.Proxy("LogProvider", 1)
 	if err != nil {
@@ -1269,7 +1270,7 @@ func MakeLogListener2(sess bus.Session, proxy bus.Proxy) LogListener2Proxy {
 	return &proxyLogListener2{bus.MakeObject(proxy), sess}
 }
 
-// LogListener2 returns a proxy to a remote service
+// LogListener2 returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) LogListener2(closer func(error)) (LogListener2Proxy, error) {
 	proxy, err := c.session.Proxy("LogListener2", 1)
 	if err != nil {
@@ -1331,8 +1332,9 @@ func (p *proxyLogListener2) SubscribeOnLogMessage() (func(), chan LogMessage, er
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessage", err)
 	}
@@ -1372,8 +1374,9 @@ func (p *proxyLogListener2) SubscribeOnLogMessages() (func(), chan []LogMessage,
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessages", err)
 	}
@@ -1426,8 +1429,9 @@ func (p *proxyLogListener2) SubscribeOnLogMessagesWithBacklog() (func(), chan []
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessagesWithBacklog", err)
 	}
@@ -1518,8 +1522,9 @@ func (p *proxyLogListener2) SubscribeLogLevel() (func(), chan LogLevel, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "logLevel", err)
 	}
@@ -1595,7 +1600,7 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
 
-// LogListener returns a proxy to a remote service
+// LogListener returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) LogListener(closer func(error)) (LogListenerProxy, error) {
 	proxy, err := c.session.Proxy("LogListener", 1)
 	if err != nil {
@@ -1657,8 +1662,9 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessage", err)
 	}
@@ -1736,8 +1742,9 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "verbosity", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "verbosity", err)
 	}
@@ -1849,8 +1856,9 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]LogLevel,
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "filters", err)
 	}
@@ -1934,7 +1942,7 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }
 
-// LogManager returns a proxy to a remote service
+// LogManager returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) LogManager(closer func(error)) (LogManagerProxy, error) {
 	proxy, err := c.session.Proxy("LogManager", 1)
 	if err != nil {

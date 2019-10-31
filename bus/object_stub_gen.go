@@ -9,6 +9,7 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
+	"math/rand"
 )
 
 // ServiceZeroImplementor interface of the service implementation
@@ -661,7 +662,7 @@ type proxyServiceZero struct {
 	Proxy
 }
 
-// ServiceZero returns a proxy to a remote service
+// ServiceZero returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) ServiceZero(closer func(error)) (ServiceZeroProxy, error) {
 	proxy, err := c.session.Proxy("ServiceZero", 1)
 	if err != nil {
@@ -759,7 +760,7 @@ type proxyObject struct {
 	Proxy
 }
 
-// Object returns a proxy to a remote service
+// Object returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) Object(closer func(error)) (ObjectProxy, error) {
 	proxy, err := c.session.Proxy("Object", 1)
 	if err != nil {
@@ -1063,8 +1064,9 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "traceObject", err)
 	}

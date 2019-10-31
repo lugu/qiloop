@@ -8,6 +8,7 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"log"
+	"math/rand"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -205,7 +206,7 @@ func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 	return &proxyPingPong{bus.MakeObject(proxy), sess}
 }
 
-// PingPong returns a proxy to a remote service
+// PingPong returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) PingPong(closer func(error)) (PingPongProxy, error) {
 	proxy, err := c.session.Proxy("PingPong", 1)
 	if err != nil {
@@ -259,8 +260,9 @@ func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
 	}
+	handlerID := rand.Uint64()
 
-	handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("register event for %s: %s", "pong", err)
 	}

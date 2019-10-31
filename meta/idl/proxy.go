@@ -372,9 +372,11 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 		jen.Id(`propertyID, err := p.`+methodID+`("`+actionName+`")
 		if err != nil {
 			return nil, nil, fmt.Errorf("property %s not available: %s", "`+actionName+`", err)
-		}
+		}`),
 
-		handlerID, err := p.RegisterEvent(p.ObjectID(), propertyID, 0)
+		jen.Id("handlerID").Op(":=").Qual("math/rand", "Uint64").Call(),
+		jen.Id(`
+		_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("register event for %s: %s", "`+actionName+`", err)
 		}`),

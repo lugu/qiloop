@@ -148,7 +148,7 @@ func MakeTimestamp(sess bus.Session, proxy bus.Proxy) TimestampProxy {
 	return &proxyTimestamp{bus.MakeObject(proxy), sess}
 }
 
-// Timestamp returns a proxy to a remote service
+// Timestamp returns a proxy to a remote service. A nil closer is accepted.
 func (c Constructor) Timestamp(closer func(error)) (TimestampProxy, error) {
 	proxy, err := c.session.Proxy("Timestamp", 1)
 	if err != nil {
