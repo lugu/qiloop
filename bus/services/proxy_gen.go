@@ -96,8 +96,8 @@ type ServiceDirectory interface {
 	UpdateServiceInfo(info ServiceInfo) error
 	// MachineId calls the remote procedure
 	MachineId() (string, error)
-	// SocketOfService calls the remote procedure
-	SocketOfService(serviceID uint32) (object.ObjectReference, error)
+	// _socketOfService calls the remote procedure
+	_socketOfService(serviceID uint32) (object.ObjectReference, error)
 	// SubscribeServiceAdded subscribe to a remote signal
 	SubscribeServiceAdded() (unsubscribe func(), updates chan ServiceAdded, err error)
 	// SubscribeServiceRemoved subscribe to a remote signal
@@ -260,8 +260,8 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 	return ret, nil
 }
 
-// SocketOfService calls the remote procedure
-func (p *proxyServiceDirectory) SocketOfService(serviceID uint32) (object.ObjectReference, error) {
+// _socketOfService calls the remote procedure
+func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.ObjectReference, error) {
 	var err error
 	var ret object.ObjectReference
 	var buf bytes.Buffer
@@ -1143,6 +1143,53 @@ func (p *proxyLogManager) RemoveProvider(providerID int32) error {
 	_, err = p.Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
+	}
+	return nil
+}
+
+// ALTextToSpeech is the abstract interface of the service
+type ALTextToSpeech interface {
+	// Say calls the remote procedure
+	Say(stringToSay string) error
+}
+
+// ALTextToSpeechProxy represents a proxy object to the service
+type ALTextToSpeechProxy interface {
+	object.Object
+	bus.Proxy
+	ALTextToSpeech
+}
+
+// proxyALTextToSpeech implements ALTextToSpeechProxy
+type proxyALTextToSpeech struct {
+	bus.ObjectProxy
+	session bus.Session
+}
+
+// MakeALTextToSpeech returns a specialized proxy.
+func MakeALTextToSpeech(sess bus.Session, proxy bus.Proxy) ALTextToSpeechProxy {
+	return &proxyALTextToSpeech{bus.MakeObject(proxy), sess}
+}
+
+// ALTextToSpeech returns a proxy to a remote service
+func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
+	proxy, err := c.session.Proxy("ALTextToSpeech", 1)
+	if err != nil {
+		return nil, fmt.Errorf("contact service: %s", err)
+	}
+	return MakeALTextToSpeech(c.session, proxy), nil
+}
+
+// Say calls the remote procedure
+func (p *proxyALTextToSpeech) Say(stringToSay string) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteString(stringToSay, &buf); err != nil {
+		return fmt.Errorf("serialize stringToSay: %s", err)
+	}
+	_, err = p.Call("say", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call say failed: %s", err)
 	}
 	return nil
 }

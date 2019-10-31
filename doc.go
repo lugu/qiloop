@@ -20,10 +20,10 @@
 //
 // Services have methods, signals and properties which are described
 // in an IDL (Interface Description Language) format. This IDL file is
-// process by the `qiloop` command to generate the go code which allow
+// process by the `qiloop` command to generate the Go code which allow
 // remote access to the service (i.e. the proxy object).
 //
-// For example, here is the IDL file which describes a service which
+// For example, here is an IDL file which describes a service which
 // have two methods, one signal and one property:
 //
 // 	package demo

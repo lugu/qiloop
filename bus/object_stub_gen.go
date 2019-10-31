@@ -3,13 +3,12 @@ package bus
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"log"
-
 	net "github.com/lugu/qiloop/bus/net"
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
+	"io"
+	"log"
 )
 
 // ServiceZeroImplementor interface of the service implementation
@@ -876,7 +875,7 @@ func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
 	}
 	_, err = p.Call("setProperty", buf.Bytes())
 	if err != nil {
-		return fmt.Errorf("call setProperty failed (%#v): %s", name, err)
+		return fmt.Errorf("call setProperty failed: %s", err)
 	}
 	return nil
 }

@@ -101,9 +101,9 @@ Documentation: [http://godoc.org/github.com/lugu/qiloop](http://godoc.org/github
 The [examples directory](https://github.com/lugu/qiloop/blob/master/examples/)
 illustrates some basic usages of qilooop:
 
--   [method call](https://github.com/lugu/qiloop/blob/master/examples/method)
-    illustrates how to call a method of a service: this example lists
-    the services registered to the service directory.
+-   [hello world](https://github.com/lugu/qiloop/blob/master/examples/say)
+    illustrates how to call a method of a service: this example calls
+    the method 'say' of a text to speech service.
 
 -   [signal registration](https://github.com/lugu/qiloop/blob/master/examples/signal)
     illustrates how to subscribe to a signal: this example prints a

@@ -62,3 +62,7 @@ interface LogManager
 	fn addProvider(source: LogProvider) -> int32 //uid:103
 	fn removeProvider(providerID: int32) //uid:104
 end
+
+interface ALTextToSpeech
+	fn say(stringToSay: str)
+end

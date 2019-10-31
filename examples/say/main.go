@@ -1,5 +1,6 @@
 // Package main illustrates how to make a method call to a remote
-// object. It uses the specialized proxy of the service directory.
+// object. It uses the specialized proxy of the text to speech
+// service.
 package main
 
 import (
@@ -16,24 +17,20 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer session.Terminate()
 
-	// proxies is an helper to access the specialized proxy.
+	// Access the specialized proxy constructor.
 	proxies := services.Services(session)
 
-	// obtain a representation of the service directory
-	directory, err := proxies.ServiceDirectory()
+	// Obtain a proxy to the service
+	textToSpeech, err := proxies.ALTextToSpeech()
 	if err != nil {
 		panic(err)
 	}
 
-	// call the method "services" of the service directory.
-	serviceList, err := directory.Services()
+	// Remote procedure call: call the method "say" of the service.
+	err = textToSpeech.Say("Hi there !")
 	if err != nil {
 		panic(err)
-	}
-
-	// print the list of services.
-	for _, info := range serviceList {
-		println("service " + info.Name)
 	}
 }

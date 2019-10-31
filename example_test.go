@@ -5,9 +5,9 @@ import (
 	"github.com/lugu/qiloop/bus/services"
 )
 
-// This example shows how to create a session which connect a server
-// and instanciate the proxy object of the service directory to list
-// the services.
+// This example llustrates how to make a method call to a remote
+// object. It uses the specialized proxy of the text to speech
+// service.
 func Example_basic() {
 	// imports the following packages:
 	// 	"github.com/lugu/qiloop"
@@ -15,32 +15,27 @@ func Example_basic() {
 
 	// Create a new session.
 	session, err := qiloop.NewSession(
-		"tcps://localhost:9443", // service directory URL
-		"nao",                   // user
-		"nao",                   // token
+		"tcp://localhost:9559", // Service directory URL
+		"",                     // user
+		"",                     // token
 	)
 	if err != nil {
 		panic(err)
 	}
+	defer session.Terminate()
 
 	// Access the specialized proxy constructor.
-	constructor := services.Services(session)
+	proxies := services.Services(session)
 
-	// Access a proxy object of the service directory.
-	directory, err := constructor.ServiceDirectory()
+	// Obtain a proxy to the service
+	textToSpeech, err := proxies.ALTextToSpeech()
 	if err != nil {
 		panic(err)
 	}
 
-	// Remote procedure call: call the method "services" of the
-	// service directory.
-	serviceList, err := directory.Services()
+	// Remote procedure call: call the method "say" of the service.
+	err = textToSpeech.Say("Hi there !")
 	if err != nil {
 		panic(err)
-	}
-
-	// Iterate over the list of services.
-	for _, info := range serviceList {
-		println("service " + info.Name)
 	}
 }
