@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/aybabtme/rgbterm"
 	qilog "github.com/lugu/qiloop/bus/logger"
@@ -96,9 +97,11 @@ func logger(serverURL string, level uint32) {
 				nocolor = ""
 				out = os.Stdout
 			}
-			fmt.Fprintf(out, "%s%s %f %d %s %s%s\n",
-				color, info,
-				float64(m.SystemDate.Ns/1000)/10000000.0,
+			sec := int64(m.SystemDate.Ns) / int64(time.Second)
+			ns := int64(m.SystemDate.Ns) - sec*int64(time.Second)
+			t := time.Unix(sec, ns).Format("2006/01/02 15:04:05.000")
+			fmt.Fprintf(out, "%s%s %s %d %s %s%s\n",
+				color, info, t,
 				m.Id, m.Category, m.Message, nocolor)
 		}
 	}
