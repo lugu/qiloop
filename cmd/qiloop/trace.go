@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 
 	"github.com/lugu/qiloop/bus"
@@ -96,14 +97,14 @@ func trace(serverURL, serviceName string, objectID uint32) {
 
 	stop := make(chan struct{})
 
-	serviceCount := 0
-
 	serviceID, err := strconv.Atoi(serviceName)
 	if err != nil {
 		serviceID = -1
 	} else {
 		serviceName = ""
 	}
+
+	var group sync.WaitGroup
 
 	for _, info := range serviceList {
 
@@ -119,8 +120,11 @@ func trace(serverURL, serviceName string, objectID uint32) {
 			continue
 		}
 
-		serviceCount++
+		group.Add(1)
+
 		go func(info services.ServiceInfo, obj bus.ObjectProxy) {
+
+			defer group.Done()
 
 			err = obj.EnableTrace(true)
 			if err != nil {
@@ -149,18 +153,17 @@ func trace(serverURL, serviceName string, objectID uint32) {
 				case <-stop:
 					return
 				}
+
 			}
 		}(info, obj)
 	}
 
-	if serviceCount == 0 {
-		log.Fatalf("Service not found")
-		return
-	}
+	go func() {
+		signalChannel := make(chan os.Signal, 2)
+		signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
+		<-signalChannel
+		close(stop)
+	}()
 
-	signalChannel := make(chan os.Signal, 2)
-	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
-
-	<-signalChannel
-	close(stop)
+	group.Wait()
 }
