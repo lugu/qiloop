@@ -99,7 +99,7 @@ Documentation: [http://godoc.org/github.com/lugu/qiloop](http://godoc.org/github
 ## Examples
 
 The [examples directory](https://github.com/lugu/qiloop/blob/master/examples/)
-illustrates some basic usages of qilooop:
+illustrates some basic usages of QiLoop:
 
 -   [hello world](https://github.com/lugu/qiloop/blob/master/examples/say)
     illustrates how to call a method of a service: this example calls
