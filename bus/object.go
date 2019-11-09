@@ -226,9 +226,9 @@ func (o *objectImpl) IsStatsEnabled() (bool, error) {
 
 func (m MethodStatistics) updateWith(t time.Duration) MethodStatistics {
 	m.Count++
-	duration := float32(t)
+	duration := float32(t.Seconds())
 	m.Wall.CumulatedValue += duration
-	if duration < m.Wall.MinValue {
+	if m.Wall.MinValue == 0 || duration < m.Wall.MinValue {
 		m.Wall.MinValue = duration
 	}
 	if duration > m.Wall.MaxValue {
