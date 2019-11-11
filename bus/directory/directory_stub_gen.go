@@ -483,10 +483,15 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 }
 
 // ServiceDirectory returns a proxy to a remote service
-func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
+func (c Constructor) ServiceDirectory(closer func(error)) (ServiceDirectoryProxy, error) {
 	proxy, err := c.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakeServiceDirectory(c.session, proxy), nil
 }

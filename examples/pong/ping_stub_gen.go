@@ -206,10 +206,15 @@ func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 }
 
 // PingPong returns a proxy to a remote service
-func (c Constructor) PingPong() (PingPongProxy, error) {
+func (c Constructor) PingPong(closer func(error)) (PingPongProxy, error) {
 	proxy, err := c.session.Proxy("PingPong", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakePingPong(c.session, proxy), nil
 }

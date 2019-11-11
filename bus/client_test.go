@@ -58,7 +58,7 @@ func TestProxy(t *testing.T) {
 
 	session := server.Session()
 	services := services.Services(session)
-	directory, err := services.ServiceDirectory()
+	directory, err := services.ServiceDirectory(nil)
 	if err != nil {
 		t.Error(err)
 	}

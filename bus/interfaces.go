@@ -16,9 +16,9 @@ type Client interface {
 	Subscribe(serviceID, objectID, actionID uint32) (func(), chan []byte, error)
 
 	// OnDisconnect registers a callback which is called when the
-	// network connection is closed. If the closure of the
-	// network connection is initiated by the remote side, a non
-	// nil error is passed to the call back.
+	// network connection is closed. If the closure of the network
+	// connection is initiated by the remote side, a non nil error
+	// is passed to the call back. A nil callback returns nil.
 	OnDisconnect(cb func(error)) error
 }
 
@@ -43,9 +43,9 @@ type Proxy interface {
 	ObjectID() uint32
 
 	// OnDisconnect registers a callback which is called when the
-	// network connection is closed. If the closure of the
-	// network connection is initiated by the remote side, a non
-	// nil error is passed to the call back.
+	// network connection is closed. If the closure of the network
+	// connection is initiated by the remote side, a non nil error
+	// is passed to the call back. A nil callback returns nil.
 	OnDisconnect(cb func(error)) error
 
 	// ProxyService returns a reference to a remote service which can be used

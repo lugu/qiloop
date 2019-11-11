@@ -64,7 +64,7 @@ func TestTimestampService(t *testing.T) {
 	session := srv.Session()
 	proxies := clock.Services(session)
 
-	timestamp, err := proxies.Timestamp()
+	timestamp, err := proxies.Timestamp(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestSynchronizedTimestamp(t *testing.T) {
 	session := srv.Session()
 	proxies := clock.Services(session)
 
-	timestampService, err := proxies.Timestamp()
+	timestampService, err := proxies.Timestamp(nil)
 	if err != nil {
 		t.Fatal(err)
 	}

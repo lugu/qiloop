@@ -101,7 +101,7 @@ func TestLogListener(t *testing.T) {
 	defer srv.Terminate()
 
 	proxies := Services(session)
-	logManager, err := proxies.LogManager()
+	logManager, err := proxies.LogManager(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +191,7 @@ func TestLogProvider(t *testing.T) {
 	}
 
 	constructor := Services(session)
-	logManager, err := constructor.LogManager()
+	logManager, err := constructor.LogManager(nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -28,7 +28,7 @@ func Example_basic() {
 	proxies := services.Services(session)
 
 	// Obtain a proxy to the service
-	textToSpeech, err := proxies.ALTextToSpeech()
+	textToSpeech, err := proxies.ALTextToSpeech(nil)
 	if err != nil {
 		panic(err)
 	}

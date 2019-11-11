@@ -123,10 +123,15 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 }
 
 // ServiceDirectory returns a proxy to a remote service
-func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
+func (c Constructor) ServiceDirectory(closer func(error)) (ServiceDirectoryProxy, error) {
 	proxy, err := c.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakeServiceDirectory(c.session, proxy), nil
 }
@@ -584,10 +589,15 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 }
 
 // LogProvider returns a proxy to a remote service
-func (c Constructor) LogProvider() (LogProviderProxy, error) {
+func (c Constructor) LogProvider(closer func(error)) (LogProviderProxy, error) {
 	proxy, err := c.session.Proxy("LogProvider", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakeLogProvider(c.session, proxy), nil
 }
@@ -694,10 +704,15 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 }
 
 // LogListener returns a proxy to a remote service
-func (c Constructor) LogListener() (LogListenerProxy, error) {
+func (c Constructor) LogListener(closer func(error)) (LogListenerProxy, error) {
 	proxy, err := c.session.Proxy("LogListener", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakeLogListener(c.session, proxy), nil
 }
@@ -1014,10 +1029,15 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 }
 
 // LogManager returns a proxy to a remote service
-func (c Constructor) LogManager() (LogManagerProxy, error) {
+func (c Constructor) LogManager(closer func(error)) (LogManagerProxy, error) {
 	proxy, err := c.session.Proxy("LogManager", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakeLogManager(c.session, proxy), nil
 }
@@ -1172,10 +1192,15 @@ func MakeALTextToSpeech(sess bus.Session, proxy bus.Proxy) ALTextToSpeechProxy {
 }
 
 // ALTextToSpeech returns a proxy to a remote service
-func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
+func (c Constructor) ALTextToSpeech(closer func(error)) (ALTextToSpeechProxy, error) {
 	proxy, err := c.session.Proxy("ALTextToSpeech", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakeALTextToSpeech(c.session, proxy), nil
 }

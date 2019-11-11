@@ -46,7 +46,7 @@ func SynchronizedTimestamper(session bus.Session) (Timestamper, error) {
 	ref := time.Now()
 
 	constructor := Services(session)
-	timestampProxy, err := constructor.Timestamp()
+	timestampProxy, err := constructor.Timestamp(nil)
 	if err != nil {
 		return Timestamper(ref),
 			fmt.Errorf("reference timestamp: %s", err)

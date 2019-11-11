@@ -149,10 +149,15 @@ func MakeTimestamp(sess bus.Session, proxy bus.Proxy) TimestampProxy {
 }
 
 // Timestamp returns a proxy to a remote service
-func (c Constructor) Timestamp() (TimestampProxy, error) {
+func (c Constructor) Timestamp(closer func(error)) (TimestampProxy, error) {
 	proxy, err := c.session.Proxy("Timestamp", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
 	}
 	return MakeTimestamp(c.session, proxy), nil
 }

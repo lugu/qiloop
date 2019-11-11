@@ -49,8 +49,13 @@ func main() {
 	// constructor.
 	services := Services(sess)
 
+	// Create a callback in case a network disconnection occurs.
+	closer := func(err error) {
+		log.Fatalf("service disconnected: %s", err)
+	}
+
 	// Using the constructor, we request a proxy to ALVideoDevice
-	videoDevice, err := services.ALVideoDevice()
+	videoDevice, err := services.ALVideoDevice(closer)
 	if err != nil {
 		log.Fatalf("failed to create video device: %s", err)
 	}

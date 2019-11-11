@@ -1,15 +1,16 @@
 package main
 
 import (
+	"io"
+	"log"
+	"os"
+	"strings"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/meta/idl"
 	"github.com/lugu/qiloop/type/object"
-	"io"
-	"log"
-	"os"
-	"strings"
 )
 
 func open(filename string) io.WriteCloser {
@@ -42,7 +43,7 @@ func scan(serverURL, serviceName, idlFile string) {
 	}
 
 	// service direction id = 1
-	dir, err := services.Services(sess).ServiceDirectory()
+	dir, err := services.Services(sess).ServiceDirectory(nil)
 	if err != nil {
 		log.Fatalf("create proxy: %s", err)
 	}

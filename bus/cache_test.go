@@ -65,7 +65,7 @@ func TestServerProxy(t *testing.T) {
 	}
 
 	services := bus.Services(cache)
-	_, err = services.ServiceZero()
+	_, err = services.ServiceZero(nil)
 	if err != nil {
 		panic("expecting an authentication error")
 	}
@@ -87,7 +87,7 @@ func TestLookup(t *testing.T) {
 	cache.AddService("Server", 0, object.MetaService0)
 
 	services := services.Services(cache)
-	_, err = services.ServiceDirectory()
+	_, err = services.ServiceDirectory(nil)
 	if err == nil {
 		panic("ServiceDirectory not yet cached")
 	}
@@ -97,7 +97,7 @@ func TestLookup(t *testing.T) {
 		panic(err)
 	}
 
-	directory, err := services.ServiceDirectory()
+	directory, err := services.ServiceDirectory(nil)
 	if err != nil {
 		panic(err)
 	}
@@ -154,7 +154,7 @@ func TestServerError(t *testing.T) {
 	cache.AddService("ServiceZero", 0, object.MetaService0)
 
 	services := bus.Services(cache)
-	server0, err := services.ServiceZero()
+	server0, err := services.ServiceZero(nil)
 	if err != nil {
 		panic("expecting an authentication error")
 	}
