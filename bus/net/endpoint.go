@@ -409,7 +409,7 @@ func (e *endPoint) ReceiveAny() (chan *Message, error) {
 	closer := func(err error) {
 		close(found)
 	}
-	_ = e.AddHandler(filter, consumer, closer)
+	e.AddHandler(filter, consumer, closer)
 	return found, nil
 }
 

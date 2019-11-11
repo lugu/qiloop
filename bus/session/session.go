@@ -163,7 +163,7 @@ func (s *Session) updateServiceList() {
 // Terminate close the session.
 func (s *Session) Terminate() error {
 	s.cancel()
-	return s.Directory.Disconnect()
+	return fmt.Errorf("Session.Terminate: Not yet implemented")
 }
 
 func (s *Session) updateLoop() {

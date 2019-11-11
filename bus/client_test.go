@@ -1,6 +1,7 @@
 package bus_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/lugu/qiloop/bus"
@@ -114,7 +115,6 @@ func TestProxy(t *testing.T) {
 	if len(resp) == 0 {
 		t.Error(err)
 	}
-	directory.Disconnect()
 }
 
 func TestSelectEndPoint(t *testing.T) {
@@ -175,5 +175,55 @@ func TestSelectError(t *testing.T) {
 	_, err = bus.SelectEndPoint(make([]string, 0), "", "")
 	if err == nil {
 		t.Fatalf("empty list")
+	}
+}
+
+func TestClientDisconnectionError(t *testing.T) {
+
+	serviceEndpoint, clientEndpoint := net.Pipe()
+	defer clientEndpoint.Close()
+
+	// client connection
+	c := bus.NewClient(clientEndpoint)
+
+	var wait sync.WaitGroup
+	var disconnectError error
+
+	wait.Add(1)
+	cont := func(err error) {
+		disconnectError = err
+		wait.Done()
+	}
+	c.OnDisconnect(cont)
+
+	serviceEndpoint.Close()
+	wait.Wait()
+	if disconnectError == nil {
+		t.Error("expecting a disconnection error")
+	}
+}
+
+func TestClientDisconnectionSuccess(t *testing.T) {
+
+	serviceEndpoint, clientEndpoint := net.Pipe()
+	defer serviceEndpoint.Close()
+
+	// client connection
+	c := bus.NewClient(clientEndpoint)
+
+	var wait sync.WaitGroup
+	var err error
+
+	wait.Add(1)
+	cont := func(disconnectError error) {
+		err = disconnectError
+		wait.Done()
+	}
+	c.OnDisconnect(cont)
+
+	clientEndpoint.Close()
+	wait.Wait()
+	if err != nil {
+		t.Errorf("not expecting a disconnection error: %s", err)
 	}
 }

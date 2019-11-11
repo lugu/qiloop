@@ -142,6 +142,14 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 	return cancel, events, nil
 }
 
+// OnDisconnect calls cb when the network connection is closed.
+func (c *client) OnDisconnect(closer func(error)) error {
+	filter := func(hdr *net.Header) (bool, bool) { return false, true }
+	consumer := func(msg *net.Message) error { return nil }
+	c.endpoint.AddHandler(filter, consumer, closer)
+	return nil
+}
+
 // NewClient returns a new client.
 func NewClient(endpoint net.EndPoint) Client {
 	return &client{

@@ -75,6 +75,7 @@ func (p *pipeStream) Context() context.Context {
 	return p.ctx
 }
 
+// PipeStream returns a Stream based on the pipe:// protocol
 func PipeStream(r, w *os.File) Stream {
 	return &pipeStream{
 		r:   r,

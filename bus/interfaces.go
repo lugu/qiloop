@@ -6,11 +6,20 @@ import (
 
 // Client represents a client connection to a service.
 type Client interface {
+
+	// Call initiates a remote procedure call.
 	Call(serviceID uint32, objectID uint32, methodID uint32, payload []byte) ([]byte, error)
+
 	// Subscribe registers to a signal or a property. Returns a
 	// cancel callback, a channel to receive the payload and an
 	// error.
 	Subscribe(serviceID, objectID, actionID uint32) (func(), chan []byte, error)
+
+	// OnDisconnect registers a callback which is called when the
+	// network connection is closed. If the closure of the
+	// network connection is initiated by the remote side, a non
+	// nil error is passed to the call back.
+	OnDisconnect(cb func(error)) error
 }
 
 // Proxy represents a reference to a remote service. It allows to
@@ -33,8 +42,11 @@ type Proxy interface {
 	// namespace.
 	ObjectID() uint32
 
-	// Disconnect stop the network connection to the remote object.
-	Disconnect() error
+	// OnDisconnect registers a callback which is called when the
+	// network connection is closed. If the closure of the
+	// network connection is initiated by the remote side, a non
+	// nil error is passed to the call back.
+	OnDisconnect(cb func(error)) error
 
 	// ProxyService returns a reference to a remote service which can be used
 	// to create client side objects.

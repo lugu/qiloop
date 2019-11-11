@@ -67,10 +67,10 @@ func (p proxy) MethodID(name string) (uint32, error) {
 	return p.meta.MethodID(name)
 }
 
-// Disconnect closes the connection.
-func (p proxy) Disconnect() error {
-	// TODO
-	return fmt.Errorf("proxy.Disconnect not yet implemented")
+// OnDisconnect registers a callback which is called when the network
+// connection is unavailable.
+func (p proxy) OnDisconnect(cb func(error)) error {
+	return p.client.OnDisconnect(cb)
 }
 
 // SignalID resolve the name of the signal using the meta object and
