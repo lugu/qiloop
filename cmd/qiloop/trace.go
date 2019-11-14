@@ -9,7 +9,9 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/aybabtme/rgbterm"
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
@@ -19,9 +21,21 @@ import (
 )
 
 var (
-	infos = make([]services.ServiceInfo, 0)
-	metas = make([]object.MetaObject, 0)
+	infos   = make([]services.ServiceInfo, 0)
+	metas   = make([]object.MetaObject, 0)
+	colored = true
 )
+
+func init() {
+	stat, err := os.Stdout.Stat()
+	if err != nil {
+		colored = false
+	}
+	mode := stat.Mode()
+	if (mode&os.ModeDevice == 0) || (mode&os.ModeCharDevice == 0) {
+		colored = false
+	}
+}
 
 func getObject(sess bus.Session, info services.ServiceInfo,
 	objectID uint32) (bus.ObjectProxy, error) {
@@ -33,32 +47,39 @@ func getObject(sess bus.Session, info services.ServiceInfo,
 	return bus.MakeObject(proxy), nil
 }
 
+func msgType(typ uint8) (color, label string) {
+	switch typ {
+	case net.Call:
+		return "{#cccccc}", "call "
+	case net.Reply:
+		return "{#cccccc}", "reply"
+	case net.Error:
+		return "{#ff0000}", "error"
+	case net.Post:
+		return "{#0088ff}", "post "
+	case net.Event:
+		return "{#0088ff}", "event"
+	case net.Capability:
+		return "{#ff8800}", "cap  "
+	case net.Cancel:
+		return "{#ff8800}", "cancl"
+	case net.Cancelled:
+		return "{#ff8800}", "cnled"
+	default:
+		return "{#ff0000}", "unkno"
+	}
+}
+
 func printEvent(e bus.EventTrace, info *services.ServiceInfo,
 	meta *object.MetaObject) {
 
-	var typ = "unknown"
-	switch e.Kind {
-	case int32(net.Call):
-		typ = "call "
-	case int32(net.Reply):
-		typ = "reply"
-	case int32(net.Error):
-		typ = "error"
-	case int32(net.Post):
-		typ = "post "
-	case int32(net.Event):
-		typ = "event"
-	case int32(net.Capability):
-		typ = "capability"
-	case int32(net.Cancel):
-		typ = "cancel"
-	case int32(net.Cancelled):
-		typ = "cancelled"
-	}
 	action, err := meta.ActionName(e.SlotId)
 	if err != nil {
 		action = fmt.Sprintf("unknown (%d)", e.SlotId)
 	}
+	ts := time.Unix(e.Timestamp.Tv_sec,
+		e.Timestamp.Tv_usec*1000).Format("2006/01/02 15:04:05.0000000")
+
 	var size = -1
 	var sig = "unknown"
 	var data = []byte{}
@@ -72,8 +93,17 @@ func printEvent(e bus.EventTrace, info *services.ServiceInfo,
 		}
 	}
 
-	fmt.Printf("[%s %4d bytes] %s.%s: %s\n", typ, size, info.Name,
-		action, sig)
+	color, typ := msgType(uint8(e.Kind))
+	nocolor := "{}"
+	out := rgbterm.ColorOut
+	if !colored {
+		color = ""
+		nocolor = ""
+		out = os.Stdout
+	}
+
+	fmt.Fprintf(out, "%s%s [id %8d] [%s %4d bytes] %s.%s: %s%s\n",
+		color, ts, e.Id, typ, size, info.Name, action, sig, nocolor)
 }
 
 func trace(serverURL, serviceName string, objectID uint32) {
