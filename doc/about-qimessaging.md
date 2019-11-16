@@ -607,14 +607,16 @@ At the heart of QiMessaging is the feature of remote procedure calls:
 Here is a list of methods shared by almost every object:
 
 - 0: `fn registerEvent(objectID: uint32, signalID: uint32, handler:
-  uint64) uint64`: subscribes to a signal. The new values of the
-  signal will be sent the client using messages of type `event`. If
-  objectID is zero, the object is considered the subject.
-
+  uint64) uint64`: subscribes to a signal. Once registered, the client
+  will receive messages of type `event` with the new value of the
+  signal. For interroperability, the handler parameter must be
+  uniquely assigned by the client.  If objectID is zero, the object is
+  considered the subject.
 
 - 1: `fn unregisterEvent(objectID: uint32, signalID: uint32, handler:
   uint64) void`: unsubscribes from a signal. If objectID is zero, the
-  object is considered the subject.
+  object is considered the subject. For interroperability, the handler
+  must be the same provided to registerEvent.
 
 - 2: `metaObject(objectID: uint32) MetaObject`: introspects an object.
   It returns structure called `MetaObject` which describe an object.
