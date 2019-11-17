@@ -52,7 +52,7 @@ func init() {
 	logCommand.String(&serverURL, "r", "qi-url",
 		"server URL (default: tcp://localhost:9559)")
 	logCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
-	levelInfo := "log level, 1:fatal, 2:error, 3:warning, 4:info, 5:verbose, 6:debug (default: 4)"
+	levelInfo := "log level, 1:fatal, 2:error, 3:warning, 4:info, 5:verbose, 6:debug"
 	logCommand.UInt32(&logLevel, "l", "level", levelInfo)
 
 	scanCommand = flaggy.NewSubcommand("scan")
