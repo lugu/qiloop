@@ -66,6 +66,10 @@
   - [Basic scenario](#basic-scenario)
   - [Client objects](#client-objects)
   - [Message transfer](#message-transfer)
+- [Socket semantic](#socket-semantic)
+  - [Resource lifespan](#resource-lifespan)
+  - [Bus terminaison](#bus-terminaison)
+  - [Namespacing](#namespacing)
 - [Gateway](#gateway)
   - [Motivation](#motivation)
   - [Description](#description)
@@ -991,6 +995,36 @@ Moreover, in the case of a signal / property subscription, the client
 object can emit messages at destination of registered clients. In such
 case it is unclear how the service will be able to route the messages
 appropriately.
+
+## Socket semantic
+
+QiMessaging is a *stateful* protocol because it requires permanent
+connections, most notably to the service directory.
+
+### Resource lifespan
+
+Resources allocation initated from a socket connection can be freed
+after the socket disconnection.
+
+An example of this behavior is the service directory: Service
+registered through a socket will be unregistered automatically if the
+socket is closed.
+
+Another example is LogListener: once the socket is closed to the
+associated listener is be destroy by LogManager.
+
+### Bus terminaison
+
+Client shall consider the connection to the service directory
+permanent. Loosing this connection shall close all other connections.
+This behavior is used to initiate a bus terminaison.
+
+### Namespacing
+
+Identifier resolutions per socket:
+
+        - object ids (Terminate, MetaObject)
+        - signal ids (RegisterEvent, UnregisterEvent)
 
 ## Gateway
 
