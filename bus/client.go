@@ -166,9 +166,9 @@ func NewClient(endpoint net.EndPoint) Client {
 // invalid IP addresses such as test ranges (198.18.0.x).
 // User and token are user during Authentication. If user and token
 // are empty, the file .qiloop-auth.conf is read.
-func SelectEndPoint(addrs []string, user, token string) (endpoint net.EndPoint, err error) {
+func SelectEndPoint(addrs []string, user, token string) (addr string, endpoint net.EndPoint, err error) {
 	if len(addrs) == 0 {
-		return endpoint, fmt.Errorf("empty address list")
+		return "", nil, fmt.Errorf("empty address list")
 	}
 	// sort the addresses based on their value
 	for _, addr := range addrs {
@@ -188,10 +188,10 @@ func SelectEndPoint(addrs []string, user, token string) (endpoint net.EndPoint, 
 			err = AuthenticateUser(endpoint, user, token)
 		}
 		if err != nil {
-			return endpoint, fmt.Errorf("authentication error: %s",
+			return "", nil, fmt.Errorf("authentication error: %s",
 				err)
 		}
-		return endpoint, nil
+		return addr, endpoint, nil
 	}
-	return endpoint, err
+	return "", nil, err
 }

@@ -127,7 +127,7 @@ func TestSelectEndPoint(t *testing.T) {
 	defer server.Terminate()
 
 	// shall connect to unix socket
-	endpoint, err := bus.SelectEndPoint([]string{
+	naddr, endpoint, err := bus.SelectEndPoint([]string{
 		"tcp://198.18.0.1:12",
 		addr,
 		"tcps://192.168.0.1:12",
@@ -135,46 +135,34 @@ func TestSelectEndPoint(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	if naddr != addr {
+		t.Error("unexpected address")
+	}
 	defer endpoint.Close()
 	// shall refuse to connect
-	_, err = bus.SelectEndPoint([]string{
+	naddr, endpoint, err = bus.SelectEndPoint([]string{
 		"tcp://198.18.1.0",
 		"tcps://192.168.0.0",
 	}, "", "")
 	if err == nil {
-		t.Fatalf("shall not be able to connect")
+		t.Error("shall not be able to connect")
 	}
-}
-
-func TestSelectError(t *testing.T) {
-
-	addr := util.NewUnixAddr()
-
-	listener, err := net.Listen(addr)
-	if err != nil {
-		t.Error(err)
+	if endpoint != nil {
+		t.Error("non empty endpoint")
 	}
-	server, err := bus.StandAloneServer(listener, bus.No{},
-		bus.PrivateNamespace())
-	if err != nil {
-		t.Error(err)
-	}
-	defer server.Terminate()
-
-	// shall fail to authenticate
-	endpoint, err := bus.SelectEndPoint([]string{
-		"tcp://198.18.0.1:12",
-		addr,
-		"tcps://192.168.0.1:12",
-	}, "", "")
-	defer endpoint.Close()
-	if err == nil {
-		t.Fatalf("shall fail to authenticate")
+	if naddr != "" {
+		t.Error("non empty address")
 	}
 	// shall refuse to connect to empty list
-	_, err = bus.SelectEndPoint(make([]string, 0), "", "")
+	_, _, err = bus.SelectEndPoint(make([]string, 0), "", "")
 	if err == nil {
 		t.Fatalf("empty list")
+	}
+	if endpoint != nil {
+		t.Error("non empty endpoint")
+	}
+	if naddr != "" {
+		t.Error("non empty address")
 	}
 }
 

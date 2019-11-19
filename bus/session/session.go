@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/lugu/qiloop/bus"
+	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/services"
 	"github.com/lugu/qiloop/type/object"
 )
@@ -22,10 +23,12 @@ type Session struct {
 	removed          chan services.ServiceRemoved
 	userName         string
 	userToken        string
+	poll             map[string]net.EndPoint
+	pollMutex        sync.RWMutex
 }
 
 func (s *Session) newObject(info services.ServiceInfo, ref object.ObjectReference) (bus.ObjectProxy, error) {
-	endpoint, err := bus.SelectEndPoint(info.Endpoints, s.userName, s.userToken)
+	endpoint, err := s.endpoint(info)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)
@@ -36,7 +39,7 @@ func (s *Session) newObject(info services.ServiceInfo, ref object.ObjectReferenc
 }
 
 func (s *Session) newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
-	endpoint, err := bus.SelectEndPoint(info.Endpoints, s.userName, s.userToken)
+	endpoint, err := s.endpoint(info)
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
 	}
@@ -46,6 +49,46 @@ func (s *Session) newService(info services.ServiceInfo, objectID uint32) (p bus.
 		return nil, fmt.Errorf("get service meta object (%s): %s", info.Name, err)
 	}
 	return proxy, nil
+}
+
+// endpoint returns an net.EndPoint matching the info description. If
+// an existing connection exists, it reuse the connection, otherwise
+// it establish a new connection.
+func (s *Session) endpoint(info services.ServiceInfo) (net.EndPoint, error) {
+	if len(info.Endpoints) == 0 {
+		return nil, fmt.Errorf("empty address list")
+	}
+	s.pollMutex.RLock()
+	for _, addr := range info.Endpoints {
+		e, ok := s.poll[addr]
+		if ok {
+			s.pollMutex.RUnlock()
+			return e, nil
+		}
+	}
+	s.pollMutex.RUnlock()
+	addr, endpoint, err := bus.SelectEndPoint(info.Endpoints, s.userName, s.userToken)
+	if err != nil {
+		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
+	}
+	filter := func(hdr *net.Header) (matched bool, keep bool) { return false, true }
+	consumer := func(msg *net.Message) error { panic("unexpected") }
+	closer := func(err error) {
+		s.pollMutex.Lock()
+		delete(s.poll, addr)
+		s.pollMutex.Unlock()
+	}
+	s.pollMutex.Lock()
+	e, ok := s.poll[addr]
+	if ok {
+		s.pollMutex.RUnlock()
+		endpoint.Close()
+		return e, nil
+	}
+	s.poll[addr] = endpoint
+	s.pollMutex.Unlock()
+	endpoint.AddHandler(filter, consumer, closer)
+	return endpoint, nil
 }
 
 func (s *Session) findServiceName(name string) (i services.ServiceInfo, err error) {
@@ -104,6 +147,7 @@ func NewAuthSession(addr, user, token string) (bus.Session, error) {
 	s := new(Session)
 	s.userName = user
 	s.userToken = token
+	s.poll = map[string]net.EndPoint{}
 	// Manually create a serviceList with just the ServiceInfo
 	// needed to contact ServiceDirectory.
 	s.serviceList = []services.ServiceInfo{
