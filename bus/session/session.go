@@ -138,6 +138,7 @@ func NewAuthSession(addr, user, token string) (bus.Session, error) {
 		cancelRemoved()
 		cancelAdded()
 	}
+	go s.updateLoop()
 	return s, nil
 }
 
