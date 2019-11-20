@@ -25,6 +25,12 @@ The messages selected by Filter are queued until they are processed by the
 consumer. Messages are filtered and process in the respective order of their
 arrival. Each handler has a queue of size 10.
 
+Improvement: replace the consumer with a channel of message. EndPoint
+would send the message to the channel or drop the message if the
+buffered channel is full. This to allow of arbitrary buffer size and
+more flexible client handling (see improvement of client proxy
+handler).
+
 ## Client proxy handler
 
 Call data flow: message is sent to the endpoint. reply message is read
@@ -39,7 +45,7 @@ consumer queue, extracted from the queue and sent to the event channel
 the subscriber channel. Then read from the subscriber's channel.
 
 Improvement: no need of two channels to reach the deserialization
-stage.
+stage. See previous improvement.
 
 ## Server message dispatch
 
@@ -47,7 +53,7 @@ Each incoming connection generates a new endpoint. Traffic from the various
 endpoints is process in parallel.
 
 Incoming messages from an endpoint are sent to the router (see
-Router.Receive). The router dispatches of the messages to the various
+Router.Receive). The router dispatches the messages to the various
 services. Each service dispatch the messages the mailbox of the
 object. Each object has its mailbox which is process sequentially.
 
