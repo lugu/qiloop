@@ -47,22 +47,22 @@ func (l *logListenerImpl) Activate(activation bus.Activation,
 	l.helper = helper
 	l.activation = activation
 
-	if err := helper.UpdateVerbosity(LogLevelInfo); err != nil {
-		return err
-	}
-	if err := helper.UpdateFilters(make(map[string]LogLevel)); err != nil {
+	if err := helper.UpdateLogLevel(LogLevelInfo); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (l *logListenerImpl) Messages(messages []LogMessage) {
+func (l *logListenerImpl) Messages(messages []LogMessage) error {
+	kept := []LogMessage{}
 	for _, msg := range messages {
 		if l.filter(&msg) {
 			l.helper.SignalOnLogMessage(msg)
+			kept = append(kept, msg)
 		}
 	}
+	return l.helper.SignalOnLogMessages(kept)
 }
 
 func (l *logListenerImpl) OnTerminate() {
@@ -80,7 +80,7 @@ func validateLevel(level LogLevel) error {
 	return nil
 }
 
-func (l *logListenerImpl) SetCategory(category string, level LogLevel) error {
+func (l *logListenerImpl) AddFilter(category string, level LogLevel) error {
 	if err := validateLevel(level); err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (l *logListenerImpl) ClearFilters() error {
 	return nil
 }
 
-func (l *logListenerImpl) OnVerbosityChange(level LogLevel) error {
+func (l *logListenerImpl) OnLogLevelChange(level LogLevel) error {
 	if err := validateLevel(level); err != nil {
 		return err
 	}
@@ -123,29 +123,5 @@ func (l *logListenerImpl) SetLevel(level LogLevel) error {
 	l.defaultLevel = level
 	l.filtersMutex.Unlock()
 	l.manager.UpdateVerbosity()
-	return nil
-}
-
-func (l *logListenerImpl) OnFiltersChange(filters map[string]LogLevel) error {
-
-	newFilters := make(map[string]LogLevel)
-	newFiltersReg := make(map[string]*regexp.Regexp)
-	for pattern, level := range filters {
-		if err := validateLevel(level); err != nil {
-			return err
-		}
-		reg, err := regexp.Compile(pattern)
-		if err != nil {
-			return fmt.Errorf("invalid regexp (%s): %s", pattern, err)
-		}
-		newFilters[pattern] = level
-		newFiltersReg[pattern] = reg
-	}
-
-	l.filtersMutex.Lock()
-	l.filters = newFilters
-	l.filtersReg = newFiltersReg
-	l.filtersMutex.Unlock()
-	l.manager.UpdateFilters()
 	return nil
 }

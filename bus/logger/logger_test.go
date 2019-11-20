@@ -112,18 +112,23 @@ func TestLogListener(t *testing.T) {
 	}
 	defer logListener.Terminate(0)
 
-	err = logListener.SetVerbosity(LogLevelWarning)
+	err = logListener.SetLevel(LogLevelWarning)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = logListener.SetCategory("qi.*", LogLevelVerbose)
+	err = logListener.AddFilter("qi.*", LogLevelVerbose)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = logListener.SetFilters(map[string]LogLevel{
-		"qiloop.": LogLevelInfo,
-		"boo":     LogLevelDebug,
-	})
+	err = logListener.AddFilter("qiloop.", LogLevelInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = logListener.AddFilter("boo", LogLevelDebug)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,7 +218,7 @@ func TestLogProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer logListener.Terminate(0)
-	err = logListener.SetVerbosity(LogLevelVerbose)
+	err = logListener.SetLevel(LogLevelVerbose)
 	if err != nil {
 		t.Fatal(err)
 	}

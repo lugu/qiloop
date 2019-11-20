@@ -197,274 +197,6 @@ func (p *stubLogProvider) metaObject() object.MetaObject {
 	}
 }
 
-// LogListener2Implementor interface of the service implementation
-type LogListener2Implementor interface {
-	// Activate is called before any other method.
-	// It shall be used to initialize the interface.
-	// activation provides runtime informations.
-	// activation.Terminate() unregisters the object.
-	// activation.Session can access other services.
-	// helper enables signals and properties updates.
-	// Properties must be initialized using helper,
-	// during the Activate call.
-	Activate(activation bus.Activation, helper LogListener2SignalHelper) error
-	OnTerminate()
-	SetLevel(level LogLevel) error
-	AddFilter(category string, level LogLevel) error
-	ClearFilters() error
-	// OnLogLevelChange is called when the property is updated.
-	// Returns an error if the property value is not allowed
-	OnLogLevelChange(level LogLevel) error
-}
-
-// LogListener2SignalHelper provided to LogListener2 a companion object
-type LogListener2SignalHelper interface {
-	SignalOnLogMessage(log LogMessage) error
-	SignalOnLogMessages(logs []LogMessage) error
-	SignalOnLogMessagesWithBacklog(logs []LogMessage) error
-	UpdateLogLevel(level LogLevel) error
-}
-
-// stubLogListener2 implements server.Actor.
-type stubLogListener2 struct {
-	impl      LogListener2Implementor
-	session   bus.Session
-	service   bus.Service
-	serviceID uint32
-	signal    bus.SignalHandler
-}
-
-// LogListener2Object returns an object using LogListener2Implementor
-func LogListener2Object(impl LogListener2Implementor) bus.Actor {
-	var stb stubLogListener2
-	stb.impl = impl
-	obj := bus.NewBasicObject(&stb, stb.metaObject(), stb.onPropertyChange)
-	stb.signal = obj
-	return obj
-}
-
-// NewLogListener2 registers a new object to a service
-// and returns a proxy to the newly created object
-func (c Constructor) NewLogListener2(service bus.Service, impl LogListener2Implementor) (LogListener2Proxy, error) {
-	obj := LogListener2Object(impl)
-	objectID, err := service.Add(obj)
-	if err != nil {
-		return nil, err
-	}
-	stb := &stubLogListener2{}
-	meta := object.FullMetaObject(stb.metaObject())
-	client := bus.DirectClient(obj)
-	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeLogListener2(c.session, proxy), nil
-}
-func (p *stubLogListener2) Activate(activation bus.Activation) error {
-	p.session = activation.Session
-	p.service = activation.Service
-	p.serviceID = activation.ServiceID
-	return p.impl.Activate(activation, p)
-}
-func (p *stubLogListener2) OnTerminate() {
-	p.impl.OnTerminate()
-}
-func (p *stubLogListener2) Receive(msg *net.Message, from bus.Channel) error {
-	// action dispatch
-	switch msg.Header.Action {
-	case 100:
-		return p.SetLevel(msg, from)
-	case 101:
-		return p.AddFilter(msg, from)
-	case 102:
-		return p.ClearFilters(msg, from)
-	default:
-		return from.SendError(msg, bus.ErrActionNotFound)
-	}
-}
-func (p *stubLogListener2) onPropertyChange(name string, data []byte) error {
-	switch name {
-	case "logLevel":
-		buf := bytes.NewBuffer(data)
-		prop, err := readLogLevel(buf)
-		if err != nil {
-			return fmt.Errorf("cannot read LogLevel: %s", err)
-		}
-		return p.impl.OnLogLevelChange(prop)
-	default:
-		return fmt.Errorf("unknown property %s", name)
-	}
-}
-func (p *stubLogListener2) SetLevel(msg *net.Message, c bus.Channel) error {
-	buf := bytes.NewBuffer(msg.Payload)
-	level, err := readLogLevel(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
-	}
-	callErr := p.impl.SetLevel(level)
-
-	// do not respond to post messages.
-	if msg.Header.Type == net.Post {
-		return nil
-	}
-	if callErr != nil {
-		return c.SendError(msg, callErr)
-	}
-	var out bytes.Buffer
-	return c.SendReply(msg, out.Bytes())
-}
-func (p *stubLogListener2) AddFilter(msg *net.Message, c bus.Channel) error {
-	buf := bytes.NewBuffer(msg.Payload)
-	category, err := basic.ReadString(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read category: %s", err))
-	}
-	level, err := readLogLevel(buf)
-	if err != nil {
-		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
-	}
-	callErr := p.impl.AddFilter(category, level)
-
-	// do not respond to post messages.
-	if msg.Header.Type == net.Post {
-		return nil
-	}
-	if callErr != nil {
-		return c.SendError(msg, callErr)
-	}
-	var out bytes.Buffer
-	return c.SendReply(msg, out.Bytes())
-}
-func (p *stubLogListener2) ClearFilters(msg *net.Message, c bus.Channel) error {
-	callErr := p.impl.ClearFilters()
-
-	// do not respond to post messages.
-	if msg.Header.Type == net.Post {
-		return nil
-	}
-	if callErr != nil {
-		return c.SendError(msg, callErr)
-	}
-	var out bytes.Buffer
-	return c.SendReply(msg, out.Bytes())
-}
-func (p *stubLogListener2) SignalOnLogMessage(log LogMessage) error {
-	var buf bytes.Buffer
-	if err := writeLogMessage(log, &buf); err != nil {
-		return fmt.Errorf("serialize log: %s", err)
-	}
-	err := p.signal.UpdateSignal(103, buf.Bytes())
-
-	if err != nil {
-		return fmt.Errorf("update SignalOnLogMessage: %s", err)
-	}
-	return nil
-}
-func (p *stubLogListener2) SignalOnLogMessages(logs []LogMessage) error {
-	var buf bytes.Buffer
-	if err := func() error {
-		err := basic.WriteUint32(uint32(len(logs)), &buf)
-		if err != nil {
-			return fmt.Errorf("write slice size: %s", err)
-		}
-		for _, v := range logs {
-			err = writeLogMessage(v, &buf)
-			if err != nil {
-				return fmt.Errorf("write slice value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("serialize logs: %s", err)
-	}
-	err := p.signal.UpdateSignal(104, buf.Bytes())
-
-	if err != nil {
-		return fmt.Errorf("update SignalOnLogMessages: %s", err)
-	}
-	return nil
-}
-func (p *stubLogListener2) SignalOnLogMessagesWithBacklog(logs []LogMessage) error {
-	var buf bytes.Buffer
-	if err := func() error {
-		err := basic.WriteUint32(uint32(len(logs)), &buf)
-		if err != nil {
-			return fmt.Errorf("write slice size: %s", err)
-		}
-		for _, v := range logs {
-			err = writeLogMessage(v, &buf)
-			if err != nil {
-				return fmt.Errorf("write slice value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("serialize logs: %s", err)
-	}
-	err := p.signal.UpdateSignal(105, buf.Bytes())
-
-	if err != nil {
-		return fmt.Errorf("update SignalOnLogMessagesWithBacklog: %s", err)
-	}
-	return nil
-}
-func (p *stubLogListener2) UpdateLogLevel(level LogLevel) error {
-	var buf bytes.Buffer
-	if err := writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	err := p.signal.UpdateProperty(106, "(i)<LogLevel,level>", buf.Bytes())
-
-	if err != nil {
-		return fmt.Errorf("update UpdateLogLevel: %s", err)
-	}
-	return nil
-}
-func (p *stubLogListener2) metaObject() object.MetaObject {
-	return object.MetaObject{
-		Description: "LogListener2",
-		Methods: map[uint32]object.MetaMethod{
-			100: {
-				Name:                "setLevel",
-				ParametersSignature: "((i)<LogLevel,level>)",
-				ReturnSignature:     "v",
-				Uid:                 100,
-			},
-			101: {
-				Name:                "addFilter",
-				ParametersSignature: "(s(i)<LogLevel,level>)",
-				ReturnSignature:     "v",
-				Uid:                 101,
-			},
-			102: {
-				Name:                "clearFilters",
-				ParametersSignature: "()",
-				ReturnSignature:     "v",
-				Uid:                 102,
-			},
-		},
-		Properties: map[uint32]object.MetaProperty{106: {
-			Name:      "logLevel",
-			Signature: "(i)<LogLevel,level>",
-			Uid:       106,
-		}},
-		Signals: map[uint32]object.MetaSignal{
-			103: {
-				Name:      "onLogMessage",
-				Signature: "(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>",
-				Uid:       103,
-			},
-			104: {
-				Name:      "onLogMessages",
-				Signature: "[(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>]",
-				Uid:       104,
-			},
-			105: {
-				Name:      "onLogMessagesWithBacklog",
-				Signature: "[(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>]",
-				Uid:       105,
-			},
-		},
-	}
-}
-
 // LogListenerImplementor interface of the service implementation
 type LogListenerImplementor interface {
 	// Activate is called before any other method.
@@ -478,21 +210,19 @@ type LogListenerImplementor interface {
 	Activate(activation bus.Activation, helper LogListenerSignalHelper) error
 	OnTerminate()
 	SetLevel(level LogLevel) error
-	SetCategory(category string, level LogLevel) error
+	AddFilter(category string, level LogLevel) error
 	ClearFilters() error
-	// OnVerbosityChange is called when the property is updated.
+	// OnLogLevelChange is called when the property is updated.
 	// Returns an error if the property value is not allowed
-	OnVerbosityChange(level LogLevel) error
-	// OnFiltersChange is called when the property is updated.
-	// Returns an error if the property value is not allowed
-	OnFiltersChange(filters map[string]LogLevel) error
+	OnLogLevelChange(level LogLevel) error
 }
 
 // LogListenerSignalHelper provided to LogListener a companion object
 type LogListenerSignalHelper interface {
-	SignalOnLogMessage(msg LogMessage) error
-	UpdateVerbosity(level LogLevel) error
-	UpdateFilters(filters map[string]LogLevel) error
+	SignalOnLogMessage(log LogMessage) error
+	SignalOnLogMessages(logs []LogMessage) error
+	SignalOnLogMessagesWithBacklog(logs []LogMessage) error
+	UpdateLogLevel(level LogLevel) error
 }
 
 // stubLogListener implements server.Actor.
@@ -542,7 +272,7 @@ func (p *stubLogListener) Receive(msg *net.Message, from bus.Channel) error {
 	case 100:
 		return p.SetLevel(msg, from)
 	case 101:
-		return p.SetCategory(msg, from)
+		return p.AddFilter(msg, from)
 	case 102:
 		return p.ClearFilters(msg, from)
 	default:
@@ -551,38 +281,13 @@ func (p *stubLogListener) Receive(msg *net.Message, from bus.Channel) error {
 }
 func (p *stubLogListener) onPropertyChange(name string, data []byte) error {
 	switch name {
-	case "verbosity":
+	case "logLevel":
 		buf := bytes.NewBuffer(data)
 		prop, err := readLogLevel(buf)
 		if err != nil {
-			return fmt.Errorf("cannot read Verbosity: %s", err)
+			return fmt.Errorf("cannot read LogLevel: %s", err)
 		}
-		return p.impl.OnVerbosityChange(prop)
-	case "filters":
-		buf := bytes.NewBuffer(data)
-		prop, err := func() (m map[string]LogLevel, err error) {
-			size, err := basic.ReadUint32(buf)
-			if err != nil {
-				return m, fmt.Errorf("read map size: %s", err)
-			}
-			m = make(map[string]LogLevel, size)
-			for i := 0; i < int(size); i++ {
-				k, err := basic.ReadString(buf)
-				if err != nil {
-					return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
-				}
-				v, err := readLogLevel(buf)
-				if err != nil {
-					return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
-				}
-				m[k] = v
-			}
-			return m, nil
-		}()
-		if err != nil {
-			return fmt.Errorf("cannot read Filters: %s", err)
-		}
-		return p.impl.OnFiltersChange(prop)
+		return p.impl.OnLogLevelChange(prop)
 	default:
 		return fmt.Errorf("unknown property %s", name)
 	}
@@ -605,7 +310,7 @@ func (p *stubLogListener) SetLevel(msg *net.Message, c bus.Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogListener) SetCategory(msg *net.Message, c bus.Channel) error {
+func (p *stubLogListener) AddFilter(msg *net.Message, c bus.Channel) error {
 	buf := bytes.NewBuffer(msg.Payload)
 	category, err := basic.ReadString(buf)
 	if err != nil {
@@ -615,7 +320,7 @@ func (p *stubLogListener) SetCategory(msg *net.Message, c bus.Channel) error {
 	if err != nil {
 		return c.SendError(msg, fmt.Errorf("cannot read level: %s", err))
 	}
-	callErr := p.impl.SetCategory(category, level)
+	callErr := p.impl.AddFilter(category, level)
 
 	// do not respond to post messages.
 	if msg.Header.Type == net.Post {
@@ -640,10 +345,10 @@ func (p *stubLogListener) ClearFilters(msg *net.Message, c bus.Channel) error {
 	var out bytes.Buffer
 	return c.SendReply(msg, out.Bytes())
 }
-func (p *stubLogListener) SignalOnLogMessage(msg LogMessage) error {
+func (p *stubLogListener) SignalOnLogMessage(log LogMessage) error {
 	var buf bytes.Buffer
-	if err := writeLogMessage(msg, &buf); err != nil {
-		return fmt.Errorf("serialize msg: %s", err)
+	if err := writeLogMessage(log, &buf); err != nil {
+		return fmt.Errorf("serialize log: %s", err)
 	}
 	err := p.signal.UpdateSignal(103, buf.Bytes())
 
@@ -652,43 +357,63 @@ func (p *stubLogListener) SignalOnLogMessage(msg LogMessage) error {
 	}
 	return nil
 }
-func (p *stubLogListener) UpdateVerbosity(level LogLevel) error {
-	var buf bytes.Buffer
-	if err := writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	err := p.signal.UpdateProperty(104, "(i)<LogLevel,level>", buf.Bytes())
-
-	if err != nil {
-		return fmt.Errorf("update UpdateVerbosity: %s", err)
-	}
-	return nil
-}
-func (p *stubLogListener) UpdateFilters(filters map[string]LogLevel) error {
+func (p *stubLogListener) SignalOnLogMessages(logs []LogMessage) error {
 	var buf bytes.Buffer
 	if err := func() error {
-		err := basic.WriteUint32(uint32(len(filters)), &buf)
+		err := basic.WriteUint32(uint32(len(logs)), &buf)
 		if err != nil {
-			return fmt.Errorf("write map size: %s", err)
+			return fmt.Errorf("write slice size: %s", err)
 		}
-		for k, v := range filters {
-			err = basic.WriteString(k, &buf)
+		for _, v := range logs {
+			err = writeLogMessage(v, &buf)
 			if err != nil {
-				return fmt.Errorf("write map key: %s", err)
-			}
-			err = writeLogLevel(v, &buf)
-			if err != nil {
-				return fmt.Errorf("write map value: %s", err)
+				return fmt.Errorf("write slice value: %s", err)
 			}
 		}
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("serialize filters: %s", err)
+		return fmt.Errorf("serialize logs: %s", err)
 	}
-	err := p.signal.UpdateProperty(105, "{s(i)<LogLevel,level>}", buf.Bytes())
+	err := p.signal.UpdateSignal(104, buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("update UpdateFilters: %s", err)
+		return fmt.Errorf("update SignalOnLogMessages: %s", err)
+	}
+	return nil
+}
+func (p *stubLogListener) SignalOnLogMessagesWithBacklog(logs []LogMessage) error {
+	var buf bytes.Buffer
+	if err := func() error {
+		err := basic.WriteUint32(uint32(len(logs)), &buf)
+		if err != nil {
+			return fmt.Errorf("write slice size: %s", err)
+		}
+		for _, v := range logs {
+			err = writeLogMessage(v, &buf)
+			if err != nil {
+				return fmt.Errorf("write slice value: %s", err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return fmt.Errorf("serialize logs: %s", err)
+	}
+	err := p.signal.UpdateSignal(105, buf.Bytes())
+
+	if err != nil {
+		return fmt.Errorf("update SignalOnLogMessagesWithBacklog: %s", err)
+	}
+	return nil
+}
+func (p *stubLogListener) UpdateLogLevel(level LogLevel) error {
+	var buf bytes.Buffer
+	if err := writeLogLevel(level, &buf); err != nil {
+		return fmt.Errorf("serialize level: %s", err)
+	}
+	err := p.signal.UpdateProperty(106, "(i)<LogLevel,level>", buf.Bytes())
+
+	if err != nil {
+		return fmt.Errorf("update UpdateLogLevel: %s", err)
 	}
 	return nil
 }
@@ -703,7 +428,7 @@ func (p *stubLogListener) metaObject() object.MetaObject {
 				Uid:                 100,
 			},
 			101: {
-				Name:                "setCategory",
+				Name:                "addFilter",
 				ParametersSignature: "(s(i)<LogLevel,level>)",
 				ReturnSignature:     "v",
 				Uid:                 101,
@@ -715,23 +440,28 @@ func (p *stubLogListener) metaObject() object.MetaObject {
 				Uid:                 102,
 			},
 		},
-		Properties: map[uint32]object.MetaProperty{
+		Properties: map[uint32]object.MetaProperty{106: {
+			Name:      "logLevel",
+			Signature: "(i)<LogLevel,level>",
+			Uid:       106,
+		}},
+		Signals: map[uint32]object.MetaSignal{
+			103: {
+				Name:      "onLogMessage",
+				Signature: "(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>",
+				Uid:       103,
+			},
 			104: {
-				Name:      "verbosity",
-				Signature: "(i)<LogLevel,level>",
+				Name:      "onLogMessages",
+				Signature: "[(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>]",
 				Uid:       104,
 			},
 			105: {
-				Name:      "filters",
-				Signature: "{s(i)<LogLevel,level>}",
+				Name:      "onLogMessagesWithBacklog",
+				Signature: "[(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>]",
 				Uid:       105,
 			},
 		},
-		Signals: map[uint32]object.MetaSignal{103: {
-			Name:      "onLogMessage",
-			Signature: "(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>",
-			Uid:       103,
-		}},
 	}
 }
 
@@ -1230,8 +960,8 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	return nil
 }
 
-// LogListener2 is the abstract interface of the service
-type LogListener2 interface {
+// LogListener is the abstract interface of the service
+type LogListener interface {
 	// SetLevel calls the remote procedure
 	SetLevel(level LogLevel) error
 	// AddFilter calls the remote procedure
@@ -1250,336 +980,6 @@ type LogListener2 interface {
 	SetLogLevel(LogLevel) error
 	// SubscribeLogLevel regusters to a property
 	SubscribeLogLevel() (unsubscribe func(), updates chan LogLevel, err error)
-}
-
-// LogListener2Proxy represents a proxy object to the service
-type LogListener2Proxy interface {
-	object.Object
-	bus.Proxy
-	LogListener2
-}
-
-// proxyLogListener2 implements LogListener2Proxy
-type proxyLogListener2 struct {
-	bus.ObjectProxy
-	session bus.Session
-}
-
-// MakeLogListener2 returns a specialized proxy.
-func MakeLogListener2(sess bus.Session, proxy bus.Proxy) LogListener2Proxy {
-	return &proxyLogListener2{bus.MakeObject(proxy), sess}
-}
-
-// LogListener2 returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) LogListener2(closer func(error)) (LogListener2Proxy, error) {
-	proxy, err := c.session.Proxy("LogListener2", 1)
-	if err != nil {
-		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
-	}
-	return MakeLogListener2(c.session, proxy), nil
-}
-
-// SetLevel calls the remote procedure
-func (p *proxyLogListener2) SetLevel(level LogLevel) error {
-	var err error
-	var buf bytes.Buffer
-	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	_, err = p.Call("setLevel", buf.Bytes())
-	if err != nil {
-		return fmt.Errorf("call setLevel failed: %s", err)
-	}
-	return nil
-}
-
-// AddFilter calls the remote procedure
-func (p *proxyLogListener2) AddFilter(category string, level LogLevel) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteString(category, &buf); err != nil {
-		return fmt.Errorf("serialize category: %s", err)
-	}
-	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	_, err = p.Call("addFilter", buf.Bytes())
-	if err != nil {
-		return fmt.Errorf("call addFilter failed: %s", err)
-	}
-	return nil
-}
-
-// ClearFilters calls the remote procedure
-func (p *proxyLogListener2) ClearFilters() error {
-	var err error
-	var buf bytes.Buffer
-	_, err = p.Call("clearFilters", buf.Bytes())
-	if err != nil {
-		return fmt.Errorf("call clearFilters failed: %s", err)
-	}
-	return nil
-}
-
-// SubscribeOnLogMessage subscribe to a remote property
-func (p *proxyLogListener2) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.SignalID("onLogMessage")
-	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
-	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessage", err)
-	}
-	ch := make(chan LogMessage)
-	cancel, chPay, err := p.SubscribeID(propertyID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("request property: %s", err)
-	}
-	go func() {
-		for {
-			payload, ok := <-chPay
-			if !ok {
-				// connection lost or cancellation.
-				close(ch)
-				return
-			}
-			buf := bytes.NewBuffer(payload)
-			_ = buf // discard unused variable error
-			e, err := readLogMessage(buf)
-			if err != nil {
-				log.Printf("unmarshall tuple: %s", err)
-				continue
-			}
-			ch <- e
-		}
-	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
-}
-
-// SubscribeOnLogMessages subscribe to a remote property
-func (p *proxyLogListener2) SubscribeOnLogMessages() (func(), chan []LogMessage, error) {
-	propertyID, err := p.SignalID("onLogMessages")
-	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
-	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessages", err)
-	}
-	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.SubscribeID(propertyID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("request property: %s", err)
-	}
-	go func() {
-		for {
-			payload, ok := <-chPay
-			if !ok {
-				// connection lost or cancellation.
-				close(ch)
-				return
-			}
-			buf := bytes.NewBuffer(payload)
-			_ = buf // discard unused variable error
-			e, err := func() (b []LogMessage, err error) {
-				size, err := basic.ReadUint32(buf)
-				if err != nil {
-					return b, fmt.Errorf("read slice size: %s", err)
-				}
-				b = make([]LogMessage, size)
-				for i := 0; i < int(size); i++ {
-					b[i], err = readLogMessage(buf)
-					if err != nil {
-						return b, fmt.Errorf("read slice value: %s", err)
-					}
-				}
-				return b, nil
-			}()
-			if err != nil {
-				log.Printf("unmarshall tuple: %s", err)
-				continue
-			}
-			ch <- e
-		}
-	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
-}
-
-// SubscribeOnLogMessagesWithBacklog subscribe to a remote property
-func (p *proxyLogListener2) SubscribeOnLogMessagesWithBacklog() (func(), chan []LogMessage, error) {
-	propertyID, err := p.SignalID("onLogMessagesWithBacklog")
-	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
-	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessagesWithBacklog", err)
-	}
-	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.SubscribeID(propertyID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("request property: %s", err)
-	}
-	go func() {
-		for {
-			payload, ok := <-chPay
-			if !ok {
-				// connection lost or cancellation.
-				close(ch)
-				return
-			}
-			buf := bytes.NewBuffer(payload)
-			_ = buf // discard unused variable error
-			e, err := func() (b []LogMessage, err error) {
-				size, err := basic.ReadUint32(buf)
-				if err != nil {
-					return b, fmt.Errorf("read slice size: %s", err)
-				}
-				b = make([]LogMessage, size)
-				for i := 0; i < int(size); i++ {
-					b[i], err = readLogMessage(buf)
-					if err != nil {
-						return b, fmt.Errorf("read slice value: %s", err)
-					}
-				}
-				return b, nil
-			}()
-			if err != nil {
-				log.Printf("unmarshall tuple: %s", err)
-				continue
-			}
-			ch <- e
-		}
-	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
-}
-
-// GetLogLevel updates the property value
-func (p *proxyLogListener2) GetLogLevel() (ret LogLevel, err error) {
-	name := value.String("logLevel")
-	value, err := p.Property(name)
-	if err != nil {
-		return ret, fmt.Errorf("get property: %s", err)
-	}
-	var buf bytes.Buffer
-	err = value.Write(&buf)
-	if err != nil {
-		return ret, fmt.Errorf("read response: %s", err)
-	}
-	s, err := basic.ReadString(&buf)
-	if err != nil {
-		return ret, fmt.Errorf("read signature: %s", err)
-	}
-	// check the signature
-	sig := "(i)<LogLevel,level>"
-	if sig != s {
-		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
-			s, sig)
-	}
-	ret, err = readLogLevel(&buf)
-	return ret, err
-}
-
-// SetLogLevel updates the property value
-func (p *proxyLogListener2) SetLogLevel(update LogLevel) error {
-	name := value.String("logLevel")
-	var buf bytes.Buffer
-	err := writeLogLevel(update, &buf)
-	if err != nil {
-		return fmt.Errorf("marshall error: %s", err)
-	}
-	val := value.Opaque("(i)<LogLevel,level>", buf.Bytes())
-	return p.SetProperty(name, val)
-}
-
-// SubscribeLogLevel subscribe to a remote property
-func (p *proxyLogListener2) SubscribeLogLevel() (func(), chan LogLevel, error) {
-	propertyID, err := p.PropertyID("logLevel")
-	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
-	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "logLevel", err)
-	}
-	ch := make(chan LogLevel)
-	cancel, chPay, err := p.SubscribeID(propertyID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("request property: %s", err)
-	}
-	go func() {
-		for {
-			payload, ok := <-chPay
-			if !ok {
-				// connection lost or cancellation.
-				close(ch)
-				return
-			}
-			buf := bytes.NewBuffer(payload)
-			_ = buf // discard unused variable error
-			e, err := readLogLevel(buf)
-			if err != nil {
-				log.Printf("unmarshall tuple: %s", err)
-				continue
-			}
-			ch <- e
-		}
-	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
-}
-
-// LogListener is the abstract interface of the service
-type LogListener interface {
-	// SetLevel calls the remote procedure
-	SetLevel(level LogLevel) error
-	// SetCategory calls the remote procedure
-	SetCategory(category string, level LogLevel) error
-	// ClearFilters calls the remote procedure
-	ClearFilters() error
-	// SubscribeOnLogMessage subscribe to a remote signal
-	SubscribeOnLogMessage() (unsubscribe func(), updates chan LogMessage, err error)
-	// GetVerbosity returns the property value
-	GetVerbosity() (LogLevel, error)
-	// SetVerbosity sets the property value
-	SetVerbosity(LogLevel) error
-	// SubscribeVerbosity regusters to a property
-	SubscribeVerbosity() (unsubscribe func(), updates chan LogLevel, err error)
-	// GetFilters returns the property value
-	GetFilters() (map[string]LogLevel, error)
-	// SetFilters sets the property value
-	SetFilters(map[string]LogLevel) error
-	// SubscribeFilters regusters to a property
-	SubscribeFilters() (unsubscribe func(), updates chan map[string]LogLevel, err error)
 }
 
 // LogListenerProxy represents a proxy object to the service
@@ -1628,8 +1028,8 @@ func (p *proxyLogListener) SetLevel(level LogLevel) error {
 	return nil
 }
 
-// SetCategory calls the remote procedure
-func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
+// AddFilter calls the remote procedure
+func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 	var err error
 	var buf bytes.Buffer
 	if err = basic.WriteString(category, &buf); err != nil {
@@ -1638,9 +1038,9 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("setCategory", buf.Bytes())
+	_, err = p.Call("addFilter", buf.Bytes())
 	if err != nil {
-		return fmt.Errorf("call setCategory failed: %s", err)
+		return fmt.Errorf("call addFilter failed: %s", err)
 	}
 	return nil
 }
@@ -1698,9 +1098,119 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 	}, ch, nil
 }
 
-// GetVerbosity updates the property value
-func (p *proxyLogListener) GetVerbosity() (ret LogLevel, err error) {
-	name := value.String("verbosity")
+// SubscribeOnLogMessages subscribe to a remote property
+func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, error) {
+	propertyID, err := p.SignalID("onLogMessages")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessages", err)
+	}
+	ch := make(chan []LogMessage)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (b []LogMessage, err error) {
+				size, err := basic.ReadUint32(buf)
+				if err != nil {
+					return b, fmt.Errorf("read slice size: %s", err)
+				}
+				b = make([]LogMessage, size)
+				for i := 0; i < int(size); i++ {
+					b[i], err = readLogMessage(buf)
+					if err != nil {
+						return b, fmt.Errorf("read slice value: %s", err)
+					}
+				}
+				return b, nil
+			}()
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}
+
+// SubscribeOnLogMessagesWithBacklog subscribe to a remote property
+func (p *proxyLogListener) SubscribeOnLogMessagesWithBacklog() (func(), chan []LogMessage, error) {
+	propertyID, err := p.SignalID("onLogMessagesWithBacklog")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessagesWithBacklog", err)
+	}
+	ch := make(chan []LogMessage)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (b []LogMessage, err error) {
+				size, err := basic.ReadUint32(buf)
+				if err != nil {
+					return b, fmt.Errorf("read slice size: %s", err)
+				}
+				b = make([]LogMessage, size)
+				for i := 0; i < int(size); i++ {
+					b[i], err = readLogMessage(buf)
+					if err != nil {
+						return b, fmt.Errorf("read slice value: %s", err)
+					}
+				}
+				return b, nil
+			}()
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}
+
+// GetLogLevel updates the property value
+func (p *proxyLogListener) GetLogLevel() (ret LogLevel, err error) {
+	name := value.String("logLevel")
 	value, err := p.Property(name)
 	if err != nil {
 		return ret, fmt.Errorf("get property: %s", err)
@@ -1724,9 +1234,9 @@ func (p *proxyLogListener) GetVerbosity() (ret LogLevel, err error) {
 	return ret, err
 }
 
-// SetVerbosity updates the property value
-func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
-	name := value.String("verbosity")
+// SetLogLevel updates the property value
+func (p *proxyLogListener) SetLogLevel(update LogLevel) error {
+	name := value.String("logLevel")
 	var buf bytes.Buffer
 	err := writeLogLevel(update, &buf)
 	if err != nil {
@@ -1736,17 +1246,17 @@ func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
 	return p.SetProperty(name, val)
 }
 
-// SubscribeVerbosity subscribe to a remote property
-func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
-	propertyID, err := p.PropertyID("verbosity")
+// SubscribeLogLevel subscribe to a remote property
+func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
+	propertyID, err := p.PropertyID("logLevel")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "verbosity", err)
+		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
 	}
 	handlerID := rand.Uint64()
 
 	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "verbosity", err)
+		return nil, nil, fmt.Errorf("register event for %s: %s", "logLevel", err)
 	}
 	ch := make(chan LogLevel)
 	cancel, chPay, err := p.SubscribeID(propertyID)
@@ -1764,138 +1274,6 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			buf := bytes.NewBuffer(payload)
 			_ = buf // discard unused variable error
 			e, err := readLogLevel(buf)
-			if err != nil {
-				log.Printf("unmarshall tuple: %s", err)
-				continue
-			}
-			ch <- e
-		}
-	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
-}
-
-// GetFilters updates the property value
-func (p *proxyLogListener) GetFilters() (ret map[string]LogLevel, err error) {
-	name := value.String("filters")
-	value, err := p.Property(name)
-	if err != nil {
-		return ret, fmt.Errorf("get property: %s", err)
-	}
-	var buf bytes.Buffer
-	err = value.Write(&buf)
-	if err != nil {
-		return ret, fmt.Errorf("read response: %s", err)
-	}
-	s, err := basic.ReadString(&buf)
-	if err != nil {
-		return ret, fmt.Errorf("read signature: %s", err)
-	}
-	// check the signature
-	sig := "{s(i)<LogLevel,level>}"
-	if sig != s {
-		return ret, fmt.Errorf("unexpected signature: %s instead of %s",
-			s, sig)
-	}
-	ret, err = func() (m map[string]LogLevel, err error) {
-		size, err := basic.ReadUint32(&buf)
-		if err != nil {
-			return m, fmt.Errorf("read map size: %s", err)
-		}
-		m = make(map[string]LogLevel, size)
-		for i := 0; i < int(size); i++ {
-			k, err := basic.ReadString(&buf)
-			if err != nil {
-				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
-			}
-			v, err := readLogLevel(&buf)
-			if err != nil {
-				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
-			}
-			m[k] = v
-		}
-		return m, nil
-	}()
-	return ret, err
-}
-
-// SetFilters updates the property value
-func (p *proxyLogListener) SetFilters(update map[string]LogLevel) error {
-	name := value.String("filters")
-	var buf bytes.Buffer
-	err := func() error {
-		err := basic.WriteUint32(uint32(len(update)), &buf)
-		if err != nil {
-			return fmt.Errorf("write map size: %s", err)
-		}
-		for k, v := range update {
-			err = basic.WriteString(k, &buf)
-			if err != nil {
-				return fmt.Errorf("write map key: %s", err)
-			}
-			err = writeLogLevel(v, &buf)
-			if err != nil {
-				return fmt.Errorf("write map value: %s", err)
-			}
-		}
-		return nil
-	}()
-	if err != nil {
-		return fmt.Errorf("marshall error: %s", err)
-	}
-	val := value.Opaque("{s(i)<LogLevel,level>}", buf.Bytes())
-	return p.SetProperty(name, val)
-}
-
-// SubscribeFilters subscribe to a remote property
-func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]LogLevel, error) {
-	propertyID, err := p.PropertyID("filters")
-	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
-	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "filters", err)
-	}
-	ch := make(chan map[string]LogLevel)
-	cancel, chPay, err := p.SubscribeID(propertyID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("request property: %s", err)
-	}
-	go func() {
-		for {
-			payload, ok := <-chPay
-			if !ok {
-				// connection lost or cancellation.
-				close(ch)
-				return
-			}
-			buf := bytes.NewBuffer(payload)
-			_ = buf // discard unused variable error
-			e, err := func() (m map[string]LogLevel, err error) {
-				size, err := basic.ReadUint32(buf)
-				if err != nil {
-					return m, fmt.Errorf("read map size: %s", err)
-				}
-				m = make(map[string]LogLevel, size)
-				for i := 0; i < int(size); i++ {
-					k, err := basic.ReadString(buf)
-					if err != nil {
-						return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
-					}
-					v, err := readLogLevel(buf)
-					if err != nil {
-						return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
-					}
-					m[k] = v
-				}
-				return m, nil
-			}()
 			if err != nil {
 				log.Printf("unmarshall tuple: %s", err)
 				continue

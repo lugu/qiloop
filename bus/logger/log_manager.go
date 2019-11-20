@@ -57,12 +57,16 @@ func (l *logManager) OnTerminate() {
 }
 
 func (l *logManager) Log(messages []LogMessage) error {
+	var mainErr error
 	l.listenersMutex.RLock()
 	defer l.listenersMutex.RUnlock()
 	for _, listener := range l.listeners {
-		listener.Messages(messages)
+		err := listener.Messages(messages)
+		if err != nil {
+			mainErr = err
+		}
 	}
-	return nil
+	return mainErr
 }
 
 func (l *logManager) terminateListener(listener *logListenerImpl) error {

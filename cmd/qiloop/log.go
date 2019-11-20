@@ -76,7 +76,7 @@ func logger(serverURL string, level uint32) {
 	if err != nil {
 		log.Fatalf("clear filters: %s", err)
 	}
-	cancel, logs, err := logListener.SubscribeOnLogMessage()
+	cancel, logs, err := logListener.SubscribeOnLogMessages()
 	if err != nil {
 		log.Fatalf("subscribe logs: %s", err)
 	}
@@ -91,24 +91,26 @@ func logger(serverURL string, level uint32) {
 		select {
 		case _ = <-signalChannel:
 			return
-		case m := <-logs:
-			if m.Level == qilog.LogLevelNone {
-				return
+		case msgs := <-logs:
+			for _, m := range msgs {
+				if m.Level == qilog.LogLevelNone {
+					return
+				}
+				color, info := label(m.Level)
+				nocolor := "{}"
+				out := rgbterm.ColorOut
+				if !colored {
+					color = ""
+					nocolor = ""
+					out = os.Stdout
+				}
+				sec := int64(m.SystemDate.Ns) / int64(time.Second)
+				ns := int64(m.SystemDate.Ns) - sec*int64(time.Second)
+				t := time.Unix(sec, ns).Format("2006/01/02 15:04:05.000")
+				fmt.Fprintf(out, "%s%s %s %d %s %s%s\n",
+					color, info, t,
+					m.Id, m.Category, m.Message, nocolor)
 			}
-			color, info := label(m.Level)
-			nocolor := "{}"
-			out := rgbterm.ColorOut
-			if !colored {
-				color = ""
-				nocolor = ""
-				out = os.Stdout
-			}
-			sec := int64(m.SystemDate.Ns) / int64(time.Second)
-			ns := int64(m.SystemDate.Ns) - sec*int64(time.Second)
-			t := time.Unix(sec, ns).Format("2006/01/02 15:04:05.000")
-			fmt.Fprintf(out, "%s%s %s %d %s %s%s\n",
-				color, info, t,
-				m.Id, m.Category, m.Message, nocolor)
 		}
 	}
 }
