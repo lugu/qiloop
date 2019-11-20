@@ -155,3 +155,9 @@ If you need to provide a login and a password to authenticate yourself
 to a server, create a file `$HOME/.qiloop-auth.conf` with you login on the
 first line and your password on the second.
 
+## Contributing
+
+1. Fork me
+2. Create your feature branch
+3. Make changes (hopefully with tests and, why not, with documentation)
+4. Create new pull request
