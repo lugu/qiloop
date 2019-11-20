@@ -223,6 +223,6 @@ func listenQUIC(addr string) (Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.WithValue(context.TODO(), ListenAddress, addr)
+	ctx := context.WithValue(context.Background(), ListenAddress, addr)
 	return newQuicListener(ctx, listener)
 }
