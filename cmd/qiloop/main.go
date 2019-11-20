@@ -38,19 +38,17 @@ func init() {
 		asciibot.Random())
 	flaggy.SetDescription(description)
 
-	authDescription := fmt.Sprintf("credentials (default: %s)", token.AuthFile)
+	authDescription := "file with user and token credentials"
 
 	infoCommand = flaggy.NewSubcommand("info")
 	infoCommand.Description = "Connect a server and display services info"
-	infoCommand.String(&serverURL, "r", "qi-url",
-		"server URL (default: tcp://localhost:9559)")
+	infoCommand.String(&serverURL, "r", "qi-url", "server URL")
 	infoCommand.String(&serviceName, "s", "service", "optional service name")
 	infoCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	logCommand = flaggy.NewSubcommand("log")
 	logCommand.Description = "Connect a server and prints logs"
-	logCommand.String(&serverURL, "r", "qi-url",
-		"server URL (default: tcp://localhost:9559)")
+	logCommand.String(&serverURL, "r", "qi-url", "server URL")
 	logCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 	levelInfo := "log level, 1:fatal, 2:error, 3:warning, 4:info, 5:verbose, 6:debug"
 	logCommand.UInt32(&logLevel, "l", "level", levelInfo)
@@ -58,37 +56,34 @@ func init() {
 	scanCommand = flaggy.NewSubcommand("scan")
 	scanCommand.Description =
 		"Connect a server and introspect a service to generate an IDL file"
-	scanCommand.String(&serverURL, "r", "qi-url",
-		"server URL (default: tcp://localhost:9559)")
+	scanCommand.String(&serverURL, "r", "qi-url", "server URL")
 	scanCommand.String(&serviceName, "s", "service", "optional service name")
-	scanCommand.String(&outputFile, "i", "idl", "IDL file (output)")
+	scanCommand.String(&outputFile, "i", "idl", "ouput IDL file")
 	scanCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	proxyCommand = flaggy.NewSubcommand("proxy")
 	proxyCommand.Description =
 		"Parse an IDL file and generate the specialized proxy code"
-	proxyCommand.String(&inputFile, "i", "idl", "IDL file (input)")
-	proxyCommand.String(&outputFile, "o", "output", "proxy file (output)")
+	proxyCommand.String(&inputFile, "i", "idl", "input IDL file")
+	proxyCommand.String(&outputFile, "o", "output", "ouput proxy file")
 	proxyCommand.String(&packageName, "p", "path", "optional package name")
 
 	stubCommand = flaggy.NewSubcommand("stub")
 	stubCommand.Description =
 		"Parse an IDL file and generate the specialized server code"
-	stubCommand.String(&inputFile, "i", "idl", "IDL file (input)")
-	stubCommand.String(&outputFile, "o", "output", "server stub file (output)")
+	stubCommand.String(&inputFile, "i", "idl", "input IDL file")
+	stubCommand.String(&outputFile, "o", "output", "output server stub")
 	stubCommand.String(&packageName, "p", "path", "optional package name")
 
 	serverCommand = flaggy.NewSubcommand("server")
 	serverCommand.Description =
 		"Start a service directory and a log manager"
-	serverCommand.String(&serverURL, "l", "qi-listen-url",
-		"Listening URL (default: tcp://localhost:9559)")
+	serverCommand.String(&serverURL, "l", "qi-listen-url", "Listening URL")
 	serverCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
 	traceCommand = flaggy.NewSubcommand("trace")
 	traceCommand.Description = "Connect a server and traces services"
-	traceCommand.String(&serverURL, "r", "qi-url",
-		"server URL (default: tcp://localhost:9559)")
+	traceCommand.String(&serverURL, "r", "qi-url", "server URL")
 	traceCommand.String(&serviceName, "s", "service", "optional service name")
 	traceCommand.UInt32(&objectID, "o", "object", "optional object id")
 	traceCommand.String(&token.AuthFile, "a", "auth-file", authDescription)

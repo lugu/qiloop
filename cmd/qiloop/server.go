@@ -17,6 +17,9 @@ func server(serverURL string) {
 		map[string]string{
 			user: token,
 		}))
+	if err != nil {
+		log.Fatalf("Failed to start server: %s", err)
+	}
 	defer server.Terminate()
 
 	_, err = server.NewService("LogManager", qilog.NewLogManager())
