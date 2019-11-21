@@ -5,8 +5,7 @@ env:
         - CC_TEST_REPORTER_ID=0785bba858e3306249391d2bfed7d0893eee93420195ad1398d5e9231c0ff680
 
 go:
-    - master
-    - tip
+    - 1.13.x
 
 install:
     - go version
