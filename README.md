@@ -23,6 +23,7 @@
 - [Examples](#examples)
 - [Command line interface](#command-line-interface)
 - [Authentication](#authentication)
+- [Contributing](#contributing)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
