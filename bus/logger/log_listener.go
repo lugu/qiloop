@@ -29,7 +29,7 @@ func (l *logListenerImpl) filter(msg *LogMessage) bool {
 	defer l.filtersMutex.RUnlock()
 
 	for pattern, reg := range l.filtersReg {
-		if reg.FindString(msg.Category) != "" {
+		if reg.Match([]byte(msg.Category)) {
 			if msg.Level.Level <= l.filters[pattern].Level {
 				return true
 			}

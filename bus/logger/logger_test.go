@@ -116,11 +116,11 @@ func TestLogListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = logListener.AddFilter("qi.*", LogLevelVerbose)
+	err = logListener.AddFilter(`qi\..*`, LogLevelVerbose)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = logListener.AddFilter("qiloop.", LogLevelInfo)
+	err = logListener.AddFilter("qiloop.*", LogLevelInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
