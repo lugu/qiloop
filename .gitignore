@@ -5,6 +5,8 @@
 *.swp
 *.swo
 *~
+/cmd/qiloop/qiloop
+/qiloop
 /coverage.out
 /package-lock.json
 /main
