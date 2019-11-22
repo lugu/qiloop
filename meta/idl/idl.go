@@ -2,9 +2,10 @@ package idl
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
-	"io"
 )
 
 // generateMethod writes the method declaration. Does not use
@@ -104,28 +105,33 @@ func generateStructures(writer io.Writer, set *signature.TypeSet) error {
 	return nil
 }
 
-// GenerateIDL writes the IDL definition of a MetaObject into a
+// GenerateIDL writes the IDL definition for the meta object in objs.  a MetaObject into a
 // writer. This IDL definition can be used to re-create the MetaObject
 // with the method ParseIDL.
-func GenerateIDL(writer io.Writer, serviceName string, metaObj object.MetaObject) error {
+func GenerateIDL(writer io.Writer, packageName string, objs map[string]object.MetaObject) error {
 	set := signature.NewTypeSet()
 
-	fmt.Fprintf(writer, "interface %s\n", serviceName)
+	fmt.Fprintf(writer, "package %s\n", packageName)
 
-	method := func(m object.MetaMethod, methodName string) error {
-		return generateMethod(writer, set, m, methodName)
-	}
-	signal := func(s object.MetaSignal, signalName string) error {
-		return generateSignal(writer, set, s, "Subscribe"+signalName)
-	}
-	property := func(p object.MetaProperty, propertyName string) error {
-		return generateProperty(writer, set, p, propertyName)
-	}
+	for name, meta := range objs {
 
-	if err := metaObj.ForEachMethodAndSignal(method, signal, property); err != nil {
-		return fmt.Errorf("generate proxy object %s: %s", serviceName, err)
+		fmt.Fprintf(writer, "interface %s\n", name)
+
+		method := func(m object.MetaMethod, methodName string) error {
+			return generateMethod(writer, set, m, methodName)
+		}
+		signal := func(s object.MetaSignal, signalName string) error {
+			return generateSignal(writer, set, s, "Subscribe"+signalName)
+		}
+		property := func(p object.MetaProperty, propertyName string) error {
+			return generateProperty(writer, set, p, propertyName)
+		}
+
+		if err := meta.ForEachMethodAndSignal(method, signal, property); err != nil {
+			return fmt.Errorf("generate proxy object %s: %s", name, err)
+		}
+		fmt.Fprintf(writer, "end\n")
 	}
-	fmt.Fprintf(writer, "end\n")
 
 	if err := generateStructures(writer, set); err != nil {
 		return fmt.Errorf("generate structures: %s", err)

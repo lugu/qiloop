@@ -1,3 +1,4 @@
+package test
 interface ServiceDirectory
 	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
 	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1

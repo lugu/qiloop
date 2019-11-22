@@ -1,3 +1,4 @@
+package test
 interface Server
 	fn authenticate(capability: Map<str,any>) -> Map<str,any> //uid:8
 end
