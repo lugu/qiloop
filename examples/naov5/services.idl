@@ -1,0 +1,4133 @@
+package naov5
+interface ServiceDirectory
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn service(P0: str) -> ServiceInfo //uid:100
+	fn services() -> Vec<ServiceInfo> //uid:101
+	fn registerService(P0: ServiceInfo) -> uint32 //uid:102
+	fn unregisterService(P0: uint32) //uid:103
+	fn serviceReady(P0: uint32) //uid:104
+	fn updateServiceInfo(P0: ServiceInfo) //uid:105
+	fn machineId() -> str //uid:108
+	fn _socketOfService(P0: uint32) -> obj //uid:109
+	sig traceObject(P0: EventTrace) //uid:86
+	sig serviceAdded(P0: uint32, P1: str) //uid:106
+	sig serviceRemoved(P0: uint32, P1: str) //uid:107
+end
+interface ALBodyTemperature
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getTemperatureDiagnosis() -> any //uid:113
+	fn setEnableNotifications(enable: bool) //uid:114
+	fn areNotificationsEnabled() -> bool //uid:115
+	fn _getDeviceTemperature(deviceName: str) -> int32 //uid:116
+	fn _getDeviceStatus(deviceName: str) -> int32 //uid:117
+	fn _getTemperatureStatus() -> any //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALVideoDevice
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribeCamera(name: str,cameraIndex: int32,resolution: int32,colorSpace: int32,fps: int32) -> str //uid:113
+	fn subscribeCameras(name: str,cameraIndexes: any,resolutions: any,colorSpaces: any,fps: int32) -> str //uid:114
+	fn unsubscribe(nameId: str) -> bool //uid:115
+	fn getSubscribers() -> any //uid:116
+	fn getCameraIndexes() -> any //uid:117
+	fn getActiveCamera() -> int32 //uid:118
+	fn setActiveCamera(activeCamera: int32) -> bool //uid:119
+	fn getCameraModel(cameraIndex: int32) -> int32 //uid:120
+	fn getCameraName(cameraIndex: int32) -> str //uid:121
+	fn getFrameRate(cameraIndex: int32) -> int32 //uid:122
+	fn getResolution(cameraIndex: int32) -> int32 //uid:123
+	fn getColorSpace(cameraIndex: int32) -> int32 //uid:124
+	fn getHorizontalFOV(cameraIndex: int32) -> float32 //uid:125
+	fn getVerticalFOV(cameraIndex: int32) -> float32 //uid:126
+	fn getParameter(cameraIndex: int32,parameterId: int32) -> int32 //uid:127
+	fn getParameterRange(cameraIndex: int32,parameterId: int32) -> any //uid:128
+	fn getParameterInfo(cameraIndex: int32,parameterId: int32) -> any //uid:129
+	fn setParameter(cameraIndex: int32,parameterId: int32,value: int32) -> bool //uid:130
+	fn setParameterToDefault(cameraIndex: int32,parameterId: int32) -> bool //uid:131
+	fn setAllParametersToDefault(cameraIndex: int32) -> bool //uid:132
+	fn openCamera(P0: int32) -> bool //uid:133
+	fn closeCamera(P0: int32) -> bool //uid:134
+	fn isCameraOpen(P0: int32) -> bool //uid:135
+	fn startCamera(P0: int32) -> bool //uid:136
+	fn stopCamera(P0: int32) -> bool //uid:137
+	fn isCameraStarted(P0: int32) -> bool //uid:138
+	fn resetCamera(P0: int32) -> bool //uid:139
+	fn startFrameGrabber(cameraIndex: int32) -> bool //uid:140
+	fn stopFrameGrabber(cameraIndex: int32) -> bool //uid:141
+	fn isFrameGrabberOff(cameraIndex: int32) -> bool //uid:142
+	fn hasDepthCamera() -> bool //uid:143
+	fn getFrameRate(name: str) -> int32 //uid:144
+	fn setFrameRate(name: str,frameRate: int32) -> bool //uid:145
+	fn getActiveCamera(name: str) -> int32 //uid:146
+	fn setActiveCamera(name: str,cameraIndex: int32) -> bool //uid:147
+	fn getResolution(name: str) -> int32 //uid:148
+	fn setResolution(name: str,resolution: int32) -> bool //uid:149
+	fn getColorSpace(name: str) -> int32 //uid:150
+	fn setColorSpace(name: str,colorSpace: int32) -> bool //uid:151
+	fn getCameraParameter(name: str,parameterId: int32) -> int32 //uid:152
+	fn getCameraParameterRange(name: str,parameterId: int32) -> any //uid:153
+	fn getCameraParameterInfo(name: str,parameterId: int32) -> any //uid:154
+	fn setCameraParameter(name: str,parameterId: int32,value: int32) -> bool //uid:155
+	fn setCameraParameterToDefault(name: str,parameterId: int32) -> bool //uid:156
+	fn setAllCameraParametersToDefault(name: str) -> bool //uid:157
+	fn getDirectRawImageLocal(name: str) -> unknown //uid:158
+	fn getDirectRawImageRemote(name: str) -> any //uid:159
+	fn releaseDirectRawImage(name: str) -> bool //uid:160
+	fn getImageLocal(name: str) -> unknown //uid:161
+	fn getImageRemote(name: str) -> any //uid:162
+	fn releaseImage(name: str) -> bool //uid:163
+	fn getActiveCameras(name: str) -> any //uid:164
+	fn setActiveCameras(name: str,cameraIndexes: any) -> any //uid:165
+	fn getResolutions(name: str) -> any //uid:166
+	fn setResolutions(name: str,resolutions: any) -> any //uid:167
+	fn getColorSpaces(name: str) -> any //uid:168
+	fn setColorSpaces(name: str,colorSpaces: any) -> any //uid:169
+	fn getCamerasParameter(name: str,parameterId: int32) -> any //uid:170
+	fn setCamerasParameter(name: str,parameterId: int32,values: any) -> any //uid:171
+	fn setCamerasParameterToDefault(name: str,parameterId: int32) -> any //uid:172
+	fn getDirectRawImagesLocal(name: str) -> any //uid:173
+	fn getDirectRawImagesRemote(name: str) -> any //uid:174
+	fn releaseDirectRawImages(name: str) -> any //uid:175
+	fn getImagesLocal(name: str) -> any //uid:176
+	fn getImagesRemote(name: str) -> any //uid:177
+	fn releaseImages(name: str) -> any //uid:178
+	fn recordVideo(id: str,path: str,totalNumber: int32,period: int32) -> bool //uid:179
+	fn stopVideo(id: str) -> bool //uid:180
+	fn getAngularPositionFromImagePosition(P0: int32, P1: Vec<float32>) -> Vec<float32> //uid:181
+	fn getImagePositionFromAngularPosition(P0: int32, P1: Vec<float32>) -> Vec<float32> //uid:182
+	fn getAngularSizeFromImageSize(P0: int32, P1: Vec<float32>) -> Vec<float32> //uid:183
+	fn getImageSizeFromAngularSize(P0: int32, P1: Vec<float32>) -> Vec<float32> //uid:184
+	fn getImageInfoFromAngularInfo(P0: int32, P1: Vec<float32>) -> Vec<float32> //uid:185
+	fn getImageInfoFromAngularInfoWithResolution(P0: int32, P1: Vec<float32>, P2: int32) -> Vec<float32> //uid:186
+	fn putImage(cameraIndex: int32,width: int32,height: int32,imageBuffer: any) -> bool //uid:187
+	fn getExpectedImageParameters(cameraIndex: int32) -> any //uid:188
+	fn _getExternalBrightness(cameraIndex: int32) -> int32 //uid:189
+	fn onClientDisconnected(eventName: str,eventContents: any,message: str) //uid:190
+	fn subscribe(gvmName: str,resolution: int32,colorSpace: int32,fps: int32) -> str //uid:191
+	fn unsubscribeAllInstances(id: str) //uid:192
+	fn getVIMResolution() -> int32 //uid:193
+	fn getVIMColorSpace() -> int32 //uid:194
+	fn getVIMFrameRate() -> int32 //uid:195
+	fn getGVMResolution(P0: str) -> int32 //uid:196
+	fn getGVMColorSpace(P0: str) -> int32 //uid:197
+	fn getGVMFrameRate(P0: str) -> int32 //uid:198
+	fn getCameraModelID() -> int32 //uid:199
+	fn setParam(pParam: int32,pNewValue: int32) //uid:200
+	fn setParam(pParam: int32,pNewValue: int32,pCameraIndex: int32) //uid:201
+	fn getParam(pParam: int32) -> int32 //uid:202
+	fn getParam(pParam: int32,pCameraIndex: int32) -> int32 //uid:203
+	fn setParamDefault(P0: int32) //uid:204
+	fn getAngPosFromImgPos(P0: Vec<float32>) -> Vec<float32> //uid:205
+	fn getImgPosFromAngPos(P0: Vec<float32>) -> Vec<float32> //uid:206
+	fn getAngSizeFromImgSize(P0: Vec<float32>) -> Vec<float32> //uid:207
+	fn getImgSizeFromAngSize(P0: Vec<float32>) -> Vec<float32> //uid:208
+	fn getImgInfoFromAngInfo(P0: Vec<float32>) -> Vec<float32> //uid:209
+	fn getImgInfoFromAngInfoWithRes(P0: Vec<float32>, P1: int32) -> Vec<float32> //uid:210
+	fn resolutionToSizes(P0: int32) -> any //uid:211
+	fn sizesToResolution(P0: int32, P1: int32) -> int32 //uid:212
+	fn getExpectedImageParameters() -> any //uid:213
+	fn setSimCamInputSize(width: int32,height: int32) -> bool //uid:214
+	fn putImage(imageBuffer: any) -> bool //uid:215
+	fn startFrameGrabber() -> bool //uid:216
+	fn stopFrameGrabber() -> bool //uid:217
+	fn isFrameGrabberOff() -> int32 //uid:218
+	fn getHorizontalAperture(cameraIndex: int32) -> float32 //uid:219
+	fn getVerticalAperture(cameraIndex: int32) -> float32 //uid:220
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _NaoMarkConverter2
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start(P0: int32) //uid:114
+	fn stopConverter() //uid:115
+	fn convert(P0: any) -> any //uid:116
+	fn convertEvent(P0: str, P1: any) //uid:117
+	fn updateDetectorPeriod(P0: int32) //uid:118
+	fn getDetectorPeriod() -> int32 //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _Smoother
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn startEvent(pEventName: str) //uid:113
+	fn startEvent(firsteventname: str,secondeventname: str) //uid:114
+	fn restart(pEventName: str) //uid:115
+	fn restart(firsteventname: str,secondeventname: str) //uid:116
+	fn setMap(P0: any) //uid:117
+	fn setTarget(P0: any) //uid:118
+	fn setTargetIds(P0: int32, P1: int32) //uid:119
+	fn getPosition() -> any //uid:120
+	fn stopSmoother() //uid:121
+	fn _smoothEvent(P0: str, P1: any) //uid:122
+	fn _smoothFirstEvent(P0: str, P1: any) //uid:123
+	fn _smoothSecondEvent(P0: str, P1: any) //uid:124
+	fn _raiseSearchEvent() //uid:125
+	fn getTimeOut() -> int32 //uid:126
+	fn setTimeOut(pTime: int32) //uid:127
+	fn getMaxDistance() -> float32 //uid:128
+	fn setMaxDistance(pDistance: float32) //uid:129
+	fn _setMoveEvent(P0: str) //uid:130
+	fn _smoothMoveEvent(P0: str, P1: any) //uid:131
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALEngagementZones
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn setLimitAngle(angle: float32) //uid:129
+	fn getLimitAngle() -> float32 //uid:130
+	fn setFirstLimitDistance(distance: float32) //uid:131
+	fn getFirstLimitDistance() -> float32 //uid:132
+	fn setSecondLimitDistance(distance: float32) //uid:133
+	fn getSecondLimitDistance() -> float32 //uid:134
+	fn computeEngagementZone(x: float32,y: float32,z: float32) -> int32 //uid:135
+	fn computeEngagementZone(xAngle: float32,yAngle: float32,distance: float32,cameraPositionRobot: any) -> int32 //uid:136
+	sig traceObject(P0: EventTrace) //uid:86
+	sig limitAngleChanged(P0: float32) //uid:137
+	sig firstLimitChanged(P0: float32) //uid:138
+	sig secondLimitChanged(P0: float32) //uid:139
+end
+interface _ActivityFocusManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn _onChangedRunningBehaviors(P0: str,P1: any,P2: str) //uid:113
+	fn _continueFocus() //uid:114
+	fn _focusedActivity() -> str //uid:115
+	fn _switchFocus(activity_name: str) //uid:116
+	fn _switchFocus(activity_name: str,flags: int32) //uid:117
+	fn _stopFocus() //uid:118
+	fn _stopAll() //uid:119
+	fn _onPreferenceUpdated(P0: str,P1: any,P2: str) //uid:120
+	fn _onPreferenceSynchronized(P0: str,P1: any,P2: str) //uid:121
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALMemory
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn declareEvent(eventName: str) //uid:113
+	fn declareEvent(eventName: str,extractorName: str) //uid:114
+	fn getData(key: str) -> any //uid:115
+	fn getData(key: str,deprecatedParameter: int32) -> any //uid:116
+	fn subscriber(eventName: str) -> obj //uid:117
+	fn getTimestamp(key: str) -> any //uid:118
+	fn getEventHistory(key: str) -> any //uid:119
+	fn getDataList(filter: str) -> Vec<str> //uid:120
+	fn getDataListName() -> Vec<str> //uid:121
+	fn getDataOnChange(key: str,deprecatedParameter: int32) -> any //uid:122
+	fn getDataPtr(key: str) -> unknown //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getExtractorEvent(extractorName: str) -> Vec<str> //uid:125
+	fn getListData(keyList: any) -> any //uid:126
+	fn getMicroEventList() -> Vec<str> //uid:127
+	fn getSubscribers(name: str) -> Vec<str> //uid:128
+	fn getType(key: str) -> str //uid:129
+	fn insertData(key: str,value: int32) //uid:130
+	fn insertData(key: str,value: float32) //uid:131
+	fn insertData(key: str,value: str) //uid:132
+	fn insertData(key: str,data: any) //uid:133
+	fn insertListData(list: any) //uid:134
+	fn raiseEvent(name: str,value: any) //uid:135
+	fn raiseMicroEvent(name: str,value: any) //uid:136
+	fn removeData(key: str) //uid:137
+	fn removeEvent(name: str) //uid:138
+	fn removeMicroEvent(name: str) //uid:139
+	fn subscribeToEvent(name: str,callbackModule: str,callbackMethod: str) //uid:140
+	fn subscribeToEvent(name: str,callbackModule: str,callbackMessage: str,callbacMethod: str) //uid:141
+	fn subscribeToMicroEvent(name: str,callbackModule: str,callbackMessage: str,callbackMethod: str) //uid:142
+	fn unregisterModuleReference(moduleName: str) //uid:143
+	fn _perf() //uid:144
+	fn unsubscribeToEvent(name: str,callbackModule: str) //uid:145
+	fn unsubscribeToMicroEvent(name: str,callbackModule: str) //uid:146
+	fn _insertObject(name: str,buffer: any,bufferSize: int32) //uid:147
+	fn _subscribeOnDataSetTimePolicy(name: str,callbackModule: str,nTimePolicy: int32) //uid:148
+	fn _subscribeOnDataSetSynchronizeResponse(name: str,callbackModule: str,synchronizedResponse: bool) //uid:149
+	fn setDescription(name: str,description: str) //uid:150
+	fn getDescriptionList(keylist: Vec<str>) -> any //uid:151
+	fn addMapping(service: str,signal: str,event: str) //uid:152
+	fn addMapping(service: str,signalEvent: Map<str,str>) //uid:153
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALServiceManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn startService(name: str) -> bool //uid:113
+	fn restartService(name: str) -> bool //uid:114
+	fn stopService(name: str) -> bool //uid:115
+	fn isServiceRunning(name: str) -> bool //uid:116
+	fn serviceMemoryUsage(name: str) -> uint64 //uid:117
+	fn services() -> Vec<ProcessInfo> //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+	sig serviceStarted(P0: str, P1: int32) //uid:119
+	sig serviceStopped(P0: str, P1: int32) //uid:120
+end
+interface ALPreferenceManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getValue(domain: str,setting: str) -> any //uid:113
+	fn setValue(domain: str,setting: str,value: any) //uid:114
+	fn getValueList(domain: str) -> Vec<Vec<any>> //uid:115
+	fn getDomainList() -> Vec<str> //uid:116
+	fn removeValue(domain: str,setting: str) //uid:117
+	fn removeDomainValues(domain: str) //uid:118
+	fn importPrefFile(domain: str,applicationName: str,filename: str,override: bool) //uid:119
+	fn update() //uid:120
+	fn _setFromCloud(domain: str,setting: str,value: any) //uid:121
+	fn _restart(url: str,path: str) //uid:122
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALTouch
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn _setTouchConfig(config: any) //uid:113
+	fn getSensorList() -> Vec<str> //uid:114
+	fn getStatus() -> any //uid:115
+	fn _createGroup(groupName: str,jointNames: Vec<str>) -> bool //uid:116
+	fn _deleteGroup(groupName: str) -> bool //uid:117
+	fn _getGroupList() -> Vec<str> //uid:118
+	fn _getDetectionTypeName(type_0: int32) -> str //uid:119
+	fn _robotFallingCallback(P0: str, P1: any, P2: any) //uid:120
+	fn _robotFallenCallback(P0: str, P1: any, P2: any) //uid:121
+	fn _diagnosisCallback(P0: str, P1: any, P2: any) //uid:122
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _WholeBodyLooker
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start() //uid:114
+	fn stopLooker() //uid:115
+	fn look(P0: any) //uid:116
+	fn lookEvent(P0: str, P1: any) //uid:117
+	fn lostEvent() //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALSegmentation3D
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn setFrameRate(value: int32) -> bool //uid:129
+	fn getFrameRate() -> int32 //uid:130
+	fn setResolution(resolution: int32) -> bool //uid:131
+	fn getResolution() -> int32 //uid:132
+	fn setActiveCamera(cameraId: int32) -> bool //uid:133
+	fn getActiveCamera() -> int32 //uid:134
+	fn getTopOfBlob(distance: float32,frame: int32,applyVerticalOffset: bool) -> any //uid:135
+	fn setBlobTrackingEnabled(status: bool) //uid:136
+	fn isBlobTrackingEnabled() -> bool //uid:137
+	fn setBlobTrackingDistance(distance: float32) //uid:138
+	fn getBlobTrackingDistance() -> float32 //uid:139
+	fn setVerticalOffset(value: float32) //uid:140
+	fn getVerticalOffset() -> float32 //uid:141
+	fn setDeltaDepthThreshold(value: float32) //uid:142
+	fn getDeltaDepthThreshold() -> float32 //uid:143
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALCloseObjectDetection
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _LifeReporter
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn _onFocusedActivity(memoryKey: str,value: any,message: str) //uid:113
+	fn _onAutonomousLifeStateChange(memoryKey: str,value: any,message: str) //uid:114
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALResourceManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn waitForResource(resourceName: str,ownerName: str,callbackName: str,timeoutSeconds: int32) //uid:113
+	fn acquireResource(resourceName: str,moduleName: str,callbackName: str,timeoutSeconds: int32) //uid:114
+	fn waitForOptionalResourcesTree(P0: Vec<str>, P1: str, P2: str, P3: int32, P4: Vec<str>) -> Vec<str> //uid:115
+	fn waitForResourcesTree(resourceName: Vec<str>,moduleName: str,callbackName: str,timeoutSeconds: int32) //uid:116
+	fn acquireResourcesTree(resourceName: Vec<str>,moduleName: str,callbackName: str,timeoutSeconds: int32) //uid:117
+	fn areResourcesOwnedBy(resourceNameList: Vec<str>,ownerName: str) -> bool //uid:118
+	fn releaseResource(resourceName: str,ownerName: str) //uid:119
+	fn releaseResources(resourceNames: Vec<str>,ownerName: str) //uid:120
+	fn enableStateResource(resourceName: str,enabled: bool) //uid:121
+	fn checkStateResourceFree(resourceName: Vec<str>) -> bool //uid:122
+	fn areResourcesFree(resourceNames: Vec<str>) -> bool //uid:123
+	fn isResourceFree(resourceNames: str) -> bool //uid:124
+	fn createResource(resourceName: str,parentResourceName: str) //uid:125
+	fn deleteResource(resourceName: str,deleteChildResources: bool) //uid:126
+	fn isInGroup(resourceGroupName: str,resourceName: str) -> bool //uid:127
+	fn createResourcesList(resourceGroupName: Vec<str>,resourceName: str) //uid:128
+	fn getResources() -> any //uid:129
+	fn ownersGet() -> any //uid:130
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALSensors
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn run() //uid:126
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALRedBallTracker
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn startTracker() //uid:113
+	fn stopTracker() //uid:114
+	fn getPosition() -> Vec<float32> //uid:115
+	fn isNewData() -> bool //uid:116
+	fn isActive() -> bool //uid:117
+	fn setWholeBodyOn(pWholeBodyOn: bool) //uid:118
+	fn _onBallDetected(P0: str, P1: any, P2: str) //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _FaceConverter
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start(P0: int32) //uid:114
+	fn stopConverter() //uid:115
+	fn convert(P0: any) -> any //uid:116
+	fn convertEvent(P0: str, P1: any) //uid:117
+	fn updateDetectorPeriod(P0: int32) //uid:118
+	fn getDetectorPeriod() -> int32 //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _SoundConverter
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start(P0: int32) //uid:114
+	fn stopConverter() //uid:115
+	fn convert(P0: any) -> any //uid:116
+	fn convertEvent(P0: str, P1: any) //uid:117
+	fn updateDetectorPeriod(P0: int32) //uid:118
+	fn getDetectorPeriod() -> int32 //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALFastPersonTracking
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn setTrackingDistance(distance: float32) //uid:129
+	fn getTrackingDistance() -> float32 //uid:130
+	fn setVerticalOffset(value: float32) //uid:131
+	fn getVerticalOffset() -> float32 //uid:132
+	fn _setDetectionMode(P0: str) //uid:133
+	fn _getDetectionMode() -> str //uid:134
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _UserSessionManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn _startMonitoringUsers() //uid:113
+	fn _stopMonitoringUsers() //uid:114
+	fn _isMonitoringUsers() -> bool //uid:115
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALAutonomousLife
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn _onHeadTapEvents(P0: str,P1: any,P2: str) //uid:113
+	fn _onPackagesChanged(P0: str,P1: any,P2: str) //uid:114
+	fn _onFocusedActivityChanged(P0: str,P1: any,P2: str) //uid:115
+	fn _onCompletedActivity(P0: str,P1: any,P2: str) //uid:116
+	fn _onNextActivity(P0: str,P1: any,P2: str) //uid:117
+	fn _onLaunchSuggestions(P0: str,P1: any,P2: str) //uid:118
+	fn _onRobotHealthChanged(P0: str,P1: any,P2: str) //uid:119
+	fn _onPushRecovery(P0: str,P1: any,P2: str) //uid:120
+	fn _onFallRecovery(P0: str,P1: any,P2: str) //uid:121
+	fn _onRobotMoved(P0: str,P1: any,P2: str) //uid:122
+	fn _onPreferenceUpdated(P0: str,P1: any,P2: str) //uid:123
+	fn _onPreferenceSynchronized(P0: str,P1: any,P2: str) //uid:124
+	fn _setStateChangeEnabled(enabled: bool) //uid:125
+	fn setState(state: str) //uid:126
+	fn getState() -> str //uid:127
+	fn focusedActivity() -> str //uid:128
+	fn switchFocus(activity_name: str) //uid:129
+	fn switchFocus(activity_name: str,flags: int32) //uid:130
+	fn stopFocus() //uid:131
+	fn stopAll() //uid:132
+	fn getActivityNature(activity_name: str) -> str //uid:133
+	fn getActivityStatistics() -> Map<str,Map<str,int32>> //uid:134
+	fn getAutonomousActivityStatistics() -> Map<str,Map<str,int32>> //uid:135
+	fn getFocusHistory() -> Vec<Tuple<str,int32>> //uid:136
+	fn getStateHistory() -> Vec<Tuple<str,int32>> //uid:137
+	fn getFocusHistory(depth: int32) -> Vec<Tuple<str,int32>> //uid:138
+	fn getStateHistory(depth: int32) -> Vec<Tuple<str,int32>> //uid:139
+	fn getLifeTime() -> int32 //uid:140
+	fn startMonitoringLaunchpadConditions() //uid:141
+	fn stopMonitoringLaunchpadConditions() //uid:142
+	fn isMonitoringLaunchpadConditions() -> bool //uid:143
+	fn setLaunchpadPluginEnabled(plugin_name: str,enabled: bool) //uid:144
+	fn getEnabledLaunchpadPlugins() -> Vec<str> //uid:145
+	fn _setMovedSafeguardInstantaneous(instantaneous: bool) //uid:146
+	fn _isMovedSafeguardInstantaneous() -> bool //uid:147
+	fn getLaunchpadPluginsForGroup(group: str) -> Vec<str> //uid:148
+	fn setRobotOffsetFromFloor(offset: float32) //uid:149
+	fn getRobotOffsetFromFloor() -> float32 //uid:150
+	fn _forbidAutonomousInteractiveStateChange(is_forbidden: bool) //uid:151
+	fn _forbidAutonomousActivityFocusSwitch(is_forbidden: bool) //uid:152
+	fn _setPushRecoverySafeguardDuration(duration_ms: int32) //uid:153
+	fn _getPushRecoverySafeguardDuration() -> int32 //uid:154
+	fn setSafeguardEnabled(name: str,enabled: bool) //uid:155
+	fn isSafeguardEnabled(name: str) -> bool //uid:156
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface LogManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn log(P0: LogMessage) //uid:100
+	fn getListener() -> obj //uid:101
+	fn addProvider(P0: obj) -> int32 //uid:102
+	fn removeProvider(P0: int32) //uid:103
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALAnimatedSpeech
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn say(text: str) //uid:113
+	fn say(text: str,configuration: any) //uid:114
+	fn _reset() //uid:115
+	fn _stopAll(blocking: bool) //uid:116
+	fn _isRunning() -> bool //uid:117
+	fn setBodyTalkEnabled(enable: bool) //uid:118
+	fn setBodyLanguageEnabled(enable: bool) //uid:119
+	fn setBodyLanguageModeFromStr(stringBodyLanguageMode: str) //uid:120
+	fn setBodyLanguageMode(bodyLanguageMode: uint32) //uid:121
+	fn getBodyLanguageModeToStr() -> str //uid:122
+	fn getBodyLanguageMode() -> uint32 //uid:123
+	fn declareAnimationsPackage(animationsPackage: str) //uid:124
+	fn _setMSPauseBeforeSpeech(pause: int32) //uid:125
+	fn _getMSPauseBeforeSpeech() -> uint32 //uid:126
+	fn _isCheckExecutionTimesEnabled() -> bool //uid:127
+	fn _setCheckExecutionTimes(pause: bool) //uid:128
+	fn addTagsToWords(tagsToWords: any) //uid:129
+	fn declareTagForAnimations(tagsToAnimations: any) //uid:130
+	fn _diagnosis() //uid:131
+	fn isBodyTalkEnabled() -> bool //uid:132
+	fn isBodyLanguageEnabled() -> bool //uid:133
+	fn _getTagList() -> Vec<str> //uid:134
+	fn _getAnimationsByTag(tag: str) -> Vec<str> //uid:135
+	fn _speechBookMarkCallback(memoryKey: str,value: any,message: str) //uid:136
+	fn _mrkpauseCallback(pBookmark: uint32) //uid:137
+	fn _speechStatusCallback(memoryKey: str,value: any,message: str) //uid:138
+	fn _postureFamilyChangedCallback(memoryKey: str,value: any,message: str) //uid:139
+	fn _updateRepresentations(memoryKey: str,value: any,message: str) //uid:140
+	fn _dialogMatchedInputCallback(memoryKey: str,value: any,message: str) //uid:141
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _MotionMove
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setParam(P0: any) //uid:113
+	fn start() //uid:114
+	fn stopMove() //uid:115
+	fn move(P0: any) //uid:116
+	fn moveEvent(P0: str, P1: any) //uid:117
+	fn _stopMoveEvent() //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALMovementDetection
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn setFrameRate(value: int32) -> bool //uid:129
+	fn getFrameRate() -> int32 //uid:130
+	fn setResolution(resolution: int32) -> bool //uid:131
+	fn getResolution() -> int32 //uid:132
+	fn setActiveCamera(cameraId: int32) -> bool //uid:133
+	fn getActiveCamera() -> int32 //uid:134
+	fn resetDetection() //uid:135
+	fn setColorSensitivity(sensitivity: float32) //uid:136
+	fn getColorSensitivity() -> float32 //uid:137
+	fn setDepthSensitivity(sensitivity: float32) //uid:138
+	fn getDepthSensitivity() -> float32 //uid:139
+	fn _setDetectionMode(P0: str) //uid:140
+	fn _getDetectionMode() -> str //uid:141
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALWavingDetection
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn setMaxDistance(maxDistance: float32) //uid:129
+	fn getMaxDistance() -> float32 //uid:130
+	fn setMinSize(sensitivity: float32) //uid:131
+	fn getMinSize() -> float32 //uid:132
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALFindPersonHead
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn startSearch() //uid:113
+	fn stopSearch() //uid:114
+	fn isSearching() -> bool //uid:115
+	fn setTrackingDistance(distance: float32) //uid:116
+	fn getTrackingDistance() -> float32 //uid:117
+	fn setVerticalOffset(value: float32) //uid:118
+	fn getVerticalOffset() -> float32 //uid:119
+	fn _setDetectionMode(P0: str) //uid:120
+	fn _getDetectionMode() -> str //uid:121
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _AutonomousLaunchpad
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn _onPackagesChanged(P0: str, P1: any, P2: any) //uid:113
+	fn _startMonitoringConditions() //uid:114
+	fn _stopMonitoringConditions() //uid:115
+	fn _isMonitoringConditions() -> bool //uid:116
+	fn _setPluginEnabled(plugin_name: str,enabled: bool) //uid:117
+	fn _getEnabledPlugins() -> Vec<str> //uid:118
+	fn _getPluginsForGroup(group: str) -> Vec<str> //uid:119
+	fn _unloadPlugins() //uid:120
+	fn _getAutonomousActivityNames() -> Vec<str> //uid:121
+	fn _addCondition(name: str,purpose: str,condition: str) //uid:122
+	fn _removeCondition(name: str,purpose: str,condition: str) //uid:123
+	fn _clearConditions(name: str,purpose: str) //uid:124
+	fn _getConditions(name: str,purpose: str) -> Vec<str> //uid:125
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALLeds
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn createGroup(groupName: str,ledNames: Vec<str>) //uid:113
+	fn earLedsSetAngle(degrees: int32,duration: float32,leaveOnAtEnd: bool) //uid:114
+	fn fade(name: str,intensity: float32,duration: float32) //uid:115
+	fn fadeListRGB(name: str,rgbList: any,timeList: any) //uid:116
+	fn fadeRGB(name: str,red: float32,green: float32,blue: float32,duration: float32) //uid:117
+	fn fadeRGB(name: str,colorName: str,duration: float32) //uid:118
+	fn fadeRGB(name: str,rgb: int32,duration: float32) //uid:119
+	fn reset(name: str) //uid:120
+	fn _setIntensityRatio(name: str,intensity: float32) //uid:121
+	fn getIntensity(name: str) -> any //uid:122
+	fn listLEDs() -> Vec<str> //uid:123
+	fn listLED(name: str) -> Vec<str> //uid:124
+	fn listGroup(groupName: str) -> Vec<str> //uid:125
+	fn listGroups() -> Vec<str> //uid:126
+	fn off(name: str) //uid:127
+	fn on(name: str) //uid:128
+	fn rasta(duration: float32) //uid:129
+	fn rotateEyes(rgb: int32,timeForRotation: float32,totalDuration: float32) //uid:130
+	fn randomEyes(duration: float32) //uid:131
+	fn setIntensity(name: str,intensity: float32) //uid:132
+	fn _blink() //uid:133
+	fn _blink(P0: int32) //uid:134
+	fn _setAnyLedIntensity(name: str,intensity: float32) //uid:135
+	fn _startPassiveBlinking() //uid:136
+	fn _startPassiveBlinking(eyeShadow: int32) //uid:137
+	fn _stopPassiveBlinking() //uid:138
+	fn _setTimeBetweenTwoBlinks(min: float32,max: float32) //uid:139
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _RoundSearcher
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn startEvent() //uid:113
+	fn stopSearcher() //uid:114
+	fn search(P0: any) //uid:115
+	fn searchEvent(P0: str, P1: any) //uid:116
+	fn _stopMove() //uid:117
+	fn setUseWholeBodyLookAt(P0: bool) //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _HeadLooker
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start() //uid:114
+	fn stopLooker() //uid:115
+	fn look(P0: any) //uid:116
+	fn lookEvent(P0: str, P1: any) //uid:117
+	fn lostEvent() //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALVisualCompass
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn setFrameRate(subscriberName: str,framerate: int32) -> bool //uid:126
+	fn setFrameRate(framerate: int32) -> bool //uid:127
+	fn setResolution(resolution: int32) -> bool //uid:128
+	fn setActiveCamera(cameraId: int32) -> bool //uid:129
+	fn setParameter(paramName: str,value: any) //uid:130
+	fn getFrameRate() -> int32 //uid:131
+	fn getResolution() -> int32 //uid:132
+	fn getActiveCamera() -> int32 //uid:133
+	fn isPaused() -> bool //uid:134
+	fn isProcessing() -> bool //uid:135
+	fn pause(paused: bool) //uid:136
+	fn _run() //uid:137
+	fn getReferenceImage() -> any //uid:138
+	fn enableReferenceRefresh(refresh: bool) //uid:139
+	fn getMatchingQuality() -> any //uid:140
+	fn setCurrentImageAsReference() -> bool //uid:141
+	fn moveTo(x: float32,y: float32,theta: float32) -> bool //uid:142
+	fn moveStraightTo(x: float32) -> bool //uid:143
+	fn _xOnMoveFailed() //uid:144
+	fn _xOnFootContactChanged(P0: str, P1: any, P2: str) //uid:145
+	fn _stopControllers() //uid:146
+	fn _resumeControllers(resumeControllers: bool) //uid:147
+	fn _resume() //uid:148
+	fn _setTranslationParameters(P0: float32, P1: float32, P2: float32, P3: float32) //uid:149
+	fn _setRotationParameters(P0: any, P1: float32, P2: float32, P3: float32, P4: float32, P5: int32) //uid:150
+	fn waitUntilTargetReached() //uid:151
+	fn _setOdometryMode(P0: bool) //uid:152
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALLogger
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn fatal(moduleName: str,message: str) //uid:113
+	fn error(moduleName: str,message: str) //uid:114
+	fn warn(moduleName: str,message: str) //uid:115
+	fn info(moduleName: str,message: str) //uid:116
+	fn debug(moduleName: str,message: str) //uid:117
+	fn setVerbosity(P0: str) //uid:118
+	fn verbosity() -> int32 //uid:119
+	fn logInFile(P0: str) //uid:120
+	fn logInForwarder(P0: str) //uid:121
+	fn removeHandler(P0: str) //uid:122
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALTracker
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getTargetPosition(pFrame: int32) -> Vec<float32> //uid:113
+	fn getRobotPosition() -> Vec<float32> //uid:114
+	fn isActive() -> bool //uid:115
+	fn isNewTargetDetected() -> bool //uid:116
+	fn setRelativePosition(target: any) //uid:117
+	fn getRelativePosition() -> any //uid:118
+	fn setTargetCoordinates(pCoord: any) //uid:119
+	fn getTargetCoordinates() -> any //uid:120
+	fn setMode(pMode: str) //uid:121
+	fn getMode() -> str //uid:122
+	fn getAvailableModes() -> Vec<str> //uid:123
+	fn toggleSearch(pSearch: bool) //uid:124
+	fn isSearchEnabled() -> bool //uid:125
+	fn stopTracker() //uid:126
+	fn isTargetLost() -> bool //uid:127
+	fn track(pTarget: str) //uid:128
+	fn trackEvent(pEventName: str) //uid:129
+	fn registerTarget(pTarget: str,pParams: any) //uid:130
+	fn setExtractorPeriod(pTarget: str,pPeriod: int32) //uid:131
+	fn getExtractorPeriod(pTarget: str) -> int32 //uid:132
+	fn unregisterTarget(pTarget: str) //uid:133
+	fn unregisterTargets(pTarget: Vec<str>) //uid:134
+	fn unregisterAllTargets() //uid:135
+	fn getActiveTarget() -> str //uid:136
+	fn getSupportedTargets() -> Vec<str> //uid:137
+	fn getRegisteredTargets() -> Vec<str> //uid:138
+	fn lookAt(pPosition: Vec<float32>,pFrame: int32,pFractionMaxSpeed: float32,pUseWholeBody: bool) //uid:139
+	fn pointAt(pEffector: str,pPosition: Vec<float32>,pFrame: int32,pFractionMaxSpeed: float32) //uid:140
+	fn getMoveConfig() -> any //uid:141
+	fn setMoveConfig(config: any) //uid:142
+	fn getTimeOut() -> int32 //uid:143
+	fn setTimeOut(pTimeMs: int32) //uid:144
+	fn getMaximumDistanceDetection() -> float32 //uid:145
+	fn setMaximumDistanceDetection(pMaxDistance: float32) //uid:146
+	fn getEffector() -> str //uid:147
+	fn setEffector(pEffector: str) //uid:148
+	fn lookAt(pPosition: Vec<float32>,pFractionMaxSpeed: float32,pUseWholeBody: bool) //uid:149
+	fn pointAt(pEffector: str,pPosition: Vec<float32>,pFractionMaxSpeed: float32) //uid:150
+	fn getTargetPosition() -> Vec<float32> //uid:151
+	fn getTargetNames() -> Vec<str> //uid:152
+	fn getManagedTargets() -> Vec<str> //uid:153
+	fn addTarget(pTarget: str,pParams: any) //uid:154
+	fn removeTarget(pTarget: str) //uid:155
+	fn removeTargets(pTarget: Vec<str>) //uid:156
+	fn removeAllTargets() //uid:157
+	fn addEffector(pEffector: str) //uid:158
+	fn removeEffector(pEffector: str) //uid:159
+	fn _pause() //uid:160
+	fn _restart() //uid:161
+	fn _setTrackerConfig(config: any) //uid:162
+	fn _getTrackerConfig() -> Map<str,float32> //uid:163
+	fn _getTrackerConfigStr() -> str //uid:164
+	fn _lostEvent() //uid:165
+	fn _detectedEvent(P0: str, P1: any) //uid:166
+	fn _setDebugInView3D(P0: bool) //uid:167
+	fn _debugCallbackEvent(P0: str, P1: any) //uid:168
+	fn _lookAtWithMove(pPosition: Vec<float32>,pFractionMaxSpeed: float32,pUseWholeBody: bool,pUseMove: bool) //uid:169
+	fn _lookAtWithEffector(pPosition: Vec<float32>,pFrame: int32,pEffectorId: int32,pFractionMaxSpeed: float32,pUseWholeBody: bool) //uid:170
+	fn _stopLookAt() //uid:171
+	fn _stopPointAt() //uid:172
+	fn _searcherSetUseWholeBodyLookAt(P0: bool) //uid:173
+	fn _setMoveEvent(P0: str) //uid:174
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALGazeAnalysis
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn setFaceAnalysisEnabled(status: bool) //uid:129
+	fn isFaceAnalysisEnabled() -> bool //uid:130
+	fn setTolerance(tolerance: float32) //uid:131
+	fn getTolerance() -> float32 //uid:132
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALNotificationManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn add(notification: any) -> int32 //uid:113
+	fn remove(notificationId: int32) //uid:114
+	fn notifications() -> any //uid:115
+	fn notification(notificationId: int32) -> any //uid:116
+	fn _severity() -> int32 //uid:117
+	fn _read(int: int32) //uid:118
+	fn _addImmediate(notification: any) -> int32 //uid:119
+	fn _isImmediate(notificationId: int32) -> bool //uid:120
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALColorBlobDetection
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn setFrameRate(subscriberName: str,framerate: int32) -> bool //uid:126
+	fn setFrameRate(framerate: int32) -> bool //uid:127
+	fn setResolution(resolution: int32) -> bool //uid:128
+	fn setActiveCamera(cameraId: int32) -> bool //uid:129
+	fn setParameter(paramName: str,value: any) //uid:130
+	fn getFrameRate() -> int32 //uid:131
+	fn getResolution() -> int32 //uid:132
+	fn getActiveCamera() -> int32 //uid:133
+	fn isPaused() -> bool //uid:134
+	fn isProcessing() -> bool //uid:135
+	fn pause(paused: bool) //uid:136
+	fn _run() //uid:137
+	fn setColor(r: int32,g: int32,b: int32,colorThres: int32) //uid:138
+	fn setObjectProperties(minSize: int32,span: float32) //uid:139
+	fn setObjectProperties(minSize: int32,span: float32,shape: str) //uid:140
+	fn getCircle() -> any //uid:141
+	fn getAutoExposure() -> bool //uid:142
+	fn setAutoExposure(mode: bool) //uid:143
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _RedBallConverter
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start(P0: int32) //uid:114
+	fn stopConverter() //uid:115
+	fn convert(P0: any) -> any //uid:116
+	fn convertEvent(P0: str, P1: any) //uid:117
+	fn updateDetectorPeriod(P0: int32) //uid:118
+	fn getDetectorPeriod() -> int32 //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _NaoMarkConverter1
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start(P0: int32) //uid:114
+	fn stopConverter() //uid:115
+	fn convert(P0: any) -> any //uid:116
+	fn convertEvent(P0: str, P1: any) //uid:117
+	fn updateDetectorPeriod(P0: int32) //uid:118
+	fn getDetectorPeriod() -> int32 //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALPreferences
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn readPrefFile(fileName: str,autoGenerateMemoryNames: bool) -> any //uid:113
+	fn writePrefFile(fileName: str,prefs: any,ignoreMemoryNames: bool) //uid:114
+	fn removePrefFile(fileName: str) //uid:115
+	fn saveToMemory(prefs: any) -> bool //uid:116
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _ArmsLooker
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start() //uid:114
+	fn stopLooker() //uid:115
+	fn look(P0: any) //uid:116
+	fn lookEvent(P0: str, P1: any) //uid:117
+	fn lostEvent() //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALFileManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setUserSharedFolderPath(fileName: str) //uid:113
+	fn getUserSharedFolderPath() -> str //uid:114
+	fn getSystemSharedFolderPath() -> str //uid:115
+	fn fileExists(fileName: str) -> bool //uid:116
+	fn dataFileExists(fileName: str) -> bool //uid:117
+	fn getFileCompletePath(prefs: str) -> str //uid:118
+	fn getFileContents(prefs: str) -> any //uid:119
+	fn _getBehaviorsPath() -> str //uid:120
+	fn _getBoxLibrariesPath() -> str //uid:121
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALWorldRepresentation
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn addAttributeToCategory(P0: str, P1: str, P2: any) -> int32 //uid:113
+	fn clearObject(P0: str) -> int32 //uid:114
+	fn clearOldPositions(P0: str, P1: int32) -> int32 //uid:115
+	fn createObjectCategory(P0: str, P1: bool) -> int32 //uid:116
+	fn removeObjectCategory(P0: str) -> int32 //uid:117
+	fn objectCategoryExists(P0: str) -> bool //uid:118
+	fn deleteObjectAttribute(P0: str, P1: str, P2: str) -> int32 //uid:119
+	fn findObject(P0: str) -> bool //uid:120
+	fn load() -> int32 //uid:121
+	fn getAttributesFromCategory(P0: str) -> any //uid:122
+	fn getChildrenNames(P0: str) -> Vec<str> //uid:123
+	fn getObjectNames() -> Vec<str> //uid:124
+	fn getObjectAttributes(P0: str) -> any //uid:125
+	fn getObjectAttributeValues(P0: str, P1: str, P2: int32) -> any //uid:126
+	fn getObjectLatestAttributes(P0: str, P1: int32) -> any //uid:127
+	fn getObjectParentName(P0: str) -> str //uid:128
+	fn getObjectsInCategory(P0: str) -> Vec<str> //uid:129
+	fn getObjectCategory(P0: str) -> str //uid:130
+	fn getPosition(P0: str, P1: str) -> any //uid:131
+	fn getPosition6D(P0: str, P1: str) -> Vec<float32> //uid:132
+	fn getPosition6DAtTime(P0: str, P1: str, P2: int32, P3: int32) -> Vec<float32> //uid:133
+	fn getRootName() -> str //uid:134
+	fn save() -> int32 //uid:135
+	fn select(P0: str, P1: str, P2: str, P3: str) -> any //uid:136
+	fn selectWithOrder(P0: str, P1: str, P2: str, P3: str, P4: str) -> any //uid:137
+	fn storeObject(P0: str, P1: str, P2: Vec<float32>, P3: str, P4: any) -> int32 //uid:138
+	fn storeObjectWithReference(P0: str, P1: str, P2: str, P3: Vec<float32>, P4: str, P5: any) -> int32 //uid:139
+	fn storeObjectAttribute(P0: str, P1: str, P2: any) -> int32 //uid:140
+	fn updatePosition(P0: str, P1: Vec<float32>, P2: bool) -> int32 //uid:141
+	fn updatePositionWithReference(P0: str, P1: str, P2: Vec<float32>, P3: bool) -> int32 //uid:142
+	fn updateAttribute(P0: str, P1: str, P2: str, P3: any) -> int32 //uid:143
+	fn _startMemoryCheck(P0: int32) //uid:144
+	fn _stopMemoryCheck() //uid:145
+	fn _beginTransaction(P0: str) -> int32 //uid:146
+	fn _endTransaction(P0: str) -> int32 //uid:147
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface PackageManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn install(P0: str) -> bool //uid:100
+	fn installCheckMd5(P0: str, P1: str) -> bool //uid:101
+	fn _install(P0: str, P1: str) -> bool //uid:102
+	fn _install(P0: str, P1: str, P2: str) -> bool //uid:103
+	fn setServiceDirectory(P0: str) //uid:104
+	fn hasPackage(P0: str) -> bool //uid:105
+	fn packages2() -> Vec<PackageInfo2> //uid:106
+	fn package2(P0: str) -> PackageInfo2 //uid:107
+	fn packageIcon(P0: str) -> str //uid:108
+	fn removePkg(P0: str) //uid:109
+	fn _getHttpTransferPort() -> int32 //uid:110
+	fn _openFileTransferSession(P0: str) -> any //uid:111
+	fn _closeFileTransferSession(P0: str) //uid:112
+	fn getPackages() -> any //uid:115
+	fn packages() -> Vec<PackageInfo> //uid:116
+	fn package(P0: str) -> PackageInfo //uid:117
+	fn getPackage(P0: str) -> any //uid:118
+	fn getPackageIcon(P0: str) -> any //uid:119
+	fn install(P0: str, P1: str) -> int32 //uid:120
+	fn install(P0: str, P1: str, P2: str) -> int32 //uid:121
+	fn remove(P0: str) -> int32 //uid:122
+	sig traceObject(P0: EventTrace) //uid:86
+	sig onPackageInstalled2(P0: PackageInfo2) //uid:113
+	sig onPackageRemoved2(P0: PackageInfo2) //uid:114
+	sig _onPackageInstalled(P0: any) //uid:123
+	sig _onPackageRemoved(P0: any) //uid:124
+	sig packageInstalled(P0: PackageInfo) //uid:125
+	sig packageRemoved(P0: PackageInfo) //uid:126
+	sig onPackageInstalled(P0: PackageInfo) //uid:127
+	sig onPackageRemoved(P0: PackageInfo) //uid:128
+end
+interface ALAudioPlayer
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn playFile(fileName: str) //uid:113
+	fn playFile(fileName: str,volume: float32,pan: float32) //uid:114
+	fn playFileInLoop(fileName: str) //uid:115
+	fn playFileInLoop(fileName: str,volume: float32,pan: float32) //uid:116
+	fn playFileFromPosition(fileName: str,position: float32) //uid:117
+	fn playFileFromPosition(fileName: str,position: float32,volume: float32,pan: float32) //uid:118
+	fn pause(id: int32) //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALTextToSpeech
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn say(stringToSay: str) //uid:113
+	fn say(stringToSay: str,language: str) //uid:114
+	fn sayToFile(pStringToSay: str,pFileName: str) //uid:115
+	fn sayToFileAndPlay(pStringToSay: str) //uid:116
+	fn stopAll() //uid:117
+	fn setLanguage(pLanguage: str) //uid:118
+	fn getLanguage() -> str //uid:119
+	fn getLanguageEncoding(pLanguage: str) -> str //uid:120
+	fn getAvailableLanguages() -> Vec<str> //uid:121
+	fn getSupportedLanguages() -> Vec<str> //uid:122
+	fn resetSpeed() //uid:123
+	fn setParameter(pEffectName: str,pEffectValue: float32) //uid:124
+	fn getParameter(pParameterName: str) -> float32 //uid:125
+	fn setVoice(pVoiceID: str) //uid:126
+	fn getVoice() -> str //uid:127
+	fn getAvailableVoices() -> Vec<str> //uid:128
+	fn setVolume(volume: float32) //uid:129
+	fn getVolume() -> float32 //uid:130
+	fn locale() -> str //uid:131
+	fn loadVoicePreference(pPreferenceName: str) //uid:132
+	fn _setDefaultLanguage(Language: str) //uid:133
+	fn setLanguageDefaultVoice(Language: str,Voice: str) //uid:134
+	fn enableNotifications() //uid:135
+	fn disableNotifications() //uid:136
+	fn _naoStoreApplicationInstalled(P0: str, P1: any, P2: str) //uid:137
+	fn _naoStoreApplicationUninstalled(P0: str, P1: any, P2: str) //uid:138
+	fn _pause() //uid:139
+	fn _resume() //uid:140
+	fn _enableFilter(enable: bool) //uid:141
+	fn _diagnosis() //uid:142
+	fn _showVoiceSettings() //uid:143
+	sig traceObject(P0: EventTrace) //uid:86
+	sig synchroTTS(P0: timeval) //uid:144
+end
+interface ALModularity
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getModularity() -> unknown //uid:113
+	fn loadProgram(program: str) -> bool //uid:114
+	fn loadProgramFromFile(P0: str) -> bool //uid:115
+	fn getData(sink: str) -> any //uid:116
+	fn getLastData(sink: str) -> any //uid:117
+	fn getImageLocal(sink: str) -> unknown //uid:118
+	fn getImageRemote(sink: str) -> any //uid:119
+	fn getFilters() -> any //uid:120
+	fn getFilterDescription(name: str) -> str //uid:121
+	fn getFilterInputs(name: str) -> any //uid:122
+	fn getFilterOutputs(name: str) -> any //uid:123
+	fn deleteFilter(name: str) -> bool //uid:124
+	fn getSources() -> Vec<str> //uid:125
+	fn isSourceBinded(name: str) -> bool //uid:126
+	fn getSourceFrequency(name: str) -> float32 //uid:127
+	fn deleteSource(name: str) -> bool //uid:128
+	fn getRobotHeightOffset() -> float32 //uid:129
+	fn setRobotHeightOffset(heightOffset: float32) -> bool //uid:130
+	fn getProcesses() -> Vec<str> //uid:131
+	fn isProcesses(name: str) -> bool //uid:132
+	fn getProcessDescription(name: str) -> str //uid:133
+	fn getProcessSources(name: str) -> Vec<str> //uid:134
+	fn getProcessSinks(name: str) -> Vec<str> //uid:135
+	fn getProcessAggregatedSinks(name: str) -> Vec<str> //uid:136
+	fn getProcessPriority(name: str) -> int32 //uid:137
+	fn getProcessFrequency(name: str) -> float32 //uid:138
+	fn setProcessPriority(name: str,priority: uint32) -> bool //uid:139
+	fn setProcessFrequency(name: str,priority: float32) -> bool //uid:140
+	fn resetProcess(name: str) -> bool //uid:141
+	fn isProcessEnable(name: str) -> bool //uid:142
+	fn isProcessZombie(name: str) -> bool //uid:143
+	fn enableProcess(name: str) -> bool //uid:144
+	fn disableProcess(name: str) -> bool //uid:145
+	fn deleteProcess(name: str) -> bool //uid:146
+	fn getScheduledJobs() -> Vec<str> //uid:147
+	fn startScheduler() -> bool //uid:148
+	fn stopScheduler() -> bool //uid:149
+	fn getInstrumentationResult() -> str //uid:150
+	fn getDotGraph(filter: str,level: int32) -> any //uid:151
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALPanoramaCompass
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setupPanorama() -> int32 //uid:113
+	fn isDataAvailable() -> bool //uid:114
+	fn getCurrentPosition() -> any //uid:115
+	fn localizeNoHint() -> Vec<float32> //uid:116
+	fn localize() -> Vec<float32> //uid:117
+	fn localize(pMode: bool) -> Vec<float32> //uid:118
+	fn localize(pMode: int32) -> Vec<float32> //uid:119
+	fn localize(P0: int32, P1: bool) -> Vec<float32> //uid:120
+	fn isInPanorama() -> int32 //uid:121
+	fn isRelocalizationRequired() -> bool //uid:122
+	fn loadPanorama(id: int32) -> int32 //uid:123
+	fn getCurrentPanoramaDescriptor() -> any //uid:124
+	fn getFrame(P0: int32, P1: str) -> any //uid:125
+	fn isInPanorama(P0: int32) -> int32 //uid:126
+	fn clearAllPanoramas() -> int32 //uid:127
+	fn clearAllPanoramas(P0: bool) -> int32 //uid:128
+	fn clearPanorama(pIdentity: int32) -> int32 //uid:129
+	fn _launchLocalization() -> Vec<float32> //uid:130
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALDebug
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn _stopOneThread() //uid:100
+	fn _dumpPythonTraces() -> str //uid:101
+	fn _makeMinidump() //uid:102
+	fn _probesInit(P0: bool, P1: int32) //uid:103
+	fn _probesRecordSnapshot() -> bool //uid:104
+	fn _probesSetTrigger(P0: str, P1: str, P2: str) //uid:105
+	fn _probesRemoveTrigger(P0: str) //uid:106
+	fn _probesStartTrigger() //uid:107
+	fn _probesStopTrigger() //uid:108
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALMotionRecorder
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn startInteractiveRecording(jointsToRecord: Vec<str>,nbPoses: int32,extensionAllowed: bool,mode: int32) //uid:113
+	fn startPeriodicRecording(jointsToRecord: Vec<str>,nbPoses: int32,extensionAllowed: bool,timeStep: float32,jointsToReplay: Vec<str>,replayData: any) //uid:114
+	fn stopAndGetRecording() -> any //uid:115
+	fn dataChanged(dataName: str,data: any,message: str) //uid:116
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _ALTargetManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn start() //uid:113
+	fn stopManager() //uid:114
+	fn addTarget(pTargetname: str,pParam: any) //uid:115
+	fn removeTarget(pTargetname: str) //uid:116
+	fn removeTargets(pTargetnamearray: Vec<str>) //uid:117
+	fn removeAllTargets() //uid:118
+	fn setActiveTarget(pTargetname: str) //uid:119
+	fn setActiveEvent(pTargetname: str) //uid:120
+	fn getActiveTarget() -> str //uid:121
+	fn getActiveTargetPosition() -> Vec<float32> //uid:122
+	fn getEventName() -> str //uid:123
+	fn getSecondEventName() -> str //uid:124
+	fn isTargetManaged(pTargetname: str) -> bool //uid:125
+	fn getTargetIds(pTargetname: str) -> Vec<int32> //uid:126
+	fn getSupportedTargets() -> Vec<str> //uid:127
+	fn getRegisteredTargets() -> Vec<str> //uid:128
+	fn setExtractorPeriod(pTarget: str,pPeriod: int32) //uid:129
+	fn getExtractorPeriod(pTarget: str) -> int32 //uid:130
+	fn _raiseEvent(key: str,value: any) //uid:131
+	fn _genericEvent(P0: str, P1: any) //uid:132
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALSittingPeopleDetection
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn setSittingThreshold(threshold: float32) //uid:129
+	fn getSittingThreshold() -> float32 //uid:130
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALSonar
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn getFilteredValues() -> Vec<float32> //uid:126
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALFsr
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALMotion
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn wakeUp() //uid:113
+	fn rest() //uid:114
+	fn rest(P0: str) //uid:115
+	fn _rest(chainName: str) //uid:116
+	fn _shutdown() //uid:117
+	fn _isChainGoToOrInRest(chainName: str) -> bool //uid:118
+	fn _setMotionPosture(postureName: str,bodyAngles: Vec<float32>) -> bool //uid:119
+	fn _getMotionPosture(postureName: str) -> Vec<float32> //uid:120
+	fn _getMotionPostureList() -> Vec<str> //uid:121
+	fn robotIsWakeUp() -> bool //uid:122
+	fn stiffnessInterpolation(names: any,stiffnessLists: any,timeLists: any) //uid:123
+	fn setStiffnesses(names: any,stiffnesses: any) //uid:124
+	fn _setStiffnesses(names: any,stiffnesses: any) //uid:125
+	fn getStiffnesses(jointName: any) -> Vec<float32> //uid:126
+	fn angleInterpolation(names: any,angleLists: any,timeLists: any,isAbsolute: bool) //uid:127
+	fn angleInterpolationWithSpeed(names: any,targetAngles: any,maxSpeedFraction: float32) //uid:128
+	fn angleInterpolationBezier(jointNames: Vec<str>,times: any,controlPoints: any) //uid:129
+	fn setAngles(names: any,angles: any,fractionMaxSpeed: float32) //uid:130
+	fn changeAngles(names: any,changes: any,fractionMaxSpeed: float32) //uid:131
+	fn getAngles(names: any,useSensors: bool) -> Vec<float32> //uid:132
+	fn openHand(handName: str) //uid:133
+	fn closeHand(handName: str) //uid:134
+	fn move(x: float32,y: float32,theta: float32) //uid:135
+	fn move(x: float32,y: float32,theta: float32,moveConfig: any) //uid:136
+	fn moveToward(x: float32,y: float32,theta: float32) //uid:137
+	fn moveToward(x: float32,y: float32,theta: float32,moveConfig: any) //uid:138
+	fn setWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32) //uid:139
+	fn setWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32,feetGaitConfig: any) //uid:140
+	fn setWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32,leftFootMoveConfig: any,rightFootMoveConfig: any) //uid:141
+	fn _setMpcWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32) //uid:142
+	fn moveTo(x: float32,y: float32,theta: float32) //uid:143
+	fn moveTo(x: float32,y: float32,theta: float32,time: float32) //uid:144
+	fn moveTo(x: float32,y: float32,theta: float32,moveConfig: any) //uid:145
+	fn moveTo(x: float32,y: float32,theta: float32,time: float32,moveConfig: any) //uid:146
+	fn moveTo(controlPoint: any) //uid:147
+	fn moveTo(controlPoint: any,moveConfig: any) //uid:148
+	fn _moveToPod(x: float32,y: float32,theta: float32) //uid:149
+	fn _moveToPod(x: float32,y: float32,theta: float32,moveConfig: any) //uid:150
+	fn _followPath(path: any,moveConfig: any) //uid:151
+	fn _followPath(path: any) //uid:152
+	fn _followPathInWorld(poseStart: any,path: any,moveConfig: any) //uid:153
+	fn _followPathInWorld(poseStart: any,path: any) //uid:154
+	fn _setFollowPathSpeedFactor(speedFactor: float32) //uid:155
+	fn _moveAlong(trajectory: any) -> int32 //uid:156
+	fn _moveAlong(trajectory: any,scaleFactor: float32) -> int32 //uid:157
+	fn _getTrajectoryId() -> int32 //uid:158
+	fn _stopAndStitchMoveAlong() //uid:159
+	fn _getRemainingPath(sampleStep: float32) -> any //uid:160
+	fn _getRemainingTrajectory(timeStep: float32,preview: float32) -> any //uid:161
+	fn _getTrajectoryCompletion() -> float32 //uid:162
+	fn walkTo(x: float32,y: float32,theta: float32) //uid:163
+	fn walkTo(x: float32,y: float32,theta: float32,feetGaitConfig: any) //uid:164
+	fn walkTo(controlPoint: any) //uid:165
+	fn walkTo(controlPoint: any,feetGaitConfig: any) //uid:166
+	fn setFootSteps(legName: Vec<str>,footSteps: any,timeList: Vec<float32>,clearExisting: bool) //uid:167
+	fn setFootStepsWithSpeed(legName: Vec<str>,footSteps: any,fractionMaxSpeed: Vec<float32>,clearExisting: bool) //uid:168
+	fn getFootSteps() -> any //uid:169
+	fn walkInit() //uid:170
+	fn moveInit() //uid:171
+	fn waitUntilWalkIsFinished() //uid:172
+	fn waitUntilMoveIsFinished() //uid:173
+	fn walkIsActive() -> bool //uid:174
+	fn moveIsActive() -> bool //uid:175
+	fn stopWalk() //uid:176
+	fn stopMove() //uid:177
+	fn getFootGaitConfig(config: str) -> any //uid:178
+	fn getMoveConfig(config: str) -> any //uid:179
+	fn getRobotPosition(useSensors: bool) -> Vec<float32> //uid:180
+	fn getNextRobotPosition() -> Vec<float32> //uid:181
+	fn _getStopMovePosition() -> Vec<float32> //uid:182
+	fn getRobotVelocity() -> Vec<float32> //uid:183
+	fn _getCumulatedDisplacement() -> Vec<float32> //uid:184
+	fn getWalkArmsEnabled() -> any //uid:185
+	fn setWalkArmsEnabled(leftArmEnabled: bool,rightArmEnabled: bool) //uid:186
+	fn getMoveArmsEnabled(chainName: str) -> bool //uid:187
+	fn setMoveArmsEnabled(leftArmEnabled: bool,rightArmEnabled: bool) //uid:188
+	fn positionInterpolation(chainName: str,space: int32,path: any,axisMask: int32,durations: any,isAbsolute: bool) //uid:189
+	fn positionInterpolations(effectorNames: Vec<str>,taskSpaceForAllPaths: int32,paths: any,axisMasks: any,relativeTimes: any,isAbsolute: bool) //uid:190
+	fn positionInterpolations(effectorNames: any,taskSpaceForAllPaths: any,paths: any,axisMasks: any,relativeTimes: any) //uid:191
+	fn setPosition(chainName: str,space: int32,position: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:192
+	fn setPositions(names: any,spaces: any,positions: any,fractionMaxSpeed: float32,axisMask: any) //uid:193
+	fn changePosition(effectorName: str,space: int32,positionChange: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:194
+	fn getPosition(name: str,space: int32,useSensorValues: bool) -> Vec<float32> //uid:195
+	fn transformInterpolation(chainName: str,space: int32,path: any,axisMask: int32,duration: any,isAbsolute: bool) //uid:196
+	fn transformInterpolations(effectorNames: Vec<str>,taskSpaceForAllPaths: int32,paths: any,axisMasks: any,relativeTimes: any,isAbsolute: bool) //uid:197
+	fn transformInterpolations(effectorNames: any,taskSpaceForAllPaths: any,paths: any,axisMasks: any,relativeTimes: any) //uid:198
+	fn setTransform(chainName: str,space: int32,transform: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:199
+	fn setTransforms(names: any,spaces: any,transforms: any,fractionMaxSpeed: float32,axisMask: any) //uid:200
+	fn changeTransform(chainName: str,space: int32,transform: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:201
+	fn getTransform(name: str,space: int32,useSensorValues: bool) -> Vec<float32> //uid:202
+	fn _getSensorTransformAtTime(sensorName: str,timestamp: timeval) -> Vec<float32> //uid:203
+	fn wbEnable(isEnabled: bool) //uid:204
+	fn wbFootState(stateName: str,supportLeg: str) //uid:205
+	fn wbEnableBalanceConstraint(isEnable: bool,supportLeg: str) //uid:206
+	fn wbGoToBalance(supportLeg: str,duration: float32) //uid:207
+	fn wbEnableEffectorControl(effectorName: str,isEnabled: bool) //uid:208
+	fn wbSetEffectorControl(effectorName: str,targetCoordinate: any) //uid:209
+	fn wbEnableEffectorOptimization(effectorName: str,isActive: bool) //uid:210
+	fn _wbGetBalanceState() -> str //uid:211
+	fn _wbIsActive() -> bool //uid:212
+	fn _wbDefaultConfiguration() //uid:213
+	fn _wbGetFootState(supportLeg: str) -> str //uid:214
+	fn _wbSetReferencePosture(postureName: str) //uid:215
+	fn _wbSetBalanceSecurityMargin(percentForwards: float32,percentSideways: float32) //uid:216
+	fn _wbSetJointWeighting(P0: str, P1: float32) //uid:217
+	fn _wbSetJointStiffness(P0: str, P1: float32) //uid:218
+	fn _wbSetArticularLimitPreview(P0: str, P1: int32) //uid:219
+	fn _wbEnableEffectorConstraint(effectorName: str,isActive: bool,axisMask: int32) //uid:220
+	fn _wbGetEffectorConstraint(effectorName: str) -> any //uid:221
+	fn _wbAxisMaskEffector(effectorName: str,isOptimized: bool,axisMask: int32) //uid:222
+	fn _wbEnableJointOptimization(jointName: str,isActive: bool) //uid:223
+	fn _wbGetEffectorOptimization(effectorName: str) -> any //uid:224
+	fn _wbSetEffectorWeight(effectorName: str,weightingList: any) //uid:225
+	fn _wbSetEffectorStiffness(effectorName: str,stiffnessList: any) //uid:226
+	fn setCollisionProtectionEnabled(pChainName: str,pEnable: bool) -> bool //uid:227
+	fn getCollisionProtectionEnabled(pChainName: str) -> bool //uid:228
+	fn setExternalCollisionProtectionEnabled(pName: str,pEnable: bool) //uid:229
+	fn _enablePhysicalInteractionForChain(pChain: str,pEnabled: bool) //uid:230
+	fn getChainClosestObstaclePosition(pName: str,space: int32) -> Vec<float32> //uid:231
+	fn getExternalCollisionProtectionEnabled(pName: str) -> bool //uid:232
+	fn setOrthogonalSecurityDistance(securityDistance: float32) //uid:233
+	fn getOrthogonalSecurityDistance() -> float32 //uid:234
+	fn setTangentialSecurityDistance(securityDistance: float32) //uid:235
+	fn getTangentialSecurityDistance() -> float32 //uid:236
+	fn isCollision(pChainName: str) -> str //uid:237
+	fn _getCollisionStateForObstacleSummary(pChainName: str) -> bool //uid:238
+	fn _getCollisionNames() -> any //uid:239
+	fn _getCollisionShapes(P0: str) -> any //uid:240
+	fn _setCollisionShapes(pNameList: Vec<str>,pPairList: Vec<str>,pBodyList: Vec<str>,pTypeList: Vec<str>,pShapeList: any,pPositionList: any) //uid:241
+	fn _setCollisionShapes(pNameList: Vec<str>,pPairList: Vec<str>,pShapeList: any,pPositionList: any) //uid:242
+	fn _getDetectedCollisions(pMinimumDistance: float32) -> any //uid:243
+	fn _getDangerousRegion() -> any //uid:244
+	fn setFallManagerEnabled(pEnable: bool) //uid:245
+	fn getFallManagerEnabled() -> bool //uid:246
+	fn setPushRecoveryEnabled(pEnable: bool) //uid:247
+	fn _setPushRecoveryEnabled(pEnable: bool) //uid:248
+	fn getPushRecoveryEnabled() -> bool //uid:249
+	fn setSmartStiffnessEnabled(pEnable: bool) //uid:250
+	fn getSmartStiffnessEnabled() -> bool //uid:251
+	fn setDiagnosisEffectEnabled(pEnable: bool) //uid:252
+	fn getDiagnosisEffectEnabled() -> bool //uid:253
+	fn getJointNames(name: str) -> Vec<str> //uid:254
+	fn getBodyNames(name: str) -> Vec<str> //uid:255
+	fn getSensorNames() -> Vec<str> //uid:256
+	fn getLimits(name: str) -> any //uid:257
+	fn _getFullLimits(name: str) -> any //uid:258
+	fn getMotionCycleTime() -> int32 //uid:259
+	fn _getMotionCycleNumber() -> int32 //uid:260
+	fn getRobotConfig() -> any //uid:261
+	fn getSummary() -> str //uid:262
+	fn getMass(pName: str) -> float32 //uid:263
+	fn getCOM(pName: str,pSpace: int32,pUseSensorValues: bool) -> Vec<float32> //uid:264
+	fn _getTorque(names: any,useSensor: bool) -> Vec<float32> //uid:265
+	fn _getInertia(pName: str) -> Vec<float32> //uid:266
+	fn setMotionConfig(config: any) //uid:267
+	fn _naoqiIsReadyCallback() //uid:268
+	fn _preferenceUpdatedCallback(P0: str, P1: any, P2: str) //uid:269
+	fn updateTrackerTarget(pTargetPositionWy: float32,pTargetPositionWz: float32,pTimeSinceDetectionMs: int32,pUseOfWholeBody: bool) //uid:270
+	fn _trackerAnticipation(pNames: Vec<str>,pTargetPositions: Vec<float32>,pTimeSinceDetectionMs: int32,pUseOfWholeBody: bool,pIsPointAt: bool) //uid:271
+	fn _trackerWithSpeed(P0: Vec<str>, P1: Vec<float32>, P2: Vec<float32>, P3: bool, P4: bool) //uid:272
+	fn _lookAt(pTargetPosition: Vec<float32>,pFrame: int32,pMaxSpeedFraction: float32) //uid:273
+	fn _stopLookAt(pWithSpeed: bool) //uid:274
+	fn _stopPointAt(pWithSpeed: bool) //uid:275
+	fn _updateObstacles(obstacles: Vec<Vec<float32>>) //uid:276
+	fn setBreathEnabled(pChain: str,pIsEnabled: bool) //uid:277
+	fn getBreathEnabled(pChain: str) -> bool //uid:278
+	fn setBreathConfig(pConfig: any) //uid:279
+	fn getBreathConfig() -> any //uid:280
+	fn setIdlePostureEnabled(pChain: str,pIsEnabled: bool) //uid:281
+	fn getIdlePostureEnabled(pChain: str) -> bool //uid:282
+	fn _setBreathStaticLegs(pStaticLegs: bool) //uid:283
+	fn getTaskList() -> any //uid:284
+	fn areResourcesAvailable(resourceNames: Vec<str>) -> bool //uid:285
+	fn killTask(motionTaskID: int32) -> bool //uid:286
+	fn killTasksUsingResources(resourceNames: Vec<str>) //uid:287
+	fn killWalk() //uid:288
+	fn killMove() //uid:289
+	fn killAll() //uid:290
+	fn setEnableNotifications(enable: bool) //uid:291
+	fn areNotificationsEnabled() -> bool //uid:292
+	fn _getGroundCollision() -> any //uid:293
+	fn _getGroundCollisionForForceContact() -> any //uid:294
+	fn _getGroundCollisionForFallManager() -> any //uid:295
+	fn _getGroundPlaneTf() -> Vec<float32> //uid:296
+	fn _getNormalForceContact() -> Vec<float32> //uid:297
+	fn _getRealTorsoInWorld() -> Vec<float32> //uid:298
+	fn _getRobotGroundConvexHullDebug() -> any //uid:299
+	fn _getRobotGroundConvexHull() -> any //uid:300
+	fn _getJointIsMoving(useSensors: bool) -> Vec<int32> //uid:301
+	fn _getChainIsMoving(useSensors: bool) -> Vec<int32> //uid:302
+	fn _setAnimationModeEnabled(pEnable: bool) //uid:303
+	fn _getMotionConfig(pName: str) -> str //uid:304
+	fn _getSupportPolygon() -> Vec<float32> //uid:305
+	fn _getSupportPolygonCenter() -> Vec<float32> //uid:306
+	fn _getComWorld() -> Vec<float32> //uid:307
+	fn _getWorldRotation() -> Vec<float32> //uid:308
+	fn _fall(pFallAngle: float32) //uid:309
+	fn _balanceRecovery() //uid:310
+	fn _relaxMotorsWhenSitting() //uid:311
+	fn _relax(chainName: str) //uid:312
+	fn _resetCartesianUnfeasible() //uid:313
+	fn _setCartesianUnfeasible() //uid:314
+	fn _getCartesianUnfeasible() -> int32 //uid:315
+	fn _saveWholeBodyDump() //uid:316
+	fn _resetNumJointCommandDiscontinuities() //uid:317
+	fn _getNumJointCommandDiscontinuities() -> uint32 //uid:318
+	fn _resetMotionCommandModelToSensors(pName: any) //uid:319
+	fn _setSimulationModeEnabled(pEnable: bool) //uid:320
+	fn _getMotionToDCM() -> unknown //uid:321
+	fn _getBlindZoneOffset(Name: str) -> float32 //uid:322
+	fn _setBlindZoneOffset(Name: str,Offset: float32) //uid:323
+	fn _getBlindZoneDistance() -> float32 //uid:324
+	fn _setBlindZoneDistance(Distance: float32) //uid:325
+	fn _getBlindZones() -> any //uid:326
+	fn _getBlindZonesWithNames() -> any //uid:327
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _LogoConverter
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start(P0: int32) //uid:114
+	fn stopConverter() //uid:115
+	fn convert(P0: any) -> any //uid:116
+	fn convertEvent(P0: str, P1: any) //uid:117
+	fn updateDetectorPeriod(P0: int32) //uid:118
+	fn getDetectorPeriod() -> int32 //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _PeopleConverter
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setImplParam(P0: any) //uid:113
+	fn start(P0: int32) //uid:114
+	fn stopConverter() //uid:115
+	fn convert(P0: any) -> any //uid:116
+	fn convertEvent(P0: str, P1: any) //uid:117
+	fn updateDetectorPeriod(P0: int32) //uid:118
+	fn getDetectorPeriod() -> int32 //uid:119
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALPeoplePerception
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn isPaused() -> bool //uid:126
+	fn pause(status: bool) //uid:127
+	fn isProcessing() -> bool //uid:128
+	fn getMaximumDetectionRange() -> float32 //uid:129
+	fn getMinimumBodyHeight() -> float32 //uid:130
+	fn getMaximumBodyHeight() -> float32 //uid:131
+	fn getTimeBeforePersonDisappears() -> float32 //uid:132
+	fn getTimeBeforeVisiblePersonDisappears() -> float32 //uid:133
+	fn isFaceDetectionEnabled() -> bool //uid:134
+	fn isFastModeEnabled() -> bool //uid:135
+	fn isGraphicalDisplayEnabled() -> bool //uid:136
+	fn isMovementDetectionEnabled() -> bool //uid:137
+	fn resetPopulation() //uid:138
+	fn setFastModeEnabled(enable: bool) //uid:139
+	fn setGraphicalDisplayEnabled(enable: bool) //uid:140
+	fn setMaximumDetectionRange(range_0: float32) //uid:141
+	fn setMinimumBodyHeight(height: float32) //uid:142
+	fn setMaximumBodyHeight(height: float32) //uid:143
+	fn setMovementDetectionEnabled(enable: bool) //uid:144
+	fn setTimeBeforePersonDisappears(seconds: float32) //uid:145
+	fn setTimeBeforeVisiblePersonDisappears(seconds: float32) //uid:146
+	fn _getFaceRecognitionThreshold() -> float32 //uid:147
+	fn _getMaximumColorDistance() -> float32 //uid:148
+	fn _getTimeBeforeMTMPruning() -> float32 //uid:149
+	fn _setFaceRecognitionThreshold(threshold: float32) //uid:150
+	fn _setMaximumColorDistance(dist: float32) //uid:151
+	fn _setTimeBeforeMTMPruning(seconds: float32) //uid:152
+	fn _getDetectionMode() -> str //uid:153
+	fn _setDetectionMode(mode: str) //uid:154
+	fn _matchInDatabase(id: int32) -> int32 //uid:155
+	fn _matchInDatabaseNoCreate(id: int32) -> int32 //uid:156
+	fn _matchInLTM(id: int32) -> int32 //uid:157
+	fn _storeInLTM(mtmId: int32,ltmId: int32) -> bool //uid:158
+	fn _removeFromLTM(ltmId: int32) -> bool //uid:159
+	fn _removeAllFromLTM() -> bool //uid:160
+	fn _getLTMContent() -> any //uid:161
+	fn setFaceDetectionEnabled(enable: bool) //uid:162
+	sig traceObject(P0: EventTrace) //uid:86
+	sig maximumDetectionRangeChanged(P0: float32) //uid:163
+	sig justArrived(P0: int32) //uid:164
+	sig justLeft(P0: int32) //uid:165
+	sig populationReset() //uid:166
+end
+interface ALLauncher
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn launchLocal(moduleName: str) -> Vec<str> //uid:113
+	fn launchExecutable(moduleName: str) -> bool //uid:114
+	fn _launch(executablePath: str,arguments: Vec<str>) -> int32 //uid:115
+	fn _launchWait(executablePath: str,arguments: Vec<str>) -> int32 //uid:116
+	fn launchScript(moduleName: str) -> bool //uid:117
+	fn launchPythonModule(moduleName: str) -> bool //uid:118
+	fn isModulePresent(strPartOfModuleName: str) -> bool //uid:119
+	fn getGlobalModuleList() -> Vec<str> //uid:120
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALBattery
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn enablePowerMonitoring(Enable: bool) //uid:113
+	fn getBatteryCharge() -> int32 //uid:114
+	fn _setFirstWarningPercent(Percent: int32) //uid:115
+	fn _setWarningPercent(Percent: int32) //uid:116
+	fn _setLastWarningPercent(Percent: int32) //uid:117
+	fn _hasBattery() -> bool //uid:118
+	fn _getBatteryMode() -> int32 //uid:119
+	fn _getFullyChargedThreshold() -> int32 //uid:120
+	fn _setFullyChargedThreshold(threshold: int32) //uid:121
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALFrameManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn newBehaviorFromFile(xmlFilePath: str,behName: str) -> str //uid:113
+	fn newBehavior(path: str,xmlFile: str) -> str //uid:114
+	fn newBehaviorFromChoregraphe() -> str //uid:115
+	fn completeBehavior(id: str) //uid:116
+	fn deleteBehavior(id: str) //uid:117
+	fn playBehavior(id: str) //uid:118
+	fn exitBehavior(id: str) //uid:119
+	fn isBehaviorRunning(id: str) -> bool //uid:120
+	fn cleanBehaviors() //uid:121
+	fn getBehaviorPath(id: str) -> str //uid:122
+	fn createTimeline(timelineContent: str) -> str //uid:123
+	fn playTimeline(id: str) //uid:124
+	fn stopTimeline(id: str) //uid:125
+	fn setTimelineFps(id: str,fps: int32) //uid:126
+	fn getTimelineFps(id: str) -> int32 //uid:127
+	fn getMotionLength(id: str) -> float32 //uid:128
+	fn behaviors() -> Vec<str> //uid:129
+	fn gotoAndStop(id: str,frame: str) //uid:130
+	fn gotoAndStop(id: str,frame: int32) //uid:131
+	fn gotoAndPlay(id: str,frame: str) //uid:132
+	fn gotoAndPlay(id: str,frame: int32) //uid:133
+	fn _dataChanged(dataName: str,data: any,message: str) //uid:134
+	fn _startBenchmark() //uid:135
+	fn _stopBenchmark() -> str //uid:136
+	fn _newBoxFromFile(xmlFilePath: str,path: str) -> str //uid:137
+	fn _startBehavior(fmid: str) -> bool //uid:138
+	fn _waitForStopped(fmid: str) //uid:139
+	fn _onPreferenceUpdated(key: str,value: any,message: str) //uid:140
+	fn _onPreferencesSynchronized(key: str,value: any,message: str) //uid:141
+	fn _reportError(fmid: str,boxid: str,error: str) //uid:142
+	sig traceObject(P0: EventTrace) //uid:86
+	sig behaviorCreated(P0: str) //uid:143
+	sig behaviorPlayed(P0: str) //uid:144
+	sig behaviorStopped(P0: str) //uid:145
+	sig behaviorDestroyed(P0: str) //uid:146
+	sig behaviorFailed(P0: str, P1: str, P2: str) //uid:147
+end
+interface ALVisualSpaceHistory
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn setGridPrecision(precision: float32) //uid:126
+	fn getGridPrecision() -> float32 //uid:127
+	fn resetGrid() //uid:128
+	fn _run() //uid:129
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALNavigation
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn navigateTo(x: float32,y: float32) -> bool //uid:113
+	fn navigateTo(x: float32,y: float32,config: any) -> bool //uid:114
+	fn navigateTo(x: float32,y: float32,theta: float32) -> bool //uid:115
+	fn navigateTo(x: float32,y: float32,theta: float32,config: any) -> bool //uid:116
+	fn moveTo(x: float32,y: float32,theta: float32) //uid:117
+	fn moveTo(x: float32,y: float32,theta: float32,moveConfig: any) //uid:118
+	fn move(x: float32,y: float32,theta: float32) //uid:119
+	fn move(x: float32,y: float32,theta: float32,moveConfig: any) //uid:120
+	fn moveToward(x: float32,y: float32,theta: float32) //uid:121
+	fn moveToward(x: float32,y: float32,theta: float32,moveConfig: any) //uid:122
+	fn _setNavigationConfig(config: any) //uid:123
+	fn setSecurityDistance(P0: float32) //uid:124
+	fn getSecurityDistance() -> float32 //uid:125
+	fn stopNavigateTo() //uid:126
+	fn _setTangentialSecurityDistance(P0: float32) //uid:127
+	fn _getTangentialSecurityDistance() -> float32 //uid:128
+	fn _getNavigateToStatus() -> int32 //uid:129
+	fn _getObstacleData() -> any //uid:130
+	fn _getSensorData() -> any //uid:131
+	fn _getSensorData(P0: str) -> any //uid:132
+	fn _getSensorData(P0: Vec<str>) -> any //uid:133
+	fn _subscribeToAll(P0: str) -> bool //uid:134
+	fn _subscribe(P0: str, P1: Vec<str>) -> bool //uid:135
+	fn _unsubscribeFromAll(P0: str) -> bool //uid:136
+	fn _unsubscribe(P0: str, P1: Vec<str>) -> bool //uid:137
+	fn _addSensor(sensor: str) -> bool //uid:138
+	fn _removeSensor(sensor: str) -> bool //uid:139
+	fn _getTrajectory() -> any //uid:140
+	fn _setSpeedFactor(P0: float32) //uid:141
+	fn _getObstacleMap() -> any //uid:142
+	fn _enableSensorDebug(P0: bool) //uid:143
+	fn _useHeadChecking(P0: bool) //uid:144
+	fn _usePathChecking(P0: bool) //uid:145
+	fn _enableClearMap(P0: bool) //uid:146
+	fn _clearObstacleMap() //uid:147
+	fn _getSensorSubscribers() -> any //uid:148
+	fn _getSensorList() -> any //uid:149
+	fn _getSensorListBySubscriber(P0: str) -> any //uid:150
+	fn _getActiveSensorList() -> any //uid:151
+	fn _isSensorEnabled(P0: str) -> bool //uid:152
+	fn _getSecureNavSensors() -> any //uid:153
+	fn _enableLogger(P0: bool) //uid:154
+	fn _setController(P0: int32) //uid:155
+	fn _writeTree() //uid:156
+	fn moveAlong(trajectory: any) -> bool //uid:157
+	fn _moveAlong(moveAlongScale: float32,allowMove: bool,trajectory: any) -> bool //uid:158
+	fn _enableSafety(P0: bool) //uid:159
+	fn _isSafetyEnabled() -> bool //uid:160
+	fn _isSafetyLoopRunning() -> bool //uid:161
+	fn _wakeUpCallBack(P0: str, P1: any, P2: str) //uid:162
+	fn _getFreeZoneCenter(P0: float64) -> any //uid:163
+	fn _getFreeZoneWithConstraints(P0: float32) -> any //uid:164
+	fn _updateFreeZone() -> int32 //uid:165
+	fn _startFreeZoneUpdate() //uid:166
+	fn _stopFreeZoneUpdate() //uid:167
+	fn _writeFreeZone() //uid:168
+	fn _clearFreeZone() //uid:169
+	fn _getFreeZoneMap() -> any //uid:170
+	fn _moveToFreeZoneCenter() //uid:171
+	fn _stopFreeZoneTasks() //uid:172
+	fn _writeDilatedMaps() //uid:173
+	fn _startDiagnosis() //uid:174
+	fn _stopDiagnosis() -> any //uid:175
+	fn _passiveDiagnosisCallBack(P0: str, P1: any, P2: str) //uid:176
+	fn _activeDiagnosisCallBack(P0: str, P1: any, P2: str) //uid:177
+	fn _setObstacleModeForSafety(P0: int32) //uid:178
+	fn _setTimeChecking(P0: bool) //uid:179
+	fn onTouchChanged(P0: str, P1: any, P2: str) //uid:180
+	fn _setSafetyMemoryTime(P0: uint32) //uid:181
+	fn _getSafetyMemoryTime() -> uint32 //uid:182
+	fn _setPublishBlindZones(P0: bool) //uid:183
+	fn _getPublishBlindZones() -> bool //uid:184
+	fn _setPublishCollisionObstacle(P0: bool) //uid:185
+	fn _getPublishCollisionObstacle() -> bool //uid:186
+	fn _getKnownZoneOffset() -> float32 //uid:187
+	fn _setKnownZoneOffset(P0: float32) //uid:188
+	fn _getUnknownZoneOffset() -> float32 //uid:189
+	fn _setUnknownZoneOffset(P0: float32) //uid:190
+	fn _getCollisionObstacleDistance() -> float32 //uid:191
+	fn _setCollisionObstacleDistance(P0: float32) //uid:192
+	fn _getCollisionObstacleRadius() -> float32 //uid:193
+	fn _setCollisionObstacleRadius(P0: float32) //uid:194
+	fn _setBlindZoneMode(P0: int32) //uid:195
+	fn _getBlindZoneMode() -> int32 //uid:196
+	fn _get3DMap() -> str //uid:197
+	fn _eventMoveFailedCallback() //uid:198
+	fn _setObstaclesNumber(P0: uint32) //uid:199
+	fn _getObstaclesNumber() -> int32 //uid:200
+	fn _enableTouchType(P0: int32) //uid:201
+	fn _disableTouchType(P0: int32) //uid:202
+	fn _getEnabledTouchTypes() -> Vec<int32> //uid:203
+	fn _setDataTooOldThresholdMs(P0: uint64) //uid:204
+	fn _getDataTooOldThresholdMs() -> uint64 //uid:205
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _ConditionChecker_lguegan_3439144_1
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn onEvent(key: str,value: any,message: any) //uid:113
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALBonjour
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALRobotPosture
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getPostureFamily() -> str //uid:113
+	fn goToPosture(postureName: str,maxSpeedFraction: float32) -> bool //uid:114
+	fn applyPosture(postureName: str,maxSpeedFraction: float32) -> bool //uid:115
+	fn stopMove() //uid:116
+	fn getPostureList() -> Vec<str> //uid:117
+	fn getPostureFamilyList() -> Vec<str> //uid:118
+	fn setMaxTryNumber(pMaxTryNumber: int32) //uid:119
+	fn getPosture() -> str //uid:120
+	fn _isRobotInPosture(P0: str, P1: float32, P2: float32) -> any //uid:121
+	fn _isRobotInPostureId(P0: int32, P1: float32, P2: float32) -> bool //uid:122
+	fn _getPosture() -> any //uid:123
+	fn _setPostureId(P0: int32, P1: float32) -> bool //uid:124
+	fn _goToPostureId(P0: int32, P1: float32) -> bool //uid:125
+	fn _namePosture(P0: int32, P1: str) -> bool //uid:126
+	fn _renamePosture(P0: str, P1: str) -> bool //uid:127
+	fn _resavePosture(P0: int32) -> bool //uid:128
+	fn _setSlowFactor(P0: int32, P1: int32, P2: float32) -> bool //uid:129
+	fn _setAntiCollision(P0: int32, P1: bool) -> bool //uid:130
+	fn _setCost(P0: int32, P1: float32) -> bool //uid:131
+	fn _saveCurrentPosture(P0: int32) -> bool //uid:132
+	fn _saveCurrentPostureWithName(P0: int32, P1: str) -> bool //uid:133
+	fn _applyPostures(P0: Vec<int32>, P1: float32, P2: bool, P3: bool) -> bool //uid:134
+	fn _eraseAllPostures() -> bool //uid:135
+	fn _bindPostures(P0: int32, P1: int32, P2: float32, P3: float32) -> bool //uid:136
+	fn _addNeighbourToPosture(P0: int32, P1: int32, P2: float32) -> bool //uid:137
+	fn _removeNeighbourFromPosture(P0: int32, P1: int32) -> bool //uid:138
+	fn _unBindPostures(P0: int32, P1: int32) -> bool //uid:139
+	fn _erasePosture(P0: int32) -> bool //uid:140
+	fn _getLibrarySize() -> int32 //uid:141
+	fn _loadPostureLibraryFromName(P0: str) -> bool //uid:142
+	fn _getCurrentPath() -> Vec<float32> //uid:143
+	fn _isStandCallBack(P0: str, P1: any, P2: str) //uid:144
+	fn _savePostureLibrary(P0: str) -> bool //uid:145
+	fn _getArticularDistanceToPosture(P0: int32) -> float32 //uid:146
+	fn _getCartesianDistanceToPosture(P0: int32) -> any //uid:147
+	fn _getCartesianDistanceVector(P0: int32) -> Vec<float32> //uid:148
+	fn _getPostureIdList() -> Vec<int32> //uid:149
+	fn _isReachable(P0: int32) -> bool //uid:150
+	fn _generateCartesianMap() //uid:151
+	fn _getPostureZ(P0: float32) -> any //uid:152
+	fn _getPostureNoZ() -> any //uid:153
+	fn _getIdFromName(P0: str) -> int32 //uid:154
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALUserSession
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn _getDatabaseVersion() -> int32 //uid:113
+	fn _createUsers(num_users: int32) -> Vec<int32> //uid:114
+	fn _deleteUsers(user_list: Vec<int32>) //uid:115
+	fn doUsersExist(user_list: Vec<int32>) -> bool //uid:116
+	fn getUserList() -> Vec<int32> //uid:117
+	fn getNumUsers() -> int32 //uid:118
+	fn getFocusedUser() -> int32 //uid:119
+	fn _setFocusedUser(focused_user: int32) //uid:120
+	fn getOpenUserSessions() -> Vec<int32> //uid:121
+	fn areUserSessionsOpen(user_list: Vec<int32>) -> bool //uid:122
+	fn _openUserSessions(user_list: Vec<int32>) -> Vec<int32> //uid:123
+	fn _closeUserSessions(user_list: Vec<int32>) -> Vec<int32> //uid:124
+	fn getBindingSources() -> Vec<str> //uid:125
+	fn doesBindingSourceExist(binding_name: str) -> bool //uid:126
+	fn _bindUser(uid: int32,binding_name: str,binding_value: str) //uid:127
+	fn _unbindUser(uid: int32,binding_name: str) //uid:128
+	fn getUserBindings(uid: int32) -> Map<str,str> //uid:129
+	fn getUserBinding(uid: int32,binding_name: str) -> str //uid:130
+	fn findUsersWithBinding(binding_name: str,binding_value: str) -> Vec<int32> //uid:131
+	fn _registerUserDataSource(source_name: str,proxy_name: str) //uid:132
+	fn _unregisterUserDataSource(source_name: str) //uid:133
+	fn doesUserDataSourceExist(source_name: str) -> bool //uid:134
+	fn getUserDataSources() -> Vec<str> //uid:135
+	fn getUserData(uid: int32,data_name: str,source_name: str) -> any //uid:136
+	fn getUserData(uid: int32,data_name: str) -> Map<str,any> //uid:137
+	fn setUserData(uid: int32,data_name: str,source_name: str,data: any) //uid:138
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALRedBallDetection
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn _run() //uid:126
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALRobotModel
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getConfig() -> str //uid:113
+	fn _getConfigMap() -> Map<str,any> //uid:114
+	fn _isRobocup() -> bool //uid:115
+	fn _getRobotModel() -> int32 //uid:116
+	fn _getRobotType() -> int32 //uid:117
+	fn _getRobotTypeString() -> str //uid:118
+	fn _setConfigFromConfigXml(fileName: str) //uid:119
+	fn _getMicrophoneConfig() -> int32 //uid:120
+	fn _hasTouchSensorInHands() -> bool //uid:121
+	fn _hasTablet() -> bool //uid:122
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALPythonBridge
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn eval(stringToEvaluate: str) -> str //uid:113
+	fn evalReturn(stringToEvaluate: str) -> any //uid:114
+	fn evalFull(stringToEvaluate: str) -> any //uid:115
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _NavigationMove
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn setParam(P0: any) //uid:113
+	fn start() //uid:114
+	fn stopMove() //uid:115
+	fn move(P0: any) //uid:116
+	fn moveEvent(P0: str, P1: any) //uid:117
+	fn _stopMoveEvent() //uid:118
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALBehaviorManager
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn installBehavior(localPath: str) -> bool //uid:113
+	fn installBehavior(absolutePath: str,localPath: str,overwrite: bool) -> bool //uid:114
+	fn preloadBehavior(behavior: str) -> bool //uid:115
+	fn startBehavior(behavior: str) //uid:116
+	fn runBehavior(behavior: str) //uid:117
+	fn stopBehavior(behavior: str) //uid:118
+	fn stopAllBehaviors() //uid:119
+	fn removeBehavior(behavior: str) -> bool //uid:120
+	fn isBehaviorInstalled(name: str) -> bool //uid:121
+	fn isBehaviorPresent(prefixedBehavior: str) -> bool //uid:122
+	fn getBehaviorNames() -> Vec<str> //uid:123
+	fn getUserBehaviorNames() -> Vec<str> //uid:124
+	fn getSystemBehaviorNames() -> Vec<str> //uid:125
+	fn getInstalledBehaviors() -> Vec<str> //uid:126
+	fn getBehaviorsByTag(tag: str) -> Vec<str> //uid:127
+	fn isBehaviorRunning(behavior: str) -> bool //uid:128
+	fn isBehaviorLoaded(behavior: str) -> bool //uid:129
+	fn getRunningBehaviors() -> Vec<str> //uid:130
+	fn getLoadedBehaviors() -> Vec<str> //uid:131
+	fn getTagList() -> Vec<str> //uid:132
+	fn getBehaviorTags(behavior: str) -> Vec<str> //uid:133
+	fn getBehaviorNature(behavior: str) -> str //uid:134
+	fn _getBehaviorRelativePath(behaviorId: str) -> str //uid:135
+	fn _getPackageUid(behaviorId: str) -> str //uid:136
+	fn addDefaultBehavior(behavior: str) //uid:137
+	fn removeDefaultBehavior(behavior: str) //uid:138
+	fn getDefaultBehaviors() -> Vec<str> //uid:139
+	fn playDefaultProject() //uid:140
+	fn _onDataChanged(dataName: str,dataValue: any,message: str) //uid:141
+	fn _getBehaviorFrameManagerId(name: str) -> str //uid:142
+	fn resolveBehaviorName(name: str) -> str //uid:143
+	sig traceObject(P0: EventTrace) //uid:86
+	sig behaviorsAdded(P0: Vec<str>) //uid:144
+	sig behaviorsRemoved(P0: Vec<str>) //uid:145
+	sig behaviorLoaded(P0: str) //uid:146
+	sig behaviorStarted(P0: str) //uid:147
+	sig behaviorStopped(P0: str) //uid:148
+	sig behaviorFailed(P0: str, P1: str, P2: str) //uid:149
+end
+interface ALLocalization
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getMessageFromErrorCode(P0: int32) -> str //uid:113
+	fn stopAll() //uid:114
+	fn _safetyStop() //uid:115
+	fn learnHome() -> int32 //uid:116
+	fn isInCurrentHome() -> bool //uid:117
+	fn getCurrentPanoramaDescriptor() -> any //uid:118
+	fn getFrame(P0: int32, P1: str) -> any //uid:119
+	fn clear(pDirectory: str) -> int32 //uid:120
+	fn load(pDirectory: str) -> int32 //uid:121
+	fn save(pDirectory: str) -> int32 //uid:122
+	fn isRelocalizationRequired() -> bool //uid:123
+	fn isDataAvailable() -> bool //uid:124
+	fn getRobotPosition() -> Vec<float32> //uid:125
+	fn getRobotPosition(P0: bool) -> Vec<float32> //uid:126
+	fn getRobotOrientation(P0: bool) -> any //uid:127
+	fn getRobotOrientation() -> any //uid:128
+	fn isInGivenZone(P0: float32, P1: float32, P2: float32, P3: float32) -> any //uid:129
+	fn _launchLocalization() -> Vec<float32> //uid:130
+	fn goToHome() -> int32 //uid:131
+	fn goToPosition(P0: Vec<float32>) -> int32 //uid:132
+	fn _getSavingDirectories() -> Vec<str> //uid:133
+	fn _getLoadedDirectory() -> str //uid:134
+	fn _handlePush() //uid:135
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface _ConditionChecker_lguegan_3439144_0
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn onEvent(key: str,value: any,message: any) //uid:113
+	sig traceObject(P0: EventTrace) //uid:86
+end
+interface ALDialog
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn subscribe(name: str,period: int32,precision: float32) //uid:113
+	fn subscribe(name: str) //uid:114
+	fn unsubscribe(name: str) //uid:115
+	fn updatePeriod(name: str,period: int32) //uid:116
+	fn updatePrecision(name: str,precision: float32) //uid:117
+	fn getCurrentPeriod() -> int32 //uid:118
+	fn getCurrentPrecision() -> float32 //uid:119
+	fn getMyPeriod(name: str) -> int32 //uid:120
+	fn getMyPrecision(name: str) -> float32 //uid:121
+	fn getSubscribersInfo() -> any //uid:122
+	fn getOutputNames() -> Vec<str> //uid:123
+	fn getEventList() -> Vec<str> //uid:124
+	fn getMemoryKeyList() -> Vec<str> //uid:125
+	fn wordRecognized(P0: str, P1: any, P2: str) //uid:126
+	fn addBlockingEvent(P0: str) //uid:127
+	fn wordsRecognizedCallback(P0: any, P1: int32) //uid:128
+	fn endOfUtteranceCallback() -> bool //uid:129
+	fn releaseEngine() //uid:130
+	fn controlEngine(P0: str, P1: str) -> Vec<str> //uid:131
+	fn _hasPreference() -> bool //uid:132
+	fn eventReceived(P0: str, P1: any, P2: str) //uid:133
+	fn statusChanged(P0: str, P1: any, P2: str) //uid:134
+	fn gotoTag(P0: str, P1: str) //uid:135
+	fn noPick(P0: str) //uid:136
+	fn connectionChanged(P0: str, P1: any, P2: str) //uid:137
+	fn compileAll() //uid:138
+	fn loadTopic(P0: str) -> str //uid:139
+	fn deactivateTopic(P0: str) //uid:140
+	fn activateTopic(P0: str) //uid:141
+	fn unloadTopic(P0: str) //uid:142
+	fn forceOutput() //uid:143
+	fn forceInput(P0: str) //uid:144
+	fn tell(P0: str) //uid:145
+	fn setASRConfidenceThreshold(P0: float32) //uid:146
+	fn getASRConfidenceThreshold() -> float32 //uid:147
+	fn _setConfidence(P0: str, P1: float32) //uid:148
+	fn _getConfidence(P0: str) -> float32 //uid:149
+	fn _enableStrategy(P0: str) //uid:150
+	fn openSession(P0: int32) //uid:151
+	fn closeSession() //uid:152
+	fn _generateBNF(P0: str, P1: str, P2: str, P3: str) //uid:153
+	fn setDelay(P0: str, P1: int32) //uid:154
+	fn setNumberOfScopes(P0: int32) //uid:155
+	fn setConcept(conceptName: str,language: str,content: Vec<str>) //uid:156
+	fn setConcept(conceptName: str,language: str,content: Vec<str>,store: bool) //uid:157
+	fn setConceptKeepInCache(P0: str, P1: str, P2: Vec<str>) //uid:158
+	fn setPushMode(P0: int32) //uid:159
+	fn enableTriggerSentences(P0: bool) //uid:160
+	fn enableCategory(P0: bool) //uid:161
+	fn startPush() //uid:162
+	fn stopPush() //uid:163
+	fn setAnimatedSpeechConfiguration(P0: any) //uid:164
+	fn applicationBlackList(P0: Vec<str>) //uid:165
+	fn isContentNeedsUpdate() -> bool //uid:166
+	fn _addDialogFromTopicBox(P0: str, P1: str) -> str //uid:167
+	fn _cleanEventStack() //uid:168
+	fn _updateAIClient(P0: str) //uid:169
+	fn _addTopicsInGroup(P0: str, P1: Vec<str>) //uid:170
+	fn _activateGroup(P0: str) //uid:171
+	fn _deactivateGroup(P0: str) //uid:172
+	fn _suggestNextTopic(P0: str, P1: int32) //uid:173
+	fn _suggestUserNextTopic(P0: str, P1: int32, P2: int32) //uid:174
+	fn _suggestNextTopicNoPause(P0: str, P1: int32) //uid:175
+	fn _preloadMain() //uid:176
+	fn _mainLanguage(P0: str) //uid:177
+	fn _runMainNoActivation() //uid:178
+	fn _runMain() //uid:179
+	fn runDialog() //uid:180
+	fn _resetPreload() //uid:181
+	fn _stopMain() //uid:182
+	fn stopDialog() //uid:183
+	fn _loadStrategyConfiguration(P0: str) //uid:184
+	fn setVariablePath(P0: str, P1: str, P2: str) //uid:185
+	fn setLanguage(P0: str) //uid:186
+	fn startUpdate(P0: str, P1: any, P2: str) //uid:187
+	fn startApp(P0: str, P1: any, P2: str) //uid:188
+	fn packageInstalled(P0: str, P1: any, P2: str) //uid:189
+	fn compilationFinished(P0: str, P1: any, P2: str) //uid:190
+	fn setFocus(P0: str) //uid:191
+	fn getFocus() -> str //uid:192
+	fn gotoTopic(P0: str) //uid:193
+	fn _enableOneBNFActivated(P0: bool) //uid:194
+	fn _enableAISystem(P0: bool) //uid:195
+	fn _enableStrategySwitch(P0: bool) //uid:196
+	fn _loadPrecompiledFile(P0: str, P1: str, P2: str) //uid:197
+	fn _loadSLM(P0: str, P1: str) //uid:198
+	fn getLoadedTopics(P0: str) -> Vec<str> //uid:199
+	fn getAllLoadedTopics() -> Vec<str> //uid:200
+	fn getActivatedTopics() -> Vec<str> //uid:201
+	fn _setBehaviorEvent(P0: str) //uid:202
+	fn _fastModelActivation(P0: bool) //uid:203
+	fn _byPassFastApproximateMatching(P0: bool) //uid:204
+	fn activateTag(P0: str, P1: str) //uid:205
+	fn deactivateTag(P0: str, P1: str) //uid:206
+	fn _fallback(P0: str, P1: str) -> str //uid:207
+	fn resetAll() //uid:208
+	fn insertUserData(P0: str, P1: str, P2: int32) //uid:209
+	fn getUserData(P0: str, P1: int32) -> str //uid:210
+	fn getUserDataList(P0: int32) -> Vec<str> //uid:211
+	fn getUserList() -> Vec<int32> //uid:212
+	fn removeUserData(P0: int32) //uid:213
+	fn clearConcepts() //uid:214
+	fn enableSendingLogToCloud(P0: bool) //uid:215
+	fn _encryptLog(P0: bool) //uid:216
+	fn isSendingLogToCloud() -> bool //uid:217
+	fn _isEncryptingLog() -> bool //uid:218
+	fn enableLogAudio(P0: bool) //uid:219
+	fn _setDeletionCost(P0: float32) //uid:220
+	fn _setInsertionCost(P0: float32) //uid:221
+	fn _setSubstitutionCost(P0: float32) //uid:222
+	fn _setStarCost(P0: float32) //uid:223
+	fn _setApproximateMatchingThreshold(P0: float32) //uid:224
+	fn _useAcrobaticMatching(P0: bool) //uid:225
+	fn _enableStatisticalMatching(P0: bool) //uid:226
+	fn _enablePhoneticMatching(P0: bool) //uid:227
+	fn _setSemanticModel(P0: str, P1: str) //uid:228
+	fn _isOnePassEnabled() -> bool //uid:229
+	fn _setSLMUpperThreshold(P0: float32) //uid:230
+	fn _enableSerialization(P0: bool) //uid:231
+	fn deleteSerializationFiles() //uid:232
+	fn _copyInputConcepts(P0: bool) //uid:233
+	fn _copyOutputConcepts(P0: bool) //uid:234
+	fn generateSentences(P0: str, P1: str, P2: str) //uid:235
+	fn _setLengthForAfterStarOptimization(P0: int32) //uid:236
+	fn _setLengthForBeforeStarOptimization(P0: int32) //uid:237
+	fn _onUserSessionFocused(P0: str,P1: any,P2: str) //uid:238
+	fn _us_getUserData(P0: str,P1: str,P2: str) -> any //uid:239
+	fn _setUserSessionObeyed(is_obeyed: bool) //uid:240
+	fn _isUserSessionObeyed() -> bool //uid:241
+	sig traceObject(P0: EventTrace) //uid:86
+end
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint32
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
+	description: str
+end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
+struct ServiceInfo
+	name: str
+	serviceId: uint32
+	machineId: str
+	processId: uint32
+	endpoints: Vec<str>
+	sessionId: str
+end
+struct timeval
+	tv_sec: int64
+	tv_usec: int64
+end
+struct EventTrace
+	id: uint32
+	kind: int32
+	slotId: uint32
+	arguments: any
+	timestamp: timeval
+	userUsTime: int64
+	systemUsTime: int64
+	callerContext: uint32
+	calleeContext: uint32
+end
+struct ProcessInfo
+	running: bool
+	name: str
+	execStart: str
+	autorun: bool
+end
+struct LogMessage
+	source: str
+	level: int32
+	timestamp: timeval
+	category: str
+	location: str
+	message: str
+end
+struct PackageInfo2
+	uuid: str
+	version: str
+	author: str
+	channel: str
+	organization: str
+	date: str
+	typeVersion: str
+	installer: str
+	path: str
+	elems: Map<str,any>
+end
+struct RobotRequirement
+	model: str
+	minHeadVersion: str
+	maxHeadVersion: str
+	minBodyVersion: str
+	maxBodyVersion: str
+end
+struct NaoqiRequirement
+	minVersion: str
+	maxVersion: str
+end
+struct PackageService
+	execStart: str
+	name: str
+	autoRun: bool
+end
+struct PackageInfo
+	uuid: str
+	path: str
+	version: str
+	channel: str
+	author: str
+	organization: str
+	date: str
+	typeVersion: str
+	langToName: Map<str,str>
+	langToDesc: Map<str,str>
+	supportedLanguages: Vec<str>
+	behaviors: Vec<unknown>
+	languages: Vec<unknown>
+	installer: str
+	robotRequirements: Vec<RobotRequirement>
+	naoqiRequirements: Vec<NaoqiRequirement>
+	services: Vec<PackageService>
+	executableFiles: Vec<str>
+	dialogs: Vec<unknown>
+	descriptionLanguages: Vec<str>
+end
