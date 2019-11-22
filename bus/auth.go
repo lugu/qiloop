@@ -1,7 +1,9 @@
 package bus
 
 import (
+	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/session/token"
@@ -79,16 +81,60 @@ func PreferedCap(user, token string) CapabilityMap {
 }
 
 func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
+	var capErr error
+	res := make(chan CapabilityMap, 1)
+
+	filter := func(hdr *net.Header) (matched bool, keep bool) {
+		if hdr.Type == net.Capability {
+			return true, false
+		}
+		return false, true
+	}
+	consumer := func(msg *net.Message) error {
+		buf := bytes.NewBuffer(msg.Payload)
+		m, err := ReadCapabilityMap(buf)
+		res <- m
+		capErr = err
+		return nil
+	}
+	closer := func(err error) {}
+
+	id := endpoint.AddHandler(filter, consumer, closer)
+	defer endpoint.RemoveHandler(id)
 
 	cache := NewCache(endpoint)
 	cache.AddService("ServiceZero", 0, object.MetaService0)
 	proxies := Services(cache)
 	service0, err := proxies.ServiceServer()
-	if err != nil {
-		return CapabilityMap{}, err
+	m, err := service0.Authenticate(permissions)
+
+	if err == nil {
+		return m, nil
 	}
 
-	return service0.Authenticate(permissions)
+	// send a capability type message.
+	var out bytes.Buffer
+	err = WriteCapabilityMap(permissions, &out)
+	if err != nil {
+		return m, err
+	}
+	hdr := net.NewHeader(net.Capability, 0, 0, 0, 2)
+	msg := net.NewMessage(hdr, out.Bytes())
+	err = endpoint.Send(msg)
+	if err != nil {
+		return m, err
+	}
+
+	timer := time.NewTimer(1 * time.Second)
+	select {
+	case m = <-res:
+		// capapbility received: skip authentication
+		m[KeyState] = value.Uint(StateDone)
+		return m, capErr
+
+	case <-timer.C:
+		return m, fmt.Errorf("missing capability: timeout")
+	}
 }
 
 // authenticateContinue update the token with the server provided
