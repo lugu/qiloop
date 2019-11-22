@@ -694,9 +694,9 @@ func (t *TupleType) Signature() string {
 	return sig
 }
 
-// SignatureIDL returns "name1 signature1, name2 signature2" where
+// ParamIDL returns "name1 signature1, name2 signature2" where
 // signatureX is the signature of the elements.
-func (t *TupleType) SignatureIDL() string {
+func (t *TupleType) ParamIDL() string {
 	var sig string
 	for i, typ := range t.Members {
 		sig += typ.Name + ": " + typ.Type.SignatureIDL()
@@ -705,6 +705,19 @@ func (t *TupleType) SignatureIDL() string {
 		}
 	}
 	return sig
+}
+
+// SignatureIDL returns "Tuple<signature1,signature2>" where
+// signatureX is the signature of the elements.
+func (t *TupleType) SignatureIDL() string {
+	var sig string
+	for i, typ := range t.Members {
+		sig += typ.Type.SignatureIDL()
+		if i != len(t.Members)-1 {
+			sig += ","
+		}
+	}
+	return fmt.Sprintf("Tuple<%s>", sig)
 }
 
 // Params returns a statement representing the list of parameter of

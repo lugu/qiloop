@@ -68,7 +68,7 @@ func TestListType(t *testing.T) {
 	helpTestBasics(t, NewMapType(NewStringType(), NewBoolType()), "{sb}", "Map<str,bool>",
 		jen.Map(jen.String()).Add(jen.Bool()))
 	helpTestBasics(t, NewTupleType([]Type{NewStringType(), NewBoolType()}), "(sb)",
-		"P0: str, P1: bool",
+		"Tuple<str,bool>",
 		jen.Struct(jen.Id("P0").Add(jen.String()), jen.Id("P1").Add(jen.Bool())))
 	helpTestBasics(t, NewStructType("test", []MemberType{{
 		Name: "a",
