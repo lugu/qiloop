@@ -58,6 +58,7 @@ func init() {
 		"Connect a server and introspect a service to generate an IDL file"
 	scanCommand.String(&serverURL, "r", "qi-url", "server URL")
 	scanCommand.String(&serviceName, "s", "service", "optional service name")
+	scanCommand.String(&packageName, "p", "unknown", "package name")
 	scanCommand.String(&outputFile, "i", "idl", "ouput IDL file")
 	scanCommand.String(&token.AuthFile, "a", "auth-file", authDescription)
 
@@ -107,7 +108,7 @@ func main() {
 	if infoCommand.Used {
 		info(serverURL, serviceName)
 	} else if scanCommand.Used {
-		scan(serverURL, serviceName, outputFile)
+		scan(serverURL, packageName, serviceName, outputFile)
 	} else if proxyCommand.Used {
 		proxy(inputFile, outputFile, packageName)
 	} else if stubCommand.Used {

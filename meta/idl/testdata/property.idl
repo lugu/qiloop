@@ -1,3 +1,4 @@
+package test
 interface Test
 	prop a(param: uint32) //uid:100
 	prop b(param: str) //uid:101

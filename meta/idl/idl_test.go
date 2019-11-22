@@ -1,12 +1,13 @@
 package idl
 
 import (
-	"github.com/lugu/qiloop/type/object"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/lugu/qiloop/type/object"
 )
 
 func helpTestGenerate(t *testing.T, idlFileName, serviceName string,
@@ -24,11 +25,13 @@ func helpTestGenerate(t *testing.T, idlFileName, serviceName string,
 	expected := string(idl)
 
 	var w strings.Builder
-	if err := GenerateIDL(&w, serviceName, metaObj); err != nil {
+	if err := GenerateIDL(&w, "test", map[string]object.MetaObject{
+		serviceName: metaObj,
+	}); err != nil {
 		t.Errorf("parse server: %s", err)
 	}
 	if w.String() != expected {
-		t.Errorf("Got:\n%s\nExpecting:\n%s\n", w.String(), expected)
+		t.Errorf("Got:\n->%s<-\nExpecting:\n->%s<-\n", w.String(), expected)
 	}
 }
 

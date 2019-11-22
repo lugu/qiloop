@@ -4,7 +4,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/services"
@@ -32,7 +31,7 @@ func open(filename string) io.WriteCloser {
 	}
 }
 
-func scan(serverURL, serviceName, idlFile string) {
+func scan(serverURL, packageName, serviceName, idlFile string) {
 
 	output := open(idlFile)
 	defer output.Close()
@@ -53,40 +52,28 @@ func scan(serverURL, serviceName, idlFile string) {
 		log.Fatalf("list services: %s", err)
 	}
 
-	objects := make([]object.MetaObject, 0)
-	objects = append(objects, object.MetaService0)
-	objects = append(objects, object.ObjectMetaObject)
+	objects := map[string]object.MetaObject{}
 
-	for _, s := range serviceInfoList {
+	for _, info := range serviceInfoList {
 
-		if serviceName != "" && serviceName != s.Name {
+		if serviceName != "" && serviceName != info.Name {
 			continue
 		}
-
-		// sort the addresses based on their value
-		for _, addr := range s.Endpoints {
-			// do not connect the test range.
-			if strings.Contains(addr, "198.18.0") {
-				continue
-			}
-			cache, err := bus.NewCachedSession(addr)
-			if err != nil {
-				continue
-			}
-			err = cache.Lookup(s.Name, s.ServiceId)
-			if err != nil {
-				continue
-			}
-
-			meta := cache.Services[s.ServiceId]
-			meta.Description = s.Name
-			objects = append(objects, meta)
-			err = idl.GenerateIDL(output, s.Name, meta)
-			if err != nil {
-				log.Printf("generate IDL of %s: %s",
-					s.Name, err)
-			}
-			break
+		proxy, err := sess.Proxy(info.Name, 1)
+		if err != nil {
+			log.Printf("%s: %s", info.Name, err)
 		}
+		obj := bus.MakeObject(proxy)
+		meta, err := obj.MetaObject(1)
+		if err != nil {
+			log.Printf("%s: %s", info.Name, err)
+		}
+		meta.Description = info.Name
+		objects[info.Name] = meta
+	}
+
+	err = idl.GenerateIDL(output, packageName, objects)
+	if err != nil {
+		log.Printf("generate IDL: %s", err)
 	}
 }
