@@ -1,14 +1,15 @@
 package idl
 
 import (
-	"github.com/lugu/qiloop/meta/signature"
-	"github.com/lugu/qiloop/type/object"
-	parsec "github.com/prataprc/goparsec"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/lugu/qiloop/meta/signature"
+	"github.com/lugu/qiloop/type/object"
+	parsec "github.com/prataprc/goparsec"
 )
 
 func helpParseMethod(t *testing.T, label, input string, expected Method) {
@@ -75,7 +76,11 @@ func TestParseBasicType(t *testing.T) {
 }
 
 func TestParseCompoundType(t *testing.T) {
-	helpParseType(t, "Map<int32,uint64>", "{iL}")
+	helpParseType(t, "Map<int32,uint64 >", "{iL}")
+	helpParseType(t, "Vec<uint64>", "[L]")
+	helpParseType(t, "Vec<Map<uint64,any>>", "[{Lm}]")
+	helpParseType(t, "Tuple<int32, str ,uint64>", "(isL)")
+	helpParseType(t, "Vec<Tuple<uint64,str>>", "[(Ls)]")
 	helpParseType(t, "Map<str,bool>", "{sb}")
 	helpParseType(t, "Map<float32,any>", "{fm}")
 }
@@ -108,6 +113,34 @@ func TestParseMethod1(t *testing.T) {
 		Name:   "methodName",
 		ID:     0,
 		Return: signature.NewIntType(),
+		Params: make([]Parameter, 0),
+	}
+	helpParseMethod(t, "TestParseMethod1", input, expected)
+}
+
+func TestParseMethodVec(t *testing.T) {
+	input := `fn methodName() -> Vec<int32>`
+	expected := Method{
+		Name:   "methodName",
+		ID:     0,
+		Return: signature.NewListType(signature.NewIntType()),
+		Params: make([]Parameter, 0),
+	}
+	helpParseMethod(t, "TestParseMethod1", input, expected)
+}
+
+func TestParseMethodTuple(t *testing.T) {
+	input := `fn methodName() -> Tuple<int32,str,float32>>`
+	expected := Method{
+		Name: "methodName",
+		ID:   0,
+		Return: signature.NewTupleType(
+			[]signature.Type{
+				signature.NewIntType(),
+				signature.NewStringType(),
+				signature.NewFloatType(),
+			},
+		),
 		Params: make([]Parameter, 0),
 	}
 	helpParseMethod(t, "TestParseMethod1", input, expected)

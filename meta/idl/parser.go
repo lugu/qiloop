@@ -57,6 +57,18 @@ func mapType(ctx *Context) parsec.Parser {
 		parsec.Atom(">", ">"))
 }
 
+func tupleType(ctx *Context) parsec.Parser {
+	return parsec.And(
+		nodifyTuple,
+		parsec.Atom("Tuple<", "Tuple<"),
+		parsec.Many(
+			nodifyList,
+			ctx.typeParser,
+			parsec.Atom(",", ","),
+		),
+		parsec.Atom(">", ">"))
+}
+
 func vecType(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyVec,
@@ -70,6 +82,7 @@ func typeParser(ctx *Context) parsec.Parser {
 		nodifyType,
 		basicType(),
 		mapType(ctx),
+		tupleType(ctx),
 		vecType(ctx),
 		referenceType(ctx),
 	)
@@ -571,6 +584,25 @@ func nodifyVec(nodes []signature.Node) signature.Node {
 	return signature.NewListType(elementType)
 }
 
+func nodifyTuple(nodes []signature.Node) signature.Node {
+
+	if params, ok := nodes[1].([]Parameter); ok {
+		members := []signature.MemberType{}
+		for _, p := range params {
+			members = append(members, signature.MemberType{
+				Name: p.Name,
+				Type: p.Type,
+			})
+		}
+		return &signature.TupleType{
+			Members: members,
+		}
+	} else {
+		return fmt.Errorf("unexpected non param type(%s): %v",
+			reflect.TypeOf(nodes[0]), nodes[0])
+	}
+}
+
 func nodifyMap(nodes []signature.Node) signature.Node {
 
 	keyNode := nodes[1]
@@ -740,6 +772,23 @@ func checkError(nodes []signature.Node) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func nodifyList(nodes []signature.Node) signature.Node {
+	params := make([]Parameter, len(nodes))
+	for i, node := range nodes {
+		if ok, err := checkError([]signature.Node{node}); ok {
+			return fmt.Errorf("tuple list %d: %s", i, err)
+		} else if typ, ok := node.(signature.Type); ok {
+			params[i] = Parameter{
+				Name: fmt.Sprintf("param%d", i),
+				Type: typ,
+			}
+		} else {
+			return fmt.Errorf("parse parameter %d: %s", i, node)
+		}
+	}
+	return params
 }
 
 func nodifyParam(nodes []signature.Node) signature.Node {

@@ -106,6 +106,33 @@ end
 	}
 }
 
+func TestTupleRet(t *testing.T) {
+	expected := `package test
+interface a
+	fn b() -> Tuple<str,str> //uid:1
+end
+`
+	var w strings.Builder
+	if err := GenerateIDL(&w, "test", map[string]object.MetaObject{
+		"a": object.MetaObject{
+			Description: "Test",
+			Methods: map[uint32]object.MetaMethod{
+				1: object.MetaMethod{
+					Uid:                 1,
+					Name:                "b",
+					ParametersSignature: "()",
+					ReturnSignature:     "(ss)",
+				},
+			},
+		},
+	}); err != nil {
+		t.Errorf("parse server: %s", err)
+	}
+	if w.String() != expected {
+		t.Errorf("Got:\n->%s<-\nExpecting:\n->%s<-\n", w.String(), expected)
+	}
+}
+
 func TestServiceDirectory(t *testing.T) {
 	path := filepath.Join("testdata", "meta-object.bin")
 	file, err := os.Open(path)

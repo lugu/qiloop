@@ -56,7 +56,7 @@ func generateMethod(writer io.Writer, set *signature.TypeSet,
 
 	paramSignature := ""
 	if m.Parameters == nil || len(m.Parameters) != len(tupleType.Members) {
-		paramSignature = tupleType.SignatureIDL()
+		paramSignature = tupleType.ParamIDL()
 	} else {
 		for i, p := range m.Parameters {
 			if paramSignature != "" {
@@ -91,8 +91,21 @@ func generateProperty(writer io.Writer, set *signature.TypeSet,
 		return fmt.Errorf("parse property of %s: %s", p.Name, err)
 	}
 	propertyType.RegisterTo(set)
-	fmt.Fprintf(writer, "\tprop %s(param: %s) //uid:%d\n", p.Name,
-		propertyType.SignatureIDL(), p.Uid)
+
+	tupleType, ok := propertyType.(*signature.TupleType)
+	if !ok {
+		tupleType = &signature.TupleType{
+			Members: []signature.MemberType{
+				signature.MemberType{
+					Name: "param",
+					Type: propertyType,
+				},
+			},
+		}
+	}
+
+	fmt.Fprintf(writer, "\tprop %s(%s) //uid:%d\n", p.Name,
+		tupleType.ParamIDL(), p.Uid)
 	return nil
 }
 
@@ -106,7 +119,12 @@ func generateSignal(writer io.Writer, set *signature.TypeSet, s object.MetaSigna
 		return fmt.Errorf("parse signal of %s: %s", s.Name, err)
 	}
 	signalType.RegisterTo(set)
-	fmt.Fprintf(writer, "\tsig %s(%s) //uid:%d\n", s.Name, signalType.SignatureIDL(), s.Uid)
+
+	tupleType, ok := signalType.(*signature.TupleType)
+	if !ok {
+		tupleType = signature.NewTupleType([]signature.Type{signalType})
+	}
+	fmt.Fprintf(writer, "\tsig %s(%s) //uid:%d\n", s.Name, tupleType.ParamIDL(), s.Uid)
 	return nil
 }
 
