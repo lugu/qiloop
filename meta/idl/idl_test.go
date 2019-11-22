@@ -64,6 +64,48 @@ func TestProperties(t *testing.T) {
 		})
 }
 
+func TestNames(t *testing.T) {
+	params := []string{
+		"", "for", "len", "func", "range", "some happy name ", "c",
+	}
+	expected := `package test
+interface a
+	fn b(P0: str,for_1: str,len: str,func_3: str,range_4: str,somehappyname: str,c: str) -> str //uid:1
+end
+`
+	f := func(names []string) []object.MetaMethodParameter {
+
+		params := []object.MetaMethodParameter{}
+		for _, name := range names {
+			params = append(params, object.MetaMethodParameter{
+				Name:        name,
+				Description: name,
+			})
+		}
+		return params
+	}
+	var w strings.Builder
+	if err := GenerateIDL(&w, "test", map[string]object.MetaObject{
+		"a": object.MetaObject{
+			Description: "Test",
+			Methods: map[uint32]object.MetaMethod{
+				1: object.MetaMethod{
+					Uid:                 1,
+					Name:                "b",
+					ParametersSignature: "(sssssss)",
+					Parameters:          f(params),
+					ReturnSignature:     "s",
+				},
+			},
+		},
+	}); err != nil {
+		t.Errorf("parse server: %s", err)
+	}
+	if w.String() != expected {
+		t.Errorf("Got:\n->%s<-\nExpecting:\n->%s<-\n", w.String(), expected)
+	}
+}
+
 func TestServiceDirectory(t *testing.T) {
 	path := filepath.Join("testdata", "meta-object.bin")
 	file, err := os.Open(path)
