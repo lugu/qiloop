@@ -3,32 +3,10 @@ package idl
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 )
-
-func cleanVarName(i int, name string) string {
-	if name == "" {
-		return fmt.Sprintf("P%d", i)
-	}
-	// remove space from parameter name
-	name = strings.ReplaceAll(name, " ", "")
-	for _, keyword := range []string{
-		"break", "default", "func", "interface", "select",
-		"case", "defer", "go", "map", "struct", "chan",
-		"else", "goto", "package", "switch", "const",
-		"fallthrough", "if", "range", "type", "continue",
-		"for", "import", "return", "var",
-	} {
-		if name == keyword {
-			name = fmt.Sprintf("%s_%d", name, i)
-			break
-		}
-	}
-	return name
-}
 
 // generateMethod writes the method declaration. Does not use
 // methodName, because is the Go method name generated to avoid
@@ -62,7 +40,7 @@ func generateMethod(writer io.Writer, set *signature.TypeSet,
 			if paramSignature != "" {
 				paramSignature += ","
 			}
-			name := cleanVarName(i, p.Name)
+			name := signature.CleanVarName(i, p.Name)
 			paramSignature += name + ": " + tupleType.Members[i].Type.SignatureIDL()
 		}
 	}
