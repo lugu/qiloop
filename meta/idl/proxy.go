@@ -54,7 +54,10 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 	definitions := make([]jen.Code, 0)
 	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
-		methodName = signature.CleanName(methodName)
+		methodName = signature.CleanMethodName(methodName)
+		if serviceName == "Object" {
+			methodName = signature.CleanName(methodName)
+		}
 		if skipActionInterface(serviceName, m.Uid) {
 			return nil
 		}
@@ -344,7 +347,10 @@ func generateProxyMethod(file *jen.File, serviceName string,
 		returnCode = jen.Error()
 	}
 
-	goMethodName := signature.CleanName(methodName)
+	goMethodName := signature.CleanMethodName(methodName)
+	if serviceName == proxyName("Object") {
+		goMethodName = signature.CleanName(methodName)
+	}
 	file.Comment(goMethodName + " calls the remote procedure")
 	file.Func().Params(jen.Id("p").Op("*").Id(serviceName)).Id(goMethodName).Add(
 		paramType.Params(),

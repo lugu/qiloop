@@ -67,10 +67,10 @@ func (m Method) Meta(id uint32) object.MetaMethod {
 func (m Method) Tuple() *signature.TupleType {
 	var tuple signature.TupleType
 	tuple.Members = make([]signature.MemberType, 0)
-	for _, p := range m.Params {
+	for i, p := range m.Params {
 		tuple.Members = append(tuple.Members,
 			signature.MemberType{
-				Name: p.Name,
+				Name: signature.CleanVarName(i, p.Name),
 				Type: p.Type,
 			})
 	}
