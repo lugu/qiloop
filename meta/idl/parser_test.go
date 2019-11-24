@@ -64,6 +64,10 @@ func helpParseType(t *testing.T, lang, sign string) {
 }
 
 func TestParseBasicType(t *testing.T) {
+	helpParseType(t, "int8", "c")
+	helpParseType(t, "uint8", "C")
+	helpParseType(t, "int16", "w")
+	helpParseType(t, "uint16", "W")
 	helpParseType(t, "int32", "i")
 	helpParseType(t, "uint32", "I")
 	helpParseType(t, "int64", "l")
@@ -76,10 +80,10 @@ func TestParseBasicType(t *testing.T) {
 }
 
 func TestParseCompoundType(t *testing.T) {
-	helpParseType(t, "Map<int32,uint64 >", "{iL}")
+	helpParseType(t, "Map<int8,uint64 >", "{cL}")
 	helpParseType(t, "Vec<uint64>", "[L]")
 	helpParseType(t, "Vec<Map<uint64,any>>", "[{Lm}]")
-	helpParseType(t, "Tuple<int32, str ,uint64>", "(isL)")
+	helpParseType(t, "Tuple<uint16, str ,uint64>", "(WsL)")
 	helpParseType(t, "Vec<Tuple<uint64,str>>", "[(Ls)]")
 	helpParseType(t, "Map<str,bool>", "{sb}")
 	helpParseType(t, "Map<float32,any>", "{fm}")

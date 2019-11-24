@@ -69,7 +69,7 @@ func (r *RefType) Marshal(id string, writer string) *signature.Statement {
 		return t.Marshal(id, writer)
 	}
 	return jen.Qual("fmt", "Errorf").Call(
-		jen.Lit("reference type serialization not implemented: %v"), jen.Id(id),
+		jen.Lit("reference to type "+r.Name+" not found: %v"), jen.Id(id),
 	)
 }
 
@@ -84,7 +84,7 @@ func (r *RefType) Unmarshal(reader string) *signature.Statement {
 	return jen.Return(
 		jen.Nil(),
 		jen.Qual("fmt", "Errorf").Call(
-			jen.Lit("reference type not implemented"),
+			jen.Lit("reference to type "+r.Name+" not found"),
 		),
 	)
 }

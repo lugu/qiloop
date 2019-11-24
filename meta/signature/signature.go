@@ -74,7 +74,7 @@ func nodifyBasicType(nodes []Node) Node {
 	case "i":
 		return NewIntType()
 	case "I":
-		return NewUIntType()
+		return NewUintType()
 	case "l":
 		return NewLongType()
 	case "L":
