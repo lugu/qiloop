@@ -365,10 +365,53 @@ func TestParseReturns(t *testing.T) {
 	}
 }
 
+func helpTestParser(t *testing.T, p parsec.Parser, input string, valid bool) {
+	result, scanner := p(parsec.NewScanner([]byte(input)))
+	if valid && len(input) != scanner.GetCursor() {
+		t.Errorf("failed to parse: %s", input)
+	} else if valid && result == nil {
+		t.Errorf("failed to return: %s", input)
+	} else if !valid && len(input) == scanner.GetCursor() {
+		t.Errorf("should not parse: %s", input)
+	}
+}
+
+func TestIdent(t *testing.T) {
+	valids := []string{
+		"a", "abc",
+	}
+	invalids := []string{
+		"&4444", "1adsd", "a²", "&",
+	}
+	for _, v := range valids {
+		helpTestParser(t, ident(), v, true)
+	}
+	for _, v := range invalids {
+		helpTestParser(t, ident(), v, false)
+	}
+}
+
+func TestTypeIdent(t *testing.T) {
+	valids := []string{
+		"a", "abc", "float32", "Vect<float32>", "Vect<float32>",
+		"ValueConfidence<float>",
+	}
+	invalids := []string{
+		"&4444", "1adsd", "a²", "&",
+		"ValueConfidence<float",
+	}
+	for _, v := range valids {
+		helpTestParser(t, typeIdent(), v, true)
+	}
+	for _, v := range invalids {
+		helpTestParser(t, typeIdent(), v, false)
+	}
+}
+
 func helpParseStruct(t *testing.T, label, input, expected string) {
 	root, _ := structure(NewContext())(parsec.NewScanner([]byte(input)))
 	if root == nil {
-		t.Errorf("%s: error parsing struuture:\n%s", label, input)
+		t.Errorf("%s: error parsing structure:\n%s", label, input)
 		return
 	}
 	if err, ok := root.(error); ok {
@@ -386,8 +429,8 @@ func helpParseStruct(t *testing.T, label, input, expected string) {
 }
 
 func TestStructureParser(t *testing.T) {
-	helpParseStruct(t, "1", `struct Test
-	end`, "()<Test>")
+	helpParseStruct(t, "1", `struct test
+	end`, "()<test>")
 	helpParseStruct(t, "2", `struct Test
 	a: int32
 	b: str
@@ -396,6 +439,10 @@ func TestStructureParser(t *testing.T) {
 	c: float32 // test
 	d: bool
 	end`, "(fb)<Test,c,d>")
+	helpParseStruct(t, "3", `struct Test<float>
+	c: float32 // test
+	d: bool
+	end`, "(fb)<Test<float>,c,d>")
 }
 
 func newDeclaration(t *testing.T) []*signature.StructType {

@@ -21,14 +21,14 @@ var keywords = []string{
 	"for", "import", "return", "var", "error",
 }
 
-func cleanName(name string) string {
+func ValidName(name string) string {
 	exp := regexp.MustCompile(`[^_a-zA-Z0-9]+`)
 	return exp.ReplaceAllString(name, "")
 }
 
 // CleanName remove funky character from a name
 func CleanName(name string) string {
-	return strings.Title(cleanName(name))
+	return strings.Title(ValidName(name))
 }
 
 func CleanMethodName(name string) string {
@@ -45,7 +45,7 @@ func CleanVarName(i int, name string) string {
 	if name == "" {
 		return fmt.Sprintf("P%d", i)
 	}
-	name = cleanName(name)
+	name = ValidName(name)
 	for _, keyword := range keywords {
 		if name == keyword {
 			return fmt.Sprintf("%s_%d", name, i)

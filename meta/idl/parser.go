@@ -143,6 +143,19 @@ func ident() parsec.Parser {
 	return parsec.Token(`[_A-Za-z][0-9a-zA-Z_]*`, "IDENT")
 }
 
+func typeIdent() parsec.Parser {
+	return parsec.OrdTokens(
+		[]string{
+			`[_A-Za-z][0-9a-zA-Z_]*<[0-9a-zA-Z_]*>`,
+			`[_A-Za-z][0-9a-zA-Z_]*`,
+		},
+		[]string{
+			"TYPE_IDENT_CPP",
+			"TYPE_IDENT",
+		},
+	)
+}
+
 func method(ctx *Context) parsec.Parser {
 	return parsec.And(
 		nodifyMethod,
@@ -204,7 +217,7 @@ func interfaceParser(ctx *Context) parsec.Parser {
 func referenceType(ctx *Context) parsec.Parser {
 	return parsec.And(
 		makeNodifyTypeReference(ctx.scope),
-		ident(),
+		typeIdent(),
 	)
 }
 
@@ -248,7 +261,7 @@ func structure(ctx *Context) parsec.Parser {
 	return parsec.And(
 		makeNodifyStructure(ctx.scope),
 		parsec.Atom("struct", "struct"),
-		ident(),
+		typeIdent(),
 		comments(),
 		parsec.Kleene(nodifyMemberList, member(ctx)),
 		parsec.Atom("end", "end"),
