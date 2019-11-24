@@ -37,7 +37,7 @@ func TestBasicTypes(t *testing.T) {
 	helpTestBasics(t, NewInt16Type(), "w", "int16", jen.Int16())
 	helpTestBasics(t, NewUint16Type(), "W", "uint16", jen.Uint16())
 	helpTestBasics(t, NewIntType(), "i", "int32", jen.Int32())
-	helpTestBasics(t, NewUIntType(), "I", "uint32", jen.Uint32())
+	helpTestBasics(t, NewUintType(), "I", "uint32", jen.Uint32())
 	helpTestBasics(t, NewLongType(), "l", "int64", jen.Int64())
 	helpTestBasics(t, NewULongType(), "L", "uint64", jen.Uint64())
 	helpTestBasics(t, NewFloatType(), "f", "float32", jen.Float32())

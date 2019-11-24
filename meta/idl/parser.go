@@ -14,6 +14,10 @@ import (
 
 func basicType() parsec.Parser {
 	return parsec.OrdChoice(nodifyBasicType,
+		parsec.Atom("int8", ""),
+		parsec.Atom("uint8", ""),
+		parsec.Atom("int16", ""),
+		parsec.Atom("uint16", ""),
 		parsec.Atom("int32", ""),
 		parsec.Atom("uint32", ""),
 		parsec.Atom("int64", ""),
@@ -637,10 +641,18 @@ func nodifyBasicType(nodes []signature.Node) signature.Node {
 	}
 	sig := nodes[0].(*parsec.Terminal).GetValue()
 	switch sig {
+	case "int8":
+		return signature.NewInt8Type()
+	case "uint8":
+		return signature.NewUint8Type()
+	case "int16":
+		return signature.NewInt16Type()
+	case "uint16":
+		return signature.NewUint16Type()
 	case "int32":
 		return signature.NewIntType()
 	case "uint32":
-		return signature.NewUIntType()
+		return signature.NewUintType()
 	case "int64":
 		return signature.NewLongType()
 	case "uint64":

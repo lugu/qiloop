@@ -220,7 +220,7 @@ func NewIntType() Type {
 }
 
 // NewUIntType is a contructor for the representation of an uint32.
-func NewUIntType() Type {
+func NewUintType() Type {
 	return &typeConstructor{
 		signature:    "I",
 		signatureIDL: "uint32",
