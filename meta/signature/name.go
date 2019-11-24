@@ -13,12 +13,13 @@ var reservedMethods = []string{
 	"ObjectID", "OnDisconnect", "PropertyID", "ProxyService",
 	"ServiceID", "SignalID", "Subscribe", "SubscribeID",
 }
+
 var keywords = []string{
-	"break", "default", "func", "interface", "select",
-	"case", "defer", "go", "map", "struct", "chan",
-	"else", "goto", "package", "switch", "const",
-	"fallthrough", "if", "range", "type", "continue",
-	"for", "import", "return", "var", "error",
+	"break", "default", "func", "interface", "select", "case",
+	"defer", "go", "map", "struct", "chan", "else", "goto",
+	"package", "switch", "const", "fallthrough", "if", "range",
+	"type", "continue", "for", "import", "return", "var", "error",
+	"string",
 }
 
 func ValidName(name string) string {
