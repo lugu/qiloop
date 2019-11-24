@@ -39,8 +39,8 @@ It is open-source and developped here:
 [https://github.com/aldebaran/libqi](https://github.com/aldebaran/libqi).
 
 QiLoop is another implementation of QiMessaging. It has two main goals:
-- being compatible with libqi
-- being a platform for experimenting with the protocol
+  - being compatible with libqi
+  - being a platform for experimenting with the protocol
 
 Disclaimer: QiLoop is not affiliated with SoftBank Robotics.
 
@@ -52,14 +52,14 @@ Service directory and log manager are implemented as part of the
 standalone server (launched with `qiloop server`).
 
 Features:
-- type supported: object, struct, values, map, list, enum
-- actions: method, signals and properties are fully supported
-- cancellation: not yet implemented
-- transport: TCP, TLS, UNIX socket and QUIC (experimental)
-- authentication: read the credentials from `$HOME/.qiloop-auth.conf`
-- service introspection: generate IDL from a running instance (use `qiloop scan`)
-- IDL files: generate specialized proxy and service stub (use `qiloop stub`)
-- partial support for stats and traces
+  - type supported: object, struct, values, map, list, enum
+  - actions: method, signals and properties are fully supported
+  - cancellation: not yet implemented
+  - transport: TCP, TLS, UNIX socket and QUIC (experimental)
+  - authentication: read the credentials from `$HOME/.qiloop-auth.conf`
+  - service introspection: generate IDL from a running instance (use `qiloop scan`)
+  - IDL files: generate specialized proxy and service stub (use `qiloop stub`)
+  - stats and trace support
 
 ## Usage
 
@@ -93,31 +93,31 @@ Documentation: [http://godoc.org/github.com/lugu/qiloop](http://godoc.org/github
 
 ## Tutorials
 
-- How to create a proxy to an existing service: follow the [ALVideoDevice tutorial](https://github.com/lugu/qiloop/blob/master/doc/tutorial-videodevice.md).
+  - How to create a proxy to an existing service: follow the [ALVideoDevice tutorial](https://github.com/lugu/qiloop/blob/master/doc/tutorial-videodevice.md).
 
-- How to create your own service: follow the [clock tutorial](https://github.com/lugu/qiloop/blob/master/doc/tutorial-clock.md).
+  - How to create your own service: follow the [clock tutorial](https://github.com/lugu/qiloop/blob/master/doc/tutorial-clock.md).
 
 ## Examples
 
 The [examples directory](https://github.com/lugu/qiloop/blob/master/examples/)
 illustrates some basic usages of QiLoop:
 
--   [hello world](https://github.com/lugu/qiloop/blob/master/examples/say)
-    illustrates how to call a method of a service: this example calls
-    the method 'say' of a text to speech service.
+  -   [hello world](https://github.com/lugu/qiloop/blob/master/examples/say)
+      illustrates how to call a method of a service: this example calls
+      the method 'say' of a text to speech service.
 
--   [signal registration](https://github.com/lugu/qiloop/blob/master/examples/signal)
-    illustrates how to subscribe to a signal: this example prints a
-    log each time a service is added to the service directory.
+  -   [signal registration](https://github.com/lugu/qiloop/blob/master/examples/signal)
+      illustrates how to subscribe to a signal: this example prints a
+      log each time a service is added to the service directory.
 
--   [ping pong service](https://github.com/lugu/qiloop/blob/master/examples/pong)
-    illustrates how to implement a service.
+  -   [ping pong service](https://github.com/lugu/qiloop/blob/master/examples/pong)
+      illustrates how to implement a service.
 
--   [space service](https://github.com/lugu/qiloop/blob/master/examples/space)
-    illustrates the client side objects creation.
+  -   [space service](https://github.com/lugu/qiloop/blob/master/examples/space)
+      illustrates the client side objects creation.
 
--   [clock service](https://github.com/lugu/qiloop/blob/master/examples/clock)
-    completed version of the clock tutorial.
+  -   [clock service](https://github.com/lugu/qiloop/blob/master/examples/clock)
+      completed version of the clock tutorial.
 
 ## Command line interface
 
@@ -158,7 +158,7 @@ first line and your password on the second.
 
 ## Contributing
 
-1. Fork me
-2. Create your feature branch
-3. Make changes (hopefully with tests and, why not, with documentation)
-4. Create new pull request
+ 1. Fork me
+ 2. Create your feature branch
+ 3. Make changes (hopefully with tests and, why not, with documentation)
+ 4. Create new pull request
