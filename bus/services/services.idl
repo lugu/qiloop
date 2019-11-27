@@ -1,16 +1,16 @@
 package services
 
 interface ServiceDirectory
-	fn service(name: str) -> ServiceInfo //uid:100
-	fn services() -> Vec<ServiceInfo> //uid:101
-	fn registerService(info: ServiceInfo) -> uint32 //uid:102
-	fn unregisterService(serviceID: uint32) //uid:103
-	fn serviceReady(serviceID: uint32) //uid:104
-	fn updateServiceInfo(info: ServiceInfo) //uid:105
-	fn machineId() -> str //uid:108
-	fn _socketOfService(serviceID: uint32) -> obj //uid:109
-	sig serviceAdded(serviceID: uint32, name: str) //uid:106
-	sig serviceRemoved(serviceID: uint32, name: str) //uid:107
+	fn service(name: str) -> ServiceInfo
+	fn services() -> Vec<ServiceInfo>
+	fn registerService(info: ServiceInfo) -> uint32
+	fn unregisterService(serviceID: uint32)
+	fn serviceReady(serviceID: uint32)
+	fn updateServiceInfo(info: ServiceInfo)
+	fn machineId() -> str
+	fn _socketOfService(serviceID: uint32) -> obj
+	sig serviceAdded(serviceID: uint32, name: str)
+	sig serviceRemoved(serviceID: uint32, name: str)
 end
 
 struct ServiceInfo
