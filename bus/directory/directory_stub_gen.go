@@ -9,7 +9,6 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	"io"
 	"log"
-	"math/rand"
 )
 
 // ServiceDirectoryImplementor interface of the service implementation
@@ -652,12 +651,6 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceAdded", err)
-	}
 	ch := make(chan ServiceAdded)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -681,11 +674,7 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // SubscribeServiceRemoved subscribe to a remote property
@@ -693,12 +682,6 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 	propertyID, err := p.SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
-	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
 	cancel, chPay, err := p.SubscribeID(propertyID)
@@ -723,11 +706,7 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // ServiceInfo is serializable

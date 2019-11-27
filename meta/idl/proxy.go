@@ -380,12 +380,6 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			return nil, nil, fmt.Errorf("property %s not available: %s", "`+actionName+`", err)
 		}`),
 
-		jen.Id("handlerID").Op(":=").Qual("math/rand", "Uint64").Call(),
-		jen.Id(`
-		_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("register event for %s: %s", "`+actionName+`", err)
-		}`),
 		jen.Id("ch").Op(":=").Make(jen.Chan().Add(actionType.TypeName())),
 		jen.List(
 			jen.Id("cancel"),
@@ -415,11 +409,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			),
 			jen.Id(`ch<- e`),
 		)).Call(),
-		jen.Id(`
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil`),
+		jen.Id(` return cancel, ch, nil`),
 	)
 
 	file.Comment(methodName + " subscribe to a remote property")

@@ -10,7 +10,6 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
-	"math/rand"
 )
 
 // LogProviderImplementor interface of the service implementation
@@ -1062,12 +1061,6 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessage", err)
-	}
 	ch := make(chan LogMessage)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -1091,11 +1084,7 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // SubscribeOnLogMessages subscribe to a remote property
@@ -1104,12 +1093,6 @@ func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessages", err)
-	}
 	ch := make(chan []LogMessage)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -1146,11 +1129,7 @@ func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, 
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // SubscribeOnLogMessagesWithBacklog subscribe to a remote property
@@ -1159,12 +1138,6 @@ func (p *proxyLogListener) SubscribeOnLogMessagesWithBacklog() (func(), chan []L
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessagesWithBacklog", err)
-	}
 	ch := make(chan []LogMessage)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -1201,11 +1174,7 @@ func (p *proxyLogListener) SubscribeOnLogMessagesWithBacklog() (func(), chan []L
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // GetLogLevel updates the property value
@@ -1252,12 +1221,6 @@ func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "logLevel", err)
-	}
 	ch := make(chan LogLevel)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -1281,11 +1244,7 @@ func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // LogManager is the abstract interface of the service
