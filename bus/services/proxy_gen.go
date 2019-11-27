@@ -1173,3 +1173,125 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	}
 	return nil
 }
+
+// ALAnimatedSpeech is the abstract interface of the service
+type ALAnimatedSpeech interface {
+	// Say calls the remote procedure
+	Say(text string) error
+	// IsBodyTalkEnabled calls the remote procedure
+	IsBodyTalkEnabled() (bool, error)
+	// IsBodyLanguageEnabled calls the remote procedure
+	IsBodyLanguageEnabled() (bool, error)
+	// SetBodyTalkEnabled calls the remote procedure
+	SetBodyTalkEnabled(enable bool) error
+	// SetBodyLanguageEnabled calls the remote procedure
+	SetBodyLanguageEnabled(enable bool) error
+}
+
+// ALAnimatedSpeechProxy represents a proxy object to the service
+type ALAnimatedSpeechProxy interface {
+	object.Object
+	bus.Proxy
+	ALAnimatedSpeech
+}
+
+// proxyALAnimatedSpeech implements ALAnimatedSpeechProxy
+type proxyALAnimatedSpeech struct {
+	bus.ObjectProxy
+	session bus.Session
+}
+
+// MakeALAnimatedSpeech returns a specialized proxy.
+func MakeALAnimatedSpeech(sess bus.Session, proxy bus.Proxy) ALAnimatedSpeechProxy {
+	return &proxyALAnimatedSpeech{bus.MakeObject(proxy), sess}
+}
+
+// ALAnimatedSpeech returns a proxy to a remote service. A nil closer is accepted.
+func (c Constructor) ALAnimatedSpeech(closer func(error)) (ALAnimatedSpeechProxy, error) {
+	proxy, err := c.session.Proxy("ALAnimatedSpeech", 1)
+	if err != nil {
+		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
+	}
+	return MakeALAnimatedSpeech(c.session, proxy), nil
+}
+
+// Say calls the remote procedure
+func (p *proxyALAnimatedSpeech) Say(text string) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteString(text, &buf); err != nil {
+		return fmt.Errorf("serialize text: %s", err)
+	}
+	_, err = p.Call("say", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call say failed: %s", err)
+	}
+	return nil
+}
+
+// IsBodyTalkEnabled calls the remote procedure
+func (p *proxyALAnimatedSpeech) IsBodyTalkEnabled() (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	response, err := p.Call("isBodyTalkEnabled", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isBodyTalkEnabled failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse isBodyTalkEnabled response: %s", err)
+	}
+	return ret, nil
+}
+
+// IsBodyLanguageEnabled calls the remote procedure
+func (p *proxyALAnimatedSpeech) IsBodyLanguageEnabled() (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	response, err := p.Call("isBodyLanguageEnabled", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isBodyLanguageEnabled failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse isBodyLanguageEnabled response: %s", err)
+	}
+	return ret, nil
+}
+
+// SetBodyTalkEnabled calls the remote procedure
+func (p *proxyALAnimatedSpeech) SetBodyTalkEnabled(enable bool) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteBool(enable, &buf); err != nil {
+		return fmt.Errorf("serialize enable: %s", err)
+	}
+	_, err = p.Call("setBodyTalkEnabled", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call setBodyTalkEnabled failed: %s", err)
+	}
+	return nil
+}
+
+// SetBodyLanguageEnabled calls the remote procedure
+func (p *proxyALAnimatedSpeech) SetBodyLanguageEnabled(enable bool) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteBool(enable, &buf); err != nil {
+		return fmt.Errorf("serialize enable: %s", err)
+	}
+	_, err = p.Call("setBodyLanguageEnabled", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call setBodyLanguageEnabled failed: %s", err)
+	}
+	return nil
+}
