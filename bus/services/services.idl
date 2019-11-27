@@ -66,3 +66,11 @@ end
 interface ALTextToSpeech
 	fn say(stringToSay: str)
 end
+
+interface ALAnimatedSpeech
+    fn say(text: str)
+	fn isBodyTalkEnabled() -> bool
+	fn isBodyLanguageEnabled() -> bool
+	fn setBodyTalkEnabled(enable: bool)
+	fn setBodyLanguageEnabled(enable: bool)
+end
