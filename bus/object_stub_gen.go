@@ -9,7 +9,6 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
-	"math/rand"
 )
 
 // ServiceZeroImplementor interface of the service implementation
@@ -1064,12 +1063,6 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "traceObject", err)
-	}
 	ch := make(chan EventTrace)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -1093,11 +1086,7 @@ func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // MetaMethodParameter is serializable

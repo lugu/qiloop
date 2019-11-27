@@ -82,8 +82,7 @@ func TestProxy(t *testing.T) {
 	if directory.ServiceID() != 1 {
 		t.Fatalf("wrong service id")
 	}
-	var cancel func()
-	cancel, _, err = directory.SubscribeID(signalID)
+	cancel, _, err := directory.SubscribeID(signalID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -188,6 +187,35 @@ func TestClientDisconnectionError(t *testing.T) {
 	wait.Wait()
 	if disconnectError == nil {
 		t.Error("expecting a disconnection error")
+	}
+}
+
+func TestClientState(t *testing.T) {
+
+	_, clientEndpoint := net.Pipe()
+	defer clientEndpoint.Close()
+
+	// client connection
+	c := bus.NewClient(clientEndpoint)
+
+	if c.State("boom", 1) != 1 {
+		t.Error("incorrect value")
+	}
+
+	if c.State("boom", -1) != 0 {
+		t.Error("incorrect value")
+	}
+
+	if c.State("boom", -1) != -1 {
+		t.Error("incorrect value")
+	}
+
+	if c.State("boom", 1) != 0 {
+		t.Error("incorrect value")
+	}
+
+	if c.State("bam", 0) != 0 {
+		t.Error("incorrect value")
 	}
 }
 

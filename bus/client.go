@@ -14,6 +14,8 @@ type client struct {
 	endpoint       net.EndPoint
 	messageID      uint32
 	messageIDMutex sync.Mutex
+	state          map[string]int
+	stateMutex     sync.Mutex
 }
 
 func (c *client) nextMessageID() uint32 {
@@ -100,7 +102,7 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 	cancel func(), events chan []byte, err error) {
 
-	abort := make(chan int)
+	abort := make(chan struct{})
 	closed := make(chan int)
 
 	events = make(chan []byte)
@@ -153,11 +155,29 @@ func (c *client) OnDisconnect(closer func(error)) error {
 	return nil
 }
 
+func (c *client) State(signal string, add int) int {
+	c.stateMutex.Lock()
+	defer c.stateMutex.Unlock()
+	previous, ok := c.state[signal]
+	if !ok && add != 0 {
+		c.state[signal] = add
+		return add
+	}
+	next := previous + add
+	if next == 0 {
+		delete(c.state, signal)
+		return 0
+	}
+	c.state[signal] = next
+	return next
+}
+
 // NewClient returns a new client.
 func NewClient(endpoint net.EndPoint) Client {
 	return &client{
 		endpoint:  endpoint,
 		messageID: 1,
+		state:     map[string]int{},
 	}
 }
 
