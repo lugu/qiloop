@@ -1,0 +1,301 @@
+package unknown
+interface ALMotion
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn wakeUp() //uid:113
+	fn rest() //uid:114
+	fn rest(P0: str) //uid:115
+	fn _rest(chainName: str) //uid:116
+	fn _shutdown() //uid:117
+	fn _isChainGoToOrInRest(chainName: str) -> bool //uid:118
+	fn _setMotionPosture(postureName: str,bodyAngles: Vec<float32>) -> bool //uid:119
+	fn _getMotionPosture(postureName: str) -> Vec<float32> //uid:120
+	fn _getMotionPostureList() -> Vec<str> //uid:121
+	fn robotIsWakeUp() -> bool //uid:122
+	fn stiffnessInterpolation(names: any,stiffnessLists: any,timeLists: any) //uid:123
+	fn setStiffnesses(names: any,stiffnesses: any) //uid:124
+	fn _setStiffnesses(names: any,stiffnesses: any) //uid:125
+	fn getStiffnesses(jointName: any) -> Vec<float32> //uid:126
+	fn angleInterpolation(names: any,angleLists: any,timeLists: any,isAbsolute: bool) //uid:127
+	fn angleInterpolationWithSpeed(names: any,targetAngles: any,maxSpeedFraction: float32) //uid:128
+	fn angleInterpolationBezier(jointNames: Vec<str>,times: any,controlPoints: any) //uid:129
+	fn setAngles(names: any,angles: any,fractionMaxSpeed: float32) //uid:130
+	fn changeAngles(names: any,changes: any,fractionMaxSpeed: float32) //uid:131
+	fn getAngles(names: any,useSensors: bool) -> Vec<float32> //uid:132
+	fn openHand(handName: str) //uid:133
+	fn closeHand(handName: str) //uid:134
+	fn move(x: float32,y: float32,theta: float32) //uid:135
+	fn move(x: float32,y: float32,theta: float32,moveConfig: any) //uid:136
+	fn moveToward(x: float32,y: float32,theta: float32) //uid:137
+	fn moveToward(x: float32,y: float32,theta: float32,moveConfig: any) //uid:138
+	fn setWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32) //uid:139
+	fn setWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32,feetGaitConfig: any) //uid:140
+	fn setWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32,leftFootMoveConfig: any,rightFootMoveConfig: any) //uid:141
+	fn _setMpcWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32) //uid:142
+	fn moveTo(x: float32,y: float32,theta: float32) //uid:143
+	fn moveTo(x: float32,y: float32,theta: float32,time: float32) //uid:144
+	fn moveTo(x: float32,y: float32,theta: float32,moveConfig: any) //uid:145
+	fn moveTo(x: float32,y: float32,theta: float32,time: float32,moveConfig: any) //uid:146
+	fn moveTo(controlPoint: any) //uid:147
+	fn moveTo(controlPoint: any,moveConfig: any) //uid:148
+	fn _moveToPod(x: float32,y: float32,theta: float32) //uid:149
+	fn _moveToPod(x: float32,y: float32,theta: float32,moveConfig: any) //uid:150
+	fn _followPath(path: any,moveConfig: any) //uid:151
+	fn _followPath(path: any) //uid:152
+	fn _followPathInWorld(poseStart: any,path: any,moveConfig: any) //uid:153
+	fn _followPathInWorld(poseStart: any,path: any) //uid:154
+	fn _setFollowPathSpeedFactor(speedFactor: float32) //uid:155
+	fn _moveAlong(trajectory: any) -> int32 //uid:156
+	fn _moveAlong(trajectory: any,scaleFactor: float32) -> int32 //uid:157
+	fn _getTrajectoryId() -> int32 //uid:158
+	fn _stopAndStitchMoveAlong() //uid:159
+	fn _getRemainingPath(sampleStep: float32) -> any //uid:160
+	fn _getRemainingTrajectory(timeStep: float32,preview: float32) -> any //uid:161
+	fn _getTrajectoryCompletion() -> float32 //uid:162
+	fn walkTo(x: float32,y: float32,theta: float32) //uid:163
+	fn walkTo(x: float32,y: float32,theta: float32,feetGaitConfig: any) //uid:164
+	fn walkTo(controlPoint: any) //uid:165
+	fn walkTo(controlPoint: any,feetGaitConfig: any) //uid:166
+	fn setFootSteps(legName: Vec<str>,footSteps: any,timeList: Vec<float32>,clearExisting: bool) //uid:167
+	fn setFootStepsWithSpeed(legName: Vec<str>,footSteps: any,fractionMaxSpeed: Vec<float32>,clearExisting: bool) //uid:168
+	fn getFootSteps() -> any //uid:169
+	fn walkInit() //uid:170
+	fn moveInit() //uid:171
+	fn waitUntilWalkIsFinished() //uid:172
+	fn waitUntilMoveIsFinished() //uid:173
+	fn walkIsActive() -> bool //uid:174
+	fn moveIsActive() -> bool //uid:175
+	fn stopWalk() //uid:176
+	fn stopMove() //uid:177
+	fn getFootGaitConfig(config: str) -> any //uid:178
+	fn getMoveConfig(config: str) -> any //uid:179
+	fn getRobotPosition(useSensors: bool) -> Vec<float32> //uid:180
+	fn getNextRobotPosition() -> Vec<float32> //uid:181
+	fn _getStopMovePosition() -> Vec<float32> //uid:182
+	fn getRobotVelocity() -> Vec<float32> //uid:183
+	fn _getCumulatedDisplacement() -> Vec<float32> //uid:184
+	fn getWalkArmsEnabled() -> any //uid:185
+	fn setWalkArmsEnabled(leftArmEnabled: bool,rightArmEnabled: bool) //uid:186
+	fn getMoveArmsEnabled(chainName: str) -> bool //uid:187
+	fn setMoveArmsEnabled(leftArmEnabled: bool,rightArmEnabled: bool) //uid:188
+	fn positionInterpolation(chainName: str,space: int32,path: any,axisMask: int32,durations: any,isAbsolute: bool) //uid:189
+	fn positionInterpolations(effectorNames: Vec<str>,taskSpaceForAllPaths: int32,paths: any,axisMasks: any,relativeTimes: any,isAbsolute: bool) //uid:190
+	fn positionInterpolations(effectorNames: any,taskSpaceForAllPaths: any,paths: any,axisMasks: any,relativeTimes: any) //uid:191
+	fn setPosition(chainName: str,space: int32,position: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:192
+	fn setPositions(names: any,spaces: any,positions: any,fractionMaxSpeed: float32,axisMask: any) //uid:193
+	fn changePosition(effectorName: str,space: int32,positionChange: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:194
+	fn getPosition(name: str,space: int32,useSensorValues: bool) -> Vec<float32> //uid:195
+	fn transformInterpolation(chainName: str,space: int32,path: any,axisMask: int32,duration: any,isAbsolute: bool) //uid:196
+	fn transformInterpolations(effectorNames: Vec<str>,taskSpaceForAllPaths: int32,paths: any,axisMasks: any,relativeTimes: any,isAbsolute: bool) //uid:197
+	fn transformInterpolations(effectorNames: any,taskSpaceForAllPaths: any,paths: any,axisMasks: any,relativeTimes: any) //uid:198
+	fn setTransform(chainName: str,space: int32,transform: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:199
+	fn setTransforms(names: any,spaces: any,transforms: any,fractionMaxSpeed: float32,axisMask: any) //uid:200
+	fn changeTransform(chainName: str,space: int32,transform: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32) //uid:201
+	fn getTransform(name: str,space: int32,useSensorValues: bool) -> Vec<float32> //uid:202
+	fn _getSensorTransformAtTime(sensorName: str,timestamp: timeval) -> Vec<float32> //uid:203
+	fn wbEnable(isEnabled: bool) //uid:204
+	fn wbFootState(stateName: str,supportLeg: str) //uid:205
+	fn wbEnableBalanceConstraint(isEnable: bool,supportLeg: str) //uid:206
+	fn wbGoToBalance(supportLeg: str,duration: float32) //uid:207
+	fn wbEnableEffectorControl(effectorName: str,isEnabled: bool) //uid:208
+	fn wbSetEffectorControl(effectorName: str,targetCoordinate: any) //uid:209
+	fn wbEnableEffectorOptimization(effectorName: str,isActive: bool) //uid:210
+	fn _wbGetBalanceState() -> str //uid:211
+	fn _wbIsActive() -> bool //uid:212
+	fn _wbDefaultConfiguration() //uid:213
+	fn _wbGetFootState(supportLeg: str) -> str //uid:214
+	fn _wbSetReferencePosture(postureName: str) //uid:215
+	fn _wbSetBalanceSecurityMargin(percentForwards: float32,percentSideways: float32) //uid:216
+	fn _wbSetJointWeighting(P0: str, P1: float32) //uid:217
+	fn _wbSetJointStiffness(P0: str, P1: float32) //uid:218
+	fn _wbSetArticularLimitPreview(P0: str, P1: int32) //uid:219
+	fn _wbEnableEffectorConstraint(effectorName: str,isActive: bool,axisMask: int32) //uid:220
+	fn _wbGetEffectorConstraint(effectorName: str) -> any //uid:221
+	fn _wbAxisMaskEffector(effectorName: str,isOptimized: bool,axisMask: int32) //uid:222
+	fn _wbEnableJointOptimization(jointName: str,isActive: bool) //uid:223
+	fn _wbGetEffectorOptimization(effectorName: str) -> any //uid:224
+	fn _wbSetEffectorWeight(effectorName: str,weightingList: any) //uid:225
+	fn _wbSetEffectorStiffness(effectorName: str,stiffnessList: any) //uid:226
+	fn setCollisionProtectionEnabled(pChainName: str,pEnable: bool) -> bool //uid:227
+	fn getCollisionProtectionEnabled(pChainName: str) -> bool //uid:228
+	fn setExternalCollisionProtectionEnabled(pName: str,pEnable: bool) //uid:229
+	fn _enablePhysicalInteractionForChain(pChain: str,pEnabled: bool) //uid:230
+	fn getChainClosestObstaclePosition(pName: str,space: int32) -> Vec<float32> //uid:231
+	fn getExternalCollisionProtectionEnabled(pName: str) -> bool //uid:232
+	fn setOrthogonalSecurityDistance(securityDistance: float32) //uid:233
+	fn getOrthogonalSecurityDistance() -> float32 //uid:234
+	fn setTangentialSecurityDistance(securityDistance: float32) //uid:235
+	fn getTangentialSecurityDistance() -> float32 //uid:236
+	fn isCollision(pChainName: str) -> str //uid:237
+	fn _getCollisionStateForObstacleSummary(pChainName: str) -> bool //uid:238
+	fn _getCollisionNames() -> any //uid:239
+	fn _getCollisionShapes(P0: str) -> any //uid:240
+	fn _setCollisionShapes(pNameList: Vec<str>,pPairList: Vec<str>,pBodyList: Vec<str>,pTypeList: Vec<str>,pShapeList: any,pPositionList: any) //uid:241
+	fn _setCollisionShapes(pNameList: Vec<str>,pPairList: Vec<str>,pShapeList: any,pPositionList: any) //uid:242
+	fn _getDetectedCollisions(pMinimumDistance: float32) -> any //uid:243
+	fn _getDangerousRegion() -> any //uid:244
+	fn setFallManagerEnabled(pEnable: bool) //uid:245
+	fn getFallManagerEnabled() -> bool //uid:246
+	fn setPushRecoveryEnabled(pEnable: bool) //uid:247
+	fn _setPushRecoveryEnabled(pEnable: bool) //uid:248
+	fn getPushRecoveryEnabled() -> bool //uid:249
+	fn setSmartStiffnessEnabled(pEnable: bool) //uid:250
+	fn getSmartStiffnessEnabled() -> bool //uid:251
+	fn setDiagnosisEffectEnabled(pEnable: bool) //uid:252
+	fn getDiagnosisEffectEnabled() -> bool //uid:253
+	fn getJointNames(name: str) -> Vec<str> //uid:254
+	fn getBodyNames(name: str) -> Vec<str> //uid:255
+	fn getSensorNames() -> Vec<str> //uid:256
+	fn getLimits(name: str) -> any //uid:257
+	fn _getFullLimits(name: str) -> any //uid:258
+	fn getMotionCycleTime() -> int32 //uid:259
+	fn _getMotionCycleNumber() -> int32 //uid:260
+	fn getRobotConfig() -> any //uid:261
+	fn getSummary() -> str //uid:262
+	fn getMass(pName: str) -> float32 //uid:263
+	fn getCOM(pName: str,pSpace: int32,pUseSensorValues: bool) -> Vec<float32> //uid:264
+	fn _getTorque(names: any,useSensor: bool) -> Vec<float32> //uid:265
+	fn _getInertia(pName: str) -> Vec<float32> //uid:266
+	fn setMotionConfig(config: any) //uid:267
+	fn _naoqiIsReadyCallback() //uid:268
+	fn _preferenceUpdatedCallback(P0: str, P1: any, P2: str) //uid:269
+	fn updateTrackerTarget(pTargetPositionWy: float32,pTargetPositionWz: float32,pTimeSinceDetectionMs: int32,pUseOfWholeBody: bool) //uid:270
+	fn _trackerAnticipation(pNames: Vec<str>,pTargetPositions: Vec<float32>,pTimeSinceDetectionMs: int32,pUseOfWholeBody: bool,pIsPointAt: bool) //uid:271
+	fn _trackerWithSpeed(P0: Vec<str>, P1: Vec<float32>, P2: Vec<float32>, P3: bool, P4: bool) //uid:272
+	fn _lookAt(pTargetPosition: Vec<float32>,pFrame: int32,pMaxSpeedFraction: float32) //uid:273
+	fn _stopLookAt(pWithSpeed: bool) //uid:274
+	fn _stopPointAt(pWithSpeed: bool) //uid:275
+	fn _updateObstacles(obstacles: Vec<Vec<float32>>) //uid:276
+	fn setBreathEnabled(pChain: str,pIsEnabled: bool) //uid:277
+	fn getBreathEnabled(pChain: str) -> bool //uid:278
+	fn setBreathConfig(pConfig: any) //uid:279
+	fn getBreathConfig() -> any //uid:280
+	fn setIdlePostureEnabled(pChain: str,pIsEnabled: bool) //uid:281
+	fn getIdlePostureEnabled(pChain: str) -> bool //uid:282
+	fn _setBreathStaticLegs(pStaticLegs: bool) //uid:283
+	fn getTaskList() -> any //uid:284
+	fn areResourcesAvailable(resourceNames: Vec<str>) -> bool //uid:285
+	fn killTask(motionTaskID: int32) -> bool //uid:286
+	fn killTasksUsingResources(resourceNames: Vec<str>) //uid:287
+	fn killWalk() //uid:288
+	fn killMove() //uid:289
+	fn killAll() //uid:290
+	fn setEnableNotifications(enable: bool) //uid:291
+	fn areNotificationsEnabled() -> bool //uid:292
+	fn _getGroundCollision() -> any //uid:293
+	fn _getGroundCollisionForForceContact() -> any //uid:294
+	fn _getGroundCollisionForFallManager() -> any //uid:295
+	fn _getGroundPlaneTf() -> Vec<float32> //uid:296
+	fn _getNormalForceContact() -> Vec<float32> //uid:297
+	fn _getRealTorsoInWorld() -> Vec<float32> //uid:298
+	fn _getRobotGroundConvexHullDebug() -> any //uid:299
+	fn _getRobotGroundConvexHull() -> any //uid:300
+	fn _getJointIsMoving(useSensors: bool) -> Vec<int32> //uid:301
+	fn _getChainIsMoving(useSensors: bool) -> Vec<int32> //uid:302
+	fn _setAnimationModeEnabled(pEnable: bool) //uid:303
+	fn _getMotionConfig(pName: str) -> str //uid:304
+	fn _getSupportPolygon() -> Vec<float32> //uid:305
+	fn _getSupportPolygonCenter() -> Vec<float32> //uid:306
+	fn _getComWorld() -> Vec<float32> //uid:307
+	fn _getWorldRotation() -> Vec<float32> //uid:308
+	fn _fall(pFallAngle: float32) //uid:309
+	fn _balanceRecovery() //uid:310
+	fn _relaxMotorsWhenSitting() //uid:311
+	fn _relax(chainName: str) //uid:312
+	fn _resetCartesianUnfeasible() //uid:313
+	fn _setCartesianUnfeasible() //uid:314
+	fn _getCartesianUnfeasible() -> int32 //uid:315
+	fn _saveWholeBodyDump() //uid:316
+	fn _resetNumJointCommandDiscontinuities() //uid:317
+	fn _getNumJointCommandDiscontinuities() -> uint32 //uid:318
+	fn _resetMotionCommandModelToSensors(pName: any) //uid:319
+	fn _setSimulationModeEnabled(pEnable: bool) //uid:320
+	fn _getMotionToDCM() -> unknown //uid:321
+	fn _getBlindZoneOffset(Name: str) -> float32 //uid:322
+	fn _setBlindZoneOffset(Name: str,Offset: float32) //uid:323
+	fn _getBlindZoneDistance() -> float32 //uid:324
+	fn _setBlindZoneDistance(Distance: float32) //uid:325
+	fn _getBlindZones() -> any //uid:326
+	fn _getBlindZonesWithNames() -> any //uid:327
+	sig traceObject(P0: EventTrace) //uid:86
+end
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint32
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
+	description: str
+end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
+struct timeval
+	tv_sec: int64
+	tv_usec: int64
+end
+struct EventTrace
+	id: uint32
+	kind: int32
+	slotId: uint32
+	arguments: any
+	timestamp: timeval
+	userUsTime: int64
+	systemUsTime: int64
+	callerContext: uint32
+	calleeContext: uint32
+end

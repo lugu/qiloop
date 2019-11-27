@@ -1,0 +1,115 @@
+package unknown
+interface ALAnimatedSpeech
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn say(text: str) //uid:113
+	fn say(text: str,configuration: any) //uid:114
+	fn _reset() //uid:115
+	fn _stopAll(blocking: bool) //uid:116
+	fn _isRunning() -> bool //uid:117
+	fn setBodyTalkEnabled(enable: bool) //uid:118
+	fn setBodyLanguageEnabled(enable: bool) //uid:119
+	fn setBodyLanguageModeFromStr(stringBodyLanguageMode: str) //uid:120
+	fn setBodyLanguageMode(bodyLanguageMode: uint32) //uid:121
+	fn getBodyLanguageModeToStr() -> str //uid:122
+	fn getBodyLanguageMode() -> uint32 //uid:123
+	fn declareAnimationsPackage(animationsPackage: str) //uid:124
+	fn _setMSPauseBeforeSpeech(pause: int32) //uid:125
+	fn _getMSPauseBeforeSpeech() -> uint32 //uid:126
+	fn _isCheckExecutionTimesEnabled() -> bool //uid:127
+	fn _setCheckExecutionTimes(pause: bool) //uid:128
+	fn addTagsToWords(tagsToWords: any) //uid:129
+	fn declareTagForAnimations(tagsToAnimations: any) //uid:130
+	fn _diagnosis() //uid:131
+	fn isBodyTalkEnabled() -> bool //uid:132
+	fn isBodyLanguageEnabled() -> bool //uid:133
+	fn _getTagList() -> Vec<str> //uid:134
+	fn _getAnimationsByTag(tag: str) -> Vec<str> //uid:135
+	fn _speechBookMarkCallback(memoryKey: str,value: any,message: str) //uid:136
+	fn _mrkpauseCallback(pBookmark: uint32) //uid:137
+	fn _speechStatusCallback(memoryKey: str,value: any,message: str) //uid:138
+	fn _postureFamilyChangedCallback(memoryKey: str,value: any,message: str) //uid:139
+	fn _updateRepresentations(memoryKey: str,value: any,message: str) //uid:140
+	fn _dialogMatchedInputCallback(memoryKey: str,value: any,message: str) //uid:141
+	sig traceObject(P0: EventTrace) //uid:86
+end
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint32
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
+	description: str
+end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
+struct timeval
+	tv_sec: int64
+	tv_usec: int64
+end
+struct EventTrace
+	id: uint32
+	kind: int32
+	slotId: uint32
+	arguments: any
+	timestamp: timeval
+	userUsTime: int64
+	systemUsTime: int64
+	callerContext: uint32
+	calleeContext: uint32
+end

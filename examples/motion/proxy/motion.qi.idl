@@ -1,0 +1,112 @@
+package unknown
+interface ALMotion
+	fn wakeUp()
+	fn rest()
+	fn robotIsWakeUp() -> bool
+
+	fn setStiffnesses(names: any,stiffnesses: any)
+	fn getStiffnesses(jointName: any) -> Vec<float32>
+
+	fn angleInterpolation(names: any,angleLists: any,timeLists: any,isAbsolute: bool)
+	fn angleInterpolationWithSpeed(names: any,targetAngles: any,maxSpeedFraction: float32)
+	fn angleInterpolationBezier(jointNames: Vec<str>,times: any,controlPoints: any)
+	fn setAngles(names: any,angles: any,fractionMaxSpeed: float32)
+	fn changeAngles(names: any,changes: any,fractionMaxSpeed: float32)
+	fn getAngles(names: any,useSensors: bool) -> Vec<float32>
+
+	fn openHand(handName: str) //uid:133
+	fn closeHand(handName: str) //uid:134
+	
+	fn move(x: float32,y: float32,theta: float32)
+	fn moveToward(x: float32,y: float32,theta: float32)
+	
+	fn moveInit()
+	fn moveTo(x: float32,y: float32,theta: float32)
+	fn waitUntilMoveIsFinished()
+	fn moveIsActive() -> bool
+	fn stopMove()
+
+	fn walkInit()
+	fn walkTo(x: float32,y: float32,theta: float32)
+	fn setWalkTargetVelocity(x: float32,y: float32,theta: float32,frequency: float32)
+	fn waitUntilWalkIsFinished()
+	fn walkIsActive() -> bool
+	fn stopWalk()
+
+	fn getRobotPosition(useSensors: bool) -> Vec<float32>
+	fn getNextRobotPosition() -> Vec<float32>
+	fn getRobotVelocity() -> Vec<float32>
+
+	fn getWalkArmsEnabled() -> any
+	fn setWalkArmsEnabled(leftArmEnabled: bool,rightArmEnabled: bool)
+
+	fn getMoveArmsEnabled(chainName: str) -> bool
+	fn setMoveArmsEnabled(leftArmEnabled: bool,rightArmEnabled: bool)
+
+	fn setPosition(chainName: str,space: int32,position: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32)
+	fn changePosition(effectorName: str,space: int32,positionChange: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32)
+	fn getPosition(name: str,space: int32,useSensorValues: bool) -> Vec<float32>
+
+	fn setTransform(chainName: str,space: int32,transform: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32)
+	fn changeTransform(chainName: str,space: int32,transform: Vec<float32>,fractionMaxSpeed: float32,axisMask: int32)
+
+	fn getTransform(name: str,space: int32,useSensorValues: bool) -> Vec<float32>
+
+	fn wbEnable(isEnabled: bool)
+	fn wbFootState(stateName: str,supportLeg: str)
+	fn wbEnableBalanceConstraint(isEnable: bool,supportLeg: str)
+	fn wbGoToBalance(supportLeg: str,duration: float32)
+	fn wbEnableEffectorControl(effectorName: str,isEnabled: bool)
+	fn wbSetEffectorControl(effectorName: str,targetCoordinate: any)
+	fn wbEnableEffectorOptimization(effectorName: str,isActive: bool)
+
+	fn setCollisionProtectionEnabled(pChainName: str,pEnable: bool) -> bool
+	fn getCollisionProtectionEnabled(pChainName: str) -> bool
+	fn setExternalCollisionProtectionEnabled(pName: str,pEnable: bool)
+	fn getExternalCollisionProtectionEnabled(pName: str) -> bool
+
+	fn setOrthogonalSecurityDistance(securityDistance: float32)
+	fn getOrthogonalSecurityDistance() -> float32
+	
+	fn setTangentialSecurityDistance(securityDistance: float32)
+	fn getTangentialSecurityDistance() -> float32
+
+	fn getChainClosestObstaclePosition(pName: str,space: int32) -> Vec<float32>
+	fn isCollision(pChainName: str) -> str
+
+	fn setFallManagerEnabled(pEnable: bool)
+	fn getFallManagerEnabled() -> bool
+
+	fn setPushRecoveryEnabled(pEnable: bool)
+	fn getPushRecoveryEnabled() -> bool
+
+	fn setSmartStiffnessEnabled(pEnable: bool)
+	fn getSmartStiffnessEnabled() -> bool
+
+	fn setDiagnosisEffectEnabled(pEnable: bool)
+	fn getDiagnosisEffectEnabled() -> bool
+
+	fn getJointNames(name: str) -> Vec<str>
+	fn getBodyNames(name: str) -> Vec<str>
+	fn getSensorNames() -> Vec<str>
+
+	fn getMotionCycleTime() -> int32
+	fn updateTrackerTarget(pTargetPositionWy: float32,pTargetPositionWz: float32,pTimeSinceDetectionMs: int32,pUseOfWholeBody: bool)
+
+	fn setBreathEnabled(pChain: str,pIsEnabled: bool)
+	fn getBreathEnabled(pChain: str) -> bool
+	
+	fn setIdlePostureEnabled(pChain: str,pIsEnabled: bool)
+	fn getIdlePostureEnabled(pChain: str) -> bool
+	
+	fn getTaskList() -> any
+	fn areResourcesAvailable(resourceNames: Vec<str>) -> bool
+
+	fn killTask(motionTaskID: int32) -> bool
+	fn killTasksUsingResources(resourceNames: Vec<str>)
+	fn killWalk()
+	fn killMove()
+	fn killAll()
+	
+	fn setEnableNotifications(enable: bool)
+end
