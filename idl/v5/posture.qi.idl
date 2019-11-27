@@ -1,0 +1,129 @@
+package unknown
+interface ALRobotPosture
+	fn registerEvent(P0: uint32, P1: uint32, P2: uint64) -> uint64 //uid:0
+	fn unregisterEvent(P0: uint32, P1: uint32, P2: uint64) //uid:1
+	fn metaObject(P0: uint32) -> MetaObject //uid:2
+	fn terminate(P0: uint32) //uid:3
+	fn property(P0: any) -> any //uid:5
+	fn setProperty(P0: any, P1: any) //uid:6
+	fn properties() -> Vec<str> //uid:7
+	fn registerEventWithSignature(P0: uint32, P1: uint32, P2: uint64, P3: str) -> uint64 //uid:8
+	fn isStatsEnabled() -> bool //uid:80
+	fn enableStats(P0: bool) //uid:81
+	fn stats() -> Map<uint32,MethodStatistics> //uid:82
+	fn clearStats() //uid:83
+	fn isTraceEnabled() -> bool //uid:84
+	fn enableTrace(P0: bool) //uid:85
+	fn exit() //uid:100
+	fn __pCall(P0: uint32, P1: Vec<any>) -> int32 //uid:101
+	fn pCall(P0: any) -> any //uid:102
+	fn version() -> str //uid:103
+	fn ping() -> bool //uid:104
+	fn getMethodList() -> Vec<str> //uid:105
+	fn getMethodHelp(methodName: str) -> any //uid:106
+	fn getModuleHelp() -> any //uid:107
+	fn wait(id: int32,timeoutPeriod: int32) -> bool //uid:108
+	fn isRunning(id: int32) -> bool //uid:109
+	fn stop(id: int32) //uid:110
+	fn getBrokerName() -> str //uid:111
+	fn getUsage(name: str) -> str //uid:112
+	fn getPostureFamily() -> str //uid:113
+	fn goToPosture(postureName: str,maxSpeedFraction: float32) -> bool //uid:114
+	fn applyPosture(postureName: str,maxSpeedFraction: float32) -> bool //uid:115
+	fn stopMove() //uid:116
+	fn getPostureList() -> Vec<str> //uid:117
+	fn getPostureFamilyList() -> Vec<str> //uid:118
+	fn setMaxTryNumber(pMaxTryNumber: int32) //uid:119
+	fn getPosture() -> str //uid:120
+	fn _isRobotInPosture(P0: str, P1: float32, P2: float32) -> any //uid:121
+	fn _isRobotInPostureId(P0: int32, P1: float32, P2: float32) -> bool //uid:122
+	fn _getPosture() -> any //uid:123
+	fn _setPostureId(P0: int32, P1: float32) -> bool //uid:124
+	fn _goToPostureId(P0: int32, P1: float32) -> bool //uid:125
+	fn _namePosture(P0: int32, P1: str) -> bool //uid:126
+	fn _renamePosture(P0: str, P1: str) -> bool //uid:127
+	fn _resavePosture(P0: int32) -> bool //uid:128
+	fn _setSlowFactor(P0: int32, P1: int32, P2: float32) -> bool //uid:129
+	fn _setAntiCollision(P0: int32, P1: bool) -> bool //uid:130
+	fn _setCost(P0: int32, P1: float32) -> bool //uid:131
+	fn _saveCurrentPosture(P0: int32) -> bool //uid:132
+	fn _saveCurrentPostureWithName(P0: int32, P1: str) -> bool //uid:133
+	fn _applyPostures(P0: Vec<int32>, P1: float32, P2: bool, P3: bool) -> bool //uid:134
+	fn _eraseAllPostures() -> bool //uid:135
+	fn _bindPostures(P0: int32, P1: int32, P2: float32, P3: float32) -> bool //uid:136
+	fn _addNeighbourToPosture(P0: int32, P1: int32, P2: float32) -> bool //uid:137
+	fn _removeNeighbourFromPosture(P0: int32, P1: int32) -> bool //uid:138
+	fn _unBindPostures(P0: int32, P1: int32) -> bool //uid:139
+	fn _erasePosture(P0: int32) -> bool //uid:140
+	fn _getLibrarySize() -> int32 //uid:141
+	fn _loadPostureLibraryFromName(P0: str) -> bool //uid:142
+	fn _getCurrentPath() -> Vec<float32> //uid:143
+	fn _isStandCallBack(P0: str, P1: any, P2: str) //uid:144
+	fn _savePostureLibrary(P0: str) -> bool //uid:145
+	fn _getArticularDistanceToPosture(P0: int32) -> float32 //uid:146
+	fn _getCartesianDistanceToPosture(P0: int32) -> any //uid:147
+	fn _getCartesianDistanceVector(P0: int32) -> Vec<float32> //uid:148
+	fn _getPostureIdList() -> Vec<int32> //uid:149
+	fn _isReachable(P0: int32) -> bool //uid:150
+	fn _generateCartesianMap() //uid:151
+	fn _getPostureZ(P0: float32) -> any //uid:152
+	fn _getPostureNoZ() -> any //uid:153
+	fn _getIdFromName(P0: str) -> int32 //uid:154
+	sig traceObject(P0: EventTrace) //uid:86
+end
+
+struct MetaMethodParameter
+	name: str
+	description: str
+end
+struct MetaMethod
+	uid: uint32
+	returnSignature: str
+	name: str
+	parametersSignature: str
+	description: str
+	parameters: Vec<MetaMethodParameter>
+	returnDescription: str
+end
+struct MetaSignal
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaProperty
+	uid: uint32
+	name: str
+	signature: str
+end
+struct MetaObject
+	methods: Map<uint32,MetaMethod>
+	signals: Map<uint32,MetaSignal>
+	properties: Map<uint32,MetaProperty>
+	description: str
+end
+struct MinMaxSum
+	minValue: float32
+	maxValue: float32
+	cumulatedValue: float32
+end
+struct MethodStatistics
+	count: uint32
+	wall: MinMaxSum
+	user: MinMaxSum
+	system: MinMaxSum
+end
+struct timeval
+	tv_sec: int64
+	tv_usec: int64
+end
+struct EventTrace
+	id: uint32
+	kind: int32
+	slotId: uint32
+	arguments: any
+	timestamp: timeval
+	userUsTime: int64
+	systemUsTime: int64
+	callerContext: uint32
+	calleeContext: uint32
+end

@@ -57,7 +57,6 @@ interface ALMotion
 	fn wbEnableBalanceConstraint(isEnable: bool,supportLeg: str)
 	fn wbGoToBalance(supportLeg: str,duration: float32)
 	fn wbEnableEffectorControl(effectorName: str,isEnabled: bool)
-	fn wbSetEffectorControl(effectorName: str,targetCoordinate: any)
 	fn wbEnableEffectorOptimization(effectorName: str,isActive: bool)
 
 	fn setCollisionProtectionEnabled(pChainName: str,pEnable: bool) -> bool

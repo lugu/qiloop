@@ -1,0 +1,12 @@
+package proxy
+
+interface ALRobotPosture
+	fn getPostureFamily() -> str
+	fn goToPosture(postureName: str,maxSpeedFraction: float32) -> bool
+	fn applyPosture(postureName: str,maxSpeedFraction: float32) -> bool
+	fn stopMove()
+	fn getPostureList() -> Vec<str>
+	fn getPostureFamilyList() -> Vec<str>
+	fn setMaxTryNumber(pMaxTryNumber: int32)
+	fn getPosture() -> str
+end
