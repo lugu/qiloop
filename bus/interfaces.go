@@ -1,12 +1,18 @@
 package bus
 
 import (
+	"errors"
+
 	"github.com/lugu/qiloop/type/object"
 )
+
+// ErrCancelled is returned when the call was cancelled.
+var ErrCancelled = errors.New("Cancelled")
 
 // Client represents a client connection to a service.
 type Client interface {
 	// Call initiates a remote procedure call.
+	// ErrCancelled is returned if the call was cancelled.
 	Call(serviceID uint32, objectID uint32, methodID uint32, payload []byte) ([]byte, error)
 
 	// Subscribe registers to a signal or a property. Returns a
@@ -30,8 +36,10 @@ type Client interface {
 // call methods and subscribe signals.
 type Proxy interface {
 	// CallID send a call message.
+	// ErrCancelled is returned if the call was cancelled.
 	CallID(action uint32, payload []byte) ([]byte, error)
 	// Call calls CallID with the appropriate action ID.
+	// ErrCancelled is returned if the call was cancelled.
 	Call(action string, payload []byte) ([]byte, error)
 
 	// SubscribeID returns a channel with the values of a
