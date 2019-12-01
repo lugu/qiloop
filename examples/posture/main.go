@@ -5,7 +5,6 @@ import (
 	"flag"
 	"math/rand"
 
-	"bitbucket.org/swoldt/pkg/xerrors/iferr"
 	"github.com/lugu/qiloop/app"
 	"github.com/lugu/qiloop/examples/posture/proxy"
 )
@@ -14,7 +13,9 @@ func main() {
 	flag.Parse()
 	// session represents a connection to the service directory.
 	session, err := app.SessionFromFlag()
-	iferr.Exit(err)
+	if err != nil {
+		panic(err)
+	}
 	defer session.Terminate()
 
 	// Access the specialized proxy constructor.
