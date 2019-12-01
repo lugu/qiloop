@@ -1,39 +1,59 @@
 package bus
 
 import (
+	"errors"
+
 	"github.com/lugu/qiloop/type/object"
 )
 
+// ErrCancelled is returned when the call was cancelled.
+var ErrCancelled = errors.New("Cancelled")
+
 // Client represents a client connection to a service.
 type Client interface {
-
 	// Call initiates a remote procedure call.
+	// ErrCancelled is returned if the call was cancelled.
 	Call(serviceID uint32, objectID uint32, methodID uint32, payload []byte) ([]byte, error)
 
 	// Subscribe registers to a signal or a property. Returns a
 	// cancel callback, a channel to receive the payload and an
 	// error.
-	Subscribe(serviceID, objectID, actionID uint32) (func(), chan []byte, error)
+	Subscribe(serviceID, objectID, actionID uint32) (cancel func(), events chan []byte, err error)
 
 	// OnDisconnect registers a callback which is called when the
 	// network connection is closed. If the closure of the network
 	// connection is initiated by the remote side, a non nil error
 	// is passed to the call back. A nil callback returns nil.
 	OnDisconnect(cb func(error)) error
+
+	// Signal state machine: count the number of subscription to a
+	// given signal in order to mutualize the calls to
+	// RegisterEvent and UnregisterEvent.
+	State(signal string, increment int) int
 }
 
 // Proxy represents a reference to a remote service. It allows to
 // call methods and subscribe signals.
 type Proxy interface {
-	Call(action string, payload []byte) ([]byte, error)
+	// CallID send a call message.
+	// ErrCancelled is returned if the call was cancelled.
 	CallID(action uint32, payload []byte) ([]byte, error)
+	// Call calls CallID with the appropriate action ID.
+	// ErrCancelled is returned if the call was cancelled.
+	Call(action string, payload []byte) ([]byte, error)
 
-	// SignalSubscribe returns a channel with the values of a signal
-	Subscribe(action string) (func(), chan []byte, error)
-	SubscribeID(action uint32) (func(), chan []byte, error)
+	// SubscribeID returns a channel with the values of a
+	// signal. Subscribe calls RegisterEvent and UnregisterEvent on
+	// behalf of the user.
+	Subscribe(action string) (cancel func(), events chan []byte, err error)
+	// Subscribe calls Subscribe with the appropriate action ID.
+	SubscribeID(action uint32) (cancel func(), events chan []byte, err error)
 
+	// MethodID returns the associate method ID.
 	MethodID(name string) (uint32, error)
+	// MethodID returns the associate signal ID.
 	SignalID(name string) (uint32, error)
+	// MethodID returns the associate property ID.
 	PropertyID(name string) (uint32, error)
 
 	// ServiceID returns the related service identifier

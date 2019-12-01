@@ -1,7 +1,6 @@
 BUG
 ---
 
-- clent: cache signal registration
 - SD: unregister services on disconnection
 
 FIXME

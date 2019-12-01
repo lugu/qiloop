@@ -131,8 +131,15 @@ func GenerateIDL(writer io.Writer, packageName string, objs map[string]object.Me
 	set := signature.NewTypeSet()
 
 	fmt.Fprintf(writer, "package %s\n", packageName)
+	scope := NewScope()
 
 	for name, meta := range objs {
+
+		// register service name to avoid collision with structs
+		// FIXME: should register an InterfaceType and not a RefType
+		name = set.ResolveCollision(name, "o")
+		set.Types = append(set.Types, NewRefType(name, scope))
+		set.Names = append(set.Names, name)
 
 		fmt.Fprintf(writer, "interface %s\n", name)
 

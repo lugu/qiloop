@@ -2,6 +2,7 @@ package bus
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/lugu/qiloop/type/object"
 )
@@ -30,20 +31,34 @@ func (p proxy) Call(action string, payload []byte) ([]byte, error) {
 	return p.CallID(id, payload)
 }
 
-// ServiceID returns the service identifier.
-func (p proxy) ServiceID() uint32 {
-	return p.service
-}
-
-// ObjectID returns the object identifier within the service.
-func (p proxy) ObjectID() uint32 {
-	return p.object
-}
-
 // SubscribeID returns a channel with the values of a signal or a
 // property.
 func (p proxy) SubscribeID(action uint32) (func(), chan []byte, error) {
-	return p.client.Subscribe(p.service, p.object, action)
+	cancel, bytes, err := p.client.Subscribe(p.service, p.object, action)
+	if err != nil {
+		return nil, nil, err
+
+	}
+	subscriptions := p.client.State(fmt.Sprintf("%d.%d.%d", p.service, p.object, action), 1)
+	if subscriptions == 1 {
+		handler := rand.Int()
+		p.client.State(fmt.Sprintf("%d.%d.%d.handler", p.service, p.object, action), handler)
+		obj := proxyObject{p}
+		_, err := obj.RegisterEvent(p.object, action, uint64(handler))
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	return func() {
+		subscriptions := p.client.State(fmt.Sprintf("%d.%d.%d", p.service, p.object, action), -1)
+		if subscriptions == 0 {
+			handler := p.client.State(fmt.Sprintf("%d.%d.%d.handler", p.service, p.object, action), 0)
+			p.client.State(fmt.Sprintf("%d.%d.%d.handler", p.service, p.object, action), -handler)
+			obj := proxyObject{p}
+			obj.UnregisterEvent(p.object, action, uint64(handler))
+		}
+		cancel()
+	}, bytes, nil
 }
 
 // Subscribe returns a channel with the values of a signal or a
@@ -58,7 +73,17 @@ func (p proxy) Subscribe(action string) (func(), chan []byte, error) {
 					action)
 		}
 	}
-	return p.client.Subscribe(p.service, p.object, id)
+	return p.SubscribeID(id)
+}
+
+// ServiceID returns the service identifier.
+func (p proxy) ServiceID() uint32 {
+	return p.service
+}
+
+// ObjectID returns the object identifier within the service.
+func (p proxy) ObjectID() uint32 {
+	return p.object
 }
 
 // MethodID resolve the name of the method using the meta object and
