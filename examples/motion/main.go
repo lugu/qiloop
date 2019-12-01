@@ -36,7 +36,7 @@ func main() {
 	motion.WaitUntilMoveIsFinished()
 	fmt.Println("init move is finished")
 
-	// Remote procedure call: call the method "walk to" of the service.
+	// Remote procedure call: call the method "move to" of the service.
 	err = motion.MoveTo(0.2, 0, 0)
 	if err != nil {
 		panic(err)
