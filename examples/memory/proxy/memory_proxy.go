@@ -11,7 +11,6 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"log"
-	"math/rand"
 )
 
 // Constructor gives access to remote services
@@ -220,12 +219,6 @@ func (p *proxySubscriber) SubscribeSignal() (func(), chan value.Value, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "signal", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "signal", err)
-	}
 	ch := make(chan value.Value)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -249,9 +242,5 @@ func (p *proxySubscriber) SubscribeSignal() (func(), chan value.Value, error) {
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }

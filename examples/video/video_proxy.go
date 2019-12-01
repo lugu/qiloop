@@ -26,10 +26,10 @@ func Services(s bus.Session) Constructor {
 type ALVideoDevice interface {
 	// SubscribeCamera calls the remote procedure
 	SubscribeCamera(name string, cameraIndex int32, resolution int32, colorSpace int32, fps int32) (string, error)
-	// GetImageRemote calls the remote procedure
-	GetImageRemote(name string) (value.Value, error)
 	// Unsubscribe calls the remote procedure
 	Unsubscribe(nameId string) (bool, error)
+	// GetImageRemote calls the remote procedure
+	GetImageRemote(name string) (value.Value, error)
 }
 
 // ALVideoDeviceProxy represents a proxy object to the service
@@ -96,26 +96,6 @@ func (p *proxyALVideoDevice) SubscribeCamera(name string, cameraIndex int32, res
 	return ret, nil
 }
 
-// GetImageRemote calls the remote procedure
-func (p *proxyALVideoDevice) GetImageRemote(name string) (value.Value, error) {
-	var err error
-	var ret value.Value
-	var buf bytes.Buffer
-	if err = basic.WriteString(name, &buf); err != nil {
-		return ret, fmt.Errorf("serialize name: %s", err)
-	}
-	response, err := p.Call("getImageRemote", buf.Bytes())
-	if err != nil {
-		return ret, fmt.Errorf("call getImageRemote failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = value.NewValue(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse getImageRemote response: %s", err)
-	}
-	return ret, nil
-}
-
 // Unsubscribe calls the remote procedure
 func (p *proxyALVideoDevice) Unsubscribe(nameId string) (bool, error) {
 	var err error
@@ -132,6 +112,26 @@ func (p *proxyALVideoDevice) Unsubscribe(nameId string) (bool, error) {
 	ret, err = basic.ReadBool(resp)
 	if err != nil {
 		return ret, fmt.Errorf("parse unsubscribe response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetImageRemote calls the remote procedure
+func (p *proxyALVideoDevice) GetImageRemote(name string) (value.Value, error) {
+	var err error
+	var ret value.Value
+	var buf bytes.Buffer
+	if err = basic.WriteString(name, &buf); err != nil {
+		return ret, fmt.Errorf("serialize name: %s", err)
+	}
+	response, err := p.Call("getImageRemote", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getImageRemote failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = value.NewValue(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse getImageRemote response: %s", err)
 	}
 	return ret, nil
 }
