@@ -22,16 +22,22 @@ func main() {
 
 	// Obtain a proxy to the service
 	motion, err := services.ALMotion(nil)
-	iferr.Exit(err)
+	if err != nil {
+		panic(err)
+	}
 
 	// Remote procedure call: call the method "walk init" of the service.
-	err = motion.WalkInit()
-	iferr.Exit(err)
+	err = motion.MoveInit()
+	if err != nil {
+		panic(err)
+	}
 
 	motion.WaitUntilMoveIsFinished()
 	fmt.Println("init move is finished")
 
 	// Remote procedure call: call the method "walk to" of the service.
-	err = motion.WalkTo(0.2, 0, 0)
-	iferr.Exit(err)
+	err = motion.MoveTo(0.2, 0, 0)
+	if err != nil {
+		panic(err)
+	}
 }
