@@ -14,6 +14,8 @@ type client struct {
 	endpoint       net.EndPoint
 	messageID      uint32
 	messageIDMutex sync.Mutex
+	state          map[string]int
+	stateMutex     sync.Mutex
 }
 
 func (c *client) nextMessageID() uint32 {
@@ -72,7 +74,10 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 	if !ok {
 		return nil, fmt.Errorf("Remote connection closed")
 	}
-	if response.Header.Type == net.Error {
+	switch response.Header.Type {
+	case net.Reply:
+		return response.Payload, nil
+	case net.Error:
 		buf := bytes.NewBuffer(response.Payload)
 		v, err := value.NewValue(buf)
 		if err != nil {
@@ -84,8 +89,12 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 			return nil, fmt.Errorf("invalid error response")
 		}
 		return nil, fmt.Errorf(strVal.Value())
+	case net.Cancelled:
+		return nil, ErrCancelled
+	default:
+		return nil, fmt.Errorf("Unexpected message type: %d",
+			response.Header.Type)
 	}
-	return response.Payload, nil
 }
 
 // Subscribe returns a channel which returns the future value of a
@@ -100,7 +109,7 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 	cancel func(), events chan []byte, err error) {
 
-	abort := make(chan int)
+	abort := make(chan struct{})
 	closed := make(chan int)
 
 	events = make(chan []byte)
@@ -153,11 +162,29 @@ func (c *client) OnDisconnect(closer func(error)) error {
 	return nil
 }
 
+func (c *client) State(signal string, add int) int {
+	c.stateMutex.Lock()
+	defer c.stateMutex.Unlock()
+	previous, ok := c.state[signal]
+	if !ok && add != 0 {
+		c.state[signal] = add
+		return add
+	}
+	next := previous + add
+	if next == 0 {
+		delete(c.state, signal)
+		return 0
+	}
+	c.state[signal] = next
+	return next
+}
+
 // NewClient returns a new client.
 func NewClient(endpoint net.EndPoint) Client {
 	return &client{
 		endpoint:  endpoint,
 		messageID: 1,
+		state:     map[string]int{},
 	}
 }
 

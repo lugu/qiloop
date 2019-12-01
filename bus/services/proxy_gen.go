@@ -12,7 +12,6 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 	"io"
 	"log"
-	"math/rand"
 )
 
 // Constructor gives access to remote services
@@ -292,12 +291,6 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceAdded", err)
-	}
 	ch := make(chan ServiceAdded)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -321,11 +314,7 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // SubscribeServiceRemoved subscribe to a remote property
@@ -333,12 +322,6 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 	propertyID, err := p.SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
-	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
 	cancel, chPay, err := p.SubscribeID(propertyID)
@@ -363,11 +346,7 @@ func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceR
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // ServiceInfo is serializable
@@ -754,12 +733,6 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "onLogMessage", err)
-	}
 	ch := make(chan LogMessage)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -783,11 +756,7 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // GetVerbosity updates the property value
@@ -834,12 +803,6 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "verbosity", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "verbosity", err)
-	}
 	ch := make(chan LogLevel)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -863,11 +826,7 @@ func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // GetFilters updates the property value
@@ -948,12 +907,6 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "filters", err)
-	}
 	ch := make(chan map[string]int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -995,11 +948,7 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // LogManager is the abstract interface of the service

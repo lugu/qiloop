@@ -9,7 +9,6 @@ import (
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"log"
-	"math/rand"
 )
 
 // BombImplementor interface of the service implementation
@@ -359,12 +358,6 @@ func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "boom", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "boom", err)
-	}
 	ch := make(chan int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -388,11 +381,7 @@ func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // GetDelay updates the property value
@@ -439,12 +428,6 @@ func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "delay", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "delay", err)
-	}
 	ch := make(chan int32)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -468,11 +451,7 @@ func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }
 
 // Spacecraft is the abstract interface of the service

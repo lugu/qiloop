@@ -8,7 +8,6 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	"log"
-	"math/rand"
 )
 
 // PingPongImplementor interface of the service implementation
@@ -260,12 +259,6 @@ func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
 	}
-	handlerID := rand.Uint64()
-
-	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("register event for %s: %s", "pong", err)
-	}
 	ch := make(chan string)
 	cancel, chPay, err := p.SubscribeID(propertyID)
 	if err != nil {
@@ -289,9 +282,5 @@ func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
 			ch <- e
 		}
 	}()
-
-	return func() {
-		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
-		cancel()
-	}, ch, nil
+	return cancel, ch, nil
 }

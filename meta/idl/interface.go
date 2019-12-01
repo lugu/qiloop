@@ -213,29 +213,11 @@ func (s *InterfaceType) TypeDeclaration(f *jen.File) {
 // RegisterTo adds the type to the type set.
 func (s *InterfaceType) RegisterTo(set *signature.TypeSet) {
 	s.registerMembers(set)
-	name := s.Name
-	// loop 100 times to avoid name collision
-	for i := 0; i < 100; i++ {
-		ok := true // can use the name
-		for i, n := range set.Names {
-			if n == name {
-				if set.Types[i].Signature() == s.Signature() {
-					// already registered
-					return
-				}
-				ok = false
-				break
-			}
-		}
-		if ok {
-			// name is not taken
-			set.Types = append(set.Types, s)
-			set.Names = append(set.Names, name)
-			return
-		}
-		name = fmt.Sprintf("%s_%d", s.Name, i)
+	s.Name = set.ResolveCollision(s.Name, s.Signature())
+	if set.Search(s.Name) == nil {
+		set.Types = append(set.Types, s)
+		set.Names = append(set.Names, s.Name)
 	}
-	panic("register " + name)
 }
 
 func (itf *InterfaceType) registerMembers(set *signature.TypeSet) error {

@@ -1,6 +1,9 @@
 Possible evolutions
 ===================
 
+This document discuss several evolutions of QiMessaging which might
+break compatibility.
+
 CapabilityMap
 -------------
 
@@ -14,7 +17,7 @@ Peer to peer authentication
 ---------------------------
 
 Problem: only the service directory connection is authenticated.
-Peer to peer connection requires authentication.
+Connections between the peers requires authentication.
 
 Solution: Once authenticated with the service directory, use the
 session ID of the service info data as an authenticating token when
@@ -73,6 +76,30 @@ message is unique.
 
 Solution: let the service decide of the object ID using a generic
 method such as: leaseObject -> uint32.
+
+Duplicated event stream
+-----------------------
+
+Problem: calling RegisterEvent twice leads to a duplicated stream of
+undistinguishable events. To avoid this situation a state machine is
+required on the client side. RegisterEventWithSignature makes the
+situation worst by forcing the client side to also implement the type
+conversion.
+
+Solution: Since the message ID is unused for event messages, repurpose
+it with an handler ID. Obviously signal events should be sent
+in-order.
+
+Signal registration
+-------------------
+
+Problem: the semantic of RegisterEvent is unclear: the input parameter
+act as handler while the returned value shall be ignored. Calling
+twice RegisterEvent with the same handler ID leads to a duplicated
+stream of events.
+
+Solution: update the API as follow: `RegisterEvent(uint32 actionID) ->
+uint32`.
 
 Client object routing
 ---------------------

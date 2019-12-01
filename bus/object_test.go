@@ -53,8 +53,6 @@ func TestMethodStatistics(t *testing.T) {
 	if enabled {
 		t.Errorf("Stats shall not be enabled")
 	}
-	// FIXME
-	t.Skip("Statistics not working")
 	err = remoteObj.EnableStats(true)
 	if err != nil {
 		t.Error(err)
@@ -135,10 +133,8 @@ func TestTraceEvent(t *testing.T) {
 	if !enabled {
 		t.Errorf("Trace shall be enabled")
 	}
-	// FIXME
-	t.Skip("Traces not working")
 	trace := <-traces
-	if trace.Id < 84 || trace.Id > 86 { // tracing actions
+	if trace.SlotId < 0x54 || trace.SlotId > 0x55 { // tracing actions
 		t.Errorf("unexpected action %#v", trace)
 	}
 	cancel()

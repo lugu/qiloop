@@ -23,27 +23,25 @@ type Session struct {
 	removed          chan services.ServiceRemoved
 	userName         string
 	userToken        string
-	poll             map[string]net.EndPoint
+	poll             map[string]bus.Client
 	pollMutex        sync.RWMutex
 }
 
 func (s *Session) newObject(info services.ServiceInfo, ref object.ObjectReference) (bus.ObjectProxy, error) {
-	endpoint, err := s.endpoint(info)
+	c, err := s.client(info)
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)
 	}
-	proxy := bus.NewProxy(bus.NewClient(endpoint), ref.MetaObject,
-		ref.ServiceID, ref.ObjectID)
+	proxy := bus.NewProxy(c, ref.MetaObject, ref.ServiceID, ref.ObjectID)
 	return bus.MakeObject(proxy), nil
 }
 
 func (s *Session) newService(info services.ServiceInfo, objectID uint32) (p bus.Proxy, err error) {
-	endpoint, err := s.endpoint(info)
+	c, err := s.client(info)
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
 	}
-	c := bus.NewClient(endpoint)
 	proxy, err := metaProxy(c, info.ServiceId, objectID)
 	if err != nil {
 		return nil, fmt.Errorf("get service meta object (%s): %s", info.Name, err)
@@ -54,16 +52,16 @@ func (s *Session) newService(info services.ServiceInfo, objectID uint32) (p bus.
 // endpoint returns an net.EndPoint matching the info description. If
 // an existing connection exists, it reuse the connection, otherwise
 // it establish a new connection.
-func (s *Session) endpoint(info services.ServiceInfo) (net.EndPoint, error) {
+func (s *Session) client(info services.ServiceInfo) (bus.Client, error) {
 	if len(info.Endpoints) == 0 {
 		return nil, fmt.Errorf("empty address list")
 	}
 	s.pollMutex.RLock()
 	for _, addr := range info.Endpoints {
-		e, ok := s.poll[addr]
+		c, ok := s.poll[addr]
 		if ok {
 			s.pollMutex.RUnlock()
-			return e, nil
+			return c, nil
 		}
 	}
 	s.pollMutex.RUnlock()
@@ -79,16 +77,17 @@ func (s *Session) endpoint(info services.ServiceInfo) (net.EndPoint, error) {
 		s.pollMutex.Unlock()
 	}
 	s.pollMutex.Lock()
-	e, ok := s.poll[addr]
+	c, ok := s.poll[addr]
 	if ok {
 		s.pollMutex.RUnlock()
 		endpoint.Close()
-		return e, nil
+		return c, nil
 	}
-	s.poll[addr] = endpoint
+	c = bus.NewClient(endpoint)
+	s.poll[addr] = c
 	s.pollMutex.Unlock()
 	endpoint.AddHandler(filter, consumer, closer)
-	return endpoint, nil
+	return c, nil
 }
 
 func (s *Session) findServiceName(name string) (i services.ServiceInfo, err error) {
@@ -123,6 +122,8 @@ func (s *Session) Proxy(name string, objectID uint32) (p bus.Proxy, err error) {
 }
 
 // Object returns a reference to ref.
+// TODO: cache the returned objects in order to benefit from the
+// signal registration caching.
 func (s *Session) Object(ref object.ObjectReference) (o bus.Proxy, err error) {
 	info, err := s.findServiceID(ref.ServiceID)
 	if err != nil {
@@ -147,7 +148,7 @@ func NewAuthSession(addr, user, token string) (bus.Session, error) {
 	s := new(Session)
 	s.userName = user
 	s.userToken = token
-	s.poll = map[string]net.EndPoint{}
+	s.poll = map[string]bus.Client{}
 	// Manually create a serviceList with just the ServiceInfo
 	// needed to contact ServiceDirectory.
 	s.serviceList = []services.ServiceInfo{
