@@ -23,11 +23,11 @@ struct ServiceInfo
 end
 
 struct LogLevel
-        level: int32
+	level: int32
 end
 
 struct TimePoint
-        ns: uint64
+	ns: uint64
 end
 
 struct LogMessage
@@ -42,17 +42,17 @@ struct LogMessage
 end
 
 interface LogProvider
-        fn setVerbosity(level: LogLevel) //uid:100
-        fn setCategory(category: str, level: LogLevel) //uid:101
-        fn clearAndSet(filters: Map<str,int32>) //uid:102
+	fn setVerbosity(level: LogLevel) //uid:100
+	fn setCategory(category: str, level: LogLevel) //uid:101
+	fn clearAndSet(filters: Map<str,int32>) //uid:102
 end
 
 interface LogListener
-        fn setCategory(category: str, level: LogLevel) //uid:101
-        fn clearFilters() //uid:102
-        sig onLogMessage(msg: LogMessage) //uid:103
-        prop verbosity(level: LogLevel) //uid:104
-        prop filters(filters: Map<str,int32>) //uid:105
+	fn setCategory(category: str, level: LogLevel) //uid:101
+	fn clearFilters() //uid:102
+	sig onLogMessage(msg: LogMessage) //uid:103
+	prop verbosity(level: LogLevel) //uid:104
+	prop filters(filters: Map<str,int32>) //uid:105
 end
 
 interface LogManager
@@ -68,7 +68,7 @@ interface ALTextToSpeech
 end
 
 interface ALAnimatedSpeech
-    fn say(text: str)
+	fn say(text: str)
 	fn isBodyTalkEnabled() -> bool
 	fn isBodyLanguageEnabled() -> bool
 	fn setBodyTalkEnabled(enable: bool)

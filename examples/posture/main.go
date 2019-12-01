@@ -3,7 +3,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"math/rand"
 
 	"bitbucket.org/swoldt/pkg/xerrors/iferr"
 	"github.com/lugu/qiloop/app"
@@ -21,15 +21,29 @@ func main() {
 	services := proxy.Services(session)
 
 	// Obtain a proxy to the service
-	motion, err := services.ALRobotPosture(nil)
-	iferr.Exit(err)
+	alPosture, err := services.ALRobotPosture(nil)
+	if err != nil {
+		panic(err)
+	}
 
-	ok, err := motion.GoToPosture("StandZero", 2.0)
-	iferr.Exit(err)
+	postures, err := alPosture.GetPostureList()
+	if err != nil {
+		panic(err)
+	}
 
-	fmt.Println(ok)
+	// pick a random posture
+	if len(postures) == 0 {
+		panic("no posture available")
+	}
 
-	ok, err = motion.GoToPosture("Stand", 2.0)
-	iferr.Exit(err)
+	p := postures[rand.Intn(len(postures))]
+	println("Trying posture", p)
 
+	// Go to posture
+	ok, err := alPosture.GoToPosture(p, 1.0)
+	if err != nil {
+		panic(err)
+	}
+
+	println("Posture success: ", ok)
 }

@@ -1,12 +1,9 @@
 // Package main illustrates how to make a method call to a remote
-// object. It uses the specialized proxy of the text to speech
-// service.
+// object. It uses the specialized proxy of the animated speech service.
 package main
 
 import (
 	"flag"
-	"fmt"
-	"math/rand"
 
 	"github.com/lugu/qiloop/app"
 	"github.com/lugu/qiloop/bus/services"
@@ -39,18 +36,9 @@ func main() {
 		panic(err)
 	}
 
-	anime := getRandomExplain()
-	start := "^start(" + anime + ")"
-	stop := "^stop(" + anime + ")"
 	// Remote procedure call: call the method "say" of the service.
-	err = ans.Say(start + "I have always been a very good explainer, did you know?" + stop)
+	err = ans.Say("^startTag(explain) I have always been a very good explainer, did you know? ^waitTag(explain)")
 	if err != nil {
 		panic(err)
 	}
-}
-
-func getRandomExplain() string {
-	anime := "animations/Stand/Gestures/Explain_" + fmt.Sprintf("%d", rand.Intn(11))
-	fmt.Println(anime)
-	return anime
 }
