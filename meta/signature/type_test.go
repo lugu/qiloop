@@ -84,20 +84,24 @@ func TestEnumType(t *testing.T) {
 	}), "i", "Enum0", jen.Id("Enum0"))
 }
 
-func TestStructType(t *testing.T) {
-	typ := NewStructType("test", []MemberType{{
+func TestStructTypeNameCollision(t *testing.T) {
+	typ1 := NewStructType("test", []MemberType{{
 		Name: "a",
 		Type: NewIntType(),
 	}})
+	typ2 := NewStructType("test", []MemberType{{
+		Name: "b",
+		Type: NewStringType(),
+	}})
 	set := NewTypeSet()
-	name := set.RegisterStructType("b", typ)
-	name2 := set.RegisterStructType("b", typ)
-	if name == name2 {
-		t.Errorf("not expecting the same name: %s", name)
+	typ1.RegisterTo(set)
+	typ2.RegisterTo(set)
+	if typ1.Name == typ2.Name {
+		t.Errorf("not expecting the same name")
 	}
 	file := jen.NewFile("test")
 	set.Declare(file)
-	if set.Search(name) == nil {
+	if set.Search("test") == nil {
 		t.Errorf("unexpected")
 	}
 	if set.Search("unknown") != nil {

@@ -24,38 +24,6 @@ func (s *TypeSet) Declare(f *jen.File) {
 	}
 }
 
-// RegisterStructType returns the registered name after collision
-// resolution. Register search if a type is in the TypeSet under a
-// given name. If the same name and signature is already present it
-// does nothing. otherwise it adds the type and search for a new which
-// does not conflict with the names already present. The new name is
-// returned.
-func (s *TypeSet) RegisterStructType(originalName string, typ *StructType) string {
-	name := originalName
-	for i := 0; i < 100; i++ {
-		ok := true // can use the name
-		for i, n := range s.Names {
-			if n == name {
-				if s.Types[i].Signature() == typ.Signature() {
-					// already registered
-					return name
-				}
-				ok = false
-				break
-			}
-		}
-		if ok {
-			// name is not taken
-			// BUG: StructType is duplicated else it mess-up s.TYpes.
-			s.Types = append(s.Types, NewStructType(name, typ.Members))
-			s.Names = append(s.Names, name)
-			return name
-		}
-		name = fmt.Sprintf("%s_%d", originalName, i)
-	}
-	return "can_not_register_name_" + name
-}
-
 // Search returns a Type if a name is associated.
 func (s *TypeSet) Search(name string) Type {
 	for i, n := range s.Names {
@@ -64,6 +32,32 @@ func (s *TypeSet) Search(name string) Type {
 		}
 	}
 	return nil
+}
+
+// ResolveCollision returns a type name not already present in the
+// set. If name if not present, returns name, else it returns a new
+// string derived from name.
+func (s *TypeSet) ResolveCollision(originalName, signature string) string {
+	name := originalName
+	// loop 100 times to avoid name collision
+	for i := 0; i < 100; i++ {
+		ok := true // can use the name
+		for i, n := range s.Names {
+			if n == name {
+				if s.Types[i].Signature() == signature {
+					// already registered
+					return name
+				}
+				ok = false
+				break
+			}
+		}
+		if ok {
+			return name
+		}
+		name = fmt.Sprintf("%s_%d", originalName, i)
+	}
+	return "can_not_register_name_" + originalName
 }
 
 // NewTypeSet construct a new TypeSet.
@@ -861,13 +855,20 @@ func (s *StructType) TypeName() *Statement {
 }
 
 // RegisterTo adds the type to the TypeSet.
+// Structure name is updated if needed  after collision
+// resolution. Register search if a type is in the TypeSet under a
+// given name. If the same name and signature is already present it
+// does nothing. otherwise it adds the type and search for a new which
+// does not conflict with the names already present.
 func (s *StructType) RegisterTo(set *TypeSet) {
 	for _, v := range s.Members {
 		v.Type.RegisterTo(set)
 	}
-
-	s.Name = set.RegisterStructType(s.Name, s)
-	return
+	s.Name = set.ResolveCollision(s.Name, s.Signature())
+	if set.Search(s.Name) == nil {
+		set.Types = append(set.Types, s)
+		set.Names = append(set.Names, s.Name)
+	}
 }
 
 // TypeDeclaration writes the type declaration into file.
