@@ -1,0 +1,14 @@
+package proxy
+
+interface ALTextToSpeech
+	fn say(stringToSay: str)
+end
+
+interface ALMemory
+	fn getEventList() -> Vec<str> 
+    fn subscriber(eventName: str) -> Subscriber
+end
+
+interface Subscriber
+   sig signal(data: any)
+end
