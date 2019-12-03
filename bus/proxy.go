@@ -1,6 +1,7 @@
 package bus
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 
@@ -11,6 +12,7 @@ import (
 // capture the service name.
 type proxy struct {
 	meta    object.MetaObject
+	ctx     context.Context
 	methods map[string]uint32
 	client  Client
 	service uint32
@@ -19,7 +21,7 @@ type proxy struct {
 
 // CallID construct a call message and send it to the client endpoint.
 func (p proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
-	return p.client.Call(nil, p.service, p.object, actionID, payload)
+	return p.client.Call(p.ctx.Done(), p.service, p.object, actionID, payload)
 }
 
 // Call translates the name into an action id and send it to the client endpoint.
@@ -120,11 +122,20 @@ func (p proxy) ProxyService(sess Session) Service {
 	return NewServiceReference(sess, c.endpoint, p.service)
 }
 
+func WithContext(px Proxy, ctx context.Context) Proxy {
+	p, ok := px.(proxy)
+	if !ok {
+		panic("unexpected proxy implementation")
+	}
+	return proxy{p.meta, ctx, p.methods, p.client, p.service, p.object}
+}
+
 // NewProxy construct a Proxy.
+// TODO: return a *proxy instead of a proxy.
 func NewProxy(client Client, meta object.MetaObject, service, object uint32) Proxy {
 	methods := make(map[string]uint32)
 	for id, method := range meta.Methods {
 		methods[method.Name] = id
 	}
-	return proxy{meta, methods, client, service, object}
+	return proxy{meta, context.Background(), methods, client, service, object}
 }
