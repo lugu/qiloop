@@ -338,16 +338,11 @@ func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 	return &proxyBomb{bus.MakeObject(proxy), sess}
 }
 
-// Bomb returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) Bomb(closer func(error)) (BombProxy, error) {
+// Bomb returns a proxy to a remote service
+func (c Constructor) Bomb() (BombProxy, error) {
 	proxy, err := c.session.Proxy("Bomb", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeBomb(c.session, proxy), nil
 }
@@ -480,16 +475,11 @@ func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 	return &proxySpacecraft{bus.MakeObject(proxy), sess}
 }
 
-// Spacecraft returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) Spacecraft(closer func(error)) (SpacecraftProxy, error) {
+// Spacecraft returns a proxy to a remote service
+func (c Constructor) Spacecraft() (SpacecraftProxy, error) {
 	proxy, err := c.session.Proxy("Spacecraft", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeSpacecraft(c.session, proxy), nil
 }

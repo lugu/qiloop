@@ -21,7 +21,7 @@ func main() {
 	proxies := services.Services(session)
 
 	// obtain a representation of the service directory
-	directory, err := proxies.ServiceDirectory(nil)
+	directory, err := proxies.ServiceDirectory()
 	if err != nil {
 		panic(err)
 	}

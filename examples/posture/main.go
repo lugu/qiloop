@@ -22,7 +22,7 @@ func main() {
 	services := proxy.Services(session)
 
 	// Obtain a proxy to the service
-	alPosture, err := services.ALRobotPosture(nil)
+	alPosture, err := services.ALRobotPosture()
 	if err != nil {
 		panic(err)
 	}

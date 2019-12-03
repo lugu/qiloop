@@ -884,16 +884,11 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
 
-// LogProvider returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) LogProvider(closer func(error)) (LogProviderProxy, error) {
+// LogProvider returns a proxy to a remote service
+func (c Constructor) LogProvider() (LogProviderProxy, error) {
 	proxy, err := c.session.Proxy("LogProvider", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeLogProvider(c.session, proxy), nil
 }
@@ -999,16 +994,11 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
 
-// LogListener returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) LogListener(closer func(error)) (LogListenerProxy, error) {
+// LogListener returns a proxy to a remote service
+func (c Constructor) LogListener() (LogListenerProxy, error) {
 	proxy, err := c.session.Proxy("LogListener", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeLogListener(c.session, proxy), nil
 }
@@ -1279,16 +1269,11 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }
 
-// LogManager returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) LogManager(closer func(error)) (LogManagerProxy, error) {
+// LogManager returns a proxy to a remote service
+func (c Constructor) LogManager() (LogManagerProxy, error) {
 	proxy, err := c.session.Proxy("LogManager", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeLogManager(c.session, proxy), nil
 }

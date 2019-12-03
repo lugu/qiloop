@@ -24,13 +24,13 @@ func main() {
 	proxies := proxy.Services(session)
 
 	// Obtain a proxy to the service
-	tts, err := proxies.ALTextToSpeech(nil)
+	tts, err := proxies.ALTextToSpeech()
 	if err != nil {
 		panic(err)
 	}
 
 	// Obtain a proxy to the service
-	alMemory, err := proxies.ALMemory(nil)
+	alMemory, err := proxies.ALMemory()
 	if err != nil {
 		panic(err)
 	}

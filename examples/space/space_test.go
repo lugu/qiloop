@@ -32,7 +32,7 @@ func TestAddRemoveObject(t *testing.T) {
 	session := srv.Session()
 	proxies := space.Services(session)
 
-	spacecraft, err := proxies.Spacecraft(nil)
+	spacecraft, err := proxies.Spacecraft()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +129,7 @@ func TestClientBomb(t *testing.T) {
 	defer session.Terminate()
 	proxies := space.Services(session)
 
-	spacecraft, err := proxies.Spacecraft(nil)
+	spacecraft, err := proxies.Spacecraft()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +179,7 @@ func TestOnTerminate(t *testing.T) {
 	session := srv.Session()
 	proxies := space.Services(session)
 
-	spacecraft, err := proxies.Spacecraft(nil)
+	spacecraft, err := proxies.Spacecraft()
 	if err != nil {
 		t.Fatal(err)
 	}
