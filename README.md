@@ -52,9 +52,9 @@ Service directory and log manager are implemented as part of the
 standalone server (launched with `qiloop server`).
 
 Features:
-  - type supported: object, struct, values, map, list, enum
+  - type supported: object, struct, values, map, list, tuple
   - actions: method, signals and properties are fully supported
-  - cancellation: not yet implemented
+  - cancellation: client support only (server side missing)
   - transport: TCP, TLS, UNIX socket and QUIC (experimental)
   - authentication: read the credentials from `$HOME/.qiloop-auth.conf`
   - service introspection: generate IDL from a running instance (use `qiloop scan`)

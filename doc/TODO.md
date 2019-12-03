@@ -24,6 +24,5 @@ TODO
 - transport: socketpair
 - transport: websocket
 - gateway implementation
-- cancel: include context.Context in context
 - refactor encoding: get it from the context
 - dbus converter (namspace + encoding + transport)
