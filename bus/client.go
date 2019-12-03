@@ -33,8 +33,23 @@ func (c *client) newMessage(serviceID uint32, objectID uint32,
 	return net.NewMessage(header, payload)
 }
 
-func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
+func (c *client) cancelMessage(hdr net.Header) net.Message {
+	msg := net.NewMessage(hdr, []byte{})
+	msg.Header.Type = net.Cancel
+	return msg
+}
+
+func (c *client) Call(cancel <-chan struct{}, serviceID, objectID, actionID uint32,
 	payload []byte) ([]byte, error) {
+
+	// Do nothing if cancel is already closed.
+	if cancel != nil {
+		select {
+		case <-cancel:
+			return nil, ErrCancelled
+		default:
+		}
+	}
 
 	msg := c.newMessage(serviceID, objectID, actionID, payload)
 	messageID := msg.Header.ID
@@ -70,10 +85,32 @@ func (c *client) Call(serviceID uint32, objectID uint32, actionID uint32,
 	}
 
 	// 3. wait for a response
-	response, ok := <-reply
-	if !ok {
-		return nil, fmt.Errorf("Remote connection closed")
+	var (
+		ok       bool
+		response *net.Message
+	)
+	if cancel != nil {
+		select {
+		case response, ok = <-reply:
+			if !ok {
+				return nil, fmt.Errorf("Remote connection closed")
+			}
+		case <-cancel:
+			msg := c.cancelMessage(msg.Header)
+			if err := c.endpoint.Send(msg); err != nil {
+				return nil, fmt.Errorf(
+					"cancel failed: service %d, object %d, action %d: %s",
+					serviceID, objectID, actionID, err)
+			}
+			return nil, ErrCancelled
+		}
+	} else {
+		response, ok = <-reply
+		if !ok {
+			return nil, fmt.Errorf("Remote connection closed")
+		}
 	}
+	// 3. wait for a response
 	switch response.Header.Type {
 	case net.Reply:
 		return response.Payload, nil

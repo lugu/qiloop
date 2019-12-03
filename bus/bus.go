@@ -15,7 +15,7 @@ func GetMetaObject(client Client, serviceID uint32, objectID uint32) (m object.M
 	if err != nil {
 		return m, fmt.Errorf("Can not serialize objectID: %s", err)
 	}
-	response, err := client.Call(serviceID, objectID, object.MetaObjectMethodID, buf.Bytes())
+	response, err := client.Call(nil, serviceID, objectID, object.MetaObjectMethodID, buf.Bytes())
 	if err != nil {
 		return m, fmt.Errorf("Can not call MetaObject: %s", err)
 	}
