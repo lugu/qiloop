@@ -108,8 +108,6 @@ func printEvent(e bus.EventTrace, info *services.ServiceInfo,
 
 func trace(serverURL, serviceName string, objectID uint32) {
 
-	stop := make(chan struct{})
-
 	sess, err := session.NewSession(serverURL)
 	if err != nil {
 		log.Fatalf("%s: %s", serverURL, err)
@@ -117,12 +115,7 @@ func trace(serverURL, serviceName string, objectID uint32) {
 
 	proxies := services.Services(sess)
 
-	closer := func(err error) {
-		log.Printf("Session terminated (%s)", err.Error())
-		close(stop)
-	}
-
-	directory, err := proxies.ServiceDirectory(closer)
+	directory, err := proxies.ServiceDirectory()
 	if err != nil {
 		log.Fatalf("directory: %s", err)
 	}
@@ -131,6 +124,8 @@ func trace(serverURL, serviceName string, objectID uint32) {
 	if err != nil {
 		log.Fatalf("services: %s", err)
 	}
+
+	stop := make(chan struct{})
 
 	serviceID, err := strconv.Atoi(serviceName)
 	if err != nil {

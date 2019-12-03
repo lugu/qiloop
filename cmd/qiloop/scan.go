@@ -42,7 +42,7 @@ func scan(serverURL, packageName, serviceName, idlFile string) {
 	}
 
 	// service direction id = 1
-	dir, err := services.Services(sess).ServiceDirectory(nil)
+	dir, err := services.Services(sess).ServiceDirectory()
 	if err != nil {
 		log.Fatalf("create proxy: %s", err)
 	}

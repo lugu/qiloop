@@ -2,7 +2,6 @@ package logger
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"runtime"
 	"sync"
@@ -88,10 +87,7 @@ func (l *logProvider) logf(level LogLevel, format string, v ...interface{}) {
 
 	msg := fmt.Sprintf(format, v...)
 	logMsg := newLogMessage(level, l.location, l.category, msg)
-	err := l.manager.Log([]LogMessage{logMsg})
-	if err != nil {
-		log.Printf("failed to log message: %s", err)
-	}
+	l.manager.Log([]LogMessage{logMsg})
 }
 
 func (l *logProvider) Fatal(format string, v ...interface{}) {
@@ -126,11 +122,7 @@ func (l *logProvider) Terminate() {
 func (l *logProvider) Activate(activation bus.Activation,
 	helper LogProviderSignalHelper) (err error) {
 	services := Services(activation.Session)
-	closer := func(err error) {
-		log.Printf("LogProvider disconnected from LogManager: %s", err)
-		activation.Terminate()
-	}
-	l.manager, err = services.LogManager(closer)
+	l.manager, err = services.LogManager()
 	if err != nil {
 		return fmt.Errorf("Cannot create LogProvider: %s", err)
 	}
@@ -162,7 +154,7 @@ func (l *logProvider) ClearAndSet(filters map[string]LogLevel) error {
 // provider and associate it with log manager.
 func NewLogger(session bus.Session, category string) (Logger, error) {
 	constructor := Services(session)
-	logManager, err := constructor.LogManager(nil)
+	logManager, err := constructor.LogManager()
 	if err != nil {
 		return nil, err
 	}

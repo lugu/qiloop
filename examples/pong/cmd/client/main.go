@@ -23,7 +23,7 @@ func main() {
 	proxies := pong.Services(session)
 
 	// obtain a representation of the ping pong service
-	client, err := proxies.PingPong(nil)
+	client, err := proxies.PingPong()
 	if err != nil {
 		panic(err)
 	}

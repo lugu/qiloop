@@ -661,16 +661,11 @@ type proxyServiceZero struct {
 	Proxy
 }
 
-// ServiceZero returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ServiceZero(closer func(error)) (ServiceZeroProxy, error) {
+// ServiceZero returns a proxy to a remote service
+func (c Constructor) ServiceZero() (ServiceZeroProxy, error) {
 	proxy, err := c.session.Proxy("ServiceZero", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return &proxyServiceZero{proxy}, nil
 }
@@ -759,16 +754,11 @@ type proxyObject struct {
 	Proxy
 }
 
-// Object returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) Object(closer func(error)) (ObjectProxy, error) {
+// Object returns a proxy to a remote service
+func (c Constructor) Object() (ObjectProxy, error) {
 	proxy, err := c.session.Proxy("Object", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return &proxyObject{proxy}, nil
 }

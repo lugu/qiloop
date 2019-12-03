@@ -50,16 +50,11 @@ func MakeALVideoDevice(sess bus.Session, proxy bus.Proxy) ALVideoDeviceProxy {
 	return &proxyALVideoDevice{bus.MakeObject(proxy), sess}
 }
 
-// ALVideoDevice returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ALVideoDevice(closer func(error)) (ALVideoDeviceProxy, error) {
+// ALVideoDevice returns a proxy to a remote service
+func (c Constructor) ALVideoDevice() (ALVideoDeviceProxy, error) {
 	proxy, err := c.session.Proxy("ALVideoDevice", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeALVideoDevice(c.session, proxy), nil
 }

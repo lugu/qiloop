@@ -24,7 +24,7 @@ func TestTwoSubscribersDontOverlap(t *testing.T) {
 		t.Error(err)
 	}
 	services := proxy.Services(session)
-	directory, err := services.ServiceDirectory(nil)
+	directory, err := services.ServiceDirectory()
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}

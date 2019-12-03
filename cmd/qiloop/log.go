@@ -37,9 +37,6 @@ func printColor(m qilog.LogMessage) {
 
 func logger(serverURL string, level uint32) {
 
-	signalChannel := make(chan os.Signal, 2)
-	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
-
 	stat, err := os.Stdout.Stat()
 	if err != nil {
 		log.Fatal(err)
@@ -57,12 +54,7 @@ func logger(serverURL string, level uint32) {
 	}
 	defer sess.Terminate()
 	srv := qilog.Services(sess)
-	closer := func(err error) {
-		log.Printf("Remote connection closed: %s", err)
-		close(signalChannel)
-
-	}
-	logManager, err := srv.LogManager(closer)
+	logManager, err := srv.LogManager()
 	if err != nil {
 		log.Fatalf("access LogManager service: %s", err)
 	}
@@ -86,6 +78,9 @@ func logger(serverURL string, level uint32) {
 	if err != nil {
 		log.Fatalf("set verbosity: %s", err)
 	}
+
+	signalChannel := make(chan os.Signal, 2)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT)
 
 	for {
 		select {

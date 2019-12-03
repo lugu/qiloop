@@ -53,16 +53,11 @@ func MakeALMotion(sess bus.Session, proxy bus.Proxy) ALMotionProxy {
 	return &proxyALMotion{bus.MakeObject(proxy), sess}
 }
 
-// ALMotion returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ALMotion(closer func(error)) (ALMotionProxy, error) {
+// ALMotion returns a proxy to a remote service
+func (c Constructor) ALMotion() (ALMotionProxy, error) {
 	proxy, err := c.session.Proxy("ALMotion", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeALMotion(c.session, proxy), nil
 }

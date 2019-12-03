@@ -59,16 +59,11 @@ func MakeALRobotPosture(sess bus.Session, proxy bus.Proxy) ALRobotPostureProxy {
 	return &proxyALRobotPosture{bus.MakeObject(proxy), sess}
 }
 
-// ALRobotPosture returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ALRobotPosture(closer func(error)) (ALRobotPostureProxy, error) {
+// ALRobotPosture returns a proxy to a remote service
+func (c Constructor) ALRobotPosture() (ALRobotPostureProxy, error) {
 	proxy, err := c.session.Proxy("ALRobotPosture", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeALRobotPosture(c.session, proxy), nil
 }

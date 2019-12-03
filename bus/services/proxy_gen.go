@@ -122,16 +122,11 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 	return &proxyServiceDirectory{bus.MakeObject(proxy), sess}
 }
 
-// ServiceDirectory returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ServiceDirectory(closer func(error)) (ServiceDirectoryProxy, error) {
+// ServiceDirectory returns a proxy to a remote service
+func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 	proxy, err := c.session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeServiceDirectory(c.session, proxy), nil
 }
@@ -570,16 +565,11 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 	return &proxyLogProvider{bus.MakeObject(proxy), sess}
 }
 
-// LogProvider returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) LogProvider(closer func(error)) (LogProviderProxy, error) {
+// LogProvider returns a proxy to a remote service
+func (c Constructor) LogProvider() (LogProviderProxy, error) {
 	proxy, err := c.session.Proxy("LogProvider", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeLogProvider(c.session, proxy), nil
 }
@@ -685,16 +675,11 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 	return &proxyLogListener{bus.MakeObject(proxy), sess}
 }
 
-// LogListener returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) LogListener(closer func(error)) (LogListenerProxy, error) {
+// LogListener returns a proxy to a remote service
+func (c Constructor) LogListener() (LogListenerProxy, error) {
 	proxy, err := c.session.Proxy("LogListener", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeLogListener(c.session, proxy), nil
 }
@@ -983,16 +968,11 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 	return &proxyLogManager{bus.MakeObject(proxy), sess}
 }
 
-// LogManager returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) LogManager(closer func(error)) (LogManagerProxy, error) {
+// LogManager returns a proxy to a remote service
+func (c Constructor) LogManager() (LogManagerProxy, error) {
 	proxy, err := c.session.Proxy("LogManager", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeLogManager(c.session, proxy), nil
 }
@@ -1146,16 +1126,11 @@ func MakeALTextToSpeech(sess bus.Session, proxy bus.Proxy) ALTextToSpeechProxy {
 	return &proxyALTextToSpeech{bus.MakeObject(proxy), sess}
 }
 
-// ALTextToSpeech returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ALTextToSpeech(closer func(error)) (ALTextToSpeechProxy, error) {
+// ALTextToSpeech returns a proxy to a remote service
+func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 	proxy, err := c.session.Proxy("ALTextToSpeech", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeALTextToSpeech(c.session, proxy), nil
 }
@@ -1206,16 +1181,11 @@ func MakeALAnimatedSpeech(sess bus.Session, proxy bus.Proxy) ALAnimatedSpeechPro
 	return &proxyALAnimatedSpeech{bus.MakeObject(proxy), sess}
 }
 
-// ALAnimatedSpeech returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ALAnimatedSpeech(closer func(error)) (ALAnimatedSpeechProxy, error) {
+// ALAnimatedSpeech returns a proxy to a remote service
+func (c Constructor) ALAnimatedSpeech() (ALAnimatedSpeechProxy, error) {
 	proxy, err := c.session.Proxy("ALAnimatedSpeech", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeALAnimatedSpeech(c.session, proxy), nil
 }

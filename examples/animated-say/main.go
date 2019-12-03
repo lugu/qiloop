@@ -22,7 +22,7 @@ func main() {
 	proxies := services.Services(session)
 
 	// Obtain a proxy to the service
-	ans, err := proxies.ALAnimatedSpeech(nil)
+	ans, err := proxies.ALAnimatedSpeech()
 	if err != nil {
 		panic(err)
 	}

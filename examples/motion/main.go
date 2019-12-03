@@ -22,7 +22,7 @@ func main() {
 	services := proxy.Services(session)
 
 	// Obtain a proxy to the service
-	motion, err := services.ALMotion(nil)
+	motion, err := services.ALMotion()
 	if err != nil {
 		panic(err)
 	}

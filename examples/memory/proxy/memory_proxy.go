@@ -47,16 +47,11 @@ func MakeALTextToSpeech(sess bus.Session, proxy bus.Proxy) ALTextToSpeechProxy {
 	return &proxyALTextToSpeech{bus.MakeObject(proxy), sess}
 }
 
-// ALTextToSpeech returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ALTextToSpeech(closer func(error)) (ALTextToSpeechProxy, error) {
+// ALTextToSpeech returns a proxy to a remote service
+func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 	proxy, err := c.session.Proxy("ALTextToSpeech", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeALTextToSpeech(c.session, proxy), nil
 }
@@ -101,16 +96,11 @@ func MakeALMemory(sess bus.Session, proxy bus.Proxy) ALMemoryProxy {
 	return &proxyALMemory{bus.MakeObject(proxy), sess}
 }
 
-// ALMemory returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) ALMemory(closer func(error)) (ALMemoryProxy, error) {
+// ALMemory returns a proxy to a remote service
+func (c Constructor) ALMemory() (ALMemoryProxy, error) {
 	proxy, err := c.session.Proxy("ALMemory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeALMemory(c.session, proxy), nil
 }
@@ -199,16 +189,11 @@ func MakeSubscriber(sess bus.Session, proxy bus.Proxy) SubscriberProxy {
 	return &proxySubscriber{bus.MakeObject(proxy), sess}
 }
 
-// Subscriber returns a proxy to a remote service. A nil closer is accepted.
-func (c Constructor) Subscriber(closer func(error)) (SubscriberProxy, error) {
+// Subscriber returns a proxy to a remote service
+func (c Constructor) Subscriber() (SubscriberProxy, error) {
 	proxy, err := c.session.Proxy("Subscriber", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
-	}
-
-	err = proxy.OnDisconnect(closer)
-	if err != nil {
-		return nil, err
 	}
 	return MakeSubscriber(c.session, proxy), nil
 }
