@@ -425,7 +425,7 @@ func (c *clientObject) handleRegister(msg *net.Message, from Channel) error {
 }
 
 func (c *clientObject) handleCall(msg *net.Message, from Channel) error {
-	resp, err := c.client.Call(msg.Header.Service, c.remoteID,
+	resp, err := c.client.Call(nil, msg.Header.Service, c.remoteID,
 		msg.Header.Action, msg.Payload)
 	if err != nil {
 		return from.SendError(msg, err)
@@ -441,7 +441,7 @@ func (c *clientObject) Receive(msg *net.Message, from Channel) error {
 	} else if msg.Header.Type == net.Call {
 		go c.handleCall(msg, from)
 		return nil
-	} else if msg.Header.Type == net.Post {
+	} else if msg.Header.Type == net.Post || msg.Header.Type == net.Cancel {
 		msg.Header.Object = c.remoteID
 		return c.channel.Send(msg)
 	}

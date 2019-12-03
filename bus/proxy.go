@@ -19,7 +19,7 @@ type proxy struct {
 
 // CallID construct a call message and send it to the client endpoint.
 func (p proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
-	return p.client.Call(p.service, p.object, actionID, payload)
+	return p.client.Call(nil, p.service, p.object, actionID, payload)
 }
 
 // Call translates the name into an action id and send it to the client endpoint.

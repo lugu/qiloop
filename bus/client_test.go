@@ -12,6 +12,38 @@ import (
 	"github.com/lugu/qiloop/type/object"
 )
 
+func TestClientCall(t *testing.T) {
+
+	serviceEndpoint, clientEndpoint := net.Pipe()
+	defer serviceEndpoint.Close()
+	defer clientEndpoint.Close()
+
+	msgChan, err := serviceEndpoint.ReceiveAny()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// accept a single connection
+	go func() {
+		m, ok := <-msgChan
+		if !ok {
+			t.Fatalf("connection closed")
+		}
+		m.Header.Type = net.Reply
+		err := serviceEndpoint.Send(*m)
+		if err != nil {
+			t.Errorf("send meesage: %s", err)
+		}
+	}()
+
+	// client connection
+	c := bus.NewClient(clientEndpoint)
+	_, err = c.Call(nil, 1, 2, 3, []byte{0xab, 0xcd})
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+}
+
 func TestProxyCall(t *testing.T) {
 
 	serviceEndpoint, clientEndpoint := net.Pipe()
@@ -38,11 +70,78 @@ func TestProxyCall(t *testing.T) {
 
 	// client connection
 	c := bus.NewClient(clientEndpoint)
-
-	// 4. send a message
 	proxy := bus.NewProxy(c, object.MetaService0, 1, 2)
 	_, err = proxy.CallID(3, []byte{0xab, 0xcd})
 	if err != nil {
+		t.Errorf("proxy failed to call service: %s", err)
+	}
+}
+
+func TestClientAlreadyCancelled(t *testing.T) {
+
+	serviceEndpoint, clientEndpoint := net.Pipe()
+	defer serviceEndpoint.Close()
+	defer clientEndpoint.Close()
+
+	cancel := make(chan struct{})
+	close(cancel)
+	c := bus.NewClient(clientEndpoint)
+	_, err := c.Call(cancel, 1, 2, 3, []byte{0xab, 0xcd})
+	if err != bus.ErrCancelled {
+		t.Errorf("Unexpected error: %s", err)
+	}
+}
+
+func TestClientCancel(t *testing.T) {
+
+	serviceEndpoint, clientEndpoint := net.Pipe()
+	defer serviceEndpoint.Close()
+	defer clientEndpoint.Close()
+
+	msgChan, err := serviceEndpoint.ReceiveAny()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// testSync: make sure we cancel after the call is sent
+	testSync := make(chan struct{})
+
+	// accept a single connection
+	go func() {
+		m, ok := <-msgChan
+		if !ok {
+			t.Fatalf("connection closed")
+		}
+		if m.Header.Type != net.Call {
+			t.Errorf("not a call")
+		}
+		msgChan, err = serviceEndpoint.ReceiveAny()
+		if err != nil {
+			t.Error(err)
+		}
+		close(testSync)
+		m, ok = <-msgChan
+		if !ok {
+			t.Fatalf("connection closed")
+		}
+		if m.Header.Type != net.Cancel {
+			t.Errorf("not a cancel")
+		}
+		m.Header.Type = net.Cancelled
+		serviceEndpoint.Send(net.NewMessage(m.Header, []byte{}))
+	}()
+
+	// client connection
+	c := bus.NewClient(clientEndpoint)
+
+	cancel := make(chan struct{})
+	go func() {
+		// wait until the service has received the call
+		<-testSync
+		close(cancel)
+	}()
+	_, err = c.Call(cancel, 1, 2, 3, []byte{0xab, 0xcd})
+	if err != bus.ErrCancelled {
 		t.Errorf("proxy failed to call service: %s", err)
 	}
 }

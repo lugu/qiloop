@@ -11,9 +11,11 @@ var ErrCancelled = errors.New("Cancelled")
 
 // Client represents a client connection to a service.
 type Client interface {
-	// Call initiates a remote procedure call.
+
+	// Call initiates a remote procedure call. If cancel is
+	// closed, the call is cancelled. cancel can be nil.
 	// ErrCancelled is returned if the call was cancelled.
-	Call(serviceID uint32, objectID uint32, methodID uint32, payload []byte) ([]byte, error)
+	Call(cancel <-chan struct{}, serviceID, objectID, methodID uint32, payload []byte) ([]byte, error)
 
 	// Subscribe registers to a signal or a property. Returns a
 	// cancel callback, a channel to receive the payload and an
