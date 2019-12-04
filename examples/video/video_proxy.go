@@ -9,7 +9,6 @@ import (
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
-	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 )
 
@@ -35,8 +34,7 @@ type ALVideoDevice interface {
 
 // ALVideoDeviceProxy represents a proxy object to the service
 type ALVideoDeviceProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ALVideoDevice
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -65,7 +63,7 @@ func (c Constructor) ALVideoDevice() (ALVideoDeviceProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALVideoDevice) WithContext(ctx context.Context) ALVideoDeviceProxy {
-	return MakeALVideoDevice(p.session, bus.WithContext(p, ctx))
+	return MakeALVideoDevice(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // SubscribeCamera calls the remote procedure

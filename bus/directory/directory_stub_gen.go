@@ -467,8 +467,7 @@ type ServiceDirectory interface {
 
 // ServiceDirectoryProxy represents a proxy object to the service
 type ServiceDirectoryProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ServiceDirectory
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -497,7 +496,7 @@ func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
-	return MakeServiceDirectory(p.session, bus.WithContext(p, ctx))
+	return MakeServiceDirectory(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Service calls the remote procedure
@@ -651,12 +650,12 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 
 // SubscribeServiceAdded subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
-	propertyID, err := p.SignalID("serviceAdded")
+	propertyID, err := p.FIXMEProxy().SignalID("serviceAdded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
 	ch := make(chan ServiceAdded)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -683,12 +682,12 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 
 // SubscribeServiceRemoved subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
-	propertyID, err := p.SignalID("serviceRemoved")
+	propertyID, err := p.FIXMEProxy().SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

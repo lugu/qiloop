@@ -62,7 +62,7 @@ func logger(serverURL string, level uint32) {
 	if err != nil {
 		log.Fatalf("create listener: %s", err)
 	}
-	defer logListener.Terminate(logListener.ObjectID())
+	defer logListener.Terminate(logListener.FIXMEProxy().ObjectID())
 
 	err = logListener.ClearFilters()
 	if err != nil {

@@ -107,8 +107,7 @@ type ServiceDirectory interface {
 
 // ServiceDirectoryProxy represents a proxy object to the service
 type ServiceDirectoryProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ServiceDirectory
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -137,7 +136,7 @@ func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
-	return MakeServiceDirectory(p.session, bus.WithContext(p, ctx))
+	return MakeServiceDirectory(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Service calls the remote procedure
@@ -291,12 +290,12 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 
 // SubscribeServiceAdded subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
-	propertyID, err := p.SignalID("serviceAdded")
+	propertyID, err := p.FIXMEProxy().SignalID("serviceAdded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
 	ch := make(chan ServiceAdded)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -323,12 +322,12 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 
 // SubscribeServiceRemoved subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
-	propertyID, err := p.SignalID("serviceRemoved")
+	propertyID, err := p.FIXMEProxy().SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -558,8 +557,7 @@ type LogProvider interface {
 
 // LogProviderProxy represents a proxy object to the service
 type LogProviderProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	LogProvider
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -588,7 +586,7 @@ func (c Constructor) LogProvider() (LogProviderProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
-	return MakeLogProvider(p.session, bus.WithContext(p, ctx))
+	return MakeLogProvider(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // SetVerbosity calls the remote procedure
@@ -676,8 +674,7 @@ type LogListener interface {
 
 // LogListenerProxy represents a proxy object to the service
 type LogListenerProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	LogListener
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -706,7 +703,7 @@ func (c Constructor) LogListener() (LogListenerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
-	return MakeLogListener(p.session, bus.WithContext(p, ctx))
+	return MakeLogListener(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // SetCategory calls the remote procedure
@@ -739,12 +736,12 @@ func (p *proxyLogListener) ClearFilters() error {
 
 // SubscribeOnLogMessage subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.SignalID("onLogMessage")
+	propertyID, err := p.FIXMEProxy().SignalID("onLogMessage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
 	ch := make(chan LogMessage)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -809,12 +806,12 @@ func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
 
 // SubscribeVerbosity subscribe to a remote property
 func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
-	propertyID, err := p.PropertyID("verbosity")
+	propertyID, err := p.FIXMEProxy().PropertyID("verbosity")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "verbosity", err)
 	}
 	ch := make(chan LogLevel)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -913,12 +910,12 @@ func (p *proxyLogListener) SetFilters(update map[string]int32) error {
 
 // SubscribeFilters subscribe to a remote property
 func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, error) {
-	propertyID, err := p.PropertyID("filters")
+	propertyID, err := p.FIXMEProxy().PropertyID("filters")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
 	}
 	ch := make(chan map[string]int32)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -977,8 +974,7 @@ type LogManager interface {
 
 // LogManagerProxy represents a proxy object to the service
 type LogManagerProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	LogManager
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -1007,7 +1003,7 @@ func (c Constructor) LogManager() (LogManagerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
-	return MakeLogManager(p.session, bus.WithContext(p, ctx))
+	return MakeLogManager(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Log calls the remote procedure
@@ -1096,14 +1092,14 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	var ret int32
 	var buf bytes.Buffer
 	if err = func() error {
-		meta, err := source.MetaObject(source.ObjectID())
+		meta, err := source.MetaObject(source.FIXMEProxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  source.ServiceID(),
-			ObjectID:   source.ObjectID(),
+			ServiceID:  source.FIXMEProxy().ServiceID(),
+			ObjectID:   source.FIXMEProxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
@@ -1143,8 +1139,7 @@ type ALTextToSpeech interface {
 
 // ALTextToSpeechProxy represents a proxy object to the service
 type ALTextToSpeechProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ALTextToSpeech
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -1173,7 +1168,7 @@ func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
-	return MakeALTextToSpeech(p.session, bus.WithContext(p, ctx))
+	return MakeALTextToSpeech(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Say calls the remote procedure
@@ -1206,8 +1201,7 @@ type ALAnimatedSpeech interface {
 
 // ALAnimatedSpeechProxy represents a proxy object to the service
 type ALAnimatedSpeechProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ALAnimatedSpeech
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -1236,7 +1230,7 @@ func (c Constructor) ALAnimatedSpeech() (ALAnimatedSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALAnimatedSpeech) WithContext(ctx context.Context) ALAnimatedSpeechProxy {
-	return MakeALAnimatedSpeech(p.session, bus.WithContext(p, ctx))
+	return MakeALAnimatedSpeech(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Say calls the remote procedure

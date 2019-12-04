@@ -9,7 +9,6 @@ import (
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
-	object "github.com/lugu/qiloop/type/object"
 )
 
 // Constructor gives access to remote services
@@ -44,8 +43,7 @@ type ALRobotPosture interface {
 
 // ALRobotPostureProxy represents a proxy object to the service
 type ALRobotPostureProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ALRobotPosture
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -74,7 +72,7 @@ func (c Constructor) ALRobotPosture() (ALRobotPostureProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALRobotPosture) WithContext(ctx context.Context) ALRobotPostureProxy {
-	return MakeALRobotPosture(p.session, bus.WithContext(p, ctx))
+	return MakeALRobotPosture(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // GetPostureFamily calls the remote procedure

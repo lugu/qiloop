@@ -190,8 +190,7 @@ type PingPong interface {
 
 // PingPongProxy represents a proxy object to the service
 type PingPongProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	PingPong
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -220,7 +219,7 @@ func (c Constructor) PingPong() (PingPongProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyPingPong) WithContext(ctx context.Context) PingPongProxy {
-	return MakePingPong(p.session, bus.WithContext(p, ctx))
+	return MakePingPong(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Hello calls the remote procedure
@@ -259,12 +258,12 @@ func (p *proxyPingPong) Ping(a string) error {
 
 // SubscribePong subscribe to a remote property
 func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
-	propertyID, err := p.SignalID("pong")
+	propertyID, err := p.FIXMEProxy().SignalID("pong")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
 	}
 	ch := make(chan string)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

@@ -133,8 +133,7 @@ type Timestamp interface {
 
 // TimestampProxy represents a proxy object to the service
 type TimestampProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	Timestamp
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -163,7 +162,7 @@ func (c Constructor) Timestamp() (TimestampProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyTimestamp) WithContext(ctx context.Context) TimestampProxy {
-	return MakeTimestamp(p.session, bus.WithContext(p, ctx))
+	return MakeTimestamp(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Nanoseconds calls the remote procedure
