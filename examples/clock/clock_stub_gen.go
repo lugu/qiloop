@@ -162,7 +162,7 @@ func (c Constructor) Timestamp() (TimestampProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyTimestamp) WithContext(ctx context.Context) TimestampProxy {
-	return MakeTimestamp(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeTimestamp(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Nanoseconds calls the remote procedure
@@ -170,7 +170,7 @@ func (p *proxyTimestamp) Nanoseconds() (int64, error) {
 	var err error
 	var ret int64
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("nanoseconds", buf.Bytes())
+	response, err := p.Proxy().Call("nanoseconds", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call nanoseconds failed: %s", err)
 	}

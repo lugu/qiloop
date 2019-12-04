@@ -136,10 +136,10 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 		).Params(jen.Id(objName(serviceName)))
 		definitions = append(definitions, def)
 	} else {
-		comment := jen.Comment("FIXMEProxy returns a proxy.")
+		comment := jen.Comment("Proxy returns a proxy.")
 		definitions = append(definitions, comment)
 
-		def := jen.Id("FIXMEProxy").Params().Params(
+		def := jen.Id("Proxy").Params().Params(
 			jen.Qual("github.com/lugu/qiloop/bus", "Proxy"),
 		)
 		definitions = append(definitions, def)
@@ -345,13 +345,13 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		).Id("WithContext").Params(
 			jen.Id("ctx").Qual("context", "Context"),
 		).Params(jen.Id(objName(serviceName))).Block(
-			jen.Id(`return Make` + serviceName + `(p.session, bus.WithContext(p.FIXMEProxy(), ctx))`),
+			jen.Id(`return Make` + serviceName + `(p.session, bus.WithContext(p.Proxy(), ctx))`),
 		)
 	} else {
-		file.Comment("FIXMEProxy returns a proxy.")
+		file.Comment("Proxy returns a proxy.")
 		file.Func().Params(
 			jen.Id("p").Op("*").Id(proxyName(serviceName)),
-		).Id("FIXMEProxy").Params().Params(
+		).Id("Proxy").Params().Params(
 			jen.Qual("github.com/lugu/qiloop/bus", "Proxy"),
 		).Block(
 			jen.Id(`return p.proxy`),
@@ -411,7 +411,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 		methodID = "SignalID"
 	}
 	body := jen.Block(
-		jen.Id(`propertyID, err := p.FIXMEProxy().`+methodID+`("`+actionName+`")
+		jen.Id(`propertyID, err := p.Proxy().`+methodID+`("`+actionName+`")
 		if err != nil {
 			return nil, nil, fmt.Errorf("property %s not available: %s", "`+actionName+`", err)
 		}`),
@@ -421,7 +421,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			jen.Id("cancel"),
 			jen.Id("chPay"),
 			jen.Err(),
-		).Op(":=").Id("p.FIXMEProxy().SubscribeID").Call(jen.Id("propertyID")),
+		).Op(":=").Id("p.Proxy().SubscribeID").Call(jen.Id("propertyID")),
 		jen.Id(`if err != nil {
 			return nil, nil, fmt.Errorf("request property: %s", err)
 		}`),
@@ -572,9 +572,9 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 		}
 	}
 	if ret.Signature() != "v" {
-		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.FIXMEProxy().Call("%s", buf.Bytes())`, method.Name)))
+		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.Proxy().Call("%s", buf.Bytes())`, method.Name)))
 	} else {
-		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.FIXMEProxy().Call("%s", buf.Bytes())`, method.Name)))
+		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.Proxy().Call("%s", buf.Bytes())`, method.Name)))
 	}
 	if ret.Signature() != "v" {
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(

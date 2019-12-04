@@ -594,14 +594,14 @@ func (p *stubLogManager) CreateListener(msg *net.Message, c bus.Channel) error {
 	}
 	var out bytes.Buffer
 	errOut := func() error {
-		meta, err := ret.MetaObject(ret.FIXMEProxy().ObjectID())
+		meta, err := ret.MetaObject(ret.Proxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  ret.FIXMEProxy().ServiceID(),
-			ObjectID:   ret.FIXMEProxy().ObjectID(),
+			ServiceID:  ret.Proxy().ServiceID(),
+			ObjectID:   ret.Proxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -622,14 +622,14 @@ func (p *stubLogManager) GetListener(msg *net.Message, c bus.Channel) error {
 	}
 	var out bytes.Buffer
 	errOut := func() error {
-		meta, err := ret.MetaObject(ret.FIXMEProxy().ObjectID())
+		meta, err := ret.MetaObject(ret.Proxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  ret.FIXMEProxy().ServiceID(),
-			ObjectID:   ret.FIXMEProxy().ObjectID(),
+			ServiceID:  ret.Proxy().ServiceID(),
+			ObjectID:   ret.Proxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -898,7 +898,7 @@ func (c Constructor) LogProvider() (LogProviderProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
-	return MakeLogProvider(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeLogProvider(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // SetVerbosity calls the remote procedure
@@ -908,7 +908,7 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setVerbosity", buf.Bytes())
+	_, err = p.Proxy().Call("setVerbosity", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setVerbosity failed: %s", err)
 	}
@@ -925,7 +925,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setCategory", buf.Bytes())
+	_, err = p.Proxy().Call("setCategory", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -955,7 +955,7 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize filters: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("clearAndSet", buf.Bytes())
+	_, err = p.Proxy().Call("clearAndSet", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearAndSet failed: %s", err)
 	}
@@ -1015,7 +1015,7 @@ func (c Constructor) LogListener() (LogListenerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
-	return MakeLogListener(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeLogListener(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // SetLevel calls the remote procedure
@@ -1025,7 +1025,7 @@ func (p *proxyLogListener) SetLevel(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setLevel", buf.Bytes())
+	_, err = p.Proxy().Call("setLevel", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setLevel failed: %s", err)
 	}
@@ -1042,7 +1042,7 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("addFilter", buf.Bytes())
+	_, err = p.Proxy().Call("addFilter", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call addFilter failed: %s", err)
 	}
@@ -1053,7 +1053,7 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.FIXMEProxy().Call("clearFilters", buf.Bytes())
+	_, err = p.Proxy().Call("clearFilters", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
 	}
@@ -1062,12 +1062,12 @@ func (p *proxyLogListener) ClearFilters() error {
 
 // SubscribeOnLogMessage subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("onLogMessage")
+	propertyID, err := p.Proxy().SignalID("onLogMessage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
 	ch := make(chan LogMessage)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1094,12 +1094,12 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 
 // SubscribeOnLogMessages subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("onLogMessages")
+	propertyID, err := p.Proxy().SignalID("onLogMessages")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
 	}
 	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1139,12 +1139,12 @@ func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, 
 
 // SubscribeOnLogMessagesWithBacklog subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessagesWithBacklog() (func(), chan []LogMessage, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("onLogMessagesWithBacklog")
+	propertyID, err := p.Proxy().SignalID("onLogMessagesWithBacklog")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
 	}
 	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1222,12 +1222,12 @@ func (p *proxyLogListener) SetLogLevel(update LogLevel) error {
 
 // SubscribeLogLevel subscribe to a remote property
 func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
-	propertyID, err := p.FIXMEProxy().PropertyID("logLevel")
+	propertyID, err := p.Proxy().PropertyID("logLevel")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
 	}
 	ch := make(chan LogLevel)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1297,7 +1297,7 @@ func (c Constructor) LogManager() (LogManagerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
-	return MakeLogManager(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeLogManager(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Log calls the remote procedure
@@ -1319,7 +1319,7 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize messages: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("log", buf.Bytes())
+	_, err = p.Proxy().Call("log", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
@@ -1331,7 +1331,7 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("createListener", buf.Bytes())
+	response, err := p.Proxy().Call("createListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
@@ -1358,7 +1358,7 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("getListener", buf.Bytes())
+	response, err := p.Proxy().Call("getListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
@@ -1386,20 +1386,20 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	var ret int32
 	var buf bytes.Buffer
 	if err = func() error {
-		meta, err := source.MetaObject(source.FIXMEProxy().ObjectID())
+		meta, err := source.MetaObject(source.Proxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  source.FIXMEProxy().ServiceID(),
-			ObjectID:   source.FIXMEProxy().ObjectID(),
+			ServiceID:  source.Proxy().ServiceID(),
+			ObjectID:   source.Proxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize source: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("addProvider", buf.Bytes())
+	response, err := p.Proxy().Call("addProvider", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
@@ -1418,7 +1418,7 @@ func (p *proxyLogManager) RemoveProvider(sourceID int32) error {
 	if err = basic.WriteInt32(sourceID, &buf); err != nil {
 		return fmt.Errorf("serialize sourceID: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("removeProvider", buf.Bytes())
+	_, err = p.Proxy().Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
 	}

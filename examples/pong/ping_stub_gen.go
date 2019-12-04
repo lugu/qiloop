@@ -219,7 +219,7 @@ func (c Constructor) PingPong() (PingPongProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyPingPong) WithContext(ctx context.Context) PingPongProxy {
-	return MakePingPong(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakePingPong(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Hello calls the remote procedure
@@ -230,7 +230,7 @@ func (p *proxyPingPong) Hello(a string) (string, error) {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return ret, fmt.Errorf("serialize a: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("hello", buf.Bytes())
+	response, err := p.Proxy().Call("hello", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call hello failed: %s", err)
 	}
@@ -249,7 +249,7 @@ func (p *proxyPingPong) Ping(a string) error {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("serialize a: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("ping", buf.Bytes())
+	_, err = p.Proxy().Call("ping", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call ping failed: %s", err)
 	}
@@ -258,12 +258,12 @@ func (p *proxyPingPong) Ping(a string) error {
 
 // SubscribePong subscribe to a remote property
 func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("pong")
+	propertyID, err := p.Proxy().SignalID("pong")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
 	}
 	ch := make(chan string)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

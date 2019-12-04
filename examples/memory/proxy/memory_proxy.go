@@ -61,7 +61,7 @@ func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
-	return MakeALTextToSpeech(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeALTextToSpeech(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Say calls the remote procedure
@@ -71,7 +71,7 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	if err = basic.WriteString(stringToSay, &buf); err != nil {
 		return fmt.Errorf("serialize stringToSay: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("say", buf.Bytes())
+	_, err = p.Proxy().Call("say", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -117,7 +117,7 @@ func (c Constructor) ALMemory() (ALMemoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALMemory) WithContext(ctx context.Context) ALMemoryProxy {
-	return MakeALMemory(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeALMemory(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // GetEventList calls the remote procedure
@@ -125,7 +125,7 @@ func (p *proxyALMemory) GetEventList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("getEventList", buf.Bytes())
+	response, err := p.Proxy().Call("getEventList", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getEventList failed: %s", err)
 	}
@@ -158,7 +158,7 @@ func (p *proxyALMemory) Subscriber(eventName string) (SubscriberProxy, error) {
 	if err = basic.WriteString(eventName, &buf); err != nil {
 		return ret, fmt.Errorf("serialize eventName: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("subscriber", buf.Bytes())
+	response, err := p.Proxy().Call("subscriber", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call subscriber failed: %s", err)
 	}
@@ -217,17 +217,17 @@ func (c Constructor) Subscriber() (SubscriberProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxySubscriber) WithContext(ctx context.Context) SubscriberProxy {
-	return MakeSubscriber(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeSubscriber(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // SubscribeSignal subscribe to a remote property
 func (p *proxySubscriber) SubscribeSignal() (func(), chan value.Value, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("signal")
+	propertyID, err := p.Proxy().SignalID("signal")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "signal", err)
 	}
 	ch := make(chan value.Value)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

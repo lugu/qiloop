@@ -226,14 +226,14 @@ func (p *stubSpacecraft) Shoot(msg *net.Message, c bus.Channel) error {
 	}
 	var out bytes.Buffer
 	errOut := func() error {
-		meta, err := ret.MetaObject(ret.FIXMEProxy().ObjectID())
+		meta, err := ret.MetaObject(ret.Proxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  ret.FIXMEProxy().ServiceID(),
-			ObjectID:   ret.FIXMEProxy().ObjectID(),
+			ServiceID:  ret.Proxy().ServiceID(),
+			ObjectID:   ret.Proxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -352,17 +352,17 @@ func (c Constructor) Bomb() (BombProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyBomb) WithContext(ctx context.Context) BombProxy {
-	return MakeBomb(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeBomb(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // SubscribeBoom subscribe to a remote property
 func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("boom")
+	propertyID, err := p.Proxy().SignalID("boom")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "boom", err)
 	}
 	ch := make(chan int32)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -427,12 +427,12 @@ func (p *proxyBomb) SetDelay(update int32) error {
 
 // SubscribeDelay subscribe to a remote property
 func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
-	propertyID, err := p.FIXMEProxy().PropertyID("delay")
+	propertyID, err := p.Proxy().PropertyID("delay")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "delay", err)
 	}
 	ch := make(chan int32)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -496,7 +496,7 @@ func (c Constructor) Spacecraft() (SpacecraftProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxySpacecraft) WithContext(ctx context.Context) SpacecraftProxy {
-	return MakeSpacecraft(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeSpacecraft(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Shoot calls the remote procedure
@@ -504,7 +504,7 @@ func (p *proxySpacecraft) Shoot() (BombProxy, error) {
 	var err error
 	var ret BombProxy
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("shoot", buf.Bytes())
+	response, err := p.Proxy().Call("shoot", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call shoot failed: %s", err)
 	}
@@ -531,20 +531,20 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 	var err error
 	var buf bytes.Buffer
 	if err = func() error {
-		meta, err := ammo.MetaObject(ammo.FIXMEProxy().ObjectID())
+		meta, err := ammo.MetaObject(ammo.Proxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  ammo.FIXMEProxy().ServiceID(),
-			ObjectID:   ammo.FIXMEProxy().ObjectID(),
+			ServiceID:  ammo.Proxy().ServiceID(),
+			ObjectID:   ammo.Proxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
 		return fmt.Errorf("serialize ammo: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("ammo", buf.Bytes())
+	_, err = p.Proxy().Call("ammo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call ammo failed: %s", err)
 	}

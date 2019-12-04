@@ -133,7 +133,7 @@ func (s *Session) Object(ref object.ObjectReference) (o bus.Proxy, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return obj.FIXMEProxy(), nil
+	return obj.Proxy(), nil
 }
 
 // metaProxy is to create proxies to the directory and server

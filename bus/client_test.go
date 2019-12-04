@@ -161,50 +161,50 @@ func TestProxy(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	signalID, err := directory.FIXMEProxy().SignalID("serviceAdded")
+	signalID, err := directory.Proxy().SignalID("serviceAdded")
 	if err != nil {
 		t.Error(err)
 	}
 	if signalID != 106 {
 		t.Fatalf("wrong signal id")
 	}
-	methodID, err := directory.FIXMEProxy().MethodID("services")
+	methodID, err := directory.Proxy().MethodID("services")
 	if err != nil {
 		t.Error(err)
 	}
 	if methodID != 101 {
 		t.Fatalf("wrong method id")
 	}
-	if directory.FIXMEProxy().ObjectID() != 1 {
+	if directory.Proxy().ObjectID() != 1 {
 		t.Fatalf("wrong object id")
 	}
-	if directory.FIXMEProxy().ServiceID() != 1 {
+	if directory.Proxy().ServiceID() != 1 {
 		t.Fatalf("wrong service id")
 	}
-	cancel, _, err := directory.FIXMEProxy().SubscribeID(signalID)
+	cancel, _, err := directory.Proxy().SubscribeID(signalID)
 	if err != nil {
 		t.Error(err)
 	}
 	cancel()
-	cancel, _, err = directory.FIXMEProxy().Subscribe("serviceAdded")
+	cancel, _, err = directory.Proxy().Subscribe("serviceAdded")
 	if err != nil {
 		t.Error(err)
 	}
 	cancel()
-	_, _, err = directory.FIXMEProxy().Subscribe("unknownSignal")
+	_, _, err = directory.Proxy().Subscribe("unknownSignal")
 	if err == nil {
 		t.Fatalf("must fail")
 	}
-	_, _, err = directory.FIXMEProxy().SubscribeID(12345)
+	_, _, err = directory.Proxy().SubscribeID(12345)
 
 	if err == nil {
 		// TODO
 	}
-	_, err = directory.FIXMEProxy().Call("unknown service", make([]byte, 0))
+	_, err = directory.Proxy().Call("unknown service", make([]byte, 0))
 	if err == nil {
 		t.Fatalf("must fail")
 	}
-	resp, err := directory.FIXMEProxy().Call("services", make([]byte, 0))
+	resp, err := directory.Proxy().Call("services", make([]byte, 0))
 	if err != nil {
 		t.Error(err)
 	}
