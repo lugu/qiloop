@@ -654,6 +654,8 @@ type ServiceZero interface {
 type ServiceZeroProxy interface {
 	Proxy
 	ServiceZero
+	// FIXMEProxy returns a proxy.
+	FIXMEProxy() Proxy
 }
 
 // proxyServiceZero implements ServiceZeroProxy
@@ -668,6 +670,11 @@ func (c Constructor) ServiceZero() (ServiceZeroProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return &proxyServiceZero{proxy}, nil
+}
+
+// FIXMEProxy returns a proxy.
+func (p *proxyServiceZero) FIXMEProxy() Proxy {
+	return p
 }
 
 // Authenticate calls the remote procedure
@@ -694,7 +701,7 @@ func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize capability: %s", err)
 	}
-	response, err := p.Call("authenticate", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("authenticate", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call authenticate failed: %s", err)
 	}
@@ -747,6 +754,8 @@ type ObjectProxy interface {
 	object.Object
 	Proxy
 	Object
+	// FIXMEProxy returns a proxy.
+	FIXMEProxy() Proxy
 }
 
 // proxyObject implements ObjectProxy
@@ -763,6 +772,11 @@ func (c Constructor) Object() (ObjectProxy, error) {
 	return &proxyObject{proxy}, nil
 }
 
+// FIXMEProxy returns a proxy.
+func (p *proxyObject) FIXMEProxy() Proxy {
+	return p
+}
+
 // RegisterEvent calls the remote procedure
 func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error) {
 	var err error
@@ -777,7 +791,7 @@ func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler ui
 	if err = basic.WriteUint64(handler, &buf); err != nil {
 		return ret, fmt.Errorf("serialize handler: %s", err)
 	}
-	response, err := p.Call("registerEvent", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("registerEvent", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerEvent failed: %s", err)
 	}
@@ -802,7 +816,7 @@ func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler 
 	if err = basic.WriteUint64(handler, &buf); err != nil {
 		return fmt.Errorf("serialize handler: %s", err)
 	}
-	_, err = p.Call("unregisterEvent", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("unregisterEvent", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call unregisterEvent failed: %s", err)
 	}
@@ -817,7 +831,7 @@ func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize objectID: %s", err)
 	}
-	response, err := p.Call("metaObject", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("metaObject", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call metaObject failed: %s", err)
 	}
@@ -836,7 +850,7 @@ func (p *proxyObject) Terminate(objectID uint32) error {
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
 		return fmt.Errorf("serialize objectID: %s", err)
 	}
-	_, err = p.Call("terminate", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("terminate", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call terminate failed: %s", err)
 	}
@@ -851,7 +865,7 @@ func (p *proxyObject) Property(name value.Value) (value.Value, error) {
 	if err = name.Write(&buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	response, err := p.Call("property", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("property", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call property failed: %s", err)
 	}
@@ -873,7 +887,7 @@ func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
 	if err = value.Write(&buf); err != nil {
 		return fmt.Errorf("serialize value: %s", err)
 	}
-	_, err = p.Call("setProperty", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setProperty", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setProperty failed: %s", err)
 	}
@@ -885,7 +899,7 @@ func (p *proxyObject) Properties() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Call("properties", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("properties", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call properties failed: %s", err)
 	}
@@ -927,7 +941,7 @@ func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint3
 	if err = basic.WriteString(P3, &buf); err != nil {
 		return ret, fmt.Errorf("serialize P3: %s", err)
 	}
-	response, err := p.Call("registerEventWithSignature", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("registerEventWithSignature", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerEventWithSignature failed: %s", err)
 	}
@@ -944,7 +958,7 @@ func (p *proxyObject) IsStatsEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.Call("isStatsEnabled", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("isStatsEnabled", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isStatsEnabled failed: %s", err)
 	}
@@ -963,7 +977,7 @@ func (p *proxyObject) EnableStats(enabled bool) error {
 	if err = basic.WriteBool(enabled, &buf); err != nil {
 		return fmt.Errorf("serialize enabled: %s", err)
 	}
-	_, err = p.Call("enableStats", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("enableStats", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call enableStats failed: %s", err)
 	}
@@ -975,7 +989,7 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
 	var ret map[uint32]MethodStatistics
 	var buf bytes.Buffer
-	response, err := p.Call("stats", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("stats", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call stats failed: %s", err)
 	}
@@ -1009,7 +1023,7 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 func (p *proxyObject) ClearStats() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("clearStats", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("clearStats", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearStats failed: %s", err)
 	}
@@ -1021,7 +1035,7 @@ func (p *proxyObject) IsTraceEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.Call("isTraceEnabled", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("isTraceEnabled", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isTraceEnabled failed: %s", err)
 	}
@@ -1040,7 +1054,7 @@ func (p *proxyObject) EnableTrace(traced bool) error {
 	if err = basic.WriteBool(traced, &buf); err != nil {
 		return fmt.Errorf("serialize traced: %s", err)
 	}
-	_, err = p.Call("enableTrace", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("enableTrace", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call enableTrace failed: %s", err)
 	}

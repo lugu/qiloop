@@ -134,6 +134,14 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 			jen.Id("ctx").Qual("context", "Context"),
 		).Params(jen.Id(objName(serviceName)))
 		definitions = append(definitions, def)
+	} else {
+		comment := jen.Comment("FIXMEProxy returns a proxy.")
+		definitions = append(definitions, comment)
+
+		def := jen.Id("FIXMEProxy").Params().Params(
+			jen.Qual("github.com/lugu/qiloop/bus", "Proxy"),
+		)
+		definitions = append(definitions, def)
 	}
 
 	file.Comment(objName(serviceName) + " represents a proxy object to the service")
@@ -335,6 +343,15 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 			jen.Id("ctx").Qual("context", "Context"),
 		).Params(jen.Id(objName(serviceName))).Block(
 			jen.Id(`return Make` + serviceName + `(p.session, bus.WithContext(p, ctx))`),
+		)
+	} else {
+		file.Comment("FIXMEProxy returns a proxy.")
+		file.Func().Params(
+			jen.Id("p").Op("*").Id(proxyName(serviceName)),
+		).Id("FIXMEProxy").Params().Params(
+			jen.Qual("github.com/lugu/qiloop/bus", "Proxy"),
+		).Block(
+			jen.Id(`return p`),
 		)
 	}
 }
@@ -552,9 +569,9 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 		}
 	}
 	if ret.Signature() != "v" {
-		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.Call("%s", buf.Bytes())`, method.Name)))
+		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.FIXMEProxy().Call("%s", buf.Bytes())`, method.Name)))
 	} else {
-		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.Call("%s", buf.Bytes())`, method.Name)))
+		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.FIXMEProxy().Call("%s", buf.Bytes())`, method.Name)))
 	}
 	if ret.Signature() != "v" {
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(

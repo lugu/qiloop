@@ -72,7 +72,7 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	if err = basic.WriteString(stringToSay, &buf); err != nil {
 		return fmt.Errorf("serialize stringToSay: %s", err)
 	}
-	_, err = p.Call("say", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("say", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -127,7 +127,7 @@ func (p *proxyALMemory) GetEventList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Call("getEventList", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("getEventList", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getEventList failed: %s", err)
 	}
@@ -160,7 +160,7 @@ func (p *proxyALMemory) Subscriber(eventName string) (SubscriberProxy, error) {
 	if err = basic.WriteString(eventName, &buf); err != nil {
 		return ret, fmt.Errorf("serialize eventName: %s", err)
 	}
-	response, err := p.Call("subscriber", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("subscriber", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call subscriber failed: %s", err)
 	}

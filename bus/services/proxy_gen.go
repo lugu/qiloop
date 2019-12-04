@@ -148,7 +148,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	response, err := p.Call("service", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("service", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
@@ -165,7 +165,7 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf bytes.Buffer
-	response, err := p.Call("services", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("services", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call services failed: %s", err)
 	}
@@ -198,7 +198,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("serialize info: %s", err)
 	}
-	response, err := p.Call("registerService", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("registerService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerService failed: %s", err)
 	}
@@ -217,7 +217,7 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.Call("unregisterService", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("unregisterService", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call unregisterService failed: %s", err)
 	}
@@ -231,7 +231,7 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.Call("serviceReady", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("serviceReady", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call serviceReady failed: %s", err)
 	}
@@ -245,7 +245,7 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("serialize info: %s", err)
 	}
-	_, err = p.Call("updateServiceInfo", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("updateServiceInfo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call updateServiceInfo failed: %s", err)
 	}
@@ -257,7 +257,7 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.Call("machineId", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("machineId", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call machineId failed: %s", err)
 	}
@@ -277,7 +277,7 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize serviceID: %s", err)
 	}
-	response, err := p.Call("_socketOfService", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("_socketOfService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}
@@ -598,7 +598,7 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("setVerbosity", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setVerbosity", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setVerbosity failed: %s", err)
 	}
@@ -615,7 +615,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("setCategory", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setCategory", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -645,7 +645,7 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize filters: %s", err)
 	}
-	_, err = p.Call("clearAndSet", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("clearAndSet", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearAndSet failed: %s", err)
 	}
@@ -719,7 +719,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("setCategory", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setCategory", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -730,7 +730,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("clearFilters", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("clearFilters", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
 	}
@@ -1029,7 +1029,7 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize messages: %s", err)
 	}
-	_, err = p.Call("log", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("log", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
@@ -1041,7 +1041,7 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.Call("createListener", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("createListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
@@ -1068,7 +1068,7 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.Call("getListener", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("getListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
@@ -1109,7 +1109,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize source: %s", err)
 	}
-	response, err := p.Call("addProvider", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("addProvider", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
@@ -1128,7 +1128,7 @@ func (p *proxyLogManager) RemoveProvider(providerID int32) error {
 	if err = basic.WriteInt32(providerID, &buf); err != nil {
 		return fmt.Errorf("serialize providerID: %s", err)
 	}
-	_, err = p.Call("removeProvider", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
 	}
@@ -1183,7 +1183,7 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	if err = basic.WriteString(stringToSay, &buf); err != nil {
 		return fmt.Errorf("serialize stringToSay: %s", err)
 	}
-	_, err = p.Call("say", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("say", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -1246,7 +1246,7 @@ func (p *proxyALAnimatedSpeech) Say(text string) error {
 	if err = basic.WriteString(text, &buf); err != nil {
 		return fmt.Errorf("serialize text: %s", err)
 	}
-	_, err = p.Call("say", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("say", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -1258,7 +1258,7 @@ func (p *proxyALAnimatedSpeech) IsBodyTalkEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.Call("isBodyTalkEnabled", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("isBodyTalkEnabled", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isBodyTalkEnabled failed: %s", err)
 	}
@@ -1275,7 +1275,7 @@ func (p *proxyALAnimatedSpeech) IsBodyLanguageEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.Call("isBodyLanguageEnabled", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("isBodyLanguageEnabled", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isBodyLanguageEnabled failed: %s", err)
 	}
@@ -1294,7 +1294,7 @@ func (p *proxyALAnimatedSpeech) SetBodyTalkEnabled(enable bool) error {
 	if err = basic.WriteBool(enable, &buf); err != nil {
 		return fmt.Errorf("serialize enable: %s", err)
 	}
-	_, err = p.Call("setBodyTalkEnabled", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setBodyTalkEnabled", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setBodyTalkEnabled failed: %s", err)
 	}
@@ -1308,7 +1308,7 @@ func (p *proxyALAnimatedSpeech) SetBodyLanguageEnabled(enable bool) error {
 	if err = basic.WriteBool(enable, &buf); err != nil {
 		return fmt.Errorf("serialize enable: %s", err)
 	}
-	_, err = p.Call("setBodyLanguageEnabled", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setBodyLanguageEnabled", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setBodyLanguageEnabled failed: %s", err)
 	}

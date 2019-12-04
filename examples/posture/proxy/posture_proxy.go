@@ -82,7 +82,7 @@ func (p *proxyALRobotPosture) GetPostureFamily() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.Call("getPostureFamily", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("getPostureFamily", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPostureFamily failed: %s", err)
 	}
@@ -105,7 +105,7 @@ func (p *proxyALRobotPosture) GoToPosture(postureName string, maxSpeedFraction f
 	if err = basic.WriteFloat32(maxSpeedFraction, &buf); err != nil {
 		return ret, fmt.Errorf("serialize maxSpeedFraction: %s", err)
 	}
-	response, err := p.Call("goToPosture", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("goToPosture", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call goToPosture failed: %s", err)
 	}
@@ -128,7 +128,7 @@ func (p *proxyALRobotPosture) ApplyPosture(postureName string, maxSpeedFraction 
 	if err = basic.WriteFloat32(maxSpeedFraction, &buf); err != nil {
 		return ret, fmt.Errorf("serialize maxSpeedFraction: %s", err)
 	}
-	response, err := p.Call("applyPosture", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("applyPosture", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call applyPosture failed: %s", err)
 	}
@@ -144,7 +144,7 @@ func (p *proxyALRobotPosture) ApplyPosture(postureName string, maxSpeedFraction 
 func (p *proxyALRobotPosture) StopMove() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("stopMove", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("stopMove", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call stopMove failed: %s", err)
 	}
@@ -156,7 +156,7 @@ func (p *proxyALRobotPosture) GetPostureList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Call("getPostureList", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("getPostureList", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPostureList failed: %s", err)
 	}
@@ -186,7 +186,7 @@ func (p *proxyALRobotPosture) GetPostureFamilyList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Call("getPostureFamilyList", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("getPostureFamilyList", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPostureFamilyList failed: %s", err)
 	}
@@ -218,7 +218,7 @@ func (p *proxyALRobotPosture) SetMaxTryNumber(pMaxTryNumber int32) error {
 	if err = basic.WriteInt32(pMaxTryNumber, &buf); err != nil {
 		return fmt.Errorf("serialize pMaxTryNumber: %s", err)
 	}
-	_, err = p.Call("setMaxTryNumber", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setMaxTryNumber", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setMaxTryNumber failed: %s", err)
 	}
@@ -230,7 +230,7 @@ func (p *proxyALRobotPosture) GetPosture() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.Call("getPosture", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("getPosture", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPosture failed: %s", err)
 	}
