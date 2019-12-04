@@ -354,7 +354,6 @@ func TestCancel(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // cancel the context before the call
-	t.SkipNow()
 	_, err = spacecraft.WithContext(ctx).Shoot()
 	if err != bus.ErrCancelled {
 		t.Fatal(err)
