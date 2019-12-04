@@ -274,9 +274,8 @@ func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,
 	if err != nil {
 		return nil, err
 	}
-	proxy := bus.NewProxy(clt, ref.MetaObject,
-		ref.ServiceID, ref.ObjectID)
-	return bus.MakeObject(proxy), nil
+	return bus.NewProxy(clt, ref.MetaObject,
+		ref.ServiceID, ref.ObjectID), nil
 }
 
 func (s *directorySession) Terminate() error {

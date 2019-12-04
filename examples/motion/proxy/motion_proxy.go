@@ -9,7 +9,6 @@ import (
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
-	object "github.com/lugu/qiloop/type/object"
 )
 
 // Constructor gives access to remote services
@@ -38,8 +37,7 @@ type ALMotion interface {
 
 // ALMotionProxy represents a proxy object to the service
 type ALMotionProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ALMotion
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -68,7 +66,7 @@ func (c Constructor) ALMotion() (ALMotionProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
-	return MakeALMotion(p.session, bus.WithContext(p, ctx))
+	return MakeALMotion(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // WakeUp calls the remote procedure

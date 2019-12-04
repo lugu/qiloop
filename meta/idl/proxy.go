@@ -116,12 +116,13 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 	)
 
 	definitions = make([]jen.Code, 0)
-	if serviceName != "ServiceZero" {
+	if serviceName == "Object" {
 		definitions = append(definitions,
 			jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
+	} else if serviceName != "ServiceZero" {
+		definitions = append(definitions,
+			jen.Qual("github.com/lugu/qiloop/bus", objName("Object")))
 	}
-	definitions = append(definitions,
-		jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	definitions = append(definitions, jen.Id(serviceName))
 
 	if serviceName != "ServiceZero" && serviceName != "Object" {
@@ -342,7 +343,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		).Id("WithContext").Params(
 			jen.Id("ctx").Qual("context", "Context"),
 		).Params(jen.Id(objName(serviceName))).Block(
-			jen.Id(`return Make` + serviceName + `(p.session, bus.WithContext(p, ctx))`),
+			jen.Id(`return Make` + serviceName + `(p.session, bus.WithContext(p.FIXMEProxy(), ctx))`),
 		)
 	} else {
 		file.Comment("FIXMEProxy returns a proxy.")
@@ -408,7 +409,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 		methodID = "SignalID"
 	}
 	body := jen.Block(
-		jen.Id(`propertyID, err := p.`+methodID+`("`+actionName+`")
+		jen.Id(`propertyID, err := p.FIXMEProxy().`+methodID+`("`+actionName+`")
 		if err != nil {
 			return nil, nil, fmt.Errorf("property %s not available: %s", "`+actionName+`", err)
 		}`),
@@ -418,7 +419,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			jen.Id("cancel"),
 			jen.Id("chPay"),
 			jen.Err(),
-		).Op(":=").Id("p.SubscribeID").Call(jen.Id("propertyID")),
+		).Op(":=").Id("p.FIXMEProxy().SubscribeID").Call(jen.Id("propertyID")),
 		jen.Id(`if err != nil {
 			return nil, nil, fmt.Errorf("request property: %s", err)
 		}`),

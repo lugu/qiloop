@@ -652,7 +652,6 @@ type ServiceZero interface {
 
 // ServiceZeroProxy represents a proxy object to the service
 type ServiceZeroProxy interface {
-	Proxy
 	ServiceZero
 	// FIXMEProxy returns a proxy.
 	FIXMEProxy() Proxy
@@ -752,7 +751,6 @@ type Object interface {
 // ObjectProxy represents a proxy object to the service
 type ObjectProxy interface {
 	object.Object
-	Proxy
 	Object
 	// FIXMEProxy returns a proxy.
 	FIXMEProxy() Proxy
@@ -1063,12 +1061,12 @@ func (p *proxyObject) EnableTrace(traced bool) error {
 
 // SubscribeTraceObject subscribe to a remote property
 func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
-	propertyID, err := p.SignalID("traceObject")
+	propertyID, err := p.FIXMEProxy().SignalID("traceObject")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)
 	}
 	ch := make(chan EventTrace)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

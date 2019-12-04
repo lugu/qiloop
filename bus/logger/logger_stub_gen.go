@@ -594,14 +594,14 @@ func (p *stubLogManager) CreateListener(msg *net.Message, c bus.Channel) error {
 	}
 	var out bytes.Buffer
 	errOut := func() error {
-		meta, err := ret.MetaObject(ret.ObjectID())
+		meta, err := ret.MetaObject(ret.FIXMEProxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  ret.ServiceID(),
-			ObjectID:   ret.ObjectID(),
+			ServiceID:  ret.FIXMEProxy().ServiceID(),
+			ObjectID:   ret.FIXMEProxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -622,14 +622,14 @@ func (p *stubLogManager) GetListener(msg *net.Message, c bus.Channel) error {
 	}
 	var out bytes.Buffer
 	errOut := func() error {
-		meta, err := ret.MetaObject(ret.ObjectID())
+		meta, err := ret.MetaObject(ret.FIXMEProxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  ret.ServiceID(),
-			ObjectID:   ret.ObjectID(),
+			ServiceID:  ret.FIXMEProxy().ServiceID(),
+			ObjectID:   ret.FIXMEProxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &out)
 	}()
@@ -869,8 +869,7 @@ type LogProvider interface {
 
 // LogProviderProxy represents a proxy object to the service
 type LogProviderProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	LogProvider
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -899,7 +898,7 @@ func (c Constructor) LogProvider() (LogProviderProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
-	return MakeLogProvider(p.session, bus.WithContext(p, ctx))
+	return MakeLogProvider(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // SetVerbosity calls the remote procedure
@@ -987,8 +986,7 @@ type LogListener interface {
 
 // LogListenerProxy represents a proxy object to the service
 type LogListenerProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	LogListener
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -1017,7 +1015,7 @@ func (c Constructor) LogListener() (LogListenerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
-	return MakeLogListener(p.session, bus.WithContext(p, ctx))
+	return MakeLogListener(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // SetLevel calls the remote procedure
@@ -1064,12 +1062,12 @@ func (p *proxyLogListener) ClearFilters() error {
 
 // SubscribeOnLogMessage subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.SignalID("onLogMessage")
+	propertyID, err := p.FIXMEProxy().SignalID("onLogMessage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
 	ch := make(chan LogMessage)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1096,12 +1094,12 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 
 // SubscribeOnLogMessages subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, error) {
-	propertyID, err := p.SignalID("onLogMessages")
+	propertyID, err := p.FIXMEProxy().SignalID("onLogMessages")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
 	}
 	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1141,12 +1139,12 @@ func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, 
 
 // SubscribeOnLogMessagesWithBacklog subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessagesWithBacklog() (func(), chan []LogMessage, error) {
-	propertyID, err := p.SignalID("onLogMessagesWithBacklog")
+	propertyID, err := p.FIXMEProxy().SignalID("onLogMessagesWithBacklog")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
 	}
 	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1224,12 +1222,12 @@ func (p *proxyLogListener) SetLogLevel(update LogLevel) error {
 
 // SubscribeLogLevel subscribe to a remote property
 func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
-	propertyID, err := p.PropertyID("logLevel")
+	propertyID, err := p.FIXMEProxy().PropertyID("logLevel")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
 	}
 	ch := make(chan LogLevel)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1270,8 +1268,7 @@ type LogManager interface {
 
 // LogManagerProxy represents a proxy object to the service
 type LogManagerProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	LogManager
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -1300,7 +1297,7 @@ func (c Constructor) LogManager() (LogManagerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
-	return MakeLogManager(p.session, bus.WithContext(p, ctx))
+	return MakeLogManager(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Log calls the remote procedure
@@ -1389,14 +1386,14 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	var ret int32
 	var buf bytes.Buffer
 	if err = func() error {
-		meta, err := source.MetaObject(source.ObjectID())
+		meta, err := source.MetaObject(source.FIXMEProxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  source.ServiceID(),
-			ObjectID:   source.ObjectID(),
+			ServiceID:  source.FIXMEProxy().ServiceID(),
+			ObjectID:   source.FIXMEProxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {

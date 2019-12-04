@@ -122,10 +122,10 @@ func (s *localSession) Object(ref object.ObjectReference) (Proxy,
 	if err != nil {
 		return nil, err
 	}
-	proxy := NewProxy(clt, ref.MetaObject, ref.ServiceID,
-		ref.ObjectID)
-	return MakeObject(proxy), nil
+	return NewProxy(clt, ref.MetaObject, ref.ServiceID,
+		ref.ObjectID), nil
 }
+
 func (s *localSession) Terminate() error {
 	return nil
 }

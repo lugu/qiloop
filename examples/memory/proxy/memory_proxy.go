@@ -32,8 +32,7 @@ type ALTextToSpeech interface {
 
 // ALTextToSpeechProxy represents a proxy object to the service
 type ALTextToSpeechProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ALTextToSpeech
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -62,7 +61,7 @@ func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
-	return MakeALTextToSpeech(p.session, bus.WithContext(p, ctx))
+	return MakeALTextToSpeech(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // Say calls the remote procedure
@@ -89,8 +88,7 @@ type ALMemory interface {
 
 // ALMemoryProxy represents a proxy object to the service
 type ALMemoryProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	ALMemory
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -119,7 +117,7 @@ func (c Constructor) ALMemory() (ALMemoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALMemory) WithContext(ctx context.Context) ALMemoryProxy {
-	return MakeALMemory(p.session, bus.WithContext(p, ctx))
+	return MakeALMemory(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // GetEventList calls the remote procedure
@@ -190,8 +188,7 @@ type Subscriber interface {
 
 // SubscriberProxy represents a proxy object to the service
 type SubscriberProxy interface {
-	object.Object
-	bus.Proxy
+	bus.ObjectProxy
 	Subscriber
 	// WithContext returns a new proxy. Calls to this proxy can be
 	// cancelled by the context
@@ -220,17 +217,17 @@ func (c Constructor) Subscriber() (SubscriberProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxySubscriber) WithContext(ctx context.Context) SubscriberProxy {
-	return MakeSubscriber(p.session, bus.WithContext(p, ctx))
+	return MakeSubscriber(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
 }
 
 // SubscribeSignal subscribe to a remote property
 func (p *proxySubscriber) SubscribeSignal() (func(), chan value.Value, error) {
-	propertyID, err := p.SignalID("signal")
+	propertyID, err := p.FIXMEProxy().SignalID("signal")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "signal", err)
 	}
 	ch := make(chan value.Value)
-	cancel, chPay, err := p.SubscribeID(propertyID)
+	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

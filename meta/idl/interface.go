@@ -258,14 +258,14 @@ func (itf *InterfaceType) registerMembers(set *signature.TypeSet) error {
 // error.
 func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	return jen.Id(`func() error {
-	    meta, err := ` + id + `.MetaObject(` + id + `.ObjectID())
+	    meta, err := ` + id + `.MetaObject(` + id + `.FIXMEProxy().ObjectID())
 	    if err != nil {
 		return fmt.Errorf("get meta: %s", err)
 	    }
 	    ref := object.ObjectReference {
 		    MetaObject: meta,
-		    ServiceID: ` + id + `.ServiceID(),
-		    ObjectID: ` + id + `.ObjectID(),
+		    ServiceID: ` + id + `.FIXMEProxy().ServiceID(),
+		    ObjectID: ` + id + `.FIXMEProxy().ObjectID(),
 	    }
 	    return object.WriteObjectReference(ref, ` + writer + `)
 	}()`)
@@ -293,15 +293,18 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 	    }`
 	}
 	return jen.Func().Params().Params(s.TypeName(), jen.Error()).Block(
-		jen.Id(`ref, err := object.ReadObjectReference(` + reader + `)
-	    if err != nil {
+		jen.Id("ref").Op(",").Id("err").Op(":=").Qual(
+			"github.com/lugu/qiloop/type/object",
+			"ReadObjectReference",
+		).Call(jen.Id(reader)),
+		jen.Id(`if err != nil {
 		return nil, fmt.Errorf("get meta: %s", err)
-	    }` + extra + `
+	    }`+extra+`
 	    proxy, err := p.session.Object(ref)
 	    if err != nil {
 		    return nil, fmt.Errorf("get proxy: %s", err)
 	    }
-	    return Make` + s.Name + `(p.session, proxy), nil`),
+	    return Make`+s.Name+`(p.session, proxy), nil`),
 	).Call()
 }
 
