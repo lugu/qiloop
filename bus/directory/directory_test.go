@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/lugu/qiloop/bus"
-	proxy "github.com/lugu/qiloop/bus/services"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/type/object"
@@ -25,7 +24,7 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	directory, err := proxy.ServiceDirectory(session)
+	directory, err := ServiceDirectory(session)
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}
@@ -70,8 +69,8 @@ func newObjectRef(serviceID uint32) object.ObjectReference {
 	}
 }
 
-func newClientInfo(name string) proxy.ServiceInfo {
-	return proxy.ServiceInfo{
+func newClientInfo(name string) ServiceInfo {
+	return ServiceInfo{
 		Name:      name,
 		MachineId: util.MachineID(),
 		ProcessId: util.ProcessID(),
@@ -354,7 +353,7 @@ func TestStub(t *testing.T) {
 		t.Error(err)
 	}
 	defer session.Terminate()
-	directory, err := proxy.ServiceDirectory(session)
+	directory, err := ServiceDirectory(session)
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}
@@ -447,7 +446,7 @@ func TestSession(t *testing.T) {
 		t.Error(err)
 	}
 	defer session.Terminate()
-	directory, err := proxy.ServiceDirectory(session)
+	directory, err := ServiceDirectory(session)
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}
