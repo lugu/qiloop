@@ -158,7 +158,7 @@ func NewLogger(session bus.Session, category string) (Logger, error) {
 	if err != nil {
 		return nil, err
 	}
-	service := logManager.FIXMEProxy().ProxyService(session)
+	service := logManager.Proxy().ProxyService(session)
 	impl, logger := newLogProviderImpl(category)
 	proxy, err := constructor.NewLogProvider(service, impl)
 	logger.id, err = logManager.AddProvider(proxy)

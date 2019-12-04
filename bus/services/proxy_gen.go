@@ -136,7 +136,7 @@ func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
-	return MakeServiceDirectory(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeServiceDirectory(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Service calls the remote procedure
@@ -147,7 +147,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("service", buf.Bytes())
+	response, err := p.Proxy().Call("service", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
@@ -164,7 +164,7 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("services", buf.Bytes())
+	response, err := p.Proxy().Call("services", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call services failed: %s", err)
 	}
@@ -197,7 +197,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("serialize info: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("registerService", buf.Bytes())
+	response, err := p.Proxy().Call("registerService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerService failed: %s", err)
 	}
@@ -216,7 +216,7 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("unregisterService", buf.Bytes())
+	_, err = p.Proxy().Call("unregisterService", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call unregisterService failed: %s", err)
 	}
@@ -230,7 +230,7 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("serviceReady", buf.Bytes())
+	_, err = p.Proxy().Call("serviceReady", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call serviceReady failed: %s", err)
 	}
@@ -244,7 +244,7 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("serialize info: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("updateServiceInfo", buf.Bytes())
+	_, err = p.Proxy().Call("updateServiceInfo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call updateServiceInfo failed: %s", err)
 	}
@@ -256,7 +256,7 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("machineId", buf.Bytes())
+	response, err := p.Proxy().Call("machineId", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call machineId failed: %s", err)
 	}
@@ -276,7 +276,7 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize serviceID: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("_socketOfService", buf.Bytes())
+	response, err := p.Proxy().Call("_socketOfService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}
@@ -290,12 +290,12 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 
 // SubscribeServiceAdded subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("serviceAdded")
+	propertyID, err := p.Proxy().SignalID("serviceAdded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
 	ch := make(chan ServiceAdded)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -322,12 +322,12 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 
 // SubscribeServiceRemoved subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("serviceRemoved")
+	propertyID, err := p.Proxy().SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -586,7 +586,7 @@ func (c Constructor) LogProvider() (LogProviderProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
-	return MakeLogProvider(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeLogProvider(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // SetVerbosity calls the remote procedure
@@ -596,7 +596,7 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setVerbosity", buf.Bytes())
+	_, err = p.Proxy().Call("setVerbosity", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setVerbosity failed: %s", err)
 	}
@@ -613,7 +613,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setCategory", buf.Bytes())
+	_, err = p.Proxy().Call("setCategory", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -643,7 +643,7 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize filters: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("clearAndSet", buf.Bytes())
+	_, err = p.Proxy().Call("clearAndSet", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearAndSet failed: %s", err)
 	}
@@ -703,7 +703,7 @@ func (c Constructor) LogListener() (LogListenerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
-	return MakeLogListener(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeLogListener(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // SetCategory calls the remote procedure
@@ -716,7 +716,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setCategory", buf.Bytes())
+	_, err = p.Proxy().Call("setCategory", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -727,7 +727,7 @@ func (p *proxyLogListener) SetCategory(category string, level LogLevel) error {
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.FIXMEProxy().Call("clearFilters", buf.Bytes())
+	_, err = p.Proxy().Call("clearFilters", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
 	}
@@ -736,12 +736,12 @@ func (p *proxyLogListener) ClearFilters() error {
 
 // SubscribeOnLogMessage subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("onLogMessage")
+	propertyID, err := p.Proxy().SignalID("onLogMessage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
 	ch := make(chan LogMessage)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -806,12 +806,12 @@ func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
 
 // SubscribeVerbosity subscribe to a remote property
 func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
-	propertyID, err := p.FIXMEProxy().PropertyID("verbosity")
+	propertyID, err := p.Proxy().PropertyID("verbosity")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "verbosity", err)
 	}
 	ch := make(chan LogLevel)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -910,12 +910,12 @@ func (p *proxyLogListener) SetFilters(update map[string]int32) error {
 
 // SubscribeFilters subscribe to a remote property
 func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, error) {
-	propertyID, err := p.FIXMEProxy().PropertyID("filters")
+	propertyID, err := p.Proxy().PropertyID("filters")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
 	}
 	ch := make(chan map[string]int32)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1003,7 +1003,7 @@ func (c Constructor) LogManager() (LogManagerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
-	return MakeLogManager(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeLogManager(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Log calls the remote procedure
@@ -1025,7 +1025,7 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize messages: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("log", buf.Bytes())
+	_, err = p.Proxy().Call("log", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
@@ -1037,7 +1037,7 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("createListener", buf.Bytes())
+	response, err := p.Proxy().Call("createListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
@@ -1064,7 +1064,7 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("getListener", buf.Bytes())
+	response, err := p.Proxy().Call("getListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
@@ -1092,20 +1092,20 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	var ret int32
 	var buf bytes.Buffer
 	if err = func() error {
-		meta, err := source.MetaObject(source.FIXMEProxy().ObjectID())
+		meta, err := source.MetaObject(source.Proxy().ObjectID())
 		if err != nil {
 			return fmt.Errorf("get meta: %s", err)
 		}
 		ref := object.ObjectReference{
 			MetaObject: meta,
-			ServiceID:  source.FIXMEProxy().ServiceID(),
-			ObjectID:   source.FIXMEProxy().ObjectID(),
+			ServiceID:  source.Proxy().ServiceID(),
+			ObjectID:   source.Proxy().ObjectID(),
 		}
 		return object.WriteObjectReference(ref, &buf)
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize source: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("addProvider", buf.Bytes())
+	response, err := p.Proxy().Call("addProvider", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
@@ -1124,7 +1124,7 @@ func (p *proxyLogManager) RemoveProvider(providerID int32) error {
 	if err = basic.WriteInt32(providerID, &buf); err != nil {
 		return fmt.Errorf("serialize providerID: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("removeProvider", buf.Bytes())
+	_, err = p.Proxy().Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
 	}
@@ -1168,7 +1168,7 @@ func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
-	return MakeALTextToSpeech(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeALTextToSpeech(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Say calls the remote procedure
@@ -1178,7 +1178,7 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	if err = basic.WriteString(stringToSay, &buf); err != nil {
 		return fmt.Errorf("serialize stringToSay: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("say", buf.Bytes())
+	_, err = p.Proxy().Call("say", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -1230,7 +1230,7 @@ func (c Constructor) ALAnimatedSpeech() (ALAnimatedSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALAnimatedSpeech) WithContext(ctx context.Context) ALAnimatedSpeechProxy {
-	return MakeALAnimatedSpeech(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeALAnimatedSpeech(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Say calls the remote procedure
@@ -1240,7 +1240,7 @@ func (p *proxyALAnimatedSpeech) Say(text string) error {
 	if err = basic.WriteString(text, &buf); err != nil {
 		return fmt.Errorf("serialize text: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("say", buf.Bytes())
+	_, err = p.Proxy().Call("say", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -1252,7 +1252,7 @@ func (p *proxyALAnimatedSpeech) IsBodyTalkEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("isBodyTalkEnabled", buf.Bytes())
+	response, err := p.Proxy().Call("isBodyTalkEnabled", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isBodyTalkEnabled failed: %s", err)
 	}
@@ -1269,7 +1269,7 @@ func (p *proxyALAnimatedSpeech) IsBodyLanguageEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("isBodyLanguageEnabled", buf.Bytes())
+	response, err := p.Proxy().Call("isBodyLanguageEnabled", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isBodyLanguageEnabled failed: %s", err)
 	}
@@ -1288,7 +1288,7 @@ func (p *proxyALAnimatedSpeech) SetBodyTalkEnabled(enable bool) error {
 	if err = basic.WriteBool(enable, &buf); err != nil {
 		return fmt.Errorf("serialize enable: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setBodyTalkEnabled", buf.Bytes())
+	_, err = p.Proxy().Call("setBodyTalkEnabled", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setBodyTalkEnabled failed: %s", err)
 	}
@@ -1302,7 +1302,7 @@ func (p *proxyALAnimatedSpeech) SetBodyLanguageEnabled(enable bool) error {
 	if err = basic.WriteBool(enable, &buf); err != nil {
 		return fmt.Errorf("serialize enable: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("setBodyLanguageEnabled", buf.Bytes())
+	_, err = p.Proxy().Call("setBodyLanguageEnabled", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setBodyLanguageEnabled failed: %s", err)
 	}

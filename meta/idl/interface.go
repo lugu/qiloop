@@ -258,14 +258,14 @@ func (itf *InterfaceType) registerMembers(set *signature.TypeSet) error {
 // error.
 func (s *InterfaceType) Marshal(id string, writer string) *jen.Statement {
 	return jen.Id(`func() error {
-	    meta, err := ` + id + `.MetaObject(` + id + `.FIXMEProxy().ObjectID())
+	    meta, err := ` + id + `.MetaObject(` + id + `.Proxy().ObjectID())
 	    if err != nil {
 		return fmt.Errorf("get meta: %s", err)
 	    }
 	    ref := object.ObjectReference {
 		    MetaObject: meta,
-		    ServiceID: ` + id + `.FIXMEProxy().ServiceID(),
-		    ObjectID: ` + id + `.FIXMEProxy().ObjectID(),
+		    ServiceID: ` + id + `.Proxy().ServiceID(),
+		    ObjectID: ` + id + `.Proxy().ObjectID(),
 	    }
 	    return object.WriteObjectReference(ref, ` + writer + `)
 	}()`)

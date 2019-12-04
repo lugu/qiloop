@@ -496,7 +496,7 @@ func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
-	return MakeServiceDirectory(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeServiceDirectory(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // Service calls the remote procedure
@@ -507,7 +507,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("service", buf.Bytes())
+	response, err := p.Proxy().Call("service", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
@@ -524,7 +524,7 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("services", buf.Bytes())
+	response, err := p.Proxy().Call("services", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call services failed: %s", err)
 	}
@@ -557,7 +557,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("serialize info: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("registerService", buf.Bytes())
+	response, err := p.Proxy().Call("registerService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerService failed: %s", err)
 	}
@@ -576,7 +576,7 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("unregisterService", buf.Bytes())
+	_, err = p.Proxy().Call("unregisterService", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call unregisterService failed: %s", err)
 	}
@@ -590,7 +590,7 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("serviceReady", buf.Bytes())
+	_, err = p.Proxy().Call("serviceReady", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call serviceReady failed: %s", err)
 	}
@@ -604,7 +604,7 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("serialize info: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("updateServiceInfo", buf.Bytes())
+	_, err = p.Proxy().Call("updateServiceInfo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call updateServiceInfo failed: %s", err)
 	}
@@ -616,7 +616,7 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.FIXMEProxy().Call("machineId", buf.Bytes())
+	response, err := p.Proxy().Call("machineId", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call machineId failed: %s", err)
 	}
@@ -636,7 +636,7 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize serviceID: %s", err)
 	}
-	response, err := p.FIXMEProxy().Call("_socketOfService", buf.Bytes())
+	response, err := p.Proxy().Call("_socketOfService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}
@@ -650,12 +650,12 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 
 // SubscribeServiceAdded subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("serviceAdded")
+	propertyID, err := p.Proxy().SignalID("serviceAdded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
 	ch := make(chan ServiceAdded)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -682,12 +682,12 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 
 // SubscribeServiceRemoved subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
-	propertyID, err := p.FIXMEProxy().SignalID("serviceRemoved")
+	propertyID, err := p.Proxy().SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
-	cancel, chPay, err := p.FIXMEProxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

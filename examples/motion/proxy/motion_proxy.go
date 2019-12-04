@@ -66,14 +66,14 @@ func (c Constructor) ALMotion() (ALMotionProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
-	return MakeALMotion(p.session, bus.WithContext(p.FIXMEProxy(), ctx))
+	return MakeALMotion(p.session, bus.WithContext(p.Proxy(), ctx))
 }
 
 // WakeUp calls the remote procedure
 func (p *proxyALMotion) WakeUp() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.FIXMEProxy().Call("wakeUp", buf.Bytes())
+	_, err = p.Proxy().Call("wakeUp", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call wakeUp failed: %s", err)
 	}
@@ -84,7 +84,7 @@ func (p *proxyALMotion) WakeUp() error {
 func (p *proxyALMotion) Rest() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.FIXMEProxy().Call("rest", buf.Bytes())
+	_, err = p.Proxy().Call("rest", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call rest failed: %s", err)
 	}
@@ -95,7 +95,7 @@ func (p *proxyALMotion) Rest() error {
 func (p *proxyALMotion) MoveInit() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.FIXMEProxy().Call("moveInit", buf.Bytes())
+	_, err = p.Proxy().Call("moveInit", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call moveInit failed: %s", err)
 	}
@@ -115,7 +115,7 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 	if err = basic.WriteFloat32(theta, &buf); err != nil {
 		return fmt.Errorf("serialize theta: %s", err)
 	}
-	_, err = p.FIXMEProxy().Call("moveTo", buf.Bytes())
+	_, err = p.Proxy().Call("moveTo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call moveTo failed: %s", err)
 	}
@@ -126,7 +126,7 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 func (p *proxyALMotion) WaitUntilMoveIsFinished() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.FIXMEProxy().Call("waitUntilMoveIsFinished", buf.Bytes())
+	_, err = p.Proxy().Call("waitUntilMoveIsFinished", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call waitUntilMoveIsFinished failed: %s", err)
 	}

@@ -201,7 +201,7 @@ func TestLogProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	service := logManager.FIXMEProxy().ProxyService(session)
+	service := logManager.Proxy().ProxyService(session)
 	impl, logger := newLogProviderImpl("cat")
 	providerProxy, err := constructor.NewLogProvider(service, impl)
 	id, err := logManager.AddProvider(providerProxy)

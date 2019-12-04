@@ -251,7 +251,7 @@ func TestClientBomb(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	proxyService := spacecraft.FIXMEProxy().ProxyService(session)
+	proxyService := spacecraft.Proxy().ProxyService(session)
 
 	bomb, err := space.CreateBomb(session, proxyService)
 	if err != nil {
@@ -318,7 +318,7 @@ func TestOnTerminate(t *testing.T) {
 	}()
 	waiting.Wait()
 
-	err = bomb.Terminate(bomb.FIXMEProxy().ObjectID())
+	err = bomb.Terminate(bomb.Proxy().ObjectID())
 	if err != nil {
 		t.Fatal(err)
 	}
