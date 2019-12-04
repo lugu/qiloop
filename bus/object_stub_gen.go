@@ -634,25 +634,9 @@ func (p *stubObject) metaObject() object.MetaObject {
 	}
 }
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session Session
-}
-
-// Services gives access to the services constructor
-func Services(s Session) Constructor {
-	return Constructor{session: s}
-}
-
-// ServiceZero is the abstract interface of the service
-type ServiceZero interface {
-	// Authenticate calls the remote procedure
-	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
-}
-
 // ServiceZeroProxy represents a proxy object to the service
 type ServiceZeroProxy interface {
-	ServiceZero
+	Authenticate(capability map[string]value.Value) (map[string]value.Value, error)
 	// Proxy returns a proxy.
 	Proxy() Proxy
 }
@@ -663,8 +647,8 @@ type proxyServiceZero struct {
 }
 
 // ServiceZero returns a proxy to a remote service
-func (c Constructor) ServiceZero() (ServiceZeroProxy, error) {
-	proxy, err := c.session.Proxy("ServiceZero", 1)
+func ServiceZero(session Session) (ServiceZeroProxy, error) {
+	proxy, err := session.Proxy("ServiceZero", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
@@ -730,28 +714,16 @@ func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[
 	return ret, nil
 }
 
-// Object is the abstract interface of the service
-type Object interface {
-	// IsStatsEnabled calls the remote procedure
-	IsStatsEnabled() (bool, error)
-	// EnableStats calls the remote procedure
-	EnableStats(enabled bool) error
-	// Stats calls the remote procedure
-	Stats() (map[uint32]MethodStatistics, error)
-	// ClearStats calls the remote procedure
-	ClearStats() error
-	// IsTraceEnabled calls the remote procedure
-	IsTraceEnabled() (bool, error)
-	// EnableTrace calls the remote procedure
-	EnableTrace(traced bool) error
-	// SubscribeTraceObject subscribe to a remote signal
-	SubscribeTraceObject() (unsubscribe func(), updates chan EventTrace, err error)
-}
-
 // ObjectProxy represents a proxy object to the service
 type ObjectProxy interface {
+	IsStatsEnabled() (bool, error)
+	EnableStats(enabled bool) error
+	Stats() (map[uint32]MethodStatistics, error)
+	ClearStats() error
+	IsTraceEnabled() (bool, error)
+	EnableTrace(traced bool) error
+	SubscribeTraceObject() (unsubscribe func(), updates chan EventTrace, err error)
 	object.Object
-	Object
 	// Proxy returns a proxy.
 	Proxy() Proxy
 }
@@ -762,8 +734,8 @@ type proxyObject struct {
 }
 
 // Object returns a proxy to a remote service
-func (c Constructor) Object() (ObjectProxy, error) {
-	proxy, err := c.session.Proxy("Object", 1)
+func Object(session Session) (ObjectProxy, error) {
+	proxy, err := session.Proxy("Object", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}

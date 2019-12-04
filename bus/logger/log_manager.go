@@ -95,7 +95,7 @@ func (l *logManager) CreateListener() (LogListenerProxy, error) {
 	}
 	service := l.activation.Service
 	session := l.activation.Session
-	proxy, err := Services(session).NewLogListener(service, listener)
+	proxy, err := CreateLogListener(session, service, listener)
 	if err != nil {
 		return nil, err
 	}

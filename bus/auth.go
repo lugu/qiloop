@@ -104,8 +104,7 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 
 	cache := NewCache(endpoint)
 	cache.AddService("ServiceZero", 0, object.MetaService0)
-	proxies := Services(cache)
-	service0, err := proxies.ServiceServer()
+	service0, err := ServiceServer(cache)
 	m, err := service0.Authenticate(permissions)
 
 	if err == nil {

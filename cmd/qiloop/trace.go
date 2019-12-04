@@ -113,9 +113,7 @@ func trace(serverURL, serviceName string, objectID uint32) {
 		log.Fatalf("%s: %s", serverURL, err)
 	}
 
-	proxies := services.Services(sess)
-
-	directory, err := proxies.ServiceDirectory()
+	directory, err := services.ServiceDirectory(sess)
 	if err != nil {
 		log.Fatalf("directory: %s", err)
 	}

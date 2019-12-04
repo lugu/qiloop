@@ -17,11 +17,8 @@ func main() {
 		panic(err)
 	}
 
-	// proxies is an helper to access the specialized proxy.
-	proxies := services.Services(session)
-
 	// obtain a representation of the service directory
-	directory, err := proxies.ServiceDirectory()
+	directory, err := services.ServiceDirectory(session)
 	if err != nil {
 		panic(err)
 	}

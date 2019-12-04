@@ -11,42 +11,19 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 )
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
-// ALRobotPosture is the abstract interface of the service
-type ALRobotPosture interface {
-	// GetPostureFamily calls the remote procedure
-	GetPostureFamily() (string, error)
-	// GoToPosture calls the remote procedure
-	GoToPosture(postureName string, maxSpeedFraction float32) (bool, error)
-	// ApplyPosture calls the remote procedure
-	ApplyPosture(postureName string, maxSpeedFraction float32) (bool, error)
-	// StopMove calls the remote procedure
-	StopMove() error
-	// GetPostureList calls the remote procedure
-	GetPostureList() ([]string, error)
-	// GetPostureFamilyList calls the remote procedure
-	GetPostureFamilyList() ([]string, error)
-	// SetMaxTryNumber calls the remote procedure
-	SetMaxTryNumber(pMaxTryNumber int32) error
-	// GetPosture calls the remote procedure
-	GetPosture() (string, error)
-}
-
 // ALRobotPostureProxy represents a proxy object to the service
 type ALRobotPostureProxy interface {
+	GetPostureFamily() (string, error)
+	GoToPosture(postureName string, maxSpeedFraction float32) (bool, error)
+	ApplyPosture(postureName string, maxSpeedFraction float32) (bool, error)
+	StopMove() error
+	GetPostureList() ([]string, error)
+	GetPostureFamilyList() ([]string, error)
+	SetMaxTryNumber(pMaxTryNumber int32) error
+	GetPosture() (string, error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ALRobotPosture
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ALRobotPostureProxy
 }
 
@@ -62,12 +39,12 @@ func MakeALRobotPosture(sess bus.Session, proxy bus.Proxy) ALRobotPostureProxy {
 }
 
 // ALRobotPosture returns a proxy to a remote service
-func (c Constructor) ALRobotPosture() (ALRobotPostureProxy, error) {
-	proxy, err := c.session.Proxy("ALRobotPosture", 1)
+func ALRobotPosture(session bus.Session) (ALRobotPostureProxy, error) {
+	proxy, err := session.Proxy("ALRobotPosture", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeALRobotPosture(c.session, proxy), nil
+	return MakeALRobotPosture(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

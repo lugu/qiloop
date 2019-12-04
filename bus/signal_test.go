@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	dir "github.com/lugu/qiloop/bus/directory"
-	proxy "github.com/lugu/qiloop/bus/services"
+	"github.com/lugu/qiloop/bus/services"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 )
@@ -23,8 +23,7 @@ func TestTwoSubscribersDontOverlap(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	services := proxy.Services(session)
-	directory, err := services.ServiceDirectory()
+	directory, err := services.ServiceDirectory(session)
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}

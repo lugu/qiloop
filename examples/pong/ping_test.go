@@ -36,8 +36,7 @@ func TestPingPong(t *testing.T) {
 		panic(err)
 	}
 	defer session.Terminate()
-	services := pong.Services(session)
-	client, err := services.PingPong()
+	client, err := pong.PingPong(session)
 	if err != nil {
 		panic(err)
 	}
@@ -93,8 +92,7 @@ func testRemoteAddr(b *testing.B, addr string) {
 	}
 	defer session.Terminate()
 
-	services := pong.Services(session)
-	client, err := services.PingPong()
+	client, err := pong.PingPong(session)
 	if err != nil {
 		panic(err)
 	}
@@ -162,8 +160,7 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
-	services := pong.Services(session)
-	client, err := services.PingPong()
+	client, err := pong.PingPong(session)
 	if err != nil {
 		panic(err)
 	}

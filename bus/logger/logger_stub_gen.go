@@ -51,9 +51,9 @@ func LogProviderObject(impl LogProviderImplementor) bus.Actor {
 	return obj
 }
 
-// NewLogProvider registers a new object to a service
+// CreateLogProvider registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewLogProvider(service bus.Service, impl LogProviderImplementor) (LogProviderProxy, error) {
+func CreateLogProvider(session bus.Session, service bus.Service, impl LogProviderImplementor) (LogProviderProxy, error) {
 	obj := LogProviderObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -63,7 +63,7 @@ func (c Constructor) NewLogProvider(service bus.Service, impl LogProviderImpleme
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeLogProvider(c.session, proxy), nil
+	return MakeLogProvider(session, proxy), nil
 }
 func (p *stubLogProvider) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -243,9 +243,9 @@ func LogListenerObject(impl LogListenerImplementor) bus.Actor {
 	return obj
 }
 
-// NewLogListener registers a new object to a service
+// CreateLogListener registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewLogListener(service bus.Service, impl LogListenerImplementor) (LogListenerProxy, error) {
+func CreateLogListener(session bus.Session, service bus.Service, impl LogListenerImplementor) (LogListenerProxy, error) {
 	obj := LogListenerObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -255,7 +255,7 @@ func (c Constructor) NewLogListener(service bus.Service, impl LogListenerImpleme
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeLogListener(c.session, proxy), nil
+	return MakeLogListener(session, proxy), nil
 }
 func (p *stubLogListener) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -505,9 +505,9 @@ func LogManagerObject(impl LogManagerImplementor) bus.Actor {
 	return obj
 }
 
-// NewLogManager registers a new object to a service
+// CreateLogManager registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewLogManager(service bus.Service, impl LogManagerImplementor) (LogManagerProxy, error) {
+func CreateLogManager(session bus.Session, service bus.Service, impl LogManagerImplementor) (LogManagerProxy, error) {
 	obj := LogManagerObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -517,7 +517,7 @@ func (c Constructor) NewLogManager(service bus.Service, impl LogManagerImplement
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeLogManager(c.session, proxy), nil
+	return MakeLogManager(session, proxy), nil
 }
 func (p *stubLogManager) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -735,16 +735,6 @@ func (p *stubLogManager) metaObject() object.MetaObject {
 	}
 }
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
 // LogLevel is serializable
 type LogLevel struct {
 	Level int32
@@ -857,22 +847,14 @@ func writeLogMessage(s LogMessage, w io.Writer) (err error) {
 	return nil
 }
 
-// LogProvider is the abstract interface of the service
-type LogProvider interface {
-	// SetVerbosity calls the remote procedure
-	SetVerbosity(level LogLevel) error
-	// SetCategory calls the remote procedure
-	SetCategory(category string, level LogLevel) error
-	// ClearAndSet calls the remote procedure
-	ClearAndSet(filters map[string]LogLevel) error
-}
-
 // LogProviderProxy represents a proxy object to the service
 type LogProviderProxy interface {
+	SetVerbosity(level LogLevel) error
+	SetCategory(category string, level LogLevel) error
+	ClearAndSet(filters map[string]LogLevel) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	LogProvider
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) LogProviderProxy
 }
 
@@ -888,12 +870,12 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 }
 
 // LogProvider returns a proxy to a remote service
-func (c Constructor) LogProvider() (LogProviderProxy, error) {
-	proxy, err := c.session.Proxy("LogProvider", 1)
+func LogProvider(session bus.Session) (LogProviderProxy, error) {
+	proxy, err := session.Proxy("LogProvider", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeLogProvider(c.session, proxy), nil
+	return MakeLogProvider(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -962,34 +944,20 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	return nil
 }
 
-// LogListener is the abstract interface of the service
-type LogListener interface {
-	// SetLevel calls the remote procedure
-	SetLevel(level LogLevel) error
-	// AddFilter calls the remote procedure
-	AddFilter(category string, level LogLevel) error
-	// ClearFilters calls the remote procedure
-	ClearFilters() error
-	// SubscribeOnLogMessage subscribe to a remote signal
-	SubscribeOnLogMessage() (unsubscribe func(), updates chan LogMessage, err error)
-	// SubscribeOnLogMessages subscribe to a remote signal
-	SubscribeOnLogMessages() (unsubscribe func(), updates chan []LogMessage, err error)
-	// SubscribeOnLogMessagesWithBacklog subscribe to a remote signal
-	SubscribeOnLogMessagesWithBacklog() (unsubscribe func(), updates chan []LogMessage, err error)
-	// GetLogLevel returns the property value
-	GetLogLevel() (LogLevel, error)
-	// SetLogLevel sets the property value
-	SetLogLevel(LogLevel) error
-	// SubscribeLogLevel regusters to a property
-	SubscribeLogLevel() (unsubscribe func(), updates chan LogLevel, err error)
-}
-
 // LogListenerProxy represents a proxy object to the service
 type LogListenerProxy interface {
+	SetLevel(level LogLevel) error
+	AddFilter(category string, level LogLevel) error
+	ClearFilters() error
+	SubscribeOnLogMessage() (unsubscribe func(), updates chan LogMessage, err error)
+	SubscribeOnLogMessages() (unsubscribe func(), updates chan []LogMessage, err error)
+	SubscribeOnLogMessagesWithBacklog() (unsubscribe func(), updates chan []LogMessage, err error)
+	GetLogLevel() (LogLevel, error)
+	SetLogLevel(LogLevel) error
+	SubscribeLogLevel() (unsubscribe func(), updates chan LogLevel, err error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	LogListener
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) LogListenerProxy
 }
 
@@ -1005,12 +973,12 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 }
 
 // LogListener returns a proxy to a remote service
-func (c Constructor) LogListener() (LogListenerProxy, error) {
-	proxy, err := c.session.Proxy("LogListener", 1)
+func LogListener(session bus.Session) (LogListenerProxy, error) {
+	proxy, err := session.Proxy("LogListener", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeLogListener(c.session, proxy), nil
+	return MakeLogListener(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -1252,26 +1220,16 @@ func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
 	return cancel, ch, nil
 }
 
-// LogManager is the abstract interface of the service
-type LogManager interface {
-	// Log calls the remote procedure
-	Log(messages []LogMessage) error
-	// CreateListener calls the remote procedure
-	CreateListener() (LogListenerProxy, error)
-	// GetListener calls the remote procedure
-	GetListener() (LogListenerProxy, error)
-	// AddProvider calls the remote procedure
-	AddProvider(source LogProviderProxy) (int32, error)
-	// RemoveProvider calls the remote procedure
-	RemoveProvider(sourceID int32) error
-}
-
 // LogManagerProxy represents a proxy object to the service
 type LogManagerProxy interface {
+	Log(messages []LogMessage) error
+	CreateListener() (LogListenerProxy, error)
+	GetListener() (LogListenerProxy, error)
+	AddProvider(source LogProviderProxy) (int32, error)
+	RemoveProvider(sourceID int32) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	LogManager
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) LogManagerProxy
 }
 
@@ -1287,12 +1245,12 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 }
 
 // LogManager returns a proxy to a remote service
-func (c Constructor) LogManager() (LogManagerProxy, error) {
-	proxy, err := c.session.Proxy("LogManager", 1)
+func LogManager(session bus.Session) (LogManagerProxy, error) {
+	proxy, err := session.Proxy("LogManager", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeLogManager(c.session, proxy), nil
+	return MakeLogManager(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

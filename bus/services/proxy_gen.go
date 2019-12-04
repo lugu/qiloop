@@ -15,16 +15,6 @@ import (
 	"log"
 )
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
 // ServiceAdded is serializable
 type ServiceAdded struct {
 	ServiceID uint32
@@ -81,36 +71,21 @@ func writeServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	return nil
 }
 
-// ServiceDirectory is the abstract interface of the service
-type ServiceDirectory interface {
-	// Service calls the remote procedure
-	Service(name string) (ServiceInfo, error)
-	// Services calls the remote procedure
-	Services() ([]ServiceInfo, error)
-	// RegisterService calls the remote procedure
-	RegisterService(info ServiceInfo) (uint32, error)
-	// UnregisterService calls the remote procedure
-	UnregisterService(serviceID uint32) error
-	// ServiceReady calls the remote procedure
-	ServiceReady(serviceID uint32) error
-	// UpdateServiceInfo calls the remote procedure
-	UpdateServiceInfo(info ServiceInfo) error
-	// MachineId calls the remote procedure
-	MachineId() (string, error)
-	// _socketOfService calls the remote procedure
-	_socketOfService(serviceID uint32) (object.ObjectReference, error)
-	// SubscribeServiceAdded subscribe to a remote signal
-	SubscribeServiceAdded() (unsubscribe func(), updates chan ServiceAdded, err error)
-	// SubscribeServiceRemoved subscribe to a remote signal
-	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
-}
-
 // ServiceDirectoryProxy represents a proxy object to the service
 type ServiceDirectoryProxy interface {
+	Service(name string) (ServiceInfo, error)
+	Services() ([]ServiceInfo, error)
+	RegisterService(info ServiceInfo) (uint32, error)
+	UnregisterService(serviceID uint32) error
+	ServiceReady(serviceID uint32) error
+	UpdateServiceInfo(info ServiceInfo) error
+	MachineId() (string, error)
+	_socketOfService(serviceID uint32) (object.ObjectReference, error)
+	SubscribeServiceAdded() (unsubscribe func(), updates chan ServiceAdded, err error)
+	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ServiceDirectory
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ServiceDirectoryProxy
 }
 
@@ -126,12 +101,12 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 }
 
 // ServiceDirectory returns a proxy to a remote service
-func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
-	proxy, err := c.session.Proxy("ServiceDirectory", 1)
+func ServiceDirectory(session bus.Session) (ServiceDirectoryProxy, error) {
+	proxy, err := session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeServiceDirectory(c.session, proxy), nil
+	return MakeServiceDirectory(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -545,22 +520,14 @@ func writeLogMessage(s LogMessage, w io.Writer) (err error) {
 	return nil
 }
 
-// LogProvider is the abstract interface of the service
-type LogProvider interface {
-	// SetVerbosity calls the remote procedure
-	SetVerbosity(level LogLevel) error
-	// SetCategory calls the remote procedure
-	SetCategory(category string, level LogLevel) error
-	// ClearAndSet calls the remote procedure
-	ClearAndSet(filters map[string]int32) error
-}
-
 // LogProviderProxy represents a proxy object to the service
 type LogProviderProxy interface {
+	SetVerbosity(level LogLevel) error
+	SetCategory(category string, level LogLevel) error
+	ClearAndSet(filters map[string]int32) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	LogProvider
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) LogProviderProxy
 }
 
@@ -576,12 +543,12 @@ func MakeLogProvider(sess bus.Session, proxy bus.Proxy) LogProviderProxy {
 }
 
 // LogProvider returns a proxy to a remote service
-func (c Constructor) LogProvider() (LogProviderProxy, error) {
-	proxy, err := c.session.Proxy("LogProvider", 1)
+func LogProvider(session bus.Session) (LogProviderProxy, error) {
+	proxy, err := session.Proxy("LogProvider", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeLogProvider(c.session, proxy), nil
+	return MakeLogProvider(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -650,34 +617,20 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]int32) error {
 	return nil
 }
 
-// LogListener is the abstract interface of the service
-type LogListener interface {
-	// SetCategory calls the remote procedure
-	SetCategory(category string, level LogLevel) error
-	// ClearFilters calls the remote procedure
-	ClearFilters() error
-	// SubscribeOnLogMessage subscribe to a remote signal
-	SubscribeOnLogMessage() (unsubscribe func(), updates chan LogMessage, err error)
-	// GetVerbosity returns the property value
-	GetVerbosity() (LogLevel, error)
-	// SetVerbosity sets the property value
-	SetVerbosity(LogLevel) error
-	// SubscribeVerbosity regusters to a property
-	SubscribeVerbosity() (unsubscribe func(), updates chan LogLevel, err error)
-	// GetFilters returns the property value
-	GetFilters() (map[string]int32, error)
-	// SetFilters sets the property value
-	SetFilters(map[string]int32) error
-	// SubscribeFilters regusters to a property
-	SubscribeFilters() (unsubscribe func(), updates chan map[string]int32, err error)
-}
-
 // LogListenerProxy represents a proxy object to the service
 type LogListenerProxy interface {
+	SetCategory(category string, level LogLevel) error
+	ClearFilters() error
+	SubscribeOnLogMessage() (unsubscribe func(), updates chan LogMessage, err error)
+	GetVerbosity() (LogLevel, error)
+	SetVerbosity(LogLevel) error
+	SubscribeVerbosity() (unsubscribe func(), updates chan LogLevel, err error)
+	GetFilters() (map[string]int32, error)
+	SetFilters(map[string]int32) error
+	SubscribeFilters() (unsubscribe func(), updates chan map[string]int32, err error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	LogListener
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) LogListenerProxy
 }
 
@@ -693,12 +646,12 @@ func MakeLogListener(sess bus.Session, proxy bus.Proxy) LogListenerProxy {
 }
 
 // LogListener returns a proxy to a remote service
-func (c Constructor) LogListener() (LogListenerProxy, error) {
-	proxy, err := c.session.Proxy("LogListener", 1)
+func LogListener(session bus.Session) (LogListenerProxy, error) {
+	proxy, err := session.Proxy("LogListener", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeLogListener(c.session, proxy), nil
+	return MakeLogListener(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -958,26 +911,16 @@ func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, er
 	return cancel, ch, nil
 }
 
-// LogManager is the abstract interface of the service
-type LogManager interface {
-	// Log calls the remote procedure
-	Log(messages []LogMessage) error
-	// CreateListener calls the remote procedure
-	CreateListener() (LogListenerProxy, error)
-	// GetListener calls the remote procedure
-	GetListener() (LogListenerProxy, error)
-	// AddProvider calls the remote procedure
-	AddProvider(source LogProviderProxy) (int32, error)
-	// RemoveProvider calls the remote procedure
-	RemoveProvider(providerID int32) error
-}
-
 // LogManagerProxy represents a proxy object to the service
 type LogManagerProxy interface {
+	Log(messages []LogMessage) error
+	CreateListener() (LogListenerProxy, error)
+	GetListener() (LogListenerProxy, error)
+	AddProvider(source LogProviderProxy) (int32, error)
+	RemoveProvider(providerID int32) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	LogManager
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) LogManagerProxy
 }
 
@@ -993,12 +936,12 @@ func MakeLogManager(sess bus.Session, proxy bus.Proxy) LogManagerProxy {
 }
 
 // LogManager returns a proxy to a remote service
-func (c Constructor) LogManager() (LogManagerProxy, error) {
-	proxy, err := c.session.Proxy("LogManager", 1)
+func LogManager(session bus.Session) (LogManagerProxy, error) {
+	proxy, err := session.Proxy("LogManager", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeLogManager(c.session, proxy), nil
+	return MakeLogManager(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -1131,18 +1074,12 @@ func (p *proxyLogManager) RemoveProvider(providerID int32) error {
 	return nil
 }
 
-// ALTextToSpeech is the abstract interface of the service
-type ALTextToSpeech interface {
-	// Say calls the remote procedure
-	Say(stringToSay string) error
-}
-
 // ALTextToSpeechProxy represents a proxy object to the service
 type ALTextToSpeechProxy interface {
+	Say(stringToSay string) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ALTextToSpeech
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ALTextToSpeechProxy
 }
 
@@ -1158,12 +1095,12 @@ func MakeALTextToSpeech(sess bus.Session, proxy bus.Proxy) ALTextToSpeechProxy {
 }
 
 // ALTextToSpeech returns a proxy to a remote service
-func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
-	proxy, err := c.session.Proxy("ALTextToSpeech", 1)
+func ALTextToSpeech(session bus.Session) (ALTextToSpeechProxy, error) {
+	proxy, err := session.Proxy("ALTextToSpeech", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeALTextToSpeech(c.session, proxy), nil
+	return MakeALTextToSpeech(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -1185,26 +1122,16 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	return nil
 }
 
-// ALAnimatedSpeech is the abstract interface of the service
-type ALAnimatedSpeech interface {
-	// Say calls the remote procedure
-	Say(text string) error
-	// IsBodyTalkEnabled calls the remote procedure
-	IsBodyTalkEnabled() (bool, error)
-	// IsBodyLanguageEnabled calls the remote procedure
-	IsBodyLanguageEnabled() (bool, error)
-	// SetBodyTalkEnabled calls the remote procedure
-	SetBodyTalkEnabled(enable bool) error
-	// SetBodyLanguageEnabled calls the remote procedure
-	SetBodyLanguageEnabled(enable bool) error
-}
-
 // ALAnimatedSpeechProxy represents a proxy object to the service
 type ALAnimatedSpeechProxy interface {
+	Say(text string) error
+	IsBodyTalkEnabled() (bool, error)
+	IsBodyLanguageEnabled() (bool, error)
+	SetBodyTalkEnabled(enable bool) error
+	SetBodyLanguageEnabled(enable bool) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ALAnimatedSpeech
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ALAnimatedSpeechProxy
 }
 
@@ -1220,12 +1147,12 @@ func MakeALAnimatedSpeech(sess bus.Session, proxy bus.Proxy) ALAnimatedSpeechPro
 }
 
 // ALAnimatedSpeech returns a proxy to a remote service
-func (c Constructor) ALAnimatedSpeech() (ALAnimatedSpeechProxy, error) {
-	proxy, err := c.session.Proxy("ALAnimatedSpeech", 1)
+func ALAnimatedSpeech(session bus.Session) (ALAnimatedSpeechProxy, error) {
+	proxy, err := session.Proxy("ALAnimatedSpeech", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeALAnimatedSpeech(c.session, proxy), nil
+	return MakeALAnimatedSpeech(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

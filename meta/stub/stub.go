@@ -7,7 +7,6 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/idl"
-	"github.com/lugu/qiloop/meta/proxy"
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 )
@@ -43,8 +42,6 @@ func GeneratePackage(w io.Writer, packagePath string,
 		}
 		idl.InterfaceTypeForStub = false
 	}
-
-	proxy.GenerateNewServices(file)
 
 	set.Declare(file)
 	return file.Render(w)
@@ -791,11 +788,10 @@ func generateObjectConstructor(file *jen.File, itf *idl.InterfaceType) error {
 	if itf.Name == "Object" || itf.Name == "ServiceZero" {
 		return nil
 	}
-	file.Comment("New" + itf.Name + " registers a new object to a service")
+	file.Comment("Create" + itf.Name + " registers a new object to a service")
 	file.Comment("and returns a proxy to the newly created object")
-	file.Func().Params(
-		jen.Id("c").Id("Constructor"),
-	).Id("New"+itf.Name).Params(
+	file.Func().Id("Create"+itf.Name).Params(
+		jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session"),
 		jen.Id("service").Qual("github.com/lugu/qiloop/bus", "Service"),
 		jen.Id("impl").Id(implName(itf.Name)),
 	).Params(
@@ -820,7 +816,7 @@ func generateObjectConstructor(file *jen.File, itf *idl.InterfaceType) error {
 			jen.Id("service.ServiceID()"),
 			jen.Id("objectID"),
 		),
-		jen.Id(`return Make`+itf.Name+`(c.session, proxy), nil`),
+		jen.Id(`return Make`+itf.Name+`(session, proxy), nil`),
 	)
 	return nil
 }

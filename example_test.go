@@ -24,11 +24,8 @@ func Example_basic() {
 	}
 	defer session.Terminate()
 
-	// Access the specialized proxy constructor.
-	proxies := services.Services(session)
-
 	// Obtain a proxy to the service
-	textToSpeech, err := proxies.ALTextToSpeech()
+	textToSpeech, err := services.ALTextToSpeech(session)
 	if err != nil {
 		panic(err)
 	}

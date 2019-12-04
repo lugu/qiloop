@@ -53,9 +53,9 @@ func BombObject(impl BombImplementor) bus.Actor {
 	return obj
 }
 
-// NewBomb registers a new object to a service
+// CreateBomb registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewBomb(service bus.Service, impl BombImplementor) (BombProxy, error) {
+func CreateBomb(session bus.Session, service bus.Service, impl BombImplementor) (BombProxy, error) {
 	obj := BombObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -65,7 +65,7 @@ func (c Constructor) NewBomb(service bus.Service, impl BombImplementor) (BombPro
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeBomb(c.session, proxy), nil
+	return MakeBomb(session, proxy), nil
 }
 func (p *stubBomb) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -174,9 +174,9 @@ func SpacecraftObject(impl SpacecraftImplementor) bus.Actor {
 	return obj
 }
 
-// NewSpacecraft registers a new object to a service
+// CreateSpacecraft registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewSpacecraft(service bus.Service, impl SpacecraftImplementor) (SpacecraftProxy, error) {
+func CreateSpacecraft(session bus.Session, service bus.Service, impl SpacecraftImplementor) (SpacecraftProxy, error) {
 	obj := SpacecraftObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -186,7 +186,7 @@ func (c Constructor) NewSpacecraft(service bus.Service, impl SpacecraftImplement
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeSpacecraft(c.session, proxy), nil
+	return MakeSpacecraft(session, proxy), nil
 }
 func (p *stubSpacecraft) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -299,34 +299,15 @@ func (p *stubSpacecraft) metaObject() object.MetaObject {
 	}
 }
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
-// Bomb is the abstract interface of the service
-type Bomb interface {
-	// SubscribeBoom subscribe to a remote signal
-	SubscribeBoom() (unsubscribe func(), updates chan int32, err error)
-	// GetDelay returns the property value
-	GetDelay() (int32, error)
-	// SetDelay sets the property value
-	SetDelay(int32) error
-	// SubscribeDelay regusters to a property
-	SubscribeDelay() (unsubscribe func(), updates chan int32, err error)
-}
-
 // BombProxy represents a proxy object to the service
 type BombProxy interface {
+	SubscribeBoom() (unsubscribe func(), updates chan int32, err error)
+	GetDelay() (int32, error)
+	SetDelay(int32) error
+	SubscribeDelay() (unsubscribe func(), updates chan int32, err error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	Bomb
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) BombProxy
 }
 
@@ -342,12 +323,12 @@ func MakeBomb(sess bus.Session, proxy bus.Proxy) BombProxy {
 }
 
 // Bomb returns a proxy to a remote service
-func (c Constructor) Bomb() (BombProxy, error) {
-	proxy, err := c.session.Proxy("Bomb", 1)
+func Bomb(session bus.Session) (BombProxy, error) {
+	proxy, err := session.Proxy("Bomb", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeBomb(c.session, proxy), nil
+	return MakeBomb(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -457,20 +438,13 @@ func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
 	return cancel, ch, nil
 }
 
-// Spacecraft is the abstract interface of the service
-type Spacecraft interface {
-	// Shoot calls the remote procedure
-	Shoot() (BombProxy, error)
-	// Ammo calls the remote procedure
-	Ammo(ammo BombProxy) error
-}
-
 // SpacecraftProxy represents a proxy object to the service
 type SpacecraftProxy interface {
+	Shoot() (BombProxy, error)
+	Ammo(ammo BombProxy) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	Spacecraft
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) SpacecraftProxy
 }
 
@@ -486,12 +460,12 @@ func MakeSpacecraft(sess bus.Session, proxy bus.Proxy) SpacecraftProxy {
 }
 
 // Spacecraft returns a proxy to a remote service
-func (c Constructor) Spacecraft() (SpacecraftProxy, error) {
-	proxy, err := c.session.Proxy("Spacecraft", 1)
+func Spacecraft(session bus.Session) (SpacecraftProxy, error) {
+	proxy, err := session.Proxy("Spacecraft", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeSpacecraft(c.session, proxy), nil
+	return MakeSpacecraft(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

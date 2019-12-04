@@ -58,9 +58,9 @@ func ServiceDirectoryObject(impl ServiceDirectoryImplementor) bus.Actor {
 	return obj
 }
 
-// NewServiceDirectory registers a new object to a service
+// CreateServiceDirectory registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewServiceDirectory(service bus.Service, impl ServiceDirectoryImplementor) (ServiceDirectoryProxy, error) {
+func CreateServiceDirectory(session bus.Session, service bus.Service, impl ServiceDirectoryImplementor) (ServiceDirectoryProxy, error) {
 	obj := ServiceDirectoryObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -70,7 +70,7 @@ func (c Constructor) NewServiceDirectory(service bus.Service, impl ServiceDirect
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeServiceDirectory(c.session, proxy), nil
+	return MakeServiceDirectory(session, proxy), nil
 }
 func (p *stubServiceDirectory) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -375,16 +375,6 @@ func (p *stubServiceDirectory) metaObject() object.MetaObject {
 	}
 }
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
 // ServiceAdded is serializable
 type ServiceAdded struct {
 	ServiceID uint32
@@ -441,36 +431,21 @@ func writeServiceRemoved(s ServiceRemoved, w io.Writer) (err error) {
 	return nil
 }
 
-// ServiceDirectory is the abstract interface of the service
-type ServiceDirectory interface {
-	// Service calls the remote procedure
-	Service(name string) (ServiceInfo, error)
-	// Services calls the remote procedure
-	Services() ([]ServiceInfo, error)
-	// RegisterService calls the remote procedure
-	RegisterService(info ServiceInfo) (uint32, error)
-	// UnregisterService calls the remote procedure
-	UnregisterService(serviceID uint32) error
-	// ServiceReady calls the remote procedure
-	ServiceReady(serviceID uint32) error
-	// UpdateServiceInfo calls the remote procedure
-	UpdateServiceInfo(info ServiceInfo) error
-	// MachineId calls the remote procedure
-	MachineId() (string, error)
-	// _socketOfService calls the remote procedure
-	_socketOfService(serviceID uint32) (object.ObjectReference, error)
-	// SubscribeServiceAdded subscribe to a remote signal
-	SubscribeServiceAdded() (unsubscribe func(), updates chan ServiceAdded, err error)
-	// SubscribeServiceRemoved subscribe to a remote signal
-	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
-}
-
 // ServiceDirectoryProxy represents a proxy object to the service
 type ServiceDirectoryProxy interface {
+	Service(name string) (ServiceInfo, error)
+	Services() ([]ServiceInfo, error)
+	RegisterService(info ServiceInfo) (uint32, error)
+	UnregisterService(serviceID uint32) error
+	ServiceReady(serviceID uint32) error
+	UpdateServiceInfo(info ServiceInfo) error
+	MachineId() (string, error)
+	_socketOfService(serviceID uint32) (object.ObjectReference, error)
+	SubscribeServiceAdded() (unsubscribe func(), updates chan ServiceAdded, err error)
+	SubscribeServiceRemoved() (unsubscribe func(), updates chan ServiceRemoved, err error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ServiceDirectory
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ServiceDirectoryProxy
 }
 
@@ -486,12 +461,12 @@ func MakeServiceDirectory(sess bus.Session, proxy bus.Proxy) ServiceDirectoryPro
 }
 
 // ServiceDirectory returns a proxy to a remote service
-func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
-	proxy, err := c.session.Proxy("ServiceDirectory", 1)
+func ServiceDirectory(session bus.Session) (ServiceDirectoryProxy, error) {
+	proxy, err := session.Proxy("ServiceDirectory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeServiceDirectory(c.session, proxy), nil
+	return MakeServiceDirectory(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

@@ -18,11 +18,8 @@ func main() {
 	}
 	defer session.Terminate()
 
-	// Access the specialized proxy constructor.
-	proxies := services.Services(session)
-
 	// Obtain a proxy to the service
-	ans, err := proxies.ALAnimatedSpeech()
+	ans, err := services.ALAnimatedSpeech(session)
 	if err != nil {
 		panic(err)
 	}

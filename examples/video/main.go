@@ -45,12 +45,8 @@ func main() {
 		log.Fatalf("failed to connect: %s", err)
 	}
 
-	// Using this session, let's instanciate our service
-	// constructor.
-	services := Services(sess)
-
 	// Using the constructor, we request a proxy to ALVideoDevice
-	videoDevice, err := services.ALVideoDevice()
+	videoDevice, err := ALVideoDevice(sess)
 	if err != nil {
 		log.Fatalf("failed to create video device: %s", err)
 	}

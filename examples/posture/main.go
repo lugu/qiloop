@@ -18,11 +18,8 @@ func main() {
 	}
 	defer session.Terminate()
 
-	// Access the specialized proxy constructor.
-	services := proxy.Services(session)
-
 	// Obtain a proxy to the service
-	alPosture, err := services.ALRobotPosture()
+	alPosture, err := proxy.ALRobotPosture(session)
 	if err != nil {
 		panic(err)
 	}

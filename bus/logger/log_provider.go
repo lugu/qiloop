@@ -16,7 +16,7 @@ import (
 var ErrNotImplemented = fmt.Errorf("Not supported")
 
 type logProvider struct {
-	manager        LogManager
+	manager        LogManagerProxy
 	id             int32
 	location       string
 	category       string
@@ -121,8 +121,7 @@ func (l *logProvider) Terminate() {
 
 func (l *logProvider) Activate(activation bus.Activation,
 	helper LogProviderSignalHelper) (err error) {
-	services := Services(activation.Session)
-	l.manager, err = services.LogManager()
+	l.manager, err = LogManager(activation.Session)
 	if err != nil {
 		return fmt.Errorf("Cannot create LogProvider: %s", err)
 	}
@@ -153,14 +152,13 @@ func (l *logProvider) ClearAndSet(filters map[string]LogLevel) error {
 // NewLogger returns a new Logger. NewLogger creates a new log
 // provider and associate it with log manager.
 func NewLogger(session bus.Session, category string) (Logger, error) {
-	constructor := Services(session)
-	logManager, err := constructor.LogManager()
+	logManager, err := LogManager(session)
 	if err != nil {
 		return nil, err
 	}
 	service := logManager.Proxy().ProxyService(session)
 	impl, logger := newLogProviderImpl(category)
-	proxy, err := constructor.NewLogProvider(service, impl)
+	proxy, err := CreateLogProvider(session, service, impl)
 	logger.id, err = logManager.AddProvider(proxy)
 	if err != nil {
 		return nil, err

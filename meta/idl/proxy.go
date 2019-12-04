@@ -52,6 +52,7 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 	file *jen.File) error {
 
 	definitions := make([]jen.Code, 0)
+
 	method := func(m object.MetaMethod, methodName string) error {
 		method := itf.Methods[m.Uid]
 		methodName = signature.CleanMethodName(methodName)
@@ -110,25 +111,18 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 			serviceName, err)
 	}
 
-	file.Comment(serviceName + " is the abstract interface of the service")
-	file.Type().Id(serviceName).Interface(
-		definitions...,
-	)
-
-	definitions = make([]jen.Code, 0)
 	if serviceName == "Object" {
 		definitions = append(definitions,
 			jen.Qual("github.com/lugu/qiloop/type/object", "Object"))
 	} else if serviceName != "ServiceZero" {
+		comment := jen.Comment(objName("Generic methods shared by all objects"))
+		definitions = append(definitions, comment)
 		definitions = append(definitions,
 			jen.Qual("github.com/lugu/qiloop/bus", objName("Object")))
 	}
-	definitions = append(definitions, jen.Id(serviceName))
 
 	if serviceName != "ServiceZero" && serviceName != "Object" {
-		comment := jen.Comment("WithContext returns a new proxy. Calls to this proxy can be")
-		definitions = append(definitions, comment)
-		comment = jen.Comment("cancelled by the context")
+		comment := jen.Comment("WithContext can be used cancellation and timeout")
 		definitions = append(definitions, comment)
 
 		def := jen.Id("WithContext").Params(
@@ -162,8 +156,6 @@ func generateSignalDef(file *jen.File, serviceName string,
 		jen.Id("updates").Chan().Add(signalType.TypeName()),
 		jen.Id("err").Error(),
 	)
-	comment := jen.Comment(signalName + " subscribe to a remote signal")
-	*definitions = append(*definitions, comment)
 	def := jen.Id(signalName).Params().Add(retType)
 	*definitions = append(*definitions, def)
 	return nil
@@ -178,14 +170,10 @@ func generatePropertyDef(file *jen.File, serviceName string,
 
 	retType := jen.Params(propertyType.TypeName(), jen.Error())
 	getMethod := jen.Id(getMethodName).Params().Add(retType)
-	comment := jen.Comment(getMethodName + " returns the property value")
-	*definitions = append(*definitions, comment)
 	*definitions = append(*definitions, getMethod)
 
 	paramType := jen.Params(propertyType.TypeName())
 	setMethod := jen.Id(setMethodName).Add(paramType).Error()
-	comment = jen.Comment(setMethodName + " sets the property value")
-	*definitions = append(*definitions, comment)
 	*definitions = append(*definitions, setMethod)
 
 	retType = jen.Params(
@@ -194,8 +182,6 @@ func generatePropertyDef(file *jen.File, serviceName string,
 		jen.Id("err").Error(),
 	)
 	subscribeMethod := jen.Id(subscribeMethodName).Params().Add(retType)
-	comment = jen.Comment(subscribeMethodName + " regusters to a property")
-	*definitions = append(*definitions, comment)
 	*definitions = append(*definitions, subscribeMethod)
 	return nil
 }
@@ -214,9 +200,6 @@ func generateMethodDef(file *jen.File, serviceName string,
 	if returnType.Signature() == signature.MetaObjectSignature {
 		returnType = signature.NewMetaObjectType()
 	}
-
-	comment := jen.Comment(methodName + " calls the remote procedure")
-	*definitions = append(*definitions, comment)
 
 	def := jen.Id(methodName).Add(
 		paramType.Params(),
@@ -309,20 +292,20 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		)
 	}
 	blockContructor := jen.Id(
-		`return Make` + serviceName + `(c.session, proxy), nil`,
+		`return Make` + serviceName + `(session, proxy), nil`,
 	)
 	if ProxyName == proxyName("Object") || ProxyName == proxyName("ServiceZero") {
 		blockContructor = jen.Id(`return &` + ProxyName + `{ proxy }, nil`)
 	}
 	file.Comment(serviceName + " returns a proxy to a remote service")
-	file.Func().Params(
-		jen.Id("c").Id("Constructor"),
-	).Id(
+	file.Func().Id(
 		signature.CleanName(serviceName),
-	).Params().Params(
+	).Params(
+		jen.Id("session").Qual("github.com/lugu/qiloop/bus", "Session"),
+	).Params(
 		jen.Id(objName(serviceName)), jen.Error(),
 	).Block(
-		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("c.session").Dot("Proxy").Call(
+		jen.List(jen.Id("proxy"), jen.Err()).Op(":=").Id("session").Dot("Proxy").Call(
 			jen.Lit(serviceName),
 			jen.Lit(1),
 		),

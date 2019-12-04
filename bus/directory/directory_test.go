@@ -25,8 +25,7 @@ func TestNewServer(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	services := proxy.Services(session)
-	directory, err := services.ServiceDirectory()
+	directory, err := proxy.ServiceDirectory(session)
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}
@@ -355,8 +354,7 @@ func TestStub(t *testing.T) {
 		t.Error(err)
 	}
 	defer session.Terminate()
-	services := proxy.Services(session)
-	directory, err := services.ServiceDirectory()
+	directory, err := proxy.ServiceDirectory(session)
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}
@@ -449,8 +447,7 @@ func TestSession(t *testing.T) {
 		t.Error(err)
 	}
 	defer session.Terminate()
-	services := proxy.Services(session)
-	directory, err := services.ServiceDirectory()
+	directory, err := proxy.ServiceDirectory(session)
 	if err != nil {
 		t.Fatalf("create directory: %s", err)
 	}
