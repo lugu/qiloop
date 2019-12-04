@@ -5,6 +5,7 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -46,6 +47,9 @@ type ALRobotPostureProxy interface {
 	object.Object
 	bus.Proxy
 	ALRobotPosture
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ALRobotPostureProxy
 }
 
 // proxyALRobotPosture implements ALRobotPostureProxy
@@ -66,6 +70,11 @@ func (c Constructor) ALRobotPosture() (ALRobotPostureProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeALRobotPosture(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyALRobotPosture) WithContext(ctx context.Context) ALRobotPostureProxy {
+	return MakeALRobotPosture(p.session, bus.WithContext(p, ctx))
 }
 
 // GetPostureFamily calls the remote procedure

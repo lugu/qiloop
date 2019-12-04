@@ -2,6 +2,7 @@ package space
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
@@ -325,6 +326,9 @@ type BombProxy interface {
 	object.Object
 	bus.Proxy
 	Bomb
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) BombProxy
 }
 
 // proxyBomb implements BombProxy
@@ -345,6 +349,11 @@ func (c Constructor) Bomb() (BombProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeBomb(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyBomb) WithContext(ctx context.Context) BombProxy {
+	return MakeBomb(p.session, bus.WithContext(p, ctx))
 }
 
 // SubscribeBoom subscribe to a remote property
@@ -462,6 +471,9 @@ type SpacecraftProxy interface {
 	object.Object
 	bus.Proxy
 	Spacecraft
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) SpacecraftProxy
 }
 
 // proxySpacecraft implements SpacecraftProxy
@@ -482,6 +494,11 @@ func (c Constructor) Spacecraft() (SpacecraftProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeSpacecraft(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxySpacecraft) WithContext(ctx context.Context) SpacecraftProxy {
+	return MakeSpacecraft(p.session, bus.WithContext(p, ctx))
 }
 
 // Shoot calls the remote procedure

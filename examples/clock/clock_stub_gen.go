@@ -2,6 +2,7 @@ package clock
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
@@ -135,6 +136,9 @@ type TimestampProxy interface {
 	object.Object
 	bus.Proxy
 	Timestamp
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) TimestampProxy
 }
 
 // proxyTimestamp implements TimestampProxy
@@ -155,6 +159,11 @@ func (c Constructor) Timestamp() (TimestampProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeTimestamp(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyTimestamp) WithContext(ctx context.Context) TimestampProxy {
+	return MakeTimestamp(p.session, bus.WithContext(p, ctx))
 }
 
 // Nanoseconds calls the remote procedure

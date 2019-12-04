@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -37,6 +38,9 @@ type ALVideoDeviceProxy interface {
 	object.Object
 	bus.Proxy
 	ALVideoDevice
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ALVideoDeviceProxy
 }
 
 // proxyALVideoDevice implements ALVideoDeviceProxy
@@ -57,6 +61,11 @@ func (c Constructor) ALVideoDevice() (ALVideoDeviceProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeALVideoDevice(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyALVideoDevice) WithContext(ctx context.Context) ALVideoDeviceProxy {
+	return MakeALVideoDevice(p.session, bus.WithContext(p, ctx))
 }
 
 // SubscribeCamera calls the remote procedure

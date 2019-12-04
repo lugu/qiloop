@@ -124,6 +124,18 @@ func generateObjectInterface(itf *InterfaceType, serviceName string,
 		jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
 	definitions = append(definitions, jen.Id(serviceName))
 
+	if serviceName != "ServiceZero" && serviceName != "Object" {
+		comment := jen.Comment("WithContext returns a new proxy. Calls to this proxy can be")
+		definitions = append(definitions, comment)
+		comment = jen.Comment("cancelled by the context")
+		definitions = append(definitions, comment)
+
+		def := jen.Id("WithContext").Params(
+			jen.Id("ctx").Qual("context", "Context"),
+		).Params(jen.Id(objName(serviceName)))
+		definitions = append(definitions, def)
+	}
+
 	file.Comment(objName(serviceName) + " represents a proxy object to the service")
 	file.Type().Id(objName(serviceName)).Interface(
 		definitions...,
@@ -314,6 +326,17 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		),
 		blockContructor,
 	)
+
+	if ProxyName != proxyName("Object") && ProxyName != proxyName("ServiceZero") {
+		file.Comment("WithContext bound future calls to the context deadline and cancellation")
+		file.Func().Params(
+			jen.Id("p").Op("*").Id(proxyName(serviceName)),
+		).Id("WithContext").Params(
+			jen.Id("ctx").Qual("context", "Context"),
+		).Params(jen.Id(objName(serviceName))).Block(
+			jen.Id(`return Make` + serviceName + `(p.session, bus.WithContext(p, ctx))`),
+		)
+	}
 }
 
 func generateProxyMethod(file *jen.File, serviceName string,

@@ -1,6 +1,7 @@
 package bus_test
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -95,6 +96,7 @@ func CreateBomb(session bus.Session, service bus.Service) (BombProxy, error) {
 	constructor := Services(session)
 	return constructor.NewBomb(service, &bombImpl{})
 }
+
 func TestAddRemoveObject(t *testing.T) {
 
 	addr := util.NewUnixAddr()
@@ -321,4 +323,40 @@ func TestOnTerminate(t *testing.T) {
 		t.Fatal(err)
 	}
 	wait.Wait()
+}
+
+func TestCancel(t *testing.T) {
+	addr := util.NewUnixAddr()
+	listener, err := net.Listen(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ns := bus.PrivateNamespace()
+	srv, err := bus.StandAloneServer(listener, bus.Yes{}, ns)
+	if err != nil {
+		t.Error(err)
+	}
+
+	obj := space.NewSpacecraftObject()
+	service, err := srv.NewService("Spacecraft", obj)
+	if err != nil {
+		t.Error(err)
+	}
+	defer service.Terminate()
+
+	session := srv.Session()
+	proxies := space.Services(session)
+
+	spacecraft, err := proxies.Spacecraft()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel the context before the call
+	t.SkipNow()
+	_, err = spacecraft.WithContext(ctx).Shoot()
+	if err != bus.ErrCancelled {
+		t.Fatal(err)
+	}
 }

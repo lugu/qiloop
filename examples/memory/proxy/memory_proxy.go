@@ -5,6 +5,7 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -34,6 +35,9 @@ type ALTextToSpeechProxy interface {
 	object.Object
 	bus.Proxy
 	ALTextToSpeech
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ALTextToSpeechProxy
 }
 
 // proxyALTextToSpeech implements ALTextToSpeechProxy
@@ -54,6 +58,11 @@ func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeALTextToSpeech(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
+	return MakeALTextToSpeech(p.session, bus.WithContext(p, ctx))
 }
 
 // Say calls the remote procedure
@@ -83,6 +92,9 @@ type ALMemoryProxy interface {
 	object.Object
 	bus.Proxy
 	ALMemory
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ALMemoryProxy
 }
 
 // proxyALMemory implements ALMemoryProxy
@@ -103,6 +115,11 @@ func (c Constructor) ALMemory() (ALMemoryProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeALMemory(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyALMemory) WithContext(ctx context.Context) ALMemoryProxy {
+	return MakeALMemory(p.session, bus.WithContext(p, ctx))
 }
 
 // GetEventList calls the remote procedure
@@ -176,6 +193,9 @@ type SubscriberProxy interface {
 	object.Object
 	bus.Proxy
 	Subscriber
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) SubscriberProxy
 }
 
 // proxySubscriber implements SubscriberProxy
@@ -196,6 +216,11 @@ func (c Constructor) Subscriber() (SubscriberProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeSubscriber(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxySubscriber) WithContext(ctx context.Context) SubscriberProxy {
+	return MakeSubscriber(p.session, bus.WithContext(p, ctx))
 }
 
 // SubscribeSignal subscribe to a remote property

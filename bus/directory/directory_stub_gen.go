@@ -2,6 +2,7 @@ package directory
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
@@ -469,6 +470,9 @@ type ServiceDirectoryProxy interface {
 	object.Object
 	bus.Proxy
 	ServiceDirectory
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ServiceDirectoryProxy
 }
 
 // proxyServiceDirectory implements ServiceDirectoryProxy
@@ -489,6 +493,11 @@ func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeServiceDirectory(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
+	return MakeServiceDirectory(p.session, bus.WithContext(p, ctx))
 }
 
 // Service calls the remote procedure
