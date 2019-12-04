@@ -2,8 +2,9 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"fmt"
+	"time"
 
 	"github.com/lugu/qiloop/app"
 	"github.com/lugu/qiloop/examples/motion/proxy"
@@ -34,10 +35,21 @@ func main() {
 	}
 
 	motion.WaitUntilMoveIsFinished()
-	fmt.Println("init move is finished")
+	println("init move is finished")
 
 	// Remote procedure call: call the method "move to" of the service.
 	err = motion.MoveTo(0.2, 0, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	// Demonstrate cancellation: create a context which expires in
+	// two seconds.
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	defer cancel()
+
+	// Move will be cancelled in two seconds.
+	err = motion.WithContext(ctx).MoveTo(-0.4, 0, 0)
 	if err != nil {
 		panic(err)
 	}

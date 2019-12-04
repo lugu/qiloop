@@ -54,7 +54,7 @@ standalone server (launched with `qiloop server`).
 Features:
   - type supported: object, struct, values, map, list, tuple
   - actions: method, signals and properties are fully supported
-  - cancellation: client support only (server side missing)
+  - cancel: client support only (see motion example)
   - transport: TCP, TLS, UNIX socket and QUIC (experimental)
   - authentication: read the credentials from `$HOME/.qiloop-auth.conf`
   - service introspection: generate IDL from a running instance (use `qiloop scan`)
