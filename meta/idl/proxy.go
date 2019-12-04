@@ -279,7 +279,9 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 
 	file.Comment(ProxyName + " implements " + objName(serviceName))
 	if ProxyName == proxyName("Object") || ProxyName == proxyName("ServiceZero") {
-		file.Type().Id(ProxyName).Struct(jen.Qual("github.com/lugu/qiloop/bus", "Proxy"))
+		file.Type().Id(ProxyName).Struct(
+			jen.Id("proxy").Qual("github.com/lugu/qiloop/bus", "Proxy"),
+		)
 	} else {
 		file.Type().Id(ProxyName).Struct(
 			jen.Qual(
@@ -352,7 +354,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		).Id("FIXMEProxy").Params().Params(
 			jen.Qual("github.com/lugu/qiloop/bus", "Proxy"),
 		).Block(
-			jen.Id(`return p`),
+			jen.Id(`return p.proxy`),
 		)
 	}
 }

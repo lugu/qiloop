@@ -659,7 +659,7 @@ type ServiceZeroProxy interface {
 
 // proxyServiceZero implements ServiceZeroProxy
 type proxyServiceZero struct {
-	Proxy
+	proxy Proxy
 }
 
 // ServiceZero returns a proxy to a remote service
@@ -673,7 +673,7 @@ func (c Constructor) ServiceZero() (ServiceZeroProxy, error) {
 
 // FIXMEProxy returns a proxy.
 func (p *proxyServiceZero) FIXMEProxy() Proxy {
-	return p
+	return p.proxy
 }
 
 // Authenticate calls the remote procedure
@@ -758,7 +758,7 @@ type ObjectProxy interface {
 
 // proxyObject implements ObjectProxy
 type proxyObject struct {
-	Proxy
+	proxy Proxy
 }
 
 // Object returns a proxy to a remote service
@@ -772,7 +772,7 @@ func (c Constructor) Object() (ObjectProxy, error) {
 
 // FIXMEProxy returns a proxy.
 func (p *proxyObject) FIXMEProxy() Proxy {
-	return p
+	return p.proxy
 }
 
 // RegisterEvent calls the remote procedure
