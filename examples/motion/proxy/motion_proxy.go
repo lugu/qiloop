@@ -75,7 +75,7 @@ func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
 func (p *proxyALMotion) WakeUp() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("wakeUp", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("wakeUp", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call wakeUp failed: %s", err)
 	}
@@ -86,7 +86,7 @@ func (p *proxyALMotion) WakeUp() error {
 func (p *proxyALMotion) Rest() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("rest", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("rest", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call rest failed: %s", err)
 	}
@@ -97,7 +97,7 @@ func (p *proxyALMotion) Rest() error {
 func (p *proxyALMotion) MoveInit() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("moveInit", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("moveInit", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call moveInit failed: %s", err)
 	}
@@ -117,7 +117,7 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 	if err = basic.WriteFloat32(theta, &buf); err != nil {
 		return fmt.Errorf("serialize theta: %s", err)
 	}
-	_, err = p.Call("moveTo", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("moveTo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call moveTo failed: %s", err)
 	}
@@ -128,7 +128,7 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 func (p *proxyALMotion) WaitUntilMoveIsFinished() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("waitUntilMoveIsFinished", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("waitUntilMoveIsFinished", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call waitUntilMoveIsFinished failed: %s", err)
 	}

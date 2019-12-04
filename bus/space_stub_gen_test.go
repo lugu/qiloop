@@ -506,7 +506,7 @@ func (p *proxySpacecraft) Shoot() (BombProxy, error) {
 	var err error
 	var ret BombProxy
 	var buf bytes.Buffer
-	response, err := p.Call("shoot", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("shoot", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call shoot failed: %s", err)
 	}
@@ -546,7 +546,7 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize ammo: %s", err)
 	}
-	_, err = p.Call("ammo", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("ammo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call ammo failed: %s", err)
 	}

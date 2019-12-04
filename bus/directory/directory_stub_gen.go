@@ -508,7 +508,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	response, err := p.Call("service", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("service", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
@@ -525,7 +525,7 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf bytes.Buffer
-	response, err := p.Call("services", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("services", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call services failed: %s", err)
 	}
@@ -558,7 +558,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("serialize info: %s", err)
 	}
-	response, err := p.Call("registerService", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("registerService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerService failed: %s", err)
 	}
@@ -577,7 +577,7 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.Call("unregisterService", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("unregisterService", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call unregisterService failed: %s", err)
 	}
@@ -591,7 +591,7 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.Call("serviceReady", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("serviceReady", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call serviceReady failed: %s", err)
 	}
@@ -605,7 +605,7 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("serialize info: %s", err)
 	}
-	_, err = p.Call("updateServiceInfo", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("updateServiceInfo", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call updateServiceInfo failed: %s", err)
 	}
@@ -617,7 +617,7 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.Call("machineId", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("machineId", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call machineId failed: %s", err)
 	}
@@ -637,7 +637,7 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize serviceID: %s", err)
 	}
-	response, err := p.Call("_socketOfService", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("_socketOfService", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}

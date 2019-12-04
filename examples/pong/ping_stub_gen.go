@@ -231,7 +231,7 @@ func (p *proxyPingPong) Hello(a string) (string, error) {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return ret, fmt.Errorf("serialize a: %s", err)
 	}
-	response, err := p.Call("hello", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("hello", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call hello failed: %s", err)
 	}
@@ -250,7 +250,7 @@ func (p *proxyPingPong) Ping(a string) error {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("serialize a: %s", err)
 	}
-	_, err = p.Call("ping", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("ping", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call ping failed: %s", err)
 	}

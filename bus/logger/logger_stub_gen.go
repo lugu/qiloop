@@ -909,7 +909,7 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("setVerbosity", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setVerbosity", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setVerbosity failed: %s", err)
 	}
@@ -926,7 +926,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("setCategory", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setCategory", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -956,7 +956,7 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize filters: %s", err)
 	}
-	_, err = p.Call("clearAndSet", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("clearAndSet", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearAndSet failed: %s", err)
 	}
@@ -1027,7 +1027,7 @@ func (p *proxyLogListener) SetLevel(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("setLevel", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("setLevel", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setLevel failed: %s", err)
 	}
@@ -1044,7 +1044,7 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Call("addFilter", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("addFilter", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call addFilter failed: %s", err)
 	}
@@ -1055,7 +1055,7 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Call("clearFilters", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("clearFilters", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
 	}
@@ -1322,7 +1322,7 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize messages: %s", err)
 	}
-	_, err = p.Call("log", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("log", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
@@ -1334,7 +1334,7 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.Call("createListener", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("createListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
@@ -1361,7 +1361,7 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.Call("getListener", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("getListener", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
@@ -1402,7 +1402,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize source: %s", err)
 	}
-	response, err := p.Call("addProvider", buf.Bytes())
+	response, err := p.FIXMEProxy().Call("addProvider", buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
@@ -1421,7 +1421,7 @@ func (p *proxyLogManager) RemoveProvider(sourceID int32) error {
 	if err = basic.WriteInt32(sourceID, &buf); err != nil {
 		return fmt.Errorf("serialize sourceID: %s", err)
 	}
-	_, err = p.Call("removeProvider", buf.Bytes())
+	_, err = p.FIXMEProxy().Call("removeProvider", buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
 	}
