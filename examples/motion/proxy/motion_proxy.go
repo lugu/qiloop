@@ -5,6 +5,7 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -40,6 +41,9 @@ type ALMotionProxy interface {
 	object.Object
 	bus.Proxy
 	ALMotion
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ALMotionProxy
 }
 
 // proxyALMotion implements ALMotionProxy
@@ -60,6 +64,11 @@ func (c Constructor) ALMotion() (ALMotionProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeALMotion(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
+	return MakeALMotion(p.session, bus.WithContext(p, ctx))
 }
 
 // WakeUp calls the remote procedure

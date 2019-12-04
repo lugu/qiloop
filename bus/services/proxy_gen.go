@@ -5,6 +5,7 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	basic "github.com/lugu/qiloop/type/basic"
@@ -109,6 +110,9 @@ type ServiceDirectoryProxy interface {
 	object.Object
 	bus.Proxy
 	ServiceDirectory
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ServiceDirectoryProxy
 }
 
 // proxyServiceDirectory implements ServiceDirectoryProxy
@@ -129,6 +133,11 @@ func (c Constructor) ServiceDirectory() (ServiceDirectoryProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeServiceDirectory(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
+	return MakeServiceDirectory(p.session, bus.WithContext(p, ctx))
 }
 
 // Service calls the remote procedure
@@ -552,6 +561,9 @@ type LogProviderProxy interface {
 	object.Object
 	bus.Proxy
 	LogProvider
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) LogProviderProxy
 }
 
 // proxyLogProvider implements LogProviderProxy
@@ -572,6 +584,11 @@ func (c Constructor) LogProvider() (LogProviderProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogProvider(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
+	return MakeLogProvider(p.session, bus.WithContext(p, ctx))
 }
 
 // SetVerbosity calls the remote procedure
@@ -662,6 +679,9 @@ type LogListenerProxy interface {
 	object.Object
 	bus.Proxy
 	LogListener
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) LogListenerProxy
 }
 
 // proxyLogListener implements LogListenerProxy
@@ -682,6 +702,11 @@ func (c Constructor) LogListener() (LogListenerProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogListener(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
+	return MakeLogListener(p.session, bus.WithContext(p, ctx))
 }
 
 // SetCategory calls the remote procedure
@@ -955,6 +980,9 @@ type LogManagerProxy interface {
 	object.Object
 	bus.Proxy
 	LogManager
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) LogManagerProxy
 }
 
 // proxyLogManager implements LogManagerProxy
@@ -975,6 +1003,11 @@ func (c Constructor) LogManager() (LogManagerProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogManager(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
+	return MakeLogManager(p.session, bus.WithContext(p, ctx))
 }
 
 // Log calls the remote procedure
@@ -1113,6 +1146,9 @@ type ALTextToSpeechProxy interface {
 	object.Object
 	bus.Proxy
 	ALTextToSpeech
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ALTextToSpeechProxy
 }
 
 // proxyALTextToSpeech implements ALTextToSpeechProxy
@@ -1133,6 +1169,11 @@ func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeALTextToSpeech(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
+	return MakeALTextToSpeech(p.session, bus.WithContext(p, ctx))
 }
 
 // Say calls the remote procedure
@@ -1168,6 +1209,9 @@ type ALAnimatedSpeechProxy interface {
 	object.Object
 	bus.Proxy
 	ALAnimatedSpeech
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) ALAnimatedSpeechProxy
 }
 
 // proxyALAnimatedSpeech implements ALAnimatedSpeechProxy
@@ -1188,6 +1232,11 @@ func (c Constructor) ALAnimatedSpeech() (ALAnimatedSpeechProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeALAnimatedSpeech(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyALAnimatedSpeech) WithContext(ctx context.Context) ALAnimatedSpeechProxy {
+	return MakeALAnimatedSpeech(p.session, bus.WithContext(p, ctx))
 }
 
 // Say calls the remote procedure

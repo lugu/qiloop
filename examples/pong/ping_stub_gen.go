@@ -2,6 +2,7 @@ package pong
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
@@ -192,6 +193,9 @@ type PingPongProxy interface {
 	object.Object
 	bus.Proxy
 	PingPong
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) PingPongProxy
 }
 
 // proxyPingPong implements PingPongProxy
@@ -212,6 +216,11 @@ func (c Constructor) PingPong() (PingPongProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakePingPong(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyPingPong) WithContext(ctx context.Context) PingPongProxy {
+	return MakePingPong(p.session, bus.WithContext(p, ctx))
 }
 
 // Hello calls the remote procedure

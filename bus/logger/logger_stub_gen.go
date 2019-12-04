@@ -2,6 +2,7 @@ package logger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
 	net "github.com/lugu/qiloop/bus/net"
@@ -871,6 +872,9 @@ type LogProviderProxy interface {
 	object.Object
 	bus.Proxy
 	LogProvider
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) LogProviderProxy
 }
 
 // proxyLogProvider implements LogProviderProxy
@@ -891,6 +895,11 @@ func (c Constructor) LogProvider() (LogProviderProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogProvider(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
+	return MakeLogProvider(p.session, bus.WithContext(p, ctx))
 }
 
 // SetVerbosity calls the remote procedure
@@ -981,6 +990,9 @@ type LogListenerProxy interface {
 	object.Object
 	bus.Proxy
 	LogListener
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) LogListenerProxy
 }
 
 // proxyLogListener implements LogListenerProxy
@@ -1001,6 +1013,11 @@ func (c Constructor) LogListener() (LogListenerProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogListener(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
+	return MakeLogListener(p.session, bus.WithContext(p, ctx))
 }
 
 // SetLevel calls the remote procedure
@@ -1256,6 +1273,9 @@ type LogManagerProxy interface {
 	object.Object
 	bus.Proxy
 	LogManager
+	// WithContext returns a new proxy. Calls to this proxy can be
+	// cancelled by the context
+	WithContext(ctx context.Context) LogManagerProxy
 }
 
 // proxyLogManager implements LogManagerProxy
@@ -1276,6 +1296,11 @@ func (c Constructor) LogManager() (LogManagerProxy, error) {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
 	return MakeLogManager(c.session, proxy), nil
+}
+
+// WithContext bound future calls to the context deadline and cancellation
+func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
+	return MakeLogManager(p.session, bus.WithContext(p, ctx))
 }
 
 // Log calls the remote procedure
