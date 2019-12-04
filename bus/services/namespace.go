@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+
 	"github.com/lugu/qiloop/bus"
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/bus/util"
@@ -27,8 +28,7 @@ func NewServer(sess bus.Session, addr string, auth bus.Authenticator) (bus.Serve
 // Namespace returns a Namespace which connects to a remote service
 // directory.
 func Namespace(session bus.Session, endpoints []string) (bus.Namespace, error) {
-	services := Services(session)
-	directory, err := services.ServiceDirectory()
+	directory, err := ServiceDirectory(session)
 	if err != nil {
 		return nil, fmt.Errorf("connect ServiceDirectory: %s",
 			err)

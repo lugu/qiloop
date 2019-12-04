@@ -165,7 +165,7 @@ func NewAuthSession(addr, user, token string) (bus.Session, error) {
 		},
 	}
 	var err error
-	s.Directory, err = services.Services(s).ServiceDirectory()
+	s.Directory, err = services.ServiceDirectory(s)
 	if err != nil {
 		return nil, fmt.Errorf("contact server: %s", err)
 	}

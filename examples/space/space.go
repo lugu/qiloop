@@ -36,7 +36,7 @@ func (f *spacecraftImpl) Activate(activation bus.Activation,
 	f.session = activation.Session
 	f.terminate = activation.Terminate
 	f.service = activation.Service
-	ammo, err := CreateBomb(f.session, f.service)
+	ammo, err := NewBomb(f.session, f.service)
 	f.ammo = ammo
 	return err
 }
@@ -91,8 +91,7 @@ func NewBombObject() bus.Actor {
 	return BombObject(&bombImpl{})
 }
 
-// CreateBomb creates a new bomb and add it the to service.
-func CreateBomb(session bus.Session, service bus.Service) (BombProxy, error) {
-	constructor := Services(session)
-	return constructor.NewBomb(service, &bombImpl{})
+// NewBomb creates a new bomb and add it the to service.
+func NewBomb(session bus.Session, service bus.Service) (BombProxy, error) {
+	return CreateBomb(session, service, &bombImpl{})
 }

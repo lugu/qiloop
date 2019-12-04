@@ -50,9 +50,9 @@ func PingPongObject(impl PingPongImplementor) bus.Actor {
 	return obj
 }
 
-// NewPingPong registers a new object to a service
+// CreatePingPong registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewPingPong(service bus.Service, impl PingPongImplementor) (PingPongProxy, error) {
+func CreatePingPong(session bus.Session, service bus.Service, impl PingPongImplementor) (PingPongProxy, error) {
 	obj := PingPongObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -62,7 +62,7 @@ func (c Constructor) NewPingPong(service bus.Service, impl PingPongImplementor) 
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakePingPong(c.session, proxy), nil
+	return MakePingPong(session, proxy), nil
 }
 func (p *stubPingPong) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -168,32 +168,14 @@ func (p *stubPingPong) metaObject() object.MetaObject {
 	}
 }
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
-// PingPong is the abstract interface of the service
-type PingPong interface {
-	// Hello calls the remote procedure
-	Hello(a string) (string, error)
-	// Ping calls the remote procedure
-	Ping(a string) error
-	// SubscribePong subscribe to a remote signal
-	SubscribePong() (unsubscribe func(), updates chan string, err error)
-}
-
 // PingPongProxy represents a proxy object to the service
 type PingPongProxy interface {
+	Hello(a string) (string, error)
+	Ping(a string) error
+	SubscribePong() (unsubscribe func(), updates chan string, err error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	PingPong
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) PingPongProxy
 }
 
@@ -209,12 +191,12 @@ func MakePingPong(sess bus.Session, proxy bus.Proxy) PingPongProxy {
 }
 
 // PingPong returns a proxy to a remote service
-func (c Constructor) PingPong() (PingPongProxy, error) {
-	proxy, err := c.session.Proxy("PingPong", 1)
+func PingPong(session bus.Session) (PingPongProxy, error) {
+	proxy, err := session.Proxy("PingPong", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakePingPong(c.session, proxy), nil
+	return MakePingPong(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

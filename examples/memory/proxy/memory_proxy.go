@@ -14,28 +14,12 @@ import (
 	"log"
 )
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
-// ALTextToSpeech is the abstract interface of the service
-type ALTextToSpeech interface {
-	// Say calls the remote procedure
-	Say(stringToSay string) error
-}
-
 // ALTextToSpeechProxy represents a proxy object to the service
 type ALTextToSpeechProxy interface {
+	Say(stringToSay string) error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ALTextToSpeech
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ALTextToSpeechProxy
 }
 
@@ -51,12 +35,12 @@ func MakeALTextToSpeech(sess bus.Session, proxy bus.Proxy) ALTextToSpeechProxy {
 }
 
 // ALTextToSpeech returns a proxy to a remote service
-func (c Constructor) ALTextToSpeech() (ALTextToSpeechProxy, error) {
-	proxy, err := c.session.Proxy("ALTextToSpeech", 1)
+func ALTextToSpeech(session bus.Session) (ALTextToSpeechProxy, error) {
+	proxy, err := session.Proxy("ALTextToSpeech", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeALTextToSpeech(c.session, proxy), nil
+	return MakeALTextToSpeech(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -78,20 +62,13 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	return nil
 }
 
-// ALMemory is the abstract interface of the service
-type ALMemory interface {
-	// GetEventList calls the remote procedure
-	GetEventList() ([]string, error)
-	// Subscriber calls the remote procedure
-	Subscriber(eventName string) (SubscriberProxy, error)
-}
-
 // ALMemoryProxy represents a proxy object to the service
 type ALMemoryProxy interface {
+	GetEventList() ([]string, error)
+	Subscriber(eventName string) (SubscriberProxy, error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ALMemory
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ALMemoryProxy
 }
 
@@ -107,12 +84,12 @@ func MakeALMemory(sess bus.Session, proxy bus.Proxy) ALMemoryProxy {
 }
 
 // ALMemory returns a proxy to a remote service
-func (c Constructor) ALMemory() (ALMemoryProxy, error) {
-	proxy, err := c.session.Proxy("ALMemory", 1)
+func ALMemory(session bus.Session) (ALMemoryProxy, error) {
+	proxy, err := session.Proxy("ALMemory", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeALMemory(c.session, proxy), nil
+	return MakeALMemory(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
@@ -180,18 +157,12 @@ func (p *proxyALMemory) Subscriber(eventName string) (SubscriberProxy, error) {
 	return ret, nil
 }
 
-// Subscriber is the abstract interface of the service
-type Subscriber interface {
-	// SubscribeSignal subscribe to a remote signal
-	SubscribeSignal() (unsubscribe func(), updates chan value.Value, err error)
-}
-
 // SubscriberProxy represents a proxy object to the service
 type SubscriberProxy interface {
+	SubscribeSignal() (unsubscribe func(), updates chan value.Value, err error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	Subscriber
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) SubscriberProxy
 }
 
@@ -207,12 +178,12 @@ func MakeSubscriber(sess bus.Session, proxy bus.Proxy) SubscriberProxy {
 }
 
 // Subscriber returns a proxy to a remote service
-func (c Constructor) Subscriber() (SubscriberProxy, error) {
-	proxy, err := c.session.Proxy("Subscriber", 1)
+func Subscriber(session bus.Session) (SubscriberProxy, error) {
+	proxy, err := session.Proxy("Subscriber", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeSubscriber(c.session, proxy), nil
+	return MakeSubscriber(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

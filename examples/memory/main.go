@@ -20,17 +20,14 @@ func main() {
 	}
 	defer session.Terminate()
 
-	// Access the specialized proxy constructor.
-	proxies := proxy.Services(session)
-
 	// Obtain a proxy to the service
-	tts, err := proxies.ALTextToSpeech()
+	tts, err := proxy.ALTextToSpeech(session)
 	if err != nil {
 		panic(err)
 	}
 
 	// Obtain a proxy to the service
-	alMemory, err := proxies.ALMemory()
+	alMemory, err := proxy.ALMemory(session)
 	if err != nil {
 		panic(err)
 	}

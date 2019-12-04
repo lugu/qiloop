@@ -19,11 +19,8 @@ func main() {
 		panic(err)
 	}
 
-	// proxies is an helper to access the specialized proxy.
-	proxies := pong.Services(session)
-
 	// obtain a representation of the ping pong service
-	client, err := proxies.PingPong()
+	client, err := pong.PingPong(session)
 	if err != nil {
 		panic(err)
 	}

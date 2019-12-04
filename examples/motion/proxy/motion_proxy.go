@@ -11,36 +11,16 @@ import (
 	basic "github.com/lugu/qiloop/type/basic"
 )
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
-// ALMotion is the abstract interface of the service
-type ALMotion interface {
-	// WakeUp calls the remote procedure
-	WakeUp() error
-	// Rest calls the remote procedure
-	Rest() error
-	// MoveInit calls the remote procedure
-	MoveInit() error
-	// MoveTo calls the remote procedure
-	MoveTo(x float32, y float32, theta float32) error
-	// WaitUntilMoveIsFinished calls the remote procedure
-	WaitUntilMoveIsFinished() error
-}
-
 // ALMotionProxy represents a proxy object to the service
 type ALMotionProxy interface {
+	WakeUp() error
+	Rest() error
+	MoveInit() error
+	MoveTo(x float32, y float32, theta float32) error
+	WaitUntilMoveIsFinished() error
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ALMotion
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ALMotionProxy
 }
 
@@ -56,12 +36,12 @@ func MakeALMotion(sess bus.Session, proxy bus.Proxy) ALMotionProxy {
 }
 
 // ALMotion returns a proxy to a remote service
-func (c Constructor) ALMotion() (ALMotionProxy, error) {
-	proxy, err := c.session.Proxy("ALMotion", 1)
+func ALMotion(session bus.Session) (ALMotionProxy, error) {
+	proxy, err := session.Proxy("ALMotion", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeALMotion(c.session, proxy), nil
+	return MakeALMotion(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

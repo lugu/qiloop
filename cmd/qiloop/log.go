@@ -53,8 +53,7 @@ func logger(serverURL string, level uint32) {
 		log.Fatalf("connect: %s", err)
 	}
 	defer sess.Terminate()
-	srv := qilog.Services(sess)
-	logManager, err := srv.LogManager()
+	logManager, err := qilog.LogManager(sess)
 	if err != nil {
 		log.Fatalf("access LogManager service: %s", err)
 	}

@@ -12,32 +12,14 @@ import (
 	value "github.com/lugu/qiloop/type/value"
 )
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
-// ALVideoDevice is the abstract interface of the service
-type ALVideoDevice interface {
-	// SubscribeCamera calls the remote procedure
-	SubscribeCamera(name string, cameraIndex int32, resolution int32, colorSpace int32, fps int32) (string, error)
-	// Unsubscribe calls the remote procedure
-	Unsubscribe(nameId string) (bool, error)
-	// GetImageRemote calls the remote procedure
-	GetImageRemote(name string) (value.Value, error)
-}
-
 // ALVideoDeviceProxy represents a proxy object to the service
 type ALVideoDeviceProxy interface {
+	SubscribeCamera(name string, cameraIndex int32, resolution int32, colorSpace int32, fps int32) (string, error)
+	Unsubscribe(nameId string) (bool, error)
+	GetImageRemote(name string) (value.Value, error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	ALVideoDevice
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) ALVideoDeviceProxy
 }
 
@@ -53,12 +35,12 @@ func MakeALVideoDevice(sess bus.Session, proxy bus.Proxy) ALVideoDeviceProxy {
 }
 
 // ALVideoDevice returns a proxy to a remote service
-func (c Constructor) ALVideoDevice() (ALVideoDeviceProxy, error) {
-	proxy, err := c.session.Proxy("ALVideoDevice", 1)
+func ALVideoDevice(session bus.Session) (ALVideoDeviceProxy, error) {
+	proxy, err := session.Proxy("ALVideoDevice", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeALVideoDevice(c.session, proxy), nil
+	return MakeALVideoDevice(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation

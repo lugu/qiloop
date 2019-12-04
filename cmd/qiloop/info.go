@@ -26,10 +26,8 @@ func info(serverURL, serviceName string) {
 	if err != nil {
 		log.Fatalf("connect: %s", err)
 	}
-	srv := services.Services(sess)
-
 	if serviceName == "" {
-		directory, err := srv.ServiceDirectory()
+		directory, err := services.ServiceDirectory(sess)
 		if err != nil {
 			log.Fatalf("directory creation failed: %s", err)
 		}

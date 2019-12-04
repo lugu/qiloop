@@ -46,9 +46,9 @@ func TimestampObject(impl TimestampImplementor) bus.Actor {
 	return obj
 }
 
-// NewTimestamp registers a new object to a service
+// CreateTimestamp registers a new object to a service
 // and returns a proxy to the newly created object
-func (c Constructor) NewTimestamp(service bus.Service, impl TimestampImplementor) (TimestampProxy, error) {
+func CreateTimestamp(session bus.Session, service bus.Service, impl TimestampImplementor) (TimestampProxy, error) {
 	obj := TimestampObject(impl)
 	objectID, err := service.Add(obj)
 	if err != nil {
@@ -58,7 +58,7 @@ func (c Constructor) NewTimestamp(service bus.Service, impl TimestampImplementor
 	meta := object.FullMetaObject(stb.metaObject())
 	client := bus.DirectClient(obj)
 	proxy := bus.NewProxy(client, meta, service.ServiceID(), objectID)
-	return MakeTimestamp(c.session, proxy), nil
+	return MakeTimestamp(session, proxy), nil
 }
 func (p *stubTimestamp) Activate(activation bus.Activation) error {
 	p.session = activation.Session
@@ -115,28 +115,12 @@ func (p *stubTimestamp) metaObject() object.MetaObject {
 	}
 }
 
-// Constructor gives access to remote services
-type Constructor struct {
-	session bus.Session
-}
-
-// Services gives access to the services constructor
-func Services(s bus.Session) Constructor {
-	return Constructor{session: s}
-}
-
-// Timestamp is the abstract interface of the service
-type Timestamp interface {
-	// Nanoseconds calls the remote procedure
-	Nanoseconds() (int64, error)
-}
-
 // TimestampProxy represents a proxy object to the service
 type TimestampProxy interface {
+	Nanoseconds() (int64, error)
+	// Generic methods shared by all objectsProxy
 	bus.ObjectProxy
-	Timestamp
-	// WithContext returns a new proxy. Calls to this proxy can be
-	// cancelled by the context
+	// WithContext can be used cancellation and timeout
 	WithContext(ctx context.Context) TimestampProxy
 }
 
@@ -152,12 +136,12 @@ func MakeTimestamp(sess bus.Session, proxy bus.Proxy) TimestampProxy {
 }
 
 // Timestamp returns a proxy to a remote service
-func (c Constructor) Timestamp() (TimestampProxy, error) {
-	proxy, err := c.session.Proxy("Timestamp", 1)
+func Timestamp(session bus.Session) (TimestampProxy, error) {
+	proxy, err := session.Proxy("Timestamp", 1)
 	if err != nil {
 		return nil, fmt.Errorf("contact service: %s", err)
 	}
-	return MakeTimestamp(c.session, proxy), nil
+	return MakeTimestamp(session, proxy), nil
 }
 
 // WithContext bound future calls to the context deadline and cancellation
