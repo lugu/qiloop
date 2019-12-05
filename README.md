@@ -12,18 +12,19 @@
 [![Release](https://img.shields.io/github/tag/lugu/qiloop.svg)](https://github.com/lugu/qiloop/releases)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
--   [About](#about)
--   [Status](#status)
--   [Usage](#usage)
--   [Go API](#go-api)
--   [Tutorials](#tutorials)
--   [Examples](#examples)
--   [Command line interface](#command-line-interface)
--   [Authentication](#authentication)
--   [Contributing](#contributing)
+- [About](#about)
+- [Frequently asked questions](#frequently-asked-questions)
+- [Status](#status)
+- [Usage](#usage)
+- [Go API](#go-api)
+- [Tutorials](#tutorials)
+- [Examples](#examples)
+- [Command line interface](#command-line-interface)
+- [Authentication](#authentication)
+- [Contributing](#contributing)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

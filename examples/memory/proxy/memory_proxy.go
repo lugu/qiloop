@@ -55,7 +55,11 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	if err = basic.WriteString(stringToSay, &buf); err != nil {
 		return fmt.Errorf("serialize stringToSay: %s", err)
 	}
-	_, err = p.Proxy().Call("say", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("say", "(s)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -102,7 +106,11 @@ func (p *proxyALMemory) GetEventList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("getEventList", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("getEventList", "()", "[s]")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getEventList failed: %s", err)
 	}
@@ -135,7 +143,11 @@ func (p *proxyALMemory) Subscriber(eventName string) (SubscriberProxy, error) {
 	if err = basic.WriteString(eventName, &buf); err != nil {
 		return ret, fmt.Errorf("serialize eventName: %s", err)
 	}
-	response, err := p.Proxy().Call("subscriber", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("subscriber", "(s)", "o")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call subscriber failed: %s", err)
 	}
@@ -193,12 +205,12 @@ func (p *proxySubscriber) WithContext(ctx context.Context) SubscriberProxy {
 
 // SubscribeSignal subscribe to a remote property
 func (p *proxySubscriber) SubscribeSignal() (func(), chan value.Value, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("signal")
+	signalID, err := p.Proxy().MetaObject().SignalID("signal", "m")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "signal", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "signal", err)
 	}
 	ch := make(chan value.Value)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

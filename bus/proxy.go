@@ -25,10 +25,10 @@ func (p proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
 }
 
 // Call translates the name into an action id and send it to the client endpoint.
-func (p proxy) Call(action string, payload []byte) ([]byte, error) {
-	id, err := p.MethodID(action)
+func (p proxy) Call(method, param, ret string, payload []byte) ([]byte, error) {
+	id, err := p.meta.MethodID(method, param, ret)
 	if err != nil {
-		return nil, fmt.Errorf("find call %s: %s", action, err)
+		return nil, fmt.Errorf("find call %s: %s", method, err)
 	}
 	return p.CallID(id, payload)
 }
@@ -63,21 +63,6 @@ func (p proxy) SubscribeID(action uint32) (func(), chan []byte, error) {
 	}, bytes, nil
 }
 
-// Subscribe returns a channel with the values of a signal or a
-// property.
-func (p proxy) Subscribe(action string) (func(), chan []byte, error) {
-	id, err := p.SignalID(action)
-	if err != nil {
-		id, err = p.PropertyID(action)
-		if err != nil {
-			return nil, nil,
-				fmt.Errorf("cannot find signal or property %s",
-					action)
-		}
-	}
-	return p.SubscribeID(id)
-}
-
 // ServiceID returns the service identifier.
 func (p proxy) ServiceID() uint32 {
 	return p.service
@@ -88,28 +73,10 @@ func (p proxy) ObjectID() uint32 {
 	return p.object
 }
 
-// MethodID resolve the name of the method using the meta object and
-// returns the method id.
-func (p proxy) MethodID(name string) (uint32, error) {
-	return p.meta.MethodID(name)
-}
-
 // OnDisconnect registers a callback which is called when the network
 // connection is unavailable.
 func (p proxy) OnDisconnect(cb func(error)) error {
 	return p.client.OnDisconnect(cb)
-}
-
-// SignalID resolve the name of the signal using the meta object and
-// returns the signal id.
-func (p proxy) SignalID(name string) (uint32, error) {
-	return p.meta.SignalID(name)
-}
-
-// PropertyID resolve the name of the property using the meta object and
-// returns the property id.
-func (p proxy) PropertyID(name string) (uint32, error) {
-	return p.meta.PropertyID(name)
 }
 
 // ProxyService returns a reference to a remote service which can be used

@@ -53,7 +53,11 @@ func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
 func (p *proxyALMotion) WakeUp() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Proxy().Call("wakeUp", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("wakeUp", "()", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call wakeUp failed: %s", err)
 	}
@@ -64,7 +68,11 @@ func (p *proxyALMotion) WakeUp() error {
 func (p *proxyALMotion) Rest() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Proxy().Call("rest", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("rest", "()", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call rest failed: %s", err)
 	}
@@ -75,7 +83,11 @@ func (p *proxyALMotion) Rest() error {
 func (p *proxyALMotion) MoveInit() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Proxy().Call("moveInit", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("moveInit", "()", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call moveInit failed: %s", err)
 	}
@@ -95,7 +107,11 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 	if err = basic.WriteFloat32(theta, &buf); err != nil {
 		return fmt.Errorf("serialize theta: %s", err)
 	}
-	_, err = p.Proxy().Call("moveTo", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("moveTo", "(fff)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call moveTo failed: %s", err)
 	}
@@ -106,7 +122,11 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 func (p *proxyALMotion) WaitUntilMoveIsFinished() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Proxy().Call("waitUntilMoveIsFinished", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("waitUntilMoveIsFinished", "()", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call waitUntilMoveIsFinished failed: %s", err)
 	}

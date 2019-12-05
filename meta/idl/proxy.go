@@ -394,9 +394,10 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 		methodID = "SignalID"
 	}
 	body := jen.Block(
-		jen.Id(`propertyID, err := p.Proxy().MetaObject().`+methodID+`("`+actionName+`")
-		if err != nil {
-			return nil, nil, fmt.Errorf("property %s not available: %s", "`+actionName+`", err)
+		jen.Id(fmt.Sprintf(`signalID, err := p.Proxy().MetaObject().%s("%s", "%s")`,
+			methodID, actionName, actionType.Signature())),
+		jen.Id(`if err != nil {
+			return nil, nil, fmt.Errorf("%s not available: %s", "`+actionName+`", err)
 		}`),
 
 		jen.Id("ch").Op(":=").Make(jen.Chan().Add(actionType.TypeName())),
@@ -404,7 +405,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 			jen.Id("cancel"),
 			jen.Id("chPay"),
 			jen.Err(),
-		).Op(":=").Id("p.Proxy().SubscribeID").Call(jen.Id("propertyID")),
+		).Op(":=").Id("p.Proxy().SubscribeID").Call(jen.Id("signalID")),
 		jen.Id(`if err != nil {
 			return nil, nil, fmt.Errorf("request property: %s", err)
 		}`),
@@ -554,21 +555,15 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 			))
 		}
 	}
+	writing = append(writing, jen.Id(fmt.Sprintf(`methodID, err := p.Proxy().MetaObject().MethodID("%s", "%s", "%s")`, method.Name, params.Signature(), ret.Signature())))
 	if ret.Signature() != "v" {
-		writing = append(writing, jen.Id(fmt.Sprintf(`response, err := p.Proxy().Call("%s", buf.Bytes())`, method.Name)))
-	} else {
-		writing = append(writing, jen.Id(fmt.Sprintf(`_, err = p.Proxy().Call("%s", buf.Bytes())`, method.Name)))
-	}
-	if ret.Signature() != "v" {
+		writing = append(writing, jen.Id(`if err != nil {
+		return ret, err
+		}`))
+		writing = append(writing, jen.Id(`response, err := p.Proxy().CallID(methodID, buf.Bytes())`))
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
 			jen.Id(fmt.Sprintf(`return ret, fmt.Errorf("call %s failed: %s", err)`, method.Name, "%s")),
 		))
-	} else {
-		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
-			jen.Id(fmt.Sprintf(`return fmt.Errorf("call %s failed: %s", err)`, method.Name, "%s")),
-		))
-	}
-	if ret.Signature() != "v" {
 		writing = append(writing, jen.Id("resp := bytes.NewBuffer(response)"))
 		writing = append(writing, jen.Id("ret, err =").Add(ret.Unmarshal("resp")))
 		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
@@ -576,6 +571,13 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 		))
 		writing = append(writing, jen.Return(jen.Id("ret"), jen.Nil()))
 	} else {
+		writing = append(writing, jen.Id(`if err != nil {
+		return err
+		}`))
+		writing = append(writing, jen.Id(`_, err = p.Proxy().CallID(methodID, buf.Bytes())`))
+		writing = append(writing, jen.If(jen.Err().Op("!=").Nil()).Block(
+			jen.Id(fmt.Sprintf(`return fmt.Errorf("call %s failed: %s", err)`, method.Name, "%s")),
+		))
 		writing = append(writing, jen.Return(jen.Nil()))
 	}
 

@@ -212,7 +212,11 @@ func (p *proxyPingPong) Hello(a string) (string, error) {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return ret, fmt.Errorf("serialize a: %s", err)
 	}
-	response, err := p.Proxy().Call("hello", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("hello", "(s)", "s")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call hello failed: %s", err)
 	}
@@ -231,7 +235,11 @@ func (p *proxyPingPong) Ping(a string) error {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("serialize a: %s", err)
 	}
-	_, err = p.Proxy().Call("ping", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("ping", "(s)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call ping failed: %s", err)
 	}
@@ -240,12 +248,12 @@ func (p *proxyPingPong) Ping(a string) error {
 
 // SubscribePong subscribe to a remote property
 func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("pong")
+	signalID, err := p.Proxy().MetaObject().SignalID("pong", "s")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "pong", err)
 	}
 	ch := make(chan string)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

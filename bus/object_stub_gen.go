@@ -684,7 +684,11 @@ func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize capability: %s", err)
 	}
-	response, err := p.Proxy().Call("authenticate", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("authenticate", "({sm})", "{sm}")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call authenticate failed: %s", err)
 	}
@@ -761,7 +765,11 @@ func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler ui
 	if err = basic.WriteUint64(handler, &buf); err != nil {
 		return ret, fmt.Errorf("serialize handler: %s", err)
 	}
-	response, err := p.Proxy().Call("registerEvent", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("registerEvent", "(IIL)", "L")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerEvent failed: %s", err)
 	}
@@ -786,7 +794,11 @@ func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler 
 	if err = basic.WriteUint64(handler, &buf); err != nil {
 		return fmt.Errorf("serialize handler: %s", err)
 	}
-	_, err = p.Proxy().Call("unregisterEvent", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("unregisterEvent", "(IIL)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call unregisterEvent failed: %s", err)
 	}
@@ -801,7 +813,11 @@ func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize objectID: %s", err)
 	}
-	response, err := p.Proxy().Call("metaObject", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("metaObject", "(I)", "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call metaObject failed: %s", err)
 	}
@@ -820,7 +836,11 @@ func (p *proxyObject) Terminate(objectID uint32) error {
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
 		return fmt.Errorf("serialize objectID: %s", err)
 	}
-	_, err = p.Proxy().Call("terminate", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("terminate", "(I)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call terminate failed: %s", err)
 	}
@@ -835,7 +855,11 @@ func (p *proxyObject) Property(name value.Value) (value.Value, error) {
 	if err = name.Write(&buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	response, err := p.Proxy().Call("property", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("property", "(m)", "m")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call property failed: %s", err)
 	}
@@ -857,7 +881,11 @@ func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
 	if err = value.Write(&buf); err != nil {
 		return fmt.Errorf("serialize value: %s", err)
 	}
-	_, err = p.Proxy().Call("setProperty", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("setProperty", "(mm)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setProperty failed: %s", err)
 	}
@@ -869,7 +897,11 @@ func (p *proxyObject) Properties() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("properties", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("properties", "()", "[s]")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call properties failed: %s", err)
 	}
@@ -911,7 +943,11 @@ func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint3
 	if err = basic.WriteString(P3, &buf); err != nil {
 		return ret, fmt.Errorf("serialize P3: %s", err)
 	}
-	response, err := p.Proxy().Call("registerEventWithSignature", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("registerEventWithSignature", "(IILs)", "L")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerEventWithSignature failed: %s", err)
 	}
@@ -928,7 +964,11 @@ func (p *proxyObject) IsStatsEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("isStatsEnabled", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("isStatsEnabled", "()", "b")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isStatsEnabled failed: %s", err)
 	}
@@ -947,7 +987,11 @@ func (p *proxyObject) EnableStats(enabled bool) error {
 	if err = basic.WriteBool(enabled, &buf); err != nil {
 		return fmt.Errorf("serialize enabled: %s", err)
 	}
-	_, err = p.Proxy().Call("enableStats", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("enableStats", "(b)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call enableStats failed: %s", err)
 	}
@@ -959,7 +1003,11 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
 	var ret map[uint32]MethodStatistics
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("stats", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("stats", "()", "{I(I(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>)<MethodStatistics,count,wall,user,system>}")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call stats failed: %s", err)
 	}
@@ -993,7 +1041,11 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 func (p *proxyObject) ClearStats() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Proxy().Call("clearStats", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("clearStats", "()", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearStats failed: %s", err)
 	}
@@ -1005,7 +1057,11 @@ func (p *proxyObject) IsTraceEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("isTraceEnabled", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("isTraceEnabled", "()", "b")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call isTraceEnabled failed: %s", err)
 	}
@@ -1024,7 +1080,11 @@ func (p *proxyObject) EnableTrace(traced bool) error {
 	if err = basic.WriteBool(traced, &buf); err != nil {
 		return fmt.Errorf("serialize traced: %s", err)
 	}
-	_, err = p.Proxy().Call("enableTrace", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("enableTrace", "(b)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call enableTrace failed: %s", err)
 	}
@@ -1033,12 +1093,12 @@ func (p *proxyObject) EnableTrace(traced bool) error {
 
 // SubscribeTraceObject subscribe to a remote property
 func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("traceObject")
+	signalID, err := p.Proxy().MetaObject().SignalID("traceObject", "(IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "traceObject", err)
 	}
 	ch := make(chan EventTrace)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

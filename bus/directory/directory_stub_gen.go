@@ -482,7 +482,11 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	response, err := p.Proxy().Call("service", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("service", "(s)", "(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call service failed: %s", err)
 	}
@@ -499,7 +503,11 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("services", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("services", "()", "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call services failed: %s", err)
 	}
@@ -532,7 +540,11 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("serialize info: %s", err)
 	}
-	response, err := p.Proxy().Call("registerService", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("registerService", "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)", "I")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call registerService failed: %s", err)
 	}
@@ -551,7 +563,11 @@ func (p *proxyServiceDirectory) UnregisterService(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.Proxy().Call("unregisterService", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("unregisterService", "(I)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call unregisterService failed: %s", err)
 	}
@@ -565,7 +581,11 @@ func (p *proxyServiceDirectory) ServiceReady(serviceID uint32) error {
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return fmt.Errorf("serialize serviceID: %s", err)
 	}
-	_, err = p.Proxy().Call("serviceReady", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("serviceReady", "(I)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call serviceReady failed: %s", err)
 	}
@@ -579,7 +599,11 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("serialize info: %s", err)
 	}
-	_, err = p.Proxy().Call("updateServiceInfo", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("updateServiceInfo", "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call updateServiceInfo failed: %s", err)
 	}
@@ -591,7 +615,11 @@ func (p *proxyServiceDirectory) MachineId() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("machineId", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("machineId", "()", "s")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call machineId failed: %s", err)
 	}
@@ -611,7 +639,11 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 	if err = basic.WriteUint32(serviceID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize serviceID: %s", err)
 	}
-	response, err := p.Proxy().Call("_socketOfService", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("_socketOfService", "(I)", "o")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call _socketOfService failed: %s", err)
 	}
@@ -625,12 +657,12 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 
 // SubscribeServiceAdded subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("serviceAdded")
+	signalID, err := p.Proxy().MetaObject().SignalID("serviceAdded", "(Is)<serviceAdded,serviceID,name>")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "serviceAdded", err)
 	}
 	ch := make(chan ServiceAdded)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -657,12 +689,12 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 
 // SubscribeServiceRemoved subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("serviceRemoved")
+	signalID, err := p.Proxy().MetaObject().SignalID("serviceRemoved", "(Is)<serviceRemoved,serviceID,name>")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "serviceRemoved", err)
 	}
 	ch := make(chan ServiceRemoved)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}

@@ -41,15 +41,10 @@ type Proxy interface {
 	// CallID send a call message.
 	// ErrCancelled is returned if the call was cancelled.
 	CallID(action uint32, payload []byte) ([]byte, error)
-	// Call calls CallID with the appropriate action ID.
-	// ErrCancelled is returned if the call was cancelled.
-	Call(action string, payload []byte) ([]byte, error)
 
 	// SubscribeID returns a channel with the values of a
 	// signal. Subscribe calls RegisterEvent and UnregisterEvent on
 	// behalf of the user.
-	Subscribe(action string) (cancel func(), events chan []byte, err error)
-	// Subscribe calls Subscribe with the appropriate action ID.
 	SubscribeID(action uint32) (cancel func(), events chan []byte, err error)
 
 	// MetaObject can be used to introspect the proyx.

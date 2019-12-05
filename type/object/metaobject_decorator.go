@@ -6,6 +6,8 @@ import (
 	io "io"
 	"sort"
 	"strings"
+
+	"github.com/lugu/qiloop/meta/signature"
 )
 
 // ActionName returns the name of the method, signal or property.
@@ -28,8 +30,22 @@ func (m *MetaObject) ActionName(id uint32) (string, error) {
 	return "", fmt.Errorf("action not found: %d", id)
 }
 
-// MethodID returns the ID of a method given its name.
-func (m *MetaObject) MethodID(name string) (uint32, error) {
+// MethodID returns the ID of a method given its name, the parameters
+// signature and the returned value signature.
+func (m *MetaObject) MethodID(name, signatureParam, signatureRet string) (uint32, error) {
+	for k, method := range m.Methods {
+		if method.Name == name &&
+			method.ParametersSignature == signatureParam &&
+			method.ReturnSignature == signatureRet {
+			return k, nil
+		}
+	}
+	for k, method := range m.Methods {
+		if method.Name == name &&
+			method.ParametersSignature == signatureParam {
+			return k, nil
+		}
+	}
 	for k, method := range m.Methods {
 		if method.Name == name {
 			return k, nil
@@ -38,24 +54,66 @@ func (m *MetaObject) MethodID(name string) (uint32, error) {
 	return 0, fmt.Errorf("missing method %s", name)
 }
 
-// SignalID returns the ID of a signal
-func (m *MetaObject) SignalID(name string) (uint32, error) {
+// SignalID returns the ID of a signal given its name and its
+// signature. If the signature does not match:
+// - if it is not a tuple, try with a tuple
+// - else return the first signal with the same name
+func (m *MetaObject) SignalID(name, sig string) (uint32, error) {
+	for _, signal := range m.Signals {
+		if signal.Name == name &&
+			signal.Signature == sig {
+			return signal.Uid, nil
+		}
+	}
+	t, err := signature.Parse(sig)
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse signal signature: %s", err)
+	}
+	_, ok := t.(*signature.TupleType)
+	if !ok {
+		// try to wrap the type in a tuple
+		tuple := signature.NewTupleType([]signature.Type{t})
+		return m.SignalID(name, tuple.Signature())
+	}
+	// last chance: try the first signal with the same name.
 	for _, signal := range m.Signals {
 		if signal.Name == name {
 			return signal.Uid, nil
 		}
 	}
-	return 0, fmt.Errorf("find signal %s", name)
+	return 0, fmt.Errorf("cannot find signal %s", name)
 }
 
-// PropertyID returns the ID of a property
-func (m *MetaObject) PropertyID(name string) (uint32, error) {
+// PropertyID returns the ID of a property given its name and its
+// signature. If the signature does not match:
+// - if it is not a tuple, try with a tuple
+// - else return the first property with the same name
+func (m *MetaObject) PropertyID(name, sig string) (uint32, error) {
+	for _, property := range m.Properties {
+		if property.Name == name &&
+			property.Signature == sig {
+			return property.Uid, nil
+		}
+	}
+	// The signature may or may not include the tuple parameters.
+	// If it does not, add it and test again.
+	t, err := signature.Parse(sig)
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse property signature: %s", err)
+	}
+	_, ok := t.(*signature.TupleType)
+	if !ok {
+		// try to wrap the type in a tuple
+		tuple := signature.NewTupleType([]signature.Type{t})
+		return m.PropertyID(name, tuple.Signature())
+	}
+	// last chance: try the first signal with the same name.
 	for _, property := range m.Properties {
 		if property.Name == name {
 			return property.Uid, nil
 		}
 	}
-	return 0, fmt.Errorf("find property %s", name)
+	return 0, fmt.Errorf("cannot find property %s", name)
 }
 
 func (m *MetaObject) PropertyName(id uint32) (string, error) {

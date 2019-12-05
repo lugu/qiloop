@@ -191,7 +191,7 @@ func (o *objectImpl) SetProperty(name value.Value, newValue value.Value) error {
 	if err != nil {
 		return err
 	}
-	id, err := o.meta.PropertyID(nameStr)
+	id, err := o.meta.PropertyID(nameStr, newValue.Signature())
 	if err != nil {
 		return fmt.Errorf("cannot set property: %s", err)
 	}
