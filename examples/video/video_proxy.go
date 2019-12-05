@@ -45,7 +45,7 @@ func ALVideoDevice(session bus.Session) (ALVideoDeviceProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALVideoDevice) WithContext(ctx context.Context) ALVideoDeviceProxy {
-	return MakeALVideoDevice(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeALVideoDevice(p.session, p.Proxy().WithContext(ctx))
 }
 
 // SubscribeCamera calls the remote procedure

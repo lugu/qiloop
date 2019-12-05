@@ -146,7 +146,7 @@ func Timestamp(session bus.Session) (TimestampProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyTimestamp) WithContext(ctx context.Context) TimestampProxy {
-	return MakeTimestamp(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeTimestamp(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Nanoseconds calls the remote procedure

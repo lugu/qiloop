@@ -111,7 +111,7 @@ func ServiceDirectory(session bus.Session) (ServiceDirectoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
-	return MakeServiceDirectory(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeServiceDirectory(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Service calls the remote procedure
@@ -553,7 +553,7 @@ func LogProvider(session bus.Session) (LogProviderProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
-	return MakeLogProvider(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeLogProvider(p.session, p.Proxy().WithContext(ctx))
 }
 
 // SetVerbosity calls the remote procedure
@@ -656,7 +656,7 @@ func LogListener(session bus.Session) (LogListenerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
-	return MakeLogListener(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeLogListener(p.session, p.Proxy().WithContext(ctx))
 }
 
 // SetCategory calls the remote procedure
@@ -946,7 +946,7 @@ func LogManager(session bus.Session) (LogManagerProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
-	return MakeLogManager(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeLogManager(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Log calls the remote procedure
@@ -1105,7 +1105,7 @@ func ALTextToSpeech(session bus.Session) (ALTextToSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
-	return MakeALTextToSpeech(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeALTextToSpeech(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Say calls the remote procedure
@@ -1157,7 +1157,7 @@ func ALAnimatedSpeech(session bus.Session) (ALAnimatedSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALAnimatedSpeech) WithContext(ctx context.Context) ALAnimatedSpeechProxy {
-	return MakeALAnimatedSpeech(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeALAnimatedSpeech(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Say calls the remote procedure

@@ -45,7 +45,7 @@ func ALTextToSpeech(session bus.Session) (ALTextToSpeechProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechProxy {
-	return MakeALTextToSpeech(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeALTextToSpeech(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Say calls the remote procedure
@@ -94,7 +94,7 @@ func ALMemory(session bus.Session) (ALMemoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALMemory) WithContext(ctx context.Context) ALMemoryProxy {
-	return MakeALMemory(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeALMemory(p.session, p.Proxy().WithContext(ctx))
 }
 
 // GetEventList calls the remote procedure
@@ -188,7 +188,7 @@ func Subscriber(session bus.Session) (SubscriberProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxySubscriber) WithContext(ctx context.Context) SubscriberProxy {
-	return MakeSubscriber(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeSubscriber(p.session, p.Proxy().WithContext(ctx))
 }
 
 // SubscribeSignal subscribe to a remote property

@@ -471,7 +471,7 @@ func ServiceDirectory(session bus.Session) (ServiceDirectoryProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyServiceDirectory) WithContext(ctx context.Context) ServiceDirectoryProxy {
-	return MakeServiceDirectory(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeServiceDirectory(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Service calls the remote procedure
