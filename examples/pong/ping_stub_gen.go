@@ -201,7 +201,7 @@ func PingPong(session bus.Session) (PingPongProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyPingPong) WithContext(ctx context.Context) PingPongProxy {
-	return MakePingPong(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakePingPong(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Hello calls the remote procedure

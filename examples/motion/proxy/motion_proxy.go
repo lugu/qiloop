@@ -46,7 +46,7 @@ func ALMotion(session bus.Session) (ALMotionProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
-	return MakeALMotion(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeALMotion(p.session, p.Proxy().WithContext(ctx))
 }
 
 // WakeUp calls the remote procedure

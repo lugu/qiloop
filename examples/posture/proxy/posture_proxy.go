@@ -49,7 +49,7 @@ func ALRobotPosture(session bus.Session) (ALRobotPostureProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyALRobotPosture) WithContext(ctx context.Context) ALRobotPostureProxy {
-	return MakeALRobotPosture(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeALRobotPosture(p.session, p.Proxy().WithContext(ctx))
 }
 
 // GetPostureFamily calls the remote procedure

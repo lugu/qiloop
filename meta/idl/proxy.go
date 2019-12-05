@@ -328,7 +328,7 @@ func generateProxyType(file *jen.File, serviceName, ProxyName string,
 		).Id("WithContext").Params(
 			jen.Id("ctx").Qual("context", "Context"),
 		).Params(jen.Id(objName(serviceName))).Block(
-			jen.Id(`return Make` + serviceName + `(p.session, bus.WithContext(p.Proxy(), ctx))`),
+			jen.Id(`return Make` + serviceName + `(p.session, p.Proxy().WithContext(ctx))`),
 		)
 	} else {
 		file.Comment("Proxy returns a proxy.")

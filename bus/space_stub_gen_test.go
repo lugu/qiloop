@@ -333,7 +333,7 @@ func Bomb(session bus.Session) (BombProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxyBomb) WithContext(ctx context.Context) BombProxy {
-	return MakeBomb(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeBomb(p.session, p.Proxy().WithContext(ctx))
 }
 
 // SubscribeBoom subscribe to a remote property
@@ -470,7 +470,7 @@ func Spacecraft(session bus.Session) (SpacecraftProxy, error) {
 
 // WithContext bound future calls to the context deadline and cancellation
 func (p *proxySpacecraft) WithContext(ctx context.Context) SpacecraftProxy {
-	return MakeSpacecraft(p.session, bus.WithContext(p.Proxy(), ctx))
+	return MakeSpacecraft(p.session, p.Proxy().WithContext(ctx))
 }
 
 // Shoot calls the remote procedure

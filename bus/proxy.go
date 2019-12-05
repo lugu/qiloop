@@ -122,11 +122,9 @@ func (p proxy) ProxyService(sess Session) Service {
 	return NewServiceReference(sess, c.endpoint, p.service)
 }
 
-func WithContext(px Proxy, ctx context.Context) Proxy {
-	p, ok := px.(proxy)
-	if !ok {
-		panic("unexpected proxy implementation")
-	}
+// WithContext returns a Proxy with a lifespan associated with the
+// context. It can be used for deadline and canceallations.
+func (p proxy) WithContext(ctx context.Context) Proxy {
 	return proxy{p.meta, ctx, p.methods, p.client, p.service, p.object}
 }
 

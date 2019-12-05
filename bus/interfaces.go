@@ -1,6 +1,7 @@
 package bus
 
 import (
+	"context"
 	"errors"
 
 	"github.com/lugu/qiloop/type/object"
@@ -63,6 +64,10 @@ type Proxy interface {
 	// ServiceID returns object identifier within the service
 	// namespace.
 	ObjectID() uint32
+
+	// WithContext returns a Proxy with a lifespan associated with the
+	// context. It can be used for deadline and canceallations.
+	WithContext(ctx context.Context) Proxy
 
 	// OnDisconnect registers a callback which is called when the
 	// network connection is closed. If the closure of the network
