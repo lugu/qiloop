@@ -53,24 +53,24 @@ on those models.
 QiMessaging was created at SoftBank robotics (formerly Aldebaran) with
 the following concepts in mind:
 
-- *Distribution and network discovery*: a robot can be composed of
-  various component connected via a network. The components need to
-  interact to fulfill the robot mission.
+-   _Distribution and network discovery_: a robot can be composed of
+    various component connected via a network. The components need to
+    interact to fulfill the robot mission.
 
 For example, the Pepper robot contains two CPUs: one located in the
 head which controls the body, and one in the tablet to offer a
 graphical interface. The robot can also be remotely controlled from a
 desktop using the Choregraph IDE from SoftBank.
 
-- *Reactive programming and data stream*: the robot evolves in an ever
-  changing environment to which it must respond.
+-   _Reactive programming and data stream_: the robot evolves in an ever
+    changing environment to which it must respond.
 
 For example, the NAO robot can be pushed and loose balance anytime: in
 which case it must quickly react. It also can detect and track faces
 using its cameras.
 
-- *Typed value and dynamic versioning*: the values involved in the APIs
-  are typed, but the supported APIs are queried at runtime.
+-   _Typed value and dynamic versioning_: the values involved in the APIs
+    are typed, but the supported APIs are queried at runtime.
 
 For example, between two software releases, deprecated API can be
 removed. Since the life-cycle of the various components is not
@@ -173,14 +173,25 @@ introspect an object. Here is the description of the MetaObject type:
         end
 
 ## logs
+
 ## directory
+
 ## wireshark
+
 ## stat
+
 ## trace
+
 ## syntax idl
+
 ## authentication
+
 ## gateway
+
 ## transport / scheme
+
 ## signature
+
 ## codec
+
 ## message origin

@@ -6,11 +6,9 @@ tcpdump or wireshark like this:
     $ tcpdump -i lo -w qicli-info.pcap port 9559
 
 And analyse them with a plugin for Wireshark which to decode headers of the messages.
-The plugin must be installed into ``$HOME/.config/wireshark/plugins/``:
+The plugin must be installed into `$HOME/.config/wireshark/plugins/`:
 
     https://github.com/aldebaran/libqi/tree/team/platform/dev/tools/wireshark
-
-
 
 ### 1. Call: ServiceServer.Authenticate
 
@@ -57,7 +55,6 @@ The plugin must be installed into ``$HOME/.config/wireshark/plugins/``:
         {"MetaObjectCache", "boolean:true"},
         {"RemoteCancelableCalls", "boolean:true"}
     };
-
 
 ### 2. Reply: ServiceServer.Authenticate
 
@@ -115,7 +112,6 @@ The plugin must be installed into ``$HOME/.config/wireshark/plugins/``:
     };
 
 ### 3.Call: ServiceDirectory.metaObject(int): MetaObject
-
 
 ### 4.Reply: ServiceDirectory.metaObject(int): MetaObject
 
@@ -395,4 +391,3 @@ The plugin must be installed into ``$HOME/.config/wireshark/plugins/``:
     00000810: 0000 0e00 0000 7365 7276 6963 6552 656d  ......serviceRem
     00000820: 6f76 6564 0400 0000 2849 7329 0000 0000  oved....(Is)....
     00000830: 0000 0000 0a                             .....
-

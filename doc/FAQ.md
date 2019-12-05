@@ -18,7 +18,7 @@ those APIs.
 Here is an [description of QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/about-qimessaging.md).
 
 For a reference implementation, visit:
-[https://github.com/aldebaran/libqi](https://github.com/aldebaran/libqi).
+<https://github.com/aldebaran/libqi>.
 
 QiLoop provides the way to access this software bus in order to create
 applications for Pepper of NAO in Go.
@@ -26,7 +26,7 @@ applications for Pepper of NAO in Go.
 ## What about libqi-go ?
 
 libqi-go is Go's binding for libqi. It can be found here:
-https://github.com/aldebaran/libqi-go
+<https://github.com/aldebaran/libqi-go>
 
 QiLoop is a pure Go re-implementation of QiMessaging and does not use
 libqi-go.
@@ -38,15 +38,15 @@ what is possible with the protocol.
 
 Some benefits of using QiLoop:
 
-  - easy to understand and to debug
-  - easy to test in isolation
-  - easy to extend (contributions are welcome!)
+-   easy to understand and to debug
+-   easy to test in isolation
+-   easy to extend (contributions are welcome!)
 
 Not to forget Go's inherent advantages:
 
-  - portable (Linux, MacOS, Windows, Android and iOS)
-  - easy to cross-compile (external cross toolchain)
-  - easy to deploy (static binaries)
+-   portable (Linux, MacOS, Windows, Android and iOS)
+-   easy to cross-compile (external cross toolchain)
+-   easy to deploy (static binaries)
 
 ## Why should I use it ?
 
@@ -92,18 +92,18 @@ directory](https://github.com/lugu/qiloop/tree/master/examples).
 
 The basic workflow is often the same:
 
- 1. Use the program `qiloop scan` to generate an IDL file
+1.  Use the program `qiloop scan` to generate an IDL file
     corresponding to the service your application targets.
 
- 2. Use `qiloop proxy` to generate the Go code which gives access to
+2.  Use `qiloop proxy` to generate the Go code which gives access to
     this service.
 
- 3. Code, test, debug and enjoy!
+3.  Code, test, debug and enjoy!
 
 ## Where is the documentation ?
 
 You can find it at GoDoc:
-[http://godoc.org/github.com/lugu/qiloop](http://godoc.org/github.com/lugu/qiloop)
+<http://godoc.org/github.com/lugu/qiloop>
 
 ## Can I use it for Android/iOS applications ?
 
