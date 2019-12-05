@@ -240,7 +240,7 @@ func (p *proxyPingPong) Ping(a string) error {
 
 // SubscribePong subscribe to a remote property
 func (p *proxyPingPong) SubscribePong() (func(), chan string, error) {
-	propertyID, err := p.Proxy().SignalID("pong")
+	propertyID, err := p.Proxy().MetaObject().SignalID("pong")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "pong", err)
 	}

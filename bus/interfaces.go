@@ -53,14 +53,7 @@ type Proxy interface {
 	SubscribeID(action uint32) (cancel func(), events chan []byte, err error)
 
 	// MetaObject can be used to introspect the proyx.
-	MetaObject() object.MetaObject
-
-	// MethodID returns the associate method ID.
-	MethodID(name string) (uint32, error)
-	// MethodID returns the associate signal ID.
-	SignalID(name string) (uint32, error)
-	// MethodID returns the associate property ID.
-	PropertyID(name string) (uint32, error)
+	MetaObject() *object.MetaObject
 
 	// ServiceID returns the related service identifier
 	ServiceID() uint32

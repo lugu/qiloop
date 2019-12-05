@@ -338,7 +338,7 @@ func (p *proxyBomb) WithContext(ctx context.Context) BombProxy {
 
 // SubscribeBoom subscribe to a remote property
 func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
-	propertyID, err := p.Proxy().SignalID("boom")
+	propertyID, err := p.Proxy().MetaObject().SignalID("boom")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "boom", err)
 	}
@@ -408,7 +408,7 @@ func (p *proxyBomb) SetDelay(update int32) error {
 
 // SubscribeDelay subscribe to a remote property
 func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
-	propertyID, err := p.Proxy().PropertyID("delay")
+	propertyID, err := p.Proxy().MetaObject().PropertyID("delay")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "delay", err)
 	}

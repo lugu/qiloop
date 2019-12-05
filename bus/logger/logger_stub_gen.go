@@ -1030,7 +1030,7 @@ func (p *proxyLogListener) ClearFilters() error {
 
 // SubscribeOnLogMessage subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.Proxy().SignalID("onLogMessage")
+	propertyID, err := p.Proxy().MetaObject().SignalID("onLogMessage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
@@ -1062,7 +1062,7 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 
 // SubscribeOnLogMessages subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, error) {
-	propertyID, err := p.Proxy().SignalID("onLogMessages")
+	propertyID, err := p.Proxy().MetaObject().SignalID("onLogMessages")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
 	}
@@ -1107,7 +1107,7 @@ func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, 
 
 // SubscribeOnLogMessagesWithBacklog subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessagesWithBacklog() (func(), chan []LogMessage, error) {
-	propertyID, err := p.Proxy().SignalID("onLogMessagesWithBacklog")
+	propertyID, err := p.Proxy().MetaObject().SignalID("onLogMessagesWithBacklog")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
 	}
@@ -1190,7 +1190,7 @@ func (p *proxyLogListener) SetLogLevel(update LogLevel) error {
 
 // SubscribeLogLevel subscribe to a remote property
 func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
-	propertyID, err := p.Proxy().PropertyID("logLevel")
+	propertyID, err := p.Proxy().MetaObject().PropertyID("logLevel")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
 	}

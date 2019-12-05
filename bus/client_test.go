@@ -160,14 +160,14 @@ func TestProxy(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	signalID, err := directory.Proxy().SignalID("serviceAdded")
+	signalID, err := directory.Proxy().MetaObject().SignalID("serviceAdded")
 	if err != nil {
 		t.Error(err)
 	}
 	if signalID != 106 {
 		t.Fatalf("wrong signal id")
 	}
-	methodID, err := directory.Proxy().MethodID("services")
+	methodID, err := directory.Proxy().MetaObject().MethodID("services")
 	if err != nil {
 		t.Error(err)
 	}
