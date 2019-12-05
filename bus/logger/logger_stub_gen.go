@@ -890,7 +890,11 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Proxy().Call("setVerbosity", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("setVerbosity", "((i)<LogLevel,level>)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setVerbosity failed: %s", err)
 	}
@@ -907,7 +911,11 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Proxy().Call("setCategory", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("setCategory", "(s(i)<LogLevel,level>)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -937,7 +945,11 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize filters: %s", err)
 	}
-	_, err = p.Proxy().Call("clearAndSet", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("clearAndSet", "({s(i)<LogLevel,level>})", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearAndSet failed: %s", err)
 	}
@@ -993,7 +1005,11 @@ func (p *proxyLogListener) SetLevel(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Proxy().Call("setLevel", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("setLevel", "((i)<LogLevel,level>)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setLevel failed: %s", err)
 	}
@@ -1010,7 +1026,11 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	_, err = p.Proxy().Call("addFilter", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("addFilter", "(s(i)<LogLevel,level>)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call addFilter failed: %s", err)
 	}
@@ -1021,7 +1041,11 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Proxy().Call("clearFilters", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("clearFilters", "()", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
 	}
@@ -1030,12 +1054,12 @@ func (p *proxyLogListener) ClearFilters() error {
 
 // SubscribeOnLogMessage subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("onLogMessage")
+	signalID, err := p.Proxy().MetaObject().SignalID("onLogMessage", "(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "onLogMessage", err)
 	}
 	ch := make(chan LogMessage)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1062,12 +1086,12 @@ func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, err
 
 // SubscribeOnLogMessages subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("onLogMessages")
+	signalID, err := p.Proxy().MetaObject().SignalID("onLogMessages", "[(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>]")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessages", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "onLogMessages", err)
 	}
 	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1107,12 +1131,12 @@ func (p *proxyLogListener) SubscribeOnLogMessages() (func(), chan []LogMessage, 
 
 // SubscribeOnLogMessagesWithBacklog subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessagesWithBacklog() (func(), chan []LogMessage, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("onLogMessagesWithBacklog")
+	signalID, err := p.Proxy().MetaObject().SignalID("onLogMessagesWithBacklog", "[(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>]")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessagesWithBacklog", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "onLogMessagesWithBacklog", err)
 	}
 	ch := make(chan []LogMessage)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1190,12 +1214,12 @@ func (p *proxyLogListener) SetLogLevel(update LogLevel) error {
 
 // SubscribeLogLevel subscribe to a remote property
 func (p *proxyLogListener) SubscribeLogLevel() (func(), chan LogLevel, error) {
-	propertyID, err := p.Proxy().MetaObject().PropertyID("logLevel")
+	signalID, err := p.Proxy().MetaObject().PropertyID("logLevel", "(i)<LogLevel,level>")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "logLevel", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "logLevel", err)
 	}
 	ch := make(chan LogLevel)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -1277,7 +1301,11 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize messages: %s", err)
 	}
-	_, err = p.Proxy().Call("log", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("log", "([(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>])", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
@@ -1289,7 +1317,11 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("createListener", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("createListener", "()", "o")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
@@ -1316,7 +1348,11 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("getListener", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("getListener", "()", "o")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
@@ -1357,7 +1393,11 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize source: %s", err)
 	}
-	response, err := p.Proxy().Call("addProvider", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("addProvider", "(o)", "i")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
 	}
@@ -1376,7 +1416,11 @@ func (p *proxyLogManager) RemoveProvider(sourceID int32) error {
 	if err = basic.WriteInt32(sourceID, &buf); err != nil {
 		return fmt.Errorf("serialize sourceID: %s", err)
 	}
-	_, err = p.Proxy().Call("removeProvider", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("removeProvider", "(i)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
 	}

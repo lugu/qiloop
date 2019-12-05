@@ -160,14 +160,16 @@ func TestProxy(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	signalID, err := directory.Proxy().MetaObject().SignalID("serviceAdded")
+	signalID, err := directory.Proxy().MetaObject().SignalID("serviceAdded",
+		"(Is)<serviceAdded,serviceID,name>")
 	if err != nil {
 		t.Error(err)
 	}
 	if signalID != 106 {
 		t.Fatalf("wrong signal id")
 	}
-	methodID, err := directory.Proxy().MetaObject().MethodID("services")
+	methodID, err := directory.Proxy().MetaObject().MethodID("services",
+		"()", "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
 	if err != nil {
 		t.Error(err)
 	}
@@ -185,25 +187,25 @@ func TestProxy(t *testing.T) {
 		t.Error(err)
 	}
 	cancel()
-	cancel, _, err = directory.Proxy().Subscribe("serviceAdded")
+	signalID, err = directory.Proxy().MetaObject().SignalID("serviceAdded",
+		"(Is)<serviceAdded,serviceID,name>")
+	if err != nil {
+		t.Error(err)
+	}
+	cancel, _, err = directory.Proxy().SubscribeID(signalID)
 	if err != nil {
 		t.Error(err)
 	}
 	cancel()
-	_, _, err = directory.Proxy().Subscribe("unknownSignal")
-	if err == nil {
-		t.Fatalf("must fail")
-	}
 	_, _, err = directory.Proxy().SubscribeID(12345)
-
 	if err == nil {
 		// TODO
 	}
-	_, err = directory.Proxy().Call("unknown service", make([]byte, 0))
-	if err == nil {
-		t.Fatalf("must fail")
+	methodID, err = directory.Proxy().MetaObject().MethodID("services", "()", "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
+	if err != nil {
+		t.Error(err)
 	}
-	resp, err := directory.Proxy().Call("services", make([]byte, 0))
+	resp, err := directory.Proxy().CallID(methodID, make([]byte, 0))
 	if err != nil {
 		t.Error(err)
 	}

@@ -154,7 +154,11 @@ func (p *proxyTimestamp) Nanoseconds() (int64, error) {
 	var err error
 	var ret int64
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("nanoseconds", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("nanoseconds", "()", "l")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call nanoseconds failed: %s", err)
 	}

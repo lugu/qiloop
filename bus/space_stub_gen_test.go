@@ -338,12 +338,12 @@ func (p *proxyBomb) WithContext(ctx context.Context) BombProxy {
 
 // SubscribeBoom subscribe to a remote property
 func (p *proxyBomb) SubscribeBoom() (func(), chan int32, error) {
-	propertyID, err := p.Proxy().MetaObject().SignalID("boom")
+	signalID, err := p.Proxy().MetaObject().SignalID("boom", "i")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "boom", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "boom", err)
 	}
 	ch := make(chan int32)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -408,12 +408,12 @@ func (p *proxyBomb) SetDelay(update int32) error {
 
 // SubscribeDelay subscribe to a remote property
 func (p *proxyBomb) SubscribeDelay() (func(), chan int32, error) {
-	propertyID, err := p.Proxy().MetaObject().PropertyID("delay")
+	signalID, err := p.Proxy().MetaObject().PropertyID("delay", "i")
 	if err != nil {
-		return nil, nil, fmt.Errorf("property %s not available: %s", "delay", err)
+		return nil, nil, fmt.Errorf("%s not available: %s", "delay", err)
 	}
 	ch := make(chan int32)
-	cancel, chPay, err := p.Proxy().SubscribeID(propertyID)
+	cancel, chPay, err := p.Proxy().SubscribeID(signalID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("request property: %s", err)
 	}
@@ -478,7 +478,11 @@ func (p *proxySpacecraft) Shoot() (BombProxy, error) {
 	var err error
 	var ret BombProxy
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("shoot", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("shoot", "()", "o")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call shoot failed: %s", err)
 	}
@@ -518,7 +522,11 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize ammo: %s", err)
 	}
-	_, err = p.Proxy().Call("ammo", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("ammo", "(o)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call ammo failed: %s", err)
 	}

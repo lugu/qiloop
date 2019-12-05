@@ -9,8 +9,107 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/object"
 )
+
+func helpFullObject() object.MetaObject {
+	return object.MetaObject{
+		Description: "Object",
+		Methods: map[uint32]object.MetaMethod{
+			0: {
+				Name:                "registerEvent",
+				ParametersSignature: "(IIL)",
+				ReturnSignature:     "L",
+				Uid:                 0,
+			},
+			1: {
+				Name:                "unregisterEvent",
+				ParametersSignature: "(IIL)",
+				ReturnSignature:     "v",
+				Uid:                 1,
+			},
+			2: {
+				Name:                "metaObject",
+				ParametersSignature: "(I)",
+				ReturnSignature:     "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>",
+				Uid:                 2,
+			},
+			3: {
+				Name:                "terminate",
+				ParametersSignature: "(I)",
+				ReturnSignature:     "v",
+				Uid:                 3,
+			},
+			5: {
+				Name:                "property",
+				ParametersSignature: "(m)",
+				ReturnSignature:     "m",
+				Uid:                 5,
+			},
+			6: {
+				Name:                "setProperty",
+				ParametersSignature: "(mm)",
+				ReturnSignature:     "v",
+				Uid:                 6,
+			},
+			7: {
+				Name:                "properties",
+				ParametersSignature: "()",
+				ReturnSignature:     "[s]",
+				Uid:                 7,
+			},
+			8: {
+				Name:                "registerEventWithSignature",
+				ParametersSignature: "(IILs)",
+				ReturnSignature:     "L",
+				Uid:                 8,
+			},
+			80: {
+				Name:                "isStatsEnabled",
+				ParametersSignature: "()",
+				ReturnSignature:     "b",
+				Uid:                 80,
+			},
+			81: {
+				Name:                "enableStats",
+				ParametersSignature: "(b)",
+				ReturnSignature:     "v",
+				Uid:                 81,
+			},
+			82: {
+				Name:                "stats",
+				ParametersSignature: "()",
+				ReturnSignature:     "{I(I(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>)<MethodStatistics,count,wall,user,system>}",
+				Uid:                 82,
+			},
+			83: {
+				Name:                "clearStats",
+				ParametersSignature: "()",
+				ReturnSignature:     "v",
+				Uid:                 83,
+			},
+			84: {
+				Name:                "isTraceEnabled",
+				ParametersSignature: "()",
+				ReturnSignature:     "b",
+				Uid:                 84,
+			},
+			85: {
+				Name:                "enableTrace",
+				ParametersSignature: "(b)",
+				ReturnSignature:     "v",
+				Uid:                 85,
+			},
+		},
+		Properties: map[uint32]object.MetaProperty{},
+		Signals: map[uint32]object.MetaSignal{86: {
+			Name:      "traceObject",
+			Signature: "(IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>",
+			Uid:       86,
+		}},
+	}
+}
 
 func helpReadGolden(t *testing.T) object.MetaObject {
 	path := filepath.Join("testdata", "meta-object.bin")
@@ -52,6 +151,37 @@ func TestWriteRead(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func helpMethodID(t *testing.T, name, param, ret string, expected uint32) {
+	metaObj := helpReadGolden(t)
+	id, err := metaObj.MethodID(name, param, ret)
+	if err != nil {
+		t.Errorf("cannot find %s %s %s: %s", name, param, ret, err)
+	} else if id != expected {
+		t.Errorf("Wrong id: %d", id)
+	}
+}
+
+func TestMethodID(t *testing.T) {
+	helpMethodID(t, "registerEvent", "(IIL)", "L", 0)
+	helpMethodID(t, "unregisterEvent", "(IIL)", "v", 1)
+	helpMethodID(t, "property", "(m)", "m", 5)
+	helpMethodID(t, "metaObject", "(I)", signature.MetaObjectSignature, 2)
+}
+
+func helpSignalID(t *testing.T, name, sig string, expected uint32) {
+	metaObj := helpFullObject()
+	id, err := metaObj.SignalID(name, sig)
+	if err != nil {
+		t.Errorf("cannot find %s %s: %s", name, sig, err)
+	} else if id != expected {
+		t.Errorf("Wrong id: %d", id)
+	}
+}
+
+func TestSignalID(t *testing.T) {
+	helpSignalID(t, "traceObject", "(IiIm(ll)<timeval,tv_sec,tv_usec>llII)<EventTrace,id,kind,slotId,arguments,timestamp,userUsTime,systemUsTime,callerContext,calleeContext>", 86)
 }
 
 func LimitedMetaReader(meta object.MetaObject, size int) io.Reader {

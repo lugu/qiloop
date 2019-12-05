@@ -57,7 +57,11 @@ func (p *proxyALRobotPosture) GetPostureFamily() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("getPostureFamily", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("getPostureFamily", "()", "s")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPostureFamily failed: %s", err)
 	}
@@ -80,7 +84,11 @@ func (p *proxyALRobotPosture) GoToPosture(postureName string, maxSpeedFraction f
 	if err = basic.WriteFloat32(maxSpeedFraction, &buf); err != nil {
 		return ret, fmt.Errorf("serialize maxSpeedFraction: %s", err)
 	}
-	response, err := p.Proxy().Call("goToPosture", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("goToPosture", "(sf)", "b")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call goToPosture failed: %s", err)
 	}
@@ -103,7 +111,11 @@ func (p *proxyALRobotPosture) ApplyPosture(postureName string, maxSpeedFraction 
 	if err = basic.WriteFloat32(maxSpeedFraction, &buf); err != nil {
 		return ret, fmt.Errorf("serialize maxSpeedFraction: %s", err)
 	}
-	response, err := p.Proxy().Call("applyPosture", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("applyPosture", "(sf)", "b")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call applyPosture failed: %s", err)
 	}
@@ -119,7 +131,11 @@ func (p *proxyALRobotPosture) ApplyPosture(postureName string, maxSpeedFraction 
 func (p *proxyALRobotPosture) StopMove() error {
 	var err error
 	var buf bytes.Buffer
-	_, err = p.Proxy().Call("stopMove", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("stopMove", "()", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call stopMove failed: %s", err)
 	}
@@ -131,7 +147,11 @@ func (p *proxyALRobotPosture) GetPostureList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("getPostureList", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("getPostureList", "()", "[s]")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPostureList failed: %s", err)
 	}
@@ -161,7 +181,11 @@ func (p *proxyALRobotPosture) GetPostureFamilyList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("getPostureFamilyList", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("getPostureFamilyList", "()", "[s]")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPostureFamilyList failed: %s", err)
 	}
@@ -193,7 +217,11 @@ func (p *proxyALRobotPosture) SetMaxTryNumber(pMaxTryNumber int32) error {
 	if err = basic.WriteInt32(pMaxTryNumber, &buf); err != nil {
 		return fmt.Errorf("serialize pMaxTryNumber: %s", err)
 	}
-	_, err = p.Proxy().Call("setMaxTryNumber", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("setMaxTryNumber", "(i)", "v")
+	if err != nil {
+		return err
+	}
+	_, err = p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("call setMaxTryNumber failed: %s", err)
 	}
@@ -205,7 +233,11 @@ func (p *proxyALRobotPosture) GetPosture() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	response, err := p.Proxy().Call("getPosture", buf.Bytes())
+	methodID, err := p.Proxy().MetaObject().MethodID("getPosture", "()", "s")
+	if err != nil {
+		return ret, err
+	}
+	response, err := p.Proxy().CallID(methodID, buf.Bytes())
 	if err != nil {
 		return ret, fmt.Errorf("call getPosture failed: %s", err)
 	}
