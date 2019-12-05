@@ -17,11 +17,9 @@ real robot (Pepper or NAO) or a virtual robot running on your desktop
 
 Install the `qiloop` command line interface with
 
-```
-$ go get -u github.com/lugu/qiloop/cmd/qiloop
-$ qiloop --version
-Version: 0.8
-```
+    $ go get -u github.com/lugu/qiloop/cmd/qiloop
+    $ qiloop --version
+    Version: 0.8
 
 ## Prerequisite
 
@@ -34,24 +32,18 @@ The user login is `nao` and the password is the password of the UNIX
 account `nao` on the robot. Create a file called ~/.qiloop-auth.conf with
 the two lines (replace `<YOUR_PASSWORD>` with your password):
 
-```
-nao
-<YOUR_PASSWORD>
-```
+    nao
+    <YOUR_PASSWORD>
 
 Test the connection to the service ALVideoDevice on the robot:
 
 On NAO:
 
-```
-$ qiloop --qi-url tcp://<ROBOT_IP>:9559 info --service ALVideoDevice
-```
+    $ qiloop --qi-url tcp://<ROBOT_IP>:9559 info --service ALVideoDevice
 
 On Pepper:
 
-```
-$ qiloop --qi-url tcps://<ROBOT_IP>:9503 info --service ALVideoDevice
-```
+    $ qiloop --qi-url tcps://<ROBOT_IP>:9503 info --service ALVideoDevice
 
 ## Generate the proxy
 
@@ -61,23 +53,19 @@ First we will **scan** the service ALVideoDevice to extract its
 interface in an IDL file. This is done using the `qiloop scan`
 command:
 
-```
-qiloop scan --qi-url tcp://127.0.0.1:9559 --idl video_device.qi.idl --service ALVideoDevice
-```
+    qiloop scan --qi-url tcp://127.0.0.1:9559 --idl video_device.qi.idl --service ALVideoDevice
 
 This produced a file called `video_device.qi.idl` with the list of
 methods, signals and properties of ALVideoDevice.
 
 Add one line at the top of the IDL file video_device.idl to specify a
-package name: 'package main`
+package name: 'package main\`
 
 Using this file, we will generate the Go code to access to the
 service. The command `qiloop proxy` will read the IDL file and
 generate a specialized proxy object for ALVideoDevice.
 
-```
-qiloop proxy --idl video_device.qi.idl --output video_proxy.go
-```
+    qiloop proxy --idl video_device.qi.idl --output video_proxy.go
 
 ## Proxy usage
 
@@ -156,13 +144,9 @@ func main() {
 
 You can convert the generate image into PNG format with:
 
-```
-ffmpeg -s 320x240 -pix_fmt rgb24 -i image.rgb image.png
-```
+    ffmpeg -s 320x240 -pix_fmt rgb24 -i image.rgb image.png
 
 Since a lot of code is generated, use `go doc` to browse the
 documentation of ALVideoDevice:
-```
-go doc .
 
-```
+    go doc .

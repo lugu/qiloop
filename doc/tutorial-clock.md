@@ -74,7 +74,6 @@ timestamps:
 Using this `Timestamper` type, let's implements
 the `TimestampImplementor` interface:
 
-
         // timestampService implements TimestampImplementor.
         type timestampService struct {
                 Timestamper // inherits the Nanoseconds method.
@@ -163,34 +162,34 @@ create one with the `qiloop server` command:
 Now we can start the timestamp service with:
 
         $ go run ./examples/clock/cmd/service/main.go
-	2019/07/15 23:00:20 Timestamp service running...
+    2019/07/15 23:00:20 Timestamp service running...
 
 Let double check if the timestamp service is registered to the service
 directory using `qiloop info`:
 
-	$ qiloop info
-	[
-	    {
-		"Name": "ServiceDirectory",
-		"ServiceId": 1,
-		"MachineId": "e9b7594a1f209b898e7a3caea5e3199a407cf5bb08d090419e4fffdeddcf167f",
-		"ProcessId": 17179,
-		"Endpoints": [
-		    "tcp://localhost:9559"
-		],
-		"SessionId": ""
-	    },
-	    {
-		"Name": "Timestamp",
-		"ServiceId": 2,
-		"MachineId": "e9b7594a1f209b898e7a3caea5e3199a407cf5bb08d090419e4fffdeddcf167f",
-		"ProcessId": 18596,
-		"Endpoints": [
-		    "unix:///tmp/qiloop-271149288"
-		],
-		"SessionId": ""
-	    }
-	]
+    $ qiloop info
+    [
+        {
+    	"Name": "ServiceDirectory",
+    	"ServiceId": 1,
+    	"MachineId": "e9b7594a1f209b898e7a3caea5e3199a407cf5bb08d090419e4fffdeddcf167f",
+    	"ProcessId": 17179,
+    	"Endpoints": [
+    	    "tcp://localhost:9559"
+    	],
+    	"SessionId": ""
+        },
+        {
+    	"Name": "Timestamp",
+    	"ServiceId": 2,
+    	"MachineId": "e9b7594a1f209b898e7a3caea5e3199a407cf5bb08d090419e4fffdeddcf167f",
+    	"ProcessId": 18596,
+    	"Endpoints": [
+    	    "unix:///tmp/qiloop-271149288"
+    	],
+    	"SessionId": ""
+        }
+    ]
 
 Mission completed: a fonctionnal timestamp service! But wait, for a
 timestamp to be precise it needs to be locally generated. Let's use

@@ -6,20 +6,19 @@ The package bus/net offers an abstraction of an established network connection
 called EndPoint. The EndPoint interface allow multiple parties to send and
 receive messages.
 
-	type EndPoint interface {
-		Send(m Message) error
-		AddHandler(f Filter, c Consumer, cl Closer) int
-		RemoveHandler(id int) error
-		[...]
-	}
-
+    type EndPoint interface {
+    	Send(m Message) error
+    	AddHandler(f Filter, c Consumer, cl Closer) int
+    	RemoveHandler(id int) error
+    	[...]
+    }
 
 Sending a message is done using the synchronous method `Send`. In order to
 receive a message one needs to register an handler composed of 3 methods:
 
-- a `Filter` method to select the messages.
-- a `Consumer` method to process the selected messages one by one.
-- a `Closer` method to be notified when the connection closes.
+-   a `Filter` method to select the messages.
+-   a `Consumer` method to process the selected messages one by one.
+-   a `Closer` method to be notified when the connection closes.
 
 The messages selected by Filter are queued until they are processed by the
 consumer. Messages are filtered and process in the respective order of their
