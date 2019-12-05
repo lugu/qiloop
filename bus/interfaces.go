@@ -52,6 +52,9 @@ type Proxy interface {
 	// Subscribe calls Subscribe with the appropriate action ID.
 	SubscribeID(action uint32) (cancel func(), events chan []byte, err error)
 
+	// MetaObject can be used to introspect the proyx.
+	MetaObject() object.MetaObject
+
 	// MethodID returns the associate method ID.
 	MethodID(name string) (uint32, error)
 	// MethodID returns the associate signal ID.

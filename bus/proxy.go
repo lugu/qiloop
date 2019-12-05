@@ -122,6 +122,11 @@ func (p proxy) ProxyService(sess Session) Service {
 	return NewServiceReference(sess, c.endpoint, p.service)
 }
 
+// MetaObject can be used to introspect the proyx.
+func (p proxy) MetaObject() object.MetaObject {
+	return p.meta
+}
+
 // WithContext returns a Proxy with a lifespan associated with the
 // context. It can be used for deadline and canceallations.
 func (p proxy) WithContext(ctx context.Context) Proxy {
