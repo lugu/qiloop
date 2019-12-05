@@ -193,7 +193,7 @@ func (p *proxySubscriber) WithContext(ctx context.Context) SubscriberProxy {
 
 // SubscribeSignal subscribe to a remote property
 func (p *proxySubscriber) SubscribeSignal() (func(), chan value.Value, error) {
-	propertyID, err := p.Proxy().SignalID("signal")
+	propertyID, err := p.Proxy().MetaObject().SignalID("signal")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "signal", err)
 	}

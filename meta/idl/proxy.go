@@ -394,7 +394,7 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 		methodID = "SignalID"
 	}
 	body := jen.Block(
-		jen.Id(`propertyID, err := p.Proxy().`+methodID+`("`+actionName+`")
+		jen.Id(`propertyID, err := p.Proxy().MetaObject().`+methodID+`("`+actionName+`")
 		if err != nil {
 			return nil, nil, fmt.Errorf("property %s not available: %s", "`+actionName+`", err)
 		}`),

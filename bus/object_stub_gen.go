@@ -1033,7 +1033,7 @@ func (p *proxyObject) EnableTrace(traced bool) error {
 
 // SubscribeTraceObject subscribe to a remote property
 func (p *proxyObject) SubscribeTraceObject() (func(), chan EventTrace, error) {
-	propertyID, err := p.Proxy().SignalID("traceObject")
+	propertyID, err := p.Proxy().MetaObject().SignalID("traceObject")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "traceObject", err)
 	}

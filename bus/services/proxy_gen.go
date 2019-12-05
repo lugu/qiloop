@@ -265,7 +265,7 @@ func (p *proxyServiceDirectory) _socketOfService(serviceID uint32) (object.Objec
 
 // SubscribeServiceAdded subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdded, error) {
-	propertyID, err := p.Proxy().SignalID("serviceAdded")
+	propertyID, err := p.Proxy().MetaObject().SignalID("serviceAdded")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceAdded", err)
 	}
@@ -297,7 +297,7 @@ func (p *proxyServiceDirectory) SubscribeServiceAdded() (func(), chan ServiceAdd
 
 // SubscribeServiceRemoved subscribe to a remote property
 func (p *proxyServiceDirectory) SubscribeServiceRemoved() (func(), chan ServiceRemoved, error) {
-	propertyID, err := p.Proxy().SignalID("serviceRemoved")
+	propertyID, err := p.Proxy().MetaObject().SignalID("serviceRemoved")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "serviceRemoved", err)
 	}
@@ -689,7 +689,7 @@ func (p *proxyLogListener) ClearFilters() error {
 
 // SubscribeOnLogMessage subscribe to a remote property
 func (p *proxyLogListener) SubscribeOnLogMessage() (func(), chan LogMessage, error) {
-	propertyID, err := p.Proxy().SignalID("onLogMessage")
+	propertyID, err := p.Proxy().MetaObject().SignalID("onLogMessage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "onLogMessage", err)
 	}
@@ -759,7 +759,7 @@ func (p *proxyLogListener) SetVerbosity(update LogLevel) error {
 
 // SubscribeVerbosity subscribe to a remote property
 func (p *proxyLogListener) SubscribeVerbosity() (func(), chan LogLevel, error) {
-	propertyID, err := p.Proxy().PropertyID("verbosity")
+	propertyID, err := p.Proxy().MetaObject().PropertyID("verbosity")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "verbosity", err)
 	}
@@ -863,7 +863,7 @@ func (p *proxyLogListener) SetFilters(update map[string]int32) error {
 
 // SubscribeFilters subscribe to a remote property
 func (p *proxyLogListener) SubscribeFilters() (func(), chan map[string]int32, error) {
-	propertyID, err := p.Proxy().PropertyID("filters")
+	propertyID, err := p.Proxy().MetaObject().PropertyID("filters")
 	if err != nil {
 		return nil, nil, fmt.Errorf("property %s not available: %s", "filters", err)
 	}
