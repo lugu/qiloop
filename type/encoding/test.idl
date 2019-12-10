@@ -1,0 +1,7 @@
+package encoding_test
+
+struct InfoBaseLine
+    A: int32
+    B: int16
+    C: int64
+end

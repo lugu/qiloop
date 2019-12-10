@@ -133,7 +133,6 @@ func BenchmarkPingPongTLS(b *testing.B) {
 }
 
 func BenchmarkPingPongQUIC(b *testing.B) {
-	b.Skip("QUIC is again broken")
 	testRemoteAddr(b, "quic://localhost:54322")
 }
 
