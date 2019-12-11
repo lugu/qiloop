@@ -221,6 +221,34 @@ func TestLogProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	level, err := logListener.GetLogLevel()
+	if err != nil {
+		t.Error(err)
+	}
+	if level != LogLevelInfo {
+		t.Errorf("unexpected log level: %v", level)
+	}
+
+	cancel, levels, err := logListener.SubscribeLogLevel()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = logListener.SetLogLevel(LogLevelWarning)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// have received the log level update
+	<-levels
+	cancel()
+
+	cancel, _, err = logListener.SubscribeOnLogMessages()
+	if err != nil {
+		t.Error(err)
+	}
+	cancel()
+
 	cancel, messages, err := logListener.SubscribeOnLogMessage()
 	if err != nil {
 		t.Fatal(err)
@@ -243,13 +271,14 @@ func TestLogProvider(t *testing.T) {
 		wait.Done()
 	}()
 
-	logger.Error("paf")
-	logger.Warning("paf")
+	logger.Error("paf")   // ok
+	logger.Warning("paf") // ok
 	logger.Info("paf")
 	logger.Verbose("paf")
 	logger2.Debug("paf")
-	logger2.Debug("pif")
+	logger2.Warning("pif") // ok
 	logger2.Debug("pof")
+	logger2.Error("pof") // ok
 
 	wait.Wait()
 	wait.Add(1)

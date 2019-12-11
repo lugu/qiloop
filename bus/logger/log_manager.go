@@ -147,7 +147,9 @@ func (l *logManager) UpdateVerbosity() {
 func (l *logManager) GetListener() (LogListenerProxy, error) {
 	return l.CreateListener()
 }
+
 func (l *logManager) AddProvider(provider LogProviderProxy) (int32, error) {
+	provider.SetCategory("", LogLevelNone)
 	l.providersMutex.Lock()
 	index := l.providersNext
 	l.providersNext++
