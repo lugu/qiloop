@@ -18,14 +18,13 @@ func DirectClient(obj Actor) Client {
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		return true, true
 	}
-	consumer := func(msg *net.Message) error {
-		box <- NewMail(msg, context)
-		return nil
-	}
-	closer := func(err error) {
-	}
-
-	server.AddHandler(filter, consumer, closer)
+	queue := make(chan *net.Message, 10)
+	go func() {
+		for msg := range queue {
+			box <- NewMail(msg, context)
+		}
+	}()
+	server.MakeHandler(filter, queue, nil)
 	return NewClient(proxy)
 }
 
@@ -81,16 +80,19 @@ func (c *clientService) Add(obj Actor) (uint32, error) {
 		}
 		return false, true
 	}
-	consumer := func(msg *net.Message) error {
-		return obj.Receive(msg, c.context)
-	}
+	queue := make(chan *net.Message, 10)
+	go func() {
+		for msg := range queue {
+			obj.Receive(msg, c.context)
+		}
+	}()
 	closer := func(err error) {
 		obj.OnTerminate()
 	}
 
 	c.objectsMutex.Lock()
 	defer c.objectsMutex.Unlock()
-	c.objectsHandlers[id] = c.context.EndPoint().AddHandler(filter, consumer, closer)
+	c.objectsHandlers[id] = c.context.EndPoint().MakeHandler(filter, queue, closer)
 	return id, nil
 }
 

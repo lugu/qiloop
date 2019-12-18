@@ -3,10 +3,12 @@ package net
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/lugu/qiloop/type/basic"
+	"github.com/lugu/qiloop/type/value"
 )
 
 // Magic is a constant to discriminate between message and garbage.
@@ -243,6 +245,23 @@ func (m *Message) Read(r io.Reader) error {
 		return fmt.Errorf("read payload %s", err)
 	}
 	return nil
+}
+
+// readError returns the error embedded in the payload of an error
+// message.
+func readError(m *Message) error {
+	if m.Header.Type == Error {
+		buf := bytes.NewBuffer(m.Payload)
+		val, err := value.NewValue(buf)
+		if err != nil {
+			return fmt.Errorf("cannot read error: %s", err)
+		}
+		if msg, ok := val.(value.StringValue); ok {
+			return errors.New(msg.Value())
+		}
+		return fmt.Errorf("unexpected error type: %s", val.Signature())
+	}
+	return fmt.Errorf("not an error: wrong message type (%d)", m.Header.Type)
 }
 
 // NewMessage assemble an header and a payload to create a message.

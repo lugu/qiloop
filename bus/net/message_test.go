@@ -2,13 +2,15 @@ package net_test
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/lugu/qiloop/bus/net"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 	"unsafe"
+
+	"github.com/lugu/qiloop/bus/net"
+	"github.com/lugu/qiloop/type/value"
 )
 
 func helpParseHeader(t *testing.T, filename string, expected net.Header) {
@@ -149,7 +151,7 @@ func (b *LimitedWriter) Write(buf []byte) (int, error) {
 	}
 	oldSize := b.size
 	b.size = 0
-	return oldSize, io.EOF
+	return oldSize, errors.New("something bad happended")
 }
 
 func NewLimitedWriter(size int) io.Writer {
@@ -164,13 +166,13 @@ func TestWriterHeaderError(t *testing.T) {
 		w := NewLimitedWriter(int(net.HeaderSize) - i)
 		err := hdr.Write(w)
 		if err == nil {
-			panic(fmt.Errorf("not expecting a success at %d", i))
+			t.Errorf("not expecting a success at %d", i)
 		}
 	}
 	w := NewLimitedWriter(int(net.HeaderSize))
 	err := hdr.Write(w)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 }
 
@@ -183,12 +185,25 @@ func TestReadHeaderError(t *testing.T) {
 		r := LimitedReader(msg, i)
 		err := hdr.Read(r)
 		if err == nil {
-			panic(fmt.Errorf("not expecting a success at %d", i))
+			t.Errorf("not expecting a success at %d", i)
 		}
 	}
 	r := LimitedReader(msg, max)
 	err := hdr.Read(r)
 	if err != nil {
-		panic(err)
+		t.Error(err)
+	}
+}
+
+func TestWriteError(t *testing.T) {
+	hdr := net.NewHeader(net.Error, 1, 1, 1, 1)
+	payload := value.String("this is an error message")
+	var buf bytes.Buffer
+	payload.Write(&buf)
+	msg := net.NewMessage(hdr, buf.Bytes())
+	w := NewLimitedWriter(int(net.HeaderSize) + len(buf.Bytes()) - 1)
+	err := msg.Write(w)
+	if err == nil || err == io.EOF {
+		t.Error("not expecting a success")
 	}
 }

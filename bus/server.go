@@ -188,15 +188,23 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 		}
 		return true, true
 	}
-	consumer := func(msg *net.Message) error {
-		err := firewall(msg, context)
-		if err != nil {
-			log.Printf("missing authentication from %s: %#v",
-				context.EndPoint().String(), msg.Header)
-			return context.SendError(msg, err)
+	consumer := make(chan *net.Message, 10)
+	go func() {
+		for msg := range consumer {
+			err := firewall(msg, context)
+			if err != nil {
+				log.Printf("missing authentication from %s: %#v",
+					context.EndPoint().String(), msg.Header)
+				context.SendError(msg, err)
+				stream.Close()
+				return
+			}
+			err = s.Router.Receive(msg, context)
+			if err != nil {
+				log.Printf("error %v: %s", msg.Header, err)
+			}
 		}
-		return s.Router.Receive(msg, context)
-	}
+	}()
 	closer := func(err error) {
 		s.contextsMutex.Lock()
 		defer s.contextsMutex.Unlock()
@@ -206,7 +214,7 @@ func (s *server) handle(stream net.Stream, authenticated bool) {
 	}
 	finalize := func(e net.EndPoint) {
 		context.endpoint = e
-		e.AddHandler(filter, consumer, closer)
+		e.MakeHandler(filter, consumer, closer)
 		s.contextsMutex.Lock()
 		s.contexts[context] = true
 		s.contextsMutex.Unlock()

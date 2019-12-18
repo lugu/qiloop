@@ -1,7 +1,6 @@
 package net
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -15,7 +14,6 @@ import (
 
 	"github.com/ftrvxmtrx/fd"
 	quic "github.com/lucas-clemente/quic-go"
-	"github.com/lugu/qiloop/type/value"
 )
 
 // Filter returns true if given message shall be processed by a
@@ -41,9 +39,18 @@ type EndPoint interface {
 	// ReceiveAny returns a chanel to receive a single message.
 	ReceiveAny() (chan *Message, error)
 
-	// AddHandler registers the associated Filter and Consumer to the
-	// EndPoint. Do not attempt to add another handler from within a
-	// Filter.
+	// MakeHandler registers the associated Filter and queue to
+	// the incomming traffic from the EndPoint. Writing to the
+	// queue must not block otherwise messages are discarded. If
+	// an error occurs, closer is called, the consumer is closed.
+	// closer can be nil. Do not attempt to add another handler
+	// from within a Filter. Filter must not block.
+	MakeHandler(f Filter, queue chan<- *Message, cl Closer) int
+
+	// AddHandler creates a queue of 10 messages and spawn a
+	// goroutine to forward those events into the consumer, then
+	// calls MakeHandler. Do not attempt to add another handler
+	// from within a Filter. Filter must not block.
 	AddHandler(f Filter, c Consumer, cl Closer) int
 
 	// RemoveHandler removes the associated Filter and Consumer.
@@ -57,60 +64,34 @@ type EndPoint interface {
 
 // Handler represents a client of a incomming message stream. It
 // contains a filter used to decided if the message shall be sent to
-// the handler, a queue and a consumuer which process the messages and
-// a closer called when the connection is closed.
+// the handler, consumer will receive the messages in order of
+// arrival. If an error occurs, closer is called, then the consumer
+// is closed.
 type Handler struct {
 	filter   Filter
-	consumer Consumer
+	consumer chan<- *Message
 	closer   Closer
-	queue    chan *Message
-	cancel   chan struct{}
-	err      error
 }
 
 // NewHandler returns an Handler: f is call on each incomming message,
 // c is called if f returns true. cl is always called when the handler
 // is effectively closed.
-func NewHandler(f Filter, c Consumer, cl Closer) *Handler {
+func NewHandler(f Filter, ch chan<- *Message, cl Closer) *Handler {
 	h := &Handler{
 		filter:   f,
-		consumer: c,
+		consumer: ch,
 		closer:   cl,
-		queue:    make(chan *Message, 10),
-		cancel:   make(chan struct{}),
 	}
-	go h.run()
 	return h
 }
 
-// Stop stops the handler main loop. If immediatly, the pending
-// messages in the queue will be dropped, else the queue will be
-// processed before terminating the handler.
-func (h *Handler) Stop(immediatly bool) {
-	if immediatly {
-		close(h.cancel)
-	} else {
-		close(h.queue)
+// closeWith call the closer callback and then close the consumer.
+// TODO: update API to call closer only on error.
+func (h *Handler) closeWith(err error) {
+	if h.closer != nil {
+		h.closer(err)
 	}
-}
-
-func (h *Handler) run() {
-loop:
-	for {
-		select {
-		case msg, ok := <-h.queue:
-			if !ok {
-				break loop
-			}
-			err := h.consumer(msg)
-			if err != nil {
-				log.Printf("consumer: %s", err)
-			}
-		case <-h.cancel:
-			break loop
-		}
-	}
-	h.closer(h.err)
+	close(h.consumer)
 }
 
 type endPoint struct {
@@ -277,8 +258,7 @@ func (e *endPoint) closeWith(err error) error {
 
 	for id, handler := range e.handlers {
 		if handler != nil {
-			handler.err = err
-			handler.Stop(false)
+			go handler.closeWith(err)
 			e.handlers[id] = nil
 		}
 	}
@@ -297,17 +277,17 @@ func (e *endPoint) RemoveHandler(id int) error {
 	e.handlersMutex.Lock()
 	defer e.handlersMutex.Unlock()
 	if id >= 0 && id < len(e.handlers) && e.handlers[id] != nil {
-		e.handlers[id].Stop(true)
+		e.handlers[id].closeWith(nil)
 		e.handlers[id] = nil
 		return nil
 	}
 	return fmt.Errorf("invalid handler id: %d", id)
 }
 
-// AddHandler register the associated Filter and Consumer to the
+// AddDirectHandler register the associated Filter and Consumer to the
 // EndPoint.
-func (e *endPoint) AddHandler(f Filter, c Consumer, cl Closer) int {
-	newHandler := NewHandler(f, c, cl)
+func (e *endPoint) MakeHandler(f Filter, queue chan<- *Message, cl Closer) int {
+	newHandler := NewHandler(f, queue, cl)
 	e.handlersMutex.Lock()
 	defer e.handlersMutex.Unlock()
 	for i, handler := range e.handlers {
@@ -320,8 +300,28 @@ func (e *endPoint) AddHandler(f Filter, c Consumer, cl Closer) int {
 	return len(e.handlers) - 1
 }
 
+// AddHandler register the associated Filter and Consumer to the
+// EndPoint. A goroutine associated with a queue of 10 messages is
+// created.
+func (e *endPoint) AddHandler(f Filter, c Consumer, cl Closer) int {
+	ch := make(chan *Message, 10)
+	go func() {
+		for msg := range ch {
+			err := c(msg)
+			if err != nil {
+				log.Printf("consumer: %s", err)
+			}
+		}
+	}()
+	return e.MakeHandler(f, ch, cl)
+}
+
 // ErrNoMatch is returned when the message did not match any handler
 var ErrNoMatch = errors.New("message dropped: no handler match")
+
+// ErrConsumerBlocked is returned when the message cannot be sent to the
+// consumer queue (the queue is full).
+var ErrConsumerBlocked = errors.New("message dropped: consumer blocked")
 
 // ErrNoHandler is returned when there is no handler registered.
 var ErrNoHandler = errors.New("message dropped: no handler registered")
@@ -343,32 +343,21 @@ func (e *endPoint) dispatch(msg *Message) error {
 		}
 		matched, keep := h.filter(&msg.Header)
 		if matched {
-			h.queue <- msg
-			ret = nil
+			select {
+			case h.consumer <- msg:
+				if ret == ErrNoMatch {
+					ret = nil
+				}
+			default:
+				ret = ErrConsumerBlocked
+			}
 		}
 		if !keep {
-			h.Stop(false)
+			h.closeWith(nil)
 			e.handlers[i] = nil
 		}
 	}
 	return ret
-}
-
-// readError returns the error embedded in the payload of an error
-// message.
-func readError(m *Message) error {
-	if m.Header.Type == Error {
-		buf := bytes.NewBuffer(m.Payload)
-		val, err := value.NewValue(buf)
-		if err != nil {
-			return fmt.Errorf("cannot read error: %s", err)
-		}
-		if msg, ok := val.(value.StringValue); ok {
-			return errors.New(msg.Value())
-		}
-		return fmt.Errorf("unexpected error type: %s", val.Signature())
-	}
-	return fmt.Errorf("not an error: wrong message type (%d)", m.Header.Type)
 }
 
 // process read all messages from the end point and dispatch them one
@@ -398,19 +387,12 @@ func (e *endPoint) process() {
 // ReceiveAny returns a chanel to receive one message. If the
 // connection close, the chanel is closed.
 func (e *endPoint) ReceiveAny() (chan *Message, error) {
-	found := make(chan *Message, 1)
 	filter := func(hdr *Header) (matched bool, keep bool) {
 		return true, false
 	}
-	consumer := func(msg *Message) error {
-		found <- msg
-		return nil
-	}
-	closer := func(err error) {
-		close(found)
-	}
-	e.AddHandler(filter, consumer, closer)
-	return found, nil
+	consumer := make(chan *Message, 1)
+	e.MakeHandler(filter, consumer, nil)
+	return consumer, nil
 }
 
 func (e *endPoint) String() string {

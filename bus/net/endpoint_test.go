@@ -158,14 +158,8 @@ func TestEndPointFinalizer(t *testing.T) {
 		return true, true
 	}
 	wait := make(chan *net.Message)
-	consumer := func(msg *net.Message) error {
-		wait <- msg
-		return nil
-	}
-	closer := func(err error) {
-	}
 	finalizer := func(e net.EndPoint) {
-		e.AddHandler(filter, consumer, closer)
+		e.MakeHandler(filter, wait, nil)
 	}
 	endpoint := net.EndPointFinalizer(net.ConnStream(b), finalizer)
 	defer endpoint.Close()

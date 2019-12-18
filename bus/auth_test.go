@@ -363,7 +363,6 @@ func TestAuthError(t *testing.T) {
 		if token != "bb" {
 			panic("expecting token bb")
 		}
-		endpoint.Close()
 		return bus.CapabilityMap{}
 	}
 

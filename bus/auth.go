@@ -81,58 +81,63 @@ func PreferedCap(user, token string) CapabilityMap {
 }
 
 func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
-	var capErr error
-	res := make(chan CapabilityMap, 1)
 
+	// 1. prepare to receive a capability message
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Type == net.Capability {
 			return true, false
 		}
 		return false, true
 	}
-	consumer := func(msg *net.Message) error {
-		buf := bytes.NewBuffer(msg.Payload)
-		m, err := ReadCapabilityMap(buf)
-		res <- m
-		capErr = err
-		return nil
+	reply := make(chan *net.Message, 1)
+	errors := make(chan error, 1)
+	closer := func(err error) {
+	    if err != nil {
+		errors <- err
+	    }
 	}
-	closer := func(err error) {}
-
-	id := endpoint.AddHandler(filter, consumer, closer)
+	id := endpoint.MakeHandler(filter, reply, closer)
 	defer endpoint.RemoveHandler(id)
 
+	// 2. normal call to authenticate
 	cache := NewCache(endpoint)
 	cache.AddService("ServiceZero", 0, object.MetaService0)
 	service0, err := ServiceServer(cache)
 	m, err := service0.Authenticate(permissions)
-
 	if err == nil {
-		return m, nil
+	    return m, nil
 	}
 
-	// send a capability type message.
+	// 3. on error, send the capability map
 	var out bytes.Buffer
 	err = WriteCapabilityMap(permissions, &out)
 	if err != nil {
 		return m, err
 	}
 	hdr := net.NewHeader(net.Capability, 0, 0, 0, 2)
-	msg := net.NewMessage(hdr, out.Bytes())
-	err = endpoint.Send(msg)
+	err = endpoint.Send(net.NewMessage(hdr, out.Bytes()))
 	if err != nil {
 		return m, err
 	}
 
+	// 4. wait for the capability map
 	timer := time.NewTimer(1 * time.Second)
 	select {
-	case m = <-res:
-		// capapbility received: skip authentication
-		m[KeyState] = value.Uint(StateDone)
-		return m, capErr
-
 	case <-timer.C:
 		return m, fmt.Errorf("missing capability: timeout")
+	case err := <-errors:
+		return m, err
+	case msg, ok := <-reply:
+		if !ok {
+		    return m, fmt.Errorf("Remote connection closed")
+		}
+		buf := bytes.NewBuffer(msg.Payload)
+		m, err := ReadCapabilityMap(buf)
+		if err != nil {
+		    return m, err
+		}
+		m[KeyState] = value.Uint(StateDone)
+		return m, nil
 	}
 }
 

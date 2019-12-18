@@ -54,7 +54,8 @@ func (c *client) Call(cancel <-chan struct{}, serviceID, objectID, actionID uint
 	msg := c.newMessage(serviceID, objectID, actionID, payload)
 	messageID := msg.Header.ID
 
-	reply := make(chan *net.Message)
+	reply := make(chan *net.Message, 1)
+	errors := make(chan error, 1)
 
 	filter := func(hdr *net.Header) (matched bool, keep bool) {
 		if hdr.Service == serviceID && hdr.Object == objectID &&
@@ -64,17 +65,14 @@ func (c *client) Call(cancel <-chan struct{}, serviceID, objectID, actionID uint
 		return false, true
 	}
 
-	consumer := func(msg *net.Message) error {
-		reply <- msg
-		return nil
-	}
-
 	closer := func(err error) {
-		close(reply)
+	    if err != nil {
+		errors <- err
+	    }
 	}
 
 	// 1. starts listening for an answer.
-	id := c.endpoint.AddHandler(filter, consumer, closer)
+	id := c.endpoint.MakeHandler(filter, reply, closer)
 
 	// 2. send the call message.
 	if err := c.endpoint.Send(msg); err != nil {
@@ -89,28 +87,28 @@ func (c *client) Call(cancel <-chan struct{}, serviceID, objectID, actionID uint
 		ok       bool
 		response *net.Message
 	)
-	if cancel != nil {
-		select {
-		case response, ok = <-reply:
-			if !ok {
-				return nil, fmt.Errorf("Remote connection closed")
-			}
-		case <-cancel:
-			msg := c.cancelMessage(msg.Header)
-			if err := c.endpoint.Send(msg); err != nil {
-				return nil, fmt.Errorf(
-					"cancel failed: service %d, object %d, action %d: %s",
-					serviceID, objectID, actionID, err)
-			}
-			return nil, ErrCancelled
-		}
-	} else {
-		response, ok = <-reply
+
+	if cancel == nil {
+		cancel = make(chan struct{})
+	}
+
+	select {
+	case err := <-errors:
+		return nil, err
+	case response, ok = <-reply:
 		if !ok {
 			return nil, fmt.Errorf("Remote connection closed")
 		}
+	case <-cancel:
+		msg := c.cancelMessage(msg.Header)
+		if err := c.endpoint.Send(msg); err != nil {
+			return nil, fmt.Errorf(
+				"cancel failed: service %d, object %d, action %d: %s",
+				serviceID, objectID, actionID, err)
+		}
+		return nil, ErrCancelled
 	}
-	// 3. wait for a response
+	// 4. analyse response
 	switch response.Header.Type {
 	case net.Reply:
 		return response.Payload, nil
@@ -137,18 +135,10 @@ func (c *client) Call(cancel <-chan struct{}, serviceID, objectID, actionID uint
 // Subscribe returns a channel which returns the future value of a
 // given signal. Use the cancel method to stop the stream.
 // Do not close the events channel.
-//
-// BUG: signal cancel is racy: the Handler.run() can be
-// running after a call to RemoveHandler due to channel
-// buffering. In such case, run() will send messge to a
-// consumer after the closer has been called.
-// see generic_test.go for an example
 func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 	cancel func(), events chan []byte, err error) {
 
 	abort := make(chan struct{})
-	closed := make(chan int)
-
 	events = make(chan []byte)
 	cancel = func() {
 		close(abort)
@@ -165,25 +155,25 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 		}
 		return false, true
 	}
-	consumer := func(msg *net.Message) error {
-		if msg.Header.Type == net.Error {
-			return nil
-		}
-		events <- msg.Payload
-		return nil
-	}
-	closer := func(err error) {
-		close(closed)
-		close(events)
-	}
+	queue := make(chan *net.Message, 10)
 
 	go func(id int) {
-		select {
-		case <-closed:
-		case <-abort:
-			c.endpoint.RemoveHandler(id)
+		for {
+			select {
+			case msg, ok := <-queue:
+				if !ok {
+					close(events)
+					return
+				} else if msg.Header.Type == net.Event {
+					events <- msg.Payload
+				}
+			case <-abort:
+				c.endpoint.RemoveHandler(id)
+				close(events)
+				return
+			}
 		}
-	}(c.endpoint.AddHandler(filter, consumer, closer))
+	}(c.endpoint.MakeHandler(filter, queue, nil))
 
 	return cancel, events, nil
 }
@@ -194,8 +184,8 @@ func (c *client) OnDisconnect(closer func(error)) error {
 		return nil
 	}
 	filter := func(hdr *net.Header) (bool, bool) { return false, true }
-	consumer := func(msg *net.Message) error { return nil }
-	c.endpoint.AddHandler(filter, consumer, closer)
+	consumer := make(chan *net.Message)
+	c.endpoint.MakeHandler(filter, consumer, closer)
 	return nil
 }
 

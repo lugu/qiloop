@@ -37,35 +37,47 @@ func TestTwoSubscribersDontOverlap(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	var waitSend sync.WaitGroup
+	var waitClose sync.WaitGroup
+
+	waitSend.Add(2)
+	waitClose.Add(2)
+
 	event1Count := 0
 	event2Count := 0
-	var wait sync.WaitGroup
-	wait.Add(2)
 	go func() {
-		defer wait.Done()
 		for {
 			_, ok := <-updates1
 			if !ok {
+				waitClose.Done()
 				return
 			}
 			event1Count++
+			waitSend.Done()
 		}
 	}()
 	go func() {
-		defer wait.Done()
 		for {
 			_, ok := <-updates2
 			if !ok {
+				waitClose.Done()
 				return
 			}
 			event2Count++
+			waitSend.Done()
 		}
 	}()
-	directory.UnregisterService(1)
+	err = directory.UnregisterService(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitSend.Wait()
+
 	unsubscribe1()
 	unsubscribe2()
 
-	wait.Wait()
+	waitClose.Wait()
+
 	if event1Count != 1 {
 		t.Errorf("too many messages in 1: %d", event1Count)
 	}

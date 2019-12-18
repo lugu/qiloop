@@ -136,13 +136,7 @@ func TestLogListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = logManager.Log(messagesList())
-	if err != nil {
-		t.Error(err)
-	}
-
 	var wait sync.WaitGroup
-
 	wait.Add(1)
 	go func() {
 		for msg := range messages {
@@ -163,6 +157,11 @@ func TestLogListener(t *testing.T) {
 		}
 		wait.Done()
 	}()
+
+	err = logManager.Log(messagesList())
+	if err != nil {
+		t.Error(err)
+	}
 	cancel()
 	wait.Wait()
 
