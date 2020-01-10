@@ -23,3 +23,23 @@
 -   gateway implementation
 -   refactor encoding: get it from the context
 -   dbus converter (namspace + encoding + transport)
+
+# Encoding introduction
+
+1. Make sure encoding does the job
+2. Implement Proxy.Call using forced encoding
+3. Update proxy gen to use Proxy.Call
+4. Channel can build decoder from msg
+5. Update stub gen to use Decoder
+6. Remove Marshall/Unmarshall
+
+# proxy abstractions
+
+    // New method:
+    Proxy.Call(action, signature string, arg, ret interface{}) error
+    // keep backward compatibility
+    Proxy.CallID(action uint32, payload []byte) ([]byte, error)
+
+1. find the correct action id based on the name and the signature of
+   argument.
+2. type conversion and encoding
