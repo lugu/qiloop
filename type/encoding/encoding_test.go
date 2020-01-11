@@ -10,11 +10,35 @@ import (
 	"github.com/lugu/qiloop/type/encoding"
 )
 
-type Info struct {
-	A int32
-	B int16
+type InfoReflect struct {
+	A int16
+	B int32
 	C int64
+	D uint16
+	E uint32
+	F uint64
+	G string
+	H bool
+	I float32
+	J float64
 }
+
+type Info struct {
+	A int16
+	B int32
+	C int64
+	D uint16
+	E uint32
+	F uint64
+	G string
+	H bool
+	I float32
+	J float64
+}
+
+var info = Info{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
+var base = InfoBaseLine{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
+var ref = InfoReflect{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
 
 func (i *Info) Encode(e encoding.Encoder) error {
 	if err := e.Encode(i.A); err != nil {
@@ -25,6 +49,27 @@ func (i *Info) Encode(e encoding.Encoder) error {
 	}
 	if err := e.Encode(i.C); err != nil {
 		return fmt.Errorf("field c: %w", err)
+	}
+	if err := e.Encode(i.D); err != nil {
+		return fmt.Errorf("field d: %w", err)
+	}
+	if err := e.Encode(i.E); err != nil {
+		return fmt.Errorf("field e: %w", err)
+	}
+	if err := e.Encode(i.F); err != nil {
+		return fmt.Errorf("field f: %w", err)
+	}
+	if err := e.Encode(i.G); err != nil {
+		return fmt.Errorf("field g: %w", err)
+	}
+	if err := e.Encode(i.H); err != nil {
+		return fmt.Errorf("field h: %w", err)
+	}
+	if err := e.Encode(i.I); err != nil {
+		return fmt.Errorf("field i: %w", err)
+	}
+	if err := e.Encode(i.J); err != nil {
+		return fmt.Errorf("field j: %w", err)
 	}
 	return nil
 }
@@ -39,6 +84,27 @@ func (i *Info) Decode(d encoding.Decoder) error {
 	}
 	if err := d.Decode(&i.C); err != nil {
 		return fmt.Errorf("field c: %w", err)
+	}
+	if err := d.Decode(&i.D); err != nil {
+		return fmt.Errorf("field d: %w", err)
+	}
+	if err := d.Decode(&i.E); err != nil {
+		return fmt.Errorf("field e: %w", err)
+	}
+	if err := d.Decode(&i.F); err != nil {
+		return fmt.Errorf("field f: %w", err)
+	}
+	if err := d.Decode(&i.G); err != nil {
+		return fmt.Errorf("field g: %w", err)
+	}
+	if err := d.Decode(&i.H); err != nil {
+		return fmt.Errorf("field h: %w", err)
+	}
+	if err := d.Decode(&i.I); err != nil {
+		return fmt.Errorf("field i: %w", err)
+	}
+	if err := d.Decode(&i.J); err != nil {
+		return fmt.Errorf("field j: %w", err)
 	}
 	return nil
 }
@@ -89,7 +155,7 @@ func TestStruct(t *testing.T) {
 	var buf bytes.Buffer
 	permission := make(map[string]string)
 
-	in := &Info{1, 2, 3}
+	in := ref
 	encoder := encoding.NewEncoder(permission, &buf)
 	if err := encoder.Encode(in); err != nil {
 		t.Error(err)
@@ -100,7 +166,10 @@ func TestStruct(t *testing.T) {
 	if err := decoder.Decode(&out); err != nil {
 		t.Error(err)
 	}
-	if out.A != 1 || out.B != 2 || out.C != 3 {
+	if out.A != in.A || out.B != in.B || out.C != in.C ||
+		out.D != in.D || out.E != in.E || out.F != in.F ||
+		out.G != in.G || out.H != in.H || out.I != in.I ||
+		out.J != in.J {
 		t.Errorf("unexpected value: %v", out)
 	}
 }
@@ -121,89 +190,40 @@ func TestDecodeSlice(t *testing.T) {
 	}
 }
 
+func newBool(b bool) *bool       { return &b }
+func newString(s string) *string { return &s }
+
+func newUint(n uint) *uint       { return &n }
+func newUint16(n uint16) *uint16 { return &n }
+func newUint32(n uint32) *uint32 { return &n }
+func newUint64(n uint64) *uint64 { return &n }
+
+func newInt(n int) *int       { return &n }
 func newInt16(n int16) *int16 { return &n }
 func newInt32(n int32) *int32 { return &n }
 func newInt64(n int64) *int64 { return &n }
 
-var testData = map[string]struct {
-	wire []byte
-	in   interface{}
-	out  interface{}
-}{
-	"int16": {[]byte{
-		0x01, 0x00,
-	}, int16(1), newInt16(1)},
-	"int32": {[]byte{
-		0x02, 0x00, 0x00, 0x00,
-	}, int32(2), newInt32(2)},
-	"int64": {[]byte{
-		0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	}, int64(3), newInt64(3)},
-	"struct": {[]byte{
-		0x01, 0x00, 0x00, 0x00,
-		0x02, 0x00,
-		0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	}, Info{1, 2, 3}, &Info{1, 2, 3}},
-	"list of int16": {[]byte{
-		0x02, 0x00, 0x00, 0x00,
-		0x01, 0x00,
-		0x02, 0x00,
-	}, []int16{1, 2}, &[]int16{1, 2}},
-	"list of struct": {[]byte{
-		0x01, 0x00, 0x00, 0x00,
-		0x01, 0x00, 0x00, 0x00,
-		0x02, 0x00,
-		0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	}, []Info{Info{1, 2, 3}}, &[]Info{Info{1, 2, 3}}},
-	"map of int16": {[]byte{
-		0x02, 0x00, 0x00, 0x00,
-		0x01, 0x00,
-		0x02, 0x00,
-		0x03, 0x00,
-		0x04, 0x00,
-	}, map[int16]int16{1: 2, 3: 4}, &map[int16]int16{1: 2, 3: 4}},
-	"map of struct": {[]byte{
-		0x02, 0x00, 0x00, 0x00,
-		0x01, 0x00, 0x00, 0x00,
-		0x02, 0x00,
-		0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x04, 0x00, 0x00, 0x00,
-		0x04, 0x00,
-		0x05, 0x00,
-		0x06, 0x00,
-		0x07, 0x00,
-		0x08, 0x00, 0x00, 0x00,
-		0x09, 0x00,
-		0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x04, 0x00, 0x00, 0x00,
-		0x0b, 0x00,
-		0x0c, 0x00,
-		0x0d, 0x00,
-		0x0e, 0x00,
-	}, map[Info][]int16{
-		Info{1, 2, 3}:  []int16{4, 5, 6, 7},
-		Info{8, 9, 10}: []int16{11, 12, 13, 14},
-	}, &map[Info][]int16{
-		Info{1, 2, 3}:  []int16{4, 5, 6, 7},
-		Info{8, 9, 10}: []int16{11, 12, 13, 14},
-	}},
-}
-
-func TestDecode(t *testing.T) {
-	permission := make(map[string]string)
-	for name, test := range testData {
-		buf := bytes.NewBuffer(test.wire)
-		decoder := encoding.NewDecoder(permission, buf)
-		pv := reflect.New(reflect.TypeOf(test.out).Elem())
-		val := pv.Interface()
-		err := decoder.Decode(val)
-		if err != nil {
-			t.Errorf("Decode failed for %s: %v", name, err)
-		}
-		if !reflect.DeepEqual(val, test.out) {
-			t.Errorf("%s:\nhave %#v\nwant %#v", name, val, test.out)
-		}
-	}
+var testData = map[string]interface{}{
+	"bool-true":      newBool(true),
+	"bool-false":     newBool(false),
+	"string-1":       newString("A"),
+	"string-2":       newString("A"),
+	"uint16":         newUint16(1),
+	"uint32":         newUint32(2),
+	"uint64":         newUint64(3),
+	"uint":           newUint(3),
+	"int16":          newInt16(1),
+	"int32":          newInt32(2),
+	"int64":          newInt64(3),
+	"int":            newInt(3),
+	"struct-1":       &ref,
+	"struct-2":       &info,
+	"list of int16":  &[]int16{1, 2},
+	"list of struct": &[]Info{info},
+	"map of int16":   &map[int16]int16{1: 2, 3: 4},
+	"map of struct": &map[Info][]int16{
+		info: []int16{4, 5, 6, 7},
+	},
 }
 
 func TestEncode(t *testing.T) {
@@ -211,37 +231,40 @@ func TestEncode(t *testing.T) {
 	for name, test := range testData {
 		var buf bytes.Buffer
 		encoder := encoding.NewEncoder(permission, &buf)
-		err := encoder.Encode(test.in)
+		err := encoder.Encode(test)
 		if err != nil {
 			t.Errorf("Encode failed for %s %v", name, err)
 		}
 		decoder := encoding.NewDecoder(permission, &buf)
-		pv := reflect.New(reflect.TypeOf(test.out).Elem())
+		pv := reflect.New(reflect.TypeOf(test).Elem())
 		val := pv.Interface()
 		err = decoder.Decode(val)
 		if err != nil {
 			t.Errorf("Decode failed for %s: %v", name, err)
 		}
-		if !reflect.DeepEqual(val, test.out) {
-			t.Errorf("%s:\nhave %#v\nwant %#v", name, val, test.in)
+		if !reflect.DeepEqual(val, test) {
+			var buf bytes.Buffer
+			encoder := encoding.NewEncoder(permission, &buf)
+			err := encoder.Encode(test)
+			if err != nil {
+				t.Errorf("Encode failed for %s %v", name, err)
+			}
+
+			t.Errorf("%s:\nhave %#v\nwant %#v\n%#v",
+				name, val, test, buf.Bytes())
 		}
 	}
 }
 
-type InfoReflect struct {
-	A int32
-	B int16
-	C int64
-}
-
 func helpBenchPrepareDecoder(n int) io.Reader {
-	infoBytes := []byte{
-		0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-	}
 	var buf bytes.Buffer
 	for i := 0; i < n; i++ {
-		buf.Write(infoBytes)
+		permission := make(map[string]string)
+		encoder := encoding.NewEncoder(permission, &buf)
+		err := encoder.Encode(ref)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return &buf
 }
@@ -328,7 +351,7 @@ func BenchmarkReadInfoGob(b *testing.B) {
 	encoder := encoding.NewGobEncoder(&buf)
 	a := make([]Info, b.N)
 	for i := 0; i < b.N; i++ {
-		a[i] = Info{1, 2, 3}
+		a[i] = info
 	}
 	err := encoder.Encode(a)
 	if err != nil {
@@ -360,7 +383,7 @@ func BenchmarkReadInfoJSON(b *testing.B) {
 	encoder := encoding.NewJSONEncoder(&buf)
 	a := make([]Info, b.N)
 	for i := 0; i < b.N; i++ {
-		a[i] = Info{1, 2, 3}
+		a[i] = info
 	}
 	err := encoder.Encode(a)
 	if err != nil {
@@ -389,7 +412,7 @@ func BenchmarkReadInfoJSON(b *testing.B) {
 
 func BenchmarkWriteInfoBaseLine(b *testing.B) {
 	writer := bytes.NewBuffer(make([]byte, b.N*8))
-	a := InfoBaseLine{1, 2, 3}
+	a := base
 	for i := 0; i < b.N; i++ {
 		var err error
 		err = writeInfoBaseLine(a, writer)
@@ -404,7 +427,7 @@ func BenchmarkWriteInfoCodeGen(b *testing.B) {
 	writer := bytes.NewBuffer(make([]byte, b.N*8))
 	permission := make(map[string]string)
 	encoder := encoding.NewEncoder(permission, writer)
-	a := Info{1, 2, 3}
+	a := info
 	for i := 0; i < b.N; i++ {
 		var err error
 		err = encoder.Encode(a)
@@ -419,7 +442,7 @@ func BenchmarkWriteInfoReflect(b *testing.B) {
 	writer := bytes.NewBuffer(make([]byte, b.N*8))
 	permission := make(map[string]string)
 	encoder := encoding.NewEncoder(permission, writer)
-	a := InfoReflect{1, 2, 3}
+	a := ref
 	for i := 0; i < b.N; i++ {
 		var err error
 		err = encoder.Encode(a)
@@ -433,7 +456,7 @@ func BenchmarkWriteInfoReflect(b *testing.B) {
 func BenchmarkWriteJSON(b *testing.B) {
 	writer := bytes.NewBuffer(make([]byte, b.N*8))
 	encoder := encoding.NewJSONEncoder(writer)
-	a := Info{1, 2, 3}
+	a := info
 	for i := 0; i < b.N; i++ {
 		var err error
 		err = encoder.Encode(a)
@@ -447,7 +470,7 @@ func BenchmarkWriteJSON(b *testing.B) {
 func BenchmarkWriteGob(b *testing.B) {
 	writer := bytes.NewBuffer(make([]byte, b.N*8))
 	encoder := encoding.NewGobEncoder(writer)
-	a := Info{1, 2, 3}
+	a := info
 	for i := 0; i < b.N; i++ {
 		var err error
 		err = encoder.Encode(a)
@@ -484,7 +507,7 @@ func TestJSONSerialization(t *testing.T) {
 			// for some reason it cannot be encoded into JSON...
 			continue
 		}
-		helpJSONSerialization(t, name, test.out)
+		helpJSONSerialization(t, name, test)
 	}
 }
 
@@ -510,6 +533,6 @@ func helpGobSerialization(t *testing.T, name string, in interface{}) {
 
 func TestGobSerialization(t *testing.T) {
 	for name, test := range testData {
-		helpGobSerialization(t, name, test.out)
+		helpGobSerialization(t, name, test)
 	}
 }

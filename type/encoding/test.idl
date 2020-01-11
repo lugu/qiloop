@@ -1,7 +1,14 @@
 package encoding_test
 
 struct InfoBaseLine
-    A: int32
-    B: int16
+    A: int16
+    B: int32
     C: int64
+    D: uint16
+    E: uint32
+    F: uint64
+    G: string
+    H: bool
+    I: float32
+    J: float64
 end
