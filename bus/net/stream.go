@@ -171,7 +171,7 @@ func (q quicListener) handleSession(ctx context.Context, sess quic.Session) {
 		case <-q.closer: // close the sesion on demand
 		case <-cancel: // close the sesion on error
 		}
-		sess.Close()
+		sess.CloseWithError(0, "")
 	}()
 	// send stream of streams into streams
 	go func() {
