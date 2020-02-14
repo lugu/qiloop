@@ -12,11 +12,28 @@ const (
 	listValueMaxSize = 4096
 )
 
+type Encoder interface {
+	Encode(interface{}) error
+}
+
+type Decoder interface {
+	Decode(interface{}) error
+}
+
 type BinaryEncoder interface {
 	Encode(Encoder) error
 }
-type Encoder interface {
-	Encode(interface{}) error
+
+type BinaryDecoder interface {
+	Decode(Decoder) error
+}
+
+func NewEncoder(permission map[string]string, w io.Writer) Encoder {
+	return qiEncoder{w}
+}
+
+func NewDecoder(permissions map[string]string, r io.Reader) Decoder {
+	return qiDecoder{r}
 }
 
 type qiEncoder struct {
@@ -134,17 +151,6 @@ func (q qiEncoder) Encode(x interface{}) error {
 
 	// Fallback to reflect-based encoding.
 	return q.value(v)
-}
-
-func NewEncoder(permission map[string]string, w io.Writer) Encoder {
-	return qiEncoder{w}
-}
-
-type BinaryDecoder interface {
-	Decode(Decoder) error
-}
-type Decoder interface {
-	Decode(interface{}) error
 }
 
 type qiDecoder struct {
@@ -375,8 +381,4 @@ func (q qiDecoder) Decode(x interface{}) (err error) {
 
 	// Fallback to reflect-based decoding.
 	return q.value(v)
-}
-
-func NewDecoder(permissions map[string]string, r io.Reader) Decoder {
-	return qiDecoder{r}
 }

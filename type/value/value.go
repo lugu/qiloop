@@ -8,6 +8,7 @@ import (
 
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/basic"
+	"github.com/lugu/qiloop/type/encoding"
 )
 
 const (
@@ -72,6 +73,38 @@ func NewValue(r io.Reader) (Value, error) {
 		return f(r)
 	}
 	return newOpaque(s, r)
+}
+
+// InterfaceValue represents a value using a signature and an
+// interface.
+type InterfaceValue struct {
+	sig  string
+	inst interface{}
+}
+
+func Interface(signature string, instance interface{}) Value {
+	return &InterfaceValue{
+		sig: signature,
+		inst: instance,
+	}
+}
+
+// Signature returns the signature of the value.
+func (o *InterfaceValue) Signature() string {
+	return o.sig
+}
+
+func (o *InterfaceValue) Write(w io.Writer) error {
+	if err := basic.WriteString(o.sig, w); err != nil {
+		return err
+	}
+	// FIXME: where the permission come from???
+	permission := make(map[string]string)
+	e := encoding.NewEncoder(permission, w)
+	if err :=  e.Encode(o.sig); err != nil {
+		return err
+	}
+	return e.Encode(o.inst)
 }
 
 // OpaqueValue represents a value using a signature and the data.
