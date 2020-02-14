@@ -20,6 +20,7 @@ struct ServiceInfo
 	processId: uint32
 	endpoints: Vec<str>
 	sessionId: str
+	objectUid: str
 end
 
 struct LogLevel

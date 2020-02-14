@@ -122,7 +122,7 @@ func (p *proxyServiceDirectory) Service(name string) (ServiceInfo, error) {
 	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("service", "(s)", "(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>")
+	methodID, err := p.Proxy().MetaObject().MethodID("service", "(s)", "(sIsI[s]ss)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId,objectUid>")
 	if err != nil {
 		return ret, err
 	}
@@ -143,7 +143,7 @@ func (p *proxyServiceDirectory) Services() ([]ServiceInfo, error) {
 	var err error
 	var ret []ServiceInfo
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("services", "()", "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
+	methodID, err := p.Proxy().MetaObject().MethodID("services", "()", "[(sIsI[s]ss)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId,objectUid>]")
 	if err != nil {
 		return ret, err
 	}
@@ -180,7 +180,7 @@ func (p *proxyServiceDirectory) RegisterService(info ServiceInfo) (uint32, error
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return ret, fmt.Errorf("serialize info: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("registerService", "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)", "I")
+	methodID, err := p.Proxy().MetaObject().MethodID("registerService", "((sIsI[s]ss)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId,objectUid>)", "I")
 	if err != nil {
 		return ret, err
 	}
@@ -239,7 +239,7 @@ func (p *proxyServiceDirectory) UpdateServiceInfo(info ServiceInfo) error {
 	if err = writeServiceInfo(info, &buf); err != nil {
 		return fmt.Errorf("serialize info: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("updateServiceInfo", "((sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>)", "v")
+	methodID, err := p.Proxy().MetaObject().MethodID("updateServiceInfo", "((sIsI[s]ss)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId,objectUid>)", "v")
 	if err != nil {
 		return err
 	}
@@ -367,6 +367,7 @@ type ServiceInfo struct {
 	ProcessId uint32
 	Endpoints []string
 	SessionId string
+	ObjectUid string
 }
 
 // readServiceInfo unmarshalls ServiceInfo
@@ -402,6 +403,9 @@ func readServiceInfo(r io.Reader) (s ServiceInfo, err error) {
 	if s.SessionId, err = basic.ReadString(r); err != nil {
 		return s, fmt.Errorf("read SessionId field: %s", err)
 	}
+	if s.ObjectUid, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("read ObjectUid field: %s", err)
+	}
 	return s, nil
 }
 
@@ -436,6 +440,9 @@ func writeServiceInfo(s ServiceInfo, w io.Writer) (err error) {
 	}
 	if err := basic.WriteString(s.SessionId, w); err != nil {
 		return fmt.Errorf("write SessionId field: %s", err)
+	}
+	if err := basic.WriteString(s.ObjectUid, w); err != nil {
+		return fmt.Errorf("write ObjectUid field: %s", err)
 	}
 	return nil
 }
