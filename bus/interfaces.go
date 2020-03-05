@@ -33,6 +33,9 @@ type Client interface {
 	// given signal in order to mutualize the calls to
 	// RegisterEvent and UnregisterEvent.
 	State(signal string, increment int) int
+
+	// Permission returns the negociated capability map
+	Permission() map[string]string
 }
 
 // Proxy represents a reference to a remote service. It allows to
@@ -41,6 +44,11 @@ type Proxy interface {
 	// CallID send a call message.
 	// ErrCancelled is returned if the call was cancelled.
 	CallID(action uint32, payload []byte) ([]byte, error)
+
+	// Call is the remote procedure call primitive. It searches
+	// for a method with a signature compatible with args and fill
+	// resp with the response from the call.
+	Call2(method string, args Params, resp Response) error
 
 	// SubscribeID returns a channel with the values of a
 	// signal. Subscribe calls RegisterEvent and UnregisterEvent on

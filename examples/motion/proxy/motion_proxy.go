@@ -53,7 +53,7 @@ func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
 func (p *proxyALMotion) WakeUp() error {
 	var err error
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("wakeUp", "()", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("wakeUp", "()")
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (p *proxyALMotion) WakeUp() error {
 func (p *proxyALMotion) Rest() error {
 	var err error
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("rest", "()", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("rest", "()")
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (p *proxyALMotion) Rest() error {
 func (p *proxyALMotion) MoveInit() error {
 	var err error
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("moveInit", "()", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("moveInit", "()")
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 	if err = basic.WriteFloat32(theta, &buf); err != nil {
 		return fmt.Errorf("serialize theta: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("moveTo", "(fff)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("moveTo", "(fff)")
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 func (p *proxyALMotion) WaitUntilMoveIsFinished() error {
 	var err error
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("waitUntilMoveIsFinished", "()", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("waitUntilMoveIsFinished", "()")
 	if err != nil {
 		return err
 	}

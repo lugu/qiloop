@@ -16,6 +16,7 @@ type client struct {
 	messageIDMutex sync.Mutex
 	state          map[string]int
 	stateMutex     sync.Mutex
+	permission     map[string]string
 }
 
 func (c *client) nextMessageID() uint32 {
@@ -206,12 +207,18 @@ func (c *client) State(signal string, add int) int {
 	return next
 }
 
+func (c *client) Permission() map[string]string {
+	return c.permission
+}
+
 // NewClient returns a new client.
+// TODO: pass permission by argument
 func NewClient(endpoint net.EndPoint) Client {
 	return &client{
 		endpoint:  endpoint,
 		messageID: 1,
 		state:     map[string]int{},
+		permission: make(map[string]string),
 	}
 }
 

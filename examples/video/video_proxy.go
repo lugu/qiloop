@@ -68,7 +68,7 @@ func (p *proxyALVideoDevice) SubscribeCamera(name string, cameraIndex int32, res
 	if err = basic.WriteInt32(fps, &buf); err != nil {
 		return ret, fmt.Errorf("serialize fps: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("subscribeCamera", "(siiii)", "s")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("subscribeCamera", "(siiii)")
 	if err != nil {
 		return ret, err
 	}
@@ -92,7 +92,7 @@ func (p *proxyALVideoDevice) Unsubscribe(nameId string) (bool, error) {
 	if err = basic.WriteString(nameId, &buf); err != nil {
 		return ret, fmt.Errorf("serialize nameId: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("unsubscribe", "(s)", "b")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("unsubscribe", "(s)")
 	if err != nil {
 		return ret, err
 	}
@@ -116,7 +116,7 @@ func (p *proxyALVideoDevice) GetImageRemote(name string) (value.Value, error) {
 	if err = basic.WriteString(name, &buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("getImageRemote", "(s)", "m")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("getImageRemote", "(s)")
 	if err != nil {
 		return ret, err
 	}

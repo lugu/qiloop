@@ -555,7 +555,7 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 			))
 		}
 	}
-	writing = append(writing, jen.Id(fmt.Sprintf(`methodID, err := p.Proxy().MetaObject().MethodID("%s", "%s", "%s")`, method.Name, params.Signature(), ret.Signature())))
+	writing = append(writing, jen.Id(fmt.Sprintf(`methodID, _, err := p.Proxy().MetaObject().MethodID("%s", "%s")`, method.Name, params.Signature())))
 	if ret.Signature() != "v" {
 		writing = append(writing, jen.Id(`if err != nil {
 		return ret, err

@@ -55,7 +55,7 @@ func (p *proxyALTextToSpeech) Say(stringToSay string) error {
 	if err = basic.WriteString(stringToSay, &buf); err != nil {
 		return fmt.Errorf("serialize stringToSay: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("say", "(s)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("say", "(s)")
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (p *proxyALMemory) GetEventList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("getEventList", "()", "[s]")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("getEventList", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -143,7 +143,7 @@ func (p *proxyALMemory) Subscriber(eventName string) (SubscriberProxy, error) {
 	if err = basic.WriteString(eventName, &buf); err != nil {
 		return ret, fmt.Errorf("serialize eventName: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("subscriber", "(s)", "o")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("subscriber", "(s)")
 	if err != nil {
 		return ret, err
 	}

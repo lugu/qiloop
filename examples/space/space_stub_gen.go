@@ -478,7 +478,7 @@ func (p *proxySpacecraft) Shoot() (BombProxy, error) {
 	var err error
 	var ret BombProxy
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("shoot", "()", "o")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("shoot", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -522,7 +522,7 @@ func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize ammo: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("ammo", "(o)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("ammo", "(o)")
 	if err != nil {
 		return err
 	}

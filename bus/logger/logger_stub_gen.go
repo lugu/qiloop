@@ -890,7 +890,7 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("setVerbosity", "((i)<LogLevel,level>)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("setVerbosity", "((i)<LogLevel,level>)")
 	if err != nil {
 		return err
 	}
@@ -911,7 +911,7 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("setCategory", "(s(i)<LogLevel,level>)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("setCategory", "(s(i)<LogLevel,level>)")
 	if err != nil {
 		return err
 	}
@@ -945,7 +945,7 @@ func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize filters: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("clearAndSet", "({s(i)<LogLevel,level>})", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("clearAndSet", "({s(i)<LogLevel,level>})")
 	if err != nil {
 		return err
 	}
@@ -1005,7 +1005,7 @@ func (p *proxyLogListener) SetLevel(level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("setLevel", "((i)<LogLevel,level>)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("setLevel", "((i)<LogLevel,level>)")
 	if err != nil {
 		return err
 	}
@@ -1026,7 +1026,7 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 	if err = writeLogLevel(level, &buf); err != nil {
 		return fmt.Errorf("serialize level: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("addFilter", "(s(i)<LogLevel,level>)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("addFilter", "(s(i)<LogLevel,level>)")
 	if err != nil {
 		return err
 	}
@@ -1041,7 +1041,7 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 func (p *proxyLogListener) ClearFilters() error {
 	var err error
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("clearFilters", "()", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("clearFilters", "()")
 	if err != nil {
 		return err
 	}
@@ -1301,7 +1301,7 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 	}(); err != nil {
 		return fmt.Errorf("serialize messages: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("log", "([(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>])", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("log", "([(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>])")
 	if err != nil {
 		return err
 	}
@@ -1317,7 +1317,7 @@ func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("createListener", "()", "o")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("createListener", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -1348,7 +1348,7 @@ func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
 	var err error
 	var ret LogListenerProxy
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("getListener", "()", "o")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("getListener", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -1393,7 +1393,7 @@ func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize source: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("addProvider", "(o)", "i")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("addProvider", "(o)")
 	if err != nil {
 		return ret, err
 	}
@@ -1416,7 +1416,7 @@ func (p *proxyLogManager) RemoveProvider(sourceID int32) error {
 	if err = basic.WriteInt32(sourceID, &buf); err != nil {
 		return fmt.Errorf("serialize sourceID: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("removeProvider", "(i)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("removeProvider", "(i)")
 	if err != nil {
 		return err
 	}

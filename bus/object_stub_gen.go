@@ -684,7 +684,7 @@ func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[
 	}(); err != nil {
 		return ret, fmt.Errorf("serialize capability: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("authenticate", "({sm})", "{sm}")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("authenticate", "({sm})")
 	if err != nil {
 		return ret, err
 	}
@@ -765,7 +765,7 @@ func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler ui
 	if err = basic.WriteUint64(handler, &buf); err != nil {
 		return ret, fmt.Errorf("serialize handler: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("registerEvent", "(IIL)", "L")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("registerEvent", "(IIL)")
 	if err != nil {
 		return ret, err
 	}
@@ -794,7 +794,7 @@ func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler 
 	if err = basic.WriteUint64(handler, &buf); err != nil {
 		return fmt.Errorf("serialize handler: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("unregisterEvent", "(IIL)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("unregisterEvent", "(IIL)")
 	if err != nil {
 		return err
 	}
@@ -813,7 +813,7 @@ func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
 		return ret, fmt.Errorf("serialize objectID: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("metaObject", "(I)", "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("metaObject", "(I)")
 	if err != nil {
 		return ret, err
 	}
@@ -836,7 +836,7 @@ func (p *proxyObject) Terminate(objectID uint32) error {
 	if err = basic.WriteUint32(objectID, &buf); err != nil {
 		return fmt.Errorf("serialize objectID: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("terminate", "(I)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("terminate", "(I)")
 	if err != nil {
 		return err
 	}
@@ -855,7 +855,7 @@ func (p *proxyObject) Property(name value.Value) (value.Value, error) {
 	if err = name.Write(&buf); err != nil {
 		return ret, fmt.Errorf("serialize name: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("property", "(m)", "m")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("property", "(m)")
 	if err != nil {
 		return ret, err
 	}
@@ -881,7 +881,7 @@ func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
 	if err = value.Write(&buf); err != nil {
 		return fmt.Errorf("serialize value: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("setProperty", "(mm)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("setProperty", "(mm)")
 	if err != nil {
 		return err
 	}
@@ -897,7 +897,7 @@ func (p *proxyObject) Properties() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("properties", "()", "[s]")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("properties", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -943,7 +943,7 @@ func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint3
 	if err = basic.WriteString(P3, &buf); err != nil {
 		return ret, fmt.Errorf("serialize P3: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("registerEventWithSignature", "(IILs)", "L")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("registerEventWithSignature", "(IILs)")
 	if err != nil {
 		return ret, err
 	}
@@ -964,7 +964,7 @@ func (p *proxyObject) IsStatsEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("isStatsEnabled", "()", "b")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("isStatsEnabled", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -987,7 +987,7 @@ func (p *proxyObject) EnableStats(enabled bool) error {
 	if err = basic.WriteBool(enabled, &buf); err != nil {
 		return fmt.Errorf("serialize enabled: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("enableStats", "(b)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("enableStats", "(b)")
 	if err != nil {
 		return err
 	}
@@ -1003,7 +1003,7 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 	var err error
 	var ret map[uint32]MethodStatistics
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("stats", "()", "{I(I(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>)<MethodStatistics,count,wall,user,system>}")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("stats", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -1041,7 +1041,7 @@ func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
 func (p *proxyObject) ClearStats() error {
 	var err error
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("clearStats", "()", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("clearStats", "()")
 	if err != nil {
 		return err
 	}
@@ -1057,7 +1057,7 @@ func (p *proxyObject) IsTraceEnabled() (bool, error) {
 	var err error
 	var ret bool
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("isTraceEnabled", "()", "b")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("isTraceEnabled", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -1080,7 +1080,7 @@ func (p *proxyObject) EnableTrace(traced bool) error {
 	if err = basic.WriteBool(traced, &buf); err != nil {
 		return fmt.Errorf("serialize traced: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("enableTrace", "(b)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("enableTrace", "(b)")
 	if err != nil {
 		return err
 	}

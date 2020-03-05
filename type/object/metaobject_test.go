@@ -155,7 +155,7 @@ func TestWriteRead(t *testing.T) {
 
 func helpMethodID(t *testing.T, name, param, ret string, expected uint32) {
 	metaObj := helpReadGolden(t)
-	id, err := metaObj.MethodID(name, param, ret)
+	id, _, err := metaObj.MethodID(name, param)
 	if err != nil {
 		t.Errorf("cannot find %s %s %s: %s", name, param, ret, err)
 	} else if id != expected {

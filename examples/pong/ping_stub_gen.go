@@ -212,7 +212,7 @@ func (p *proxyPingPong) Hello(a string) (string, error) {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return ret, fmt.Errorf("serialize a: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("hello", "(s)", "s")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("hello", "(s)")
 	if err != nil {
 		return ret, err
 	}
@@ -235,7 +235,7 @@ func (p *proxyPingPong) Ping(a string) error {
 	if err = basic.WriteString(a, &buf); err != nil {
 		return fmt.Errorf("serialize a: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("ping", "(s)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("ping", "(s)")
 	if err != nil {
 		return err
 	}

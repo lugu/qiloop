@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"bytes"
 
 	"github.com/lugu/qiloop/type/object"
+	"github.com/lugu/qiloop/type/encoding"
 )
 
 // proxy is the parent strucuture for Service. It wraps Client and
@@ -26,11 +28,43 @@ func (p proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
 
 // Call translates the name into an action id and send it to the client endpoint.
 func (p proxy) Call(method, param, ret string, payload []byte) ([]byte, error) {
-	id, err := p.meta.MethodID(method, param, ret)
+	id, sig, err := p.meta.MethodID(method, param)
 	if err != nil {
-		return nil, fmt.Errorf("find call %s: %s", method, err)
+		return nil, fmt.Errorf("missing method %s: %s", method, err)
+	} else if ret != sig {
+		return nil, fmt.Errorf("unexpected return: %s, expecting %s",
+			sig, ret)
 	}
 	return p.CallID(id, payload)
+}
+
+func (p proxy) Call2(method string, args Params, ret Response) error {
+	methodID, sig, err := p.MetaObject().MethodID(method, args.Signature())
+	if err != nil {
+		return err
+	}
+	if sig != ret.Signature() {
+		// TODO: type conversion
+		return fmt.Errorf("%s: Unexpected result %s, expecting %s",
+			method, sig, ret.Signature())
+	}
+	var buf bytes.Buffer
+	permission := p.client.Permission()
+	var e = encoding.NewEncoder(permission, &buf)
+	if err := args.Write(e); err != nil {
+		return err
+	}
+	res, err := p.CallID(methodID, buf.Bytes())
+	if err != nil {
+		return err
+	}
+	buf2 := bytes.NewBuffer(res)
+	dec := encoding.NewDecoder(permission, buf2)
+	err = ret.Read(dec)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // SubscribeID returns a channel with the values of a signal or a

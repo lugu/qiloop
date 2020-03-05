@@ -32,26 +32,19 @@ func (m *MetaObject) ActionName(id uint32) (string, error) {
 
 // MethodID returns the ID of a method given its name, the parameters
 // signature and the returned value signature.
-func (m *MetaObject) MethodID(name, signatureParam, signatureRet string) (uint32, error) {
+func (m *MetaObject) MethodID(name, signature string ) (uint32, string, error) {
 	for k, method := range m.Methods {
 		if method.Name == name &&
-			method.ParametersSignature == signatureParam &&
-			method.ReturnSignature == signatureRet {
-			return k, nil
-		}
-	}
-	for k, method := range m.Methods {
-		if method.Name == name &&
-			method.ParametersSignature == signatureParam {
-			return k, nil
+			method.ParametersSignature == signature {
+			return k, method.ReturnSignature, nil
 		}
 	}
 	for k, method := range m.Methods {
 		if method.Name == name {
-			return k, nil
+			return k, method.ReturnSignature, nil
 		}
 	}
-	return 0, fmt.Errorf("missing method %s", name)
+	return 0, "", fmt.Errorf("missing method %s", name)
 }
 
 // SignalID returns the ID of a signal given its name and its

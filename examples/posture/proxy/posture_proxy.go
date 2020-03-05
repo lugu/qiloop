@@ -57,7 +57,7 @@ func (p *proxyALRobotPosture) GetPostureFamily() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("getPostureFamily", "()", "s")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("getPostureFamily", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -84,7 +84,7 @@ func (p *proxyALRobotPosture) GoToPosture(postureName string, maxSpeedFraction f
 	if err = basic.WriteFloat32(maxSpeedFraction, &buf); err != nil {
 		return ret, fmt.Errorf("serialize maxSpeedFraction: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("goToPosture", "(sf)", "b")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("goToPosture", "(sf)")
 	if err != nil {
 		return ret, err
 	}
@@ -111,7 +111,7 @@ func (p *proxyALRobotPosture) ApplyPosture(postureName string, maxSpeedFraction 
 	if err = basic.WriteFloat32(maxSpeedFraction, &buf); err != nil {
 		return ret, fmt.Errorf("serialize maxSpeedFraction: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("applyPosture", "(sf)", "b")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("applyPosture", "(sf)")
 	if err != nil {
 		return ret, err
 	}
@@ -131,7 +131,7 @@ func (p *proxyALRobotPosture) ApplyPosture(postureName string, maxSpeedFraction 
 func (p *proxyALRobotPosture) StopMove() error {
 	var err error
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("stopMove", "()", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("stopMove", "()")
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (p *proxyALRobotPosture) GetPostureList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("getPostureList", "()", "[s]")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("getPostureList", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -181,7 +181,7 @@ func (p *proxyALRobotPosture) GetPostureFamilyList() ([]string, error) {
 	var err error
 	var ret []string
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("getPostureFamilyList", "()", "[s]")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("getPostureFamilyList", "()")
 	if err != nil {
 		return ret, err
 	}
@@ -217,7 +217,7 @@ func (p *proxyALRobotPosture) SetMaxTryNumber(pMaxTryNumber int32) error {
 	if err = basic.WriteInt32(pMaxTryNumber, &buf); err != nil {
 		return fmt.Errorf("serialize pMaxTryNumber: %s", err)
 	}
-	methodID, err := p.Proxy().MetaObject().MethodID("setMaxTryNumber", "(i)", "v")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("setMaxTryNumber", "(i)")
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func (p *proxyALRobotPosture) GetPosture() (string, error) {
 	var err error
 	var ret string
 	var buf bytes.Buffer
-	methodID, err := p.Proxy().MetaObject().MethodID("getPosture", "()", "s")
+	methodID, _, err := p.Proxy().MetaObject().MethodID("getPosture", "()")
 	if err != nil {
 		return ret, err
 	}

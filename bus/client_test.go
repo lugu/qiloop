@@ -168,8 +168,7 @@ func TestProxy(t *testing.T) {
 	if signalID != 106 {
 		t.Fatalf("wrong signal id")
 	}
-	methodID, err := directory.Proxy().MetaObject().MethodID("services",
-		"()", "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
+	methodID, _, err := directory.Proxy().MetaObject().MethodID("services", "()")
 	if err != nil {
 		t.Error(err)
 	}
@@ -201,7 +200,7 @@ func TestProxy(t *testing.T) {
 	if err == nil {
 		// TODO
 	}
-	methodID, err = directory.Proxy().MetaObject().MethodID("services", "()", "[(sIsI[s]s)<ServiceInfo,name,serviceId,machineId,processId,endpoints,sessionId>]")
+	methodID, _, err = directory.Proxy().MetaObject().MethodID("services", "()")
 	if err != nil {
 		t.Error(err)
 	}

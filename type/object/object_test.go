@@ -9,14 +9,14 @@ import (
 
 func TestMetaObjectDecorator(t *testing.T) {
 	service0 := object.MetaService0
-	id, err := service0.MethodID("authenticate", "({sm})", "{sm}")
+	id, _, err := service0.MethodID("authenticate", "({sm})")
 	if err != nil {
 		panic(err)
 	}
 	if id != object.AuthenticateActionID {
 		t.Errorf("not expecting: %d", id)
 	}
-	_, err = service0.MethodID("authenticate", "({sm})", "v")
+	_, _, err = service0.MethodID("authenticate", "({sm})")
 	if err == nil {
 		// FIXME: need a better story about type comparison
 		// panic("shall fail")
