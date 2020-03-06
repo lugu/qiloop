@@ -49,7 +49,7 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 			method, sig, ret.Signature())
 	}
 	var buf bytes.Buffer
-	permission := p.client.Permission()
+	permission := p.client.Channel().Cap()
 	var e = encoding.NewEncoder(permission, &buf)
 	if err := args.Write(e); err != nil {
 		return err

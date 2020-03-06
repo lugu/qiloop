@@ -37,7 +37,7 @@ func TestClientCall(t *testing.T) {
 	}()
 
 	// client connection
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 	_, err = c.Call(nil, 1, 2, 3, []byte{0xab, 0xcd})
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
@@ -69,7 +69,7 @@ func TestProxyCall(t *testing.T) {
 	}()
 
 	// client connection
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 	proxy := bus.NewProxy(c, object.MetaService0, 1, 2)
 	_, err = proxy.CallID(3, []byte{0xab, 0xcd})
 	if err != nil {
@@ -85,7 +85,7 @@ func TestClientAlreadyCancelled(t *testing.T) {
 
 	cancel := make(chan struct{})
 	close(cancel)
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 	_, err := c.Call(cancel, 1, 2, 3, []byte{0xab, 0xcd})
 	if err != bus.ErrCancelled {
 		t.Errorf("Unexpected error: %s", err)
@@ -132,7 +132,7 @@ func TestClientCancel(t *testing.T) {
 	}()
 
 	// client connection
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 
 	cancel := make(chan struct{})
 	go func() {
@@ -226,7 +226,7 @@ func TestSelectEndPoint(t *testing.T) {
 	defer server.Terminate()
 
 	// shall connect to unix socket
-	naddr, endpoint, err := bus.SelectEndPoint([]string{
+	naddr, channel, err := bus.SelectEndPoint([]string{
 		"tcp://198.18.0.1:12",
 		addr,
 		"tcps://192.168.0.1:12",
@@ -237,27 +237,28 @@ func TestSelectEndPoint(t *testing.T) {
 	if naddr != addr {
 		t.Error("unexpected address")
 	}
+	endpoint := channel.EndPoint()
 	defer endpoint.Close()
 	// shall refuse to connect
-	naddr, endpoint, err = bus.SelectEndPoint([]string{
+	naddr, channel, err = bus.SelectEndPoint([]string{
 		"tcp://198.18.1.0",
 		"tcps://192.168.0.0",
 	}, "", "")
 	if err == nil {
 		t.Error("shall not be able to connect")
 	}
-	if endpoint != nil {
-		t.Error("non empty endpoint")
+	if channel != nil {
+		t.Error("non empty channel")
 	}
 	if naddr != "" {
 		t.Error("non empty address")
 	}
 	// shall refuse to connect to empty list
-	_, _, err = bus.SelectEndPoint(make([]string, 0), "", "")
+	_, channel, err = bus.SelectEndPoint(make([]string, 0), "", "")
 	if err == nil {
 		t.Fatalf("empty list")
 	}
-	if endpoint != nil {
+	if channel != nil {
 		t.Error("non empty endpoint")
 	}
 	if naddr != "" {
@@ -271,7 +272,7 @@ func TestClientDisconnectionError(t *testing.T) {
 	defer clientEndpoint.Close()
 
 	// client connection
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 
 	var wait sync.WaitGroup
 	var disconnectError error
@@ -296,7 +297,7 @@ func TestClientState(t *testing.T) {
 	defer clientEndpoint.Close()
 
 	// client connection
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 
 	if c.State("boom", 1) != 1 {
 		t.Error("incorrect value")
@@ -325,7 +326,7 @@ func TestClientDisconnectionSuccess(t *testing.T) {
 	defer serviceEndpoint.Close()
 
 	// client connection
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 
 	var wait sync.WaitGroup
 	var err error

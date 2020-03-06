@@ -65,7 +65,7 @@ func (s *Session) client(info services.ServiceInfo) (bus.Client, error) {
 		}
 	}
 	s.pollMutex.RUnlock()
-	addr, endpoint, err := bus.SelectEndPoint(info.Endpoints, s.userName, s.userToken)
+	addr, channel, err := bus.SelectEndPoint(info.Endpoints, s.userName, s.userToken)
 	if err != nil {
 		return nil, fmt.Errorf("service connection error (%s): %s", info.Name, err)
 	}
@@ -76,6 +76,7 @@ func (s *Session) client(info services.ServiceInfo) (bus.Client, error) {
 		delete(s.poll, addr)
 		s.pollMutex.Unlock()
 	}
+	endpoint := channel.EndPoint()
 	s.pollMutex.Lock()
 	c, ok := s.poll[addr]
 	if ok {
@@ -83,7 +84,7 @@ func (s *Session) client(info services.ServiceInfo) (bus.Client, error) {
 		endpoint.Close()
 		return c, nil
 	}
-	c = bus.NewClient(endpoint)
+	c = bus.NewClient(channel)
 	s.poll[addr] = c
 	s.pollMutex.Unlock()
 	endpoint.AddHandler(filter, consumer, closer)

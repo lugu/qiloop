@@ -33,7 +33,7 @@ func TestCancelledProxyCall(t *testing.T) {
 		}
 	}()
 
-	c := bus.NewClient(clientEndpoint)
+	c := bus.NewClient(bus.NewContext(clientEndpoint))
 	proxy := bus.NewProxy(c, object.MetaService0, 1, 2)
 	_, err = proxy.CallID(3, []byte{0xab, 0xcd})
 	if err != bus.ErrCancelled {

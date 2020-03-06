@@ -28,11 +28,11 @@ type BinaryDecoder interface {
 	Decode(Decoder) error
 }
 
-func NewEncoder(permission map[string]string, w io.Writer) Encoder {
+func NewEncoder(c Capability, w io.Writer) Encoder {
 	return qiEncoder{w}
 }
 
-func NewDecoder(permissions map[string]string, r io.Reader) Decoder {
+func NewDecoder(c Capability, r io.Reader) Decoder {
 	return qiDecoder{r}
 }
 

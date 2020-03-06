@@ -254,12 +254,12 @@ func (s *directorySession) client(info ServiceInfo) (bus.Client, error) {
 			}
 		}
 	}
-	_, endpoint, err := bus.SelectEndPoint(info.Endpoints, "", "")
+	_, channel, err := bus.SelectEndPoint(info.Endpoints, "", "")
 	if err != nil {
 		return nil, fmt.Errorf("object connection error (%s): %s",
 			info.Name, err)
 	}
-	return bus.NewClient(endpoint), nil
+	return bus.NewClient(channel), nil
 }
 
 func (s *directorySession) Object(ref object.ObjectReference) (bus.Proxy,

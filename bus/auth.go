@@ -61,16 +61,41 @@ func (c CapabilityMap) SetAuthenticated() {
 	c[KeyState] = value.Uint(StateDone)
 }
 
-// PreferedCap returns a CapabilityMap based on default settings. If
-// user or token is empty, it is ignored.
-func PreferedCap(user, token string) CapabilityMap {
-	permissions := CapabilityMap{
+func (c CapabilityMap) hasBool(val string, def bool) bool {
+	b, ok := c[val]
+	if !ok {
+		return def
+	}
+	return b == value.Bool(true)
+}
+
+func (c CapabilityMap) MetaObjectCache() bool {
+	return c.hasBool("MetaObjectCache", false)
+}
+
+func (c CapabilityMap) ObjectPtrUID() bool {
+	return c.hasBool("ObjectPtrUID", false)
+}
+
+func (c CapabilityMap) RemoteCancelableCalls() bool {
+	return c.hasBool("ObjectPtrUID", false)
+}
+
+// DefaultCap returns a CapabilityMap based on default settings.
+func DefaultCap() CapabilityMap {
+	return CapabilityMap{
 		"ClientServerSocket":    value.Bool(true),
 		"MessageFlags":          value.Bool(true),
 		"MetaObjectCache":       value.Bool(false),
 		"RemoteCancelableCalls": value.Bool(false),
 		"ObjectPtrUID":          value.Bool(false),
 	}
+}
+
+// ClientCap returns a CapabilityMap based on the default settings.
+// FIXME: get ride of the special case
+func ClientCap(user, token string) CapabilityMap {
+	permissions := DefaultCap()
 	if user != "" {
 		permissions[KeyUser] = value.String(user)
 	}
@@ -79,6 +104,7 @@ func PreferedCap(user, token string) CapabilityMap {
 	}
 	return permissions
 }
+
 
 func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
 
@@ -190,7 +216,7 @@ func authenticateContinue(endpoint net.EndPoint, prefered, resp CapabilityMap) e
 // and token. If user or token is empty, it is not included in the
 // request.
 func AuthenticateUser(endpoint net.EndPoint, user, token string) error {
-	return Authentication(endpoint, PreferedCap(user, token))
+	return Authentication(endpoint, ClientCap(user, token))
 }
 
 // Authenticate runs the authentication procedure of a given

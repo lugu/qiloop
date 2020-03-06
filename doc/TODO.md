@@ -23,6 +23,7 @@
 -   gateway implementation
 -   refactor encoding: get it from the context
 -   dbus converter (namspace + encoding + transport)
+-   value: rename types to get ride of Value suffix
 
 # Encoding introduction
 

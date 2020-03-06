@@ -176,7 +176,7 @@ func (s *server) NewService(name string, object Actor) (Service, error) {
 func (s *server) handle(stream net.Stream, authenticated bool) {
 
 	context := &channel{
-		capability: PreferedCap("", ""),
+		capability: DefaultCap(),
 	}
 	if authenticated {
 		context.SetAuthenticated()
@@ -280,7 +280,7 @@ func (s *server) Terminate() error {
 func (s *server) Client() Client {
 	ctl, srv := gonet.Pipe()
 	s.handle(net.ConnStream(srv), true)
-	return NewClient(net.ConnEndPoint(ctl))
+	return NewClient(NewChannel(net.ConnEndPoint(ctl), DefaultCap()))
 }
 
 // Session returns a local session able to contact local services

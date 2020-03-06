@@ -366,7 +366,7 @@ type clientObject struct {
 // NewClientObject returns an Actor which forwards messages to a
 // remote object.
 //
-// TODO: Why this can't work correctly:
+// WARNING: Why this can't work correctly:
 // - Pb 1: the client side does not know its public object id. this
 // means for methods like MetaObject(id uint32), it can't correctly
 // compare its object id with the one embedded in the payload. in
@@ -389,7 +389,7 @@ func NewClientObject(remoteID uint32, from Channel) Actor {
 	return &clientObject{
 		remoteID: remoteID,
 		channel:  from,
-		client:   NewClient(from.EndPoint()),
+		client:   NewClient(from),
 	}
 }
 

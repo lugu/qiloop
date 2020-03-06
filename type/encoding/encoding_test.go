@@ -111,8 +111,8 @@ func (i *Info) Decode(d encoding.Decoder) error {
 
 func TestBasic(t *testing.T) {
 	var buf bytes.Buffer
-	permission := make(map[string]string)
 
+	permission := encoding.DefaultCap()
 	encoder := encoding.NewEncoder(permission, &buf)
 
 	if err := encoder.Encode(int16(1)); err != nil {
@@ -153,7 +153,7 @@ func TestBasic(t *testing.T) {
 
 func TestStruct(t *testing.T) {
 	var buf bytes.Buffer
-	permission := make(map[string]string)
+	permission := encoding.DefaultCap()
 
 	in := ref
 	encoder := encoding.NewEncoder(permission, &buf)
@@ -178,7 +178,7 @@ func TestDecodeSlice(t *testing.T) {
 	b := bytes.NewBuffer([]byte{
 		0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x0,
 	})
-	permission := make(map[string]string)
+	permission := encoding.DefaultCap()
 	decoder := encoding.NewDecoder(permission, b)
 	var a []int16
 	err := decoder.Decode(&a)
@@ -227,7 +227,7 @@ var testData = map[string]interface{}{
 }
 
 func TestEncode(t *testing.T) {
-	permission := make(map[string]string)
+	permission := encoding.DefaultCap()
 	for name, test := range testData {
 		var buf bytes.Buffer
 		encoder := encoding.NewEncoder(permission, &buf)
@@ -259,7 +259,7 @@ func TestEncode(t *testing.T) {
 func helpBenchPrepareDecoder(n int) io.Reader {
 	var buf bytes.Buffer
 	for i := 0; i < n; i++ {
-		permission := make(map[string]string)
+		permission := encoding.DefaultCap()
 		encoder := encoding.NewEncoder(permission, &buf)
 		err := encoder.Encode(ref)
 		if err != nil {
@@ -296,7 +296,7 @@ func BenchmarkReadInfoBaseLine(b *testing.B) {
 
 func BenchmarkReadInfoCodeGen(b *testing.B) {
 	reader := helpBenchPrepareDecoder(b.N)
-	permission := make(map[string]string)
+	permission := encoding.DefaultCap()
 	decoder := encoding.NewDecoder(permission, reader)
 	a := make([]Info, b.N)
 	b.ResetTimer()
@@ -322,7 +322,7 @@ func BenchmarkReadInfoCodeGen(b *testing.B) {
 
 func BenchmarkReadInfoReflect(b *testing.B) {
 	reader := helpBenchPrepareDecoder(b.N)
-	permission := make(map[string]string)
+	permission := encoding.DefaultCap()
 	decoder := encoding.NewDecoder(permission, reader)
 	a := make([]InfoReflect, b.N)
 	b.ResetTimer()
@@ -425,7 +425,7 @@ func BenchmarkWriteInfoBaseLine(b *testing.B) {
 
 func BenchmarkWriteInfoCodeGen(b *testing.B) {
 	writer := bytes.NewBuffer(make([]byte, b.N*8))
-	permission := make(map[string]string)
+	permission := encoding.DefaultCap()
 	encoder := encoding.NewEncoder(permission, writer)
 	a := info
 	for i := 0; i < b.N; i++ {
@@ -440,7 +440,7 @@ func BenchmarkWriteInfoCodeGen(b *testing.B) {
 
 func BenchmarkWriteInfoReflect(b *testing.B) {
 	writer := bytes.NewBuffer(make([]byte, b.N*8))
-	permission := make(map[string]string)
+	permission := encoding.DefaultCap()
 	encoder := encoding.NewEncoder(permission, writer)
 	a := ref
 	for i := 0; i < b.N; i++ {

@@ -25,7 +25,7 @@ func DirectClient(obj Actor) Client {
 		}
 	}()
 	server.MakeHandler(filter, queue, nil)
-	return NewClient(proxy)
+	return NewClient(NewContext(proxy))
 }
 
 type clientService struct {

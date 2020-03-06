@@ -34,8 +34,8 @@ type Client interface {
 	// RegisterEvent and UnregisterEvent.
 	State(signal string, increment int) int
 
-	// Permission returns the negociated capability map
-	Permission() map[string]string
+	// returns the underlying channel
+	Channel() Channel
 }
 
 // Proxy represents a reference to a remote service. It allows to

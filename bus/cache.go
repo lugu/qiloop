@@ -23,7 +23,8 @@ func (s *Cache) Proxy(name string, objectID uint32) (Proxy, error) {
 	}
 	meta := s.Services[serviceID]
 
-	client := NewClient(s.Endpoint)
+	channel := NewChannel(s.Endpoint, DefaultCap())
+	client := NewClient(channel)
 	return NewProxy(client, meta, serviceID, objectID), nil
 }
 
@@ -50,7 +51,8 @@ func (s *Cache) AddService(name string, serviceID uint32,
 // the cache.
 func (s *Cache) Lookup(name string, serviceID uint32) error {
 	objectID := uint32(1)
-	meta, err := GetMetaObject(NewClient(s.Endpoint),
+	channel := NewChannel(s.Endpoint, DefaultCap())
+	meta, err := GetMetaObject(NewClient(channel),
 		serviceID, objectID)
 	if err != nil {
 		return fmt.Errorf("Can not reach metaObject: %s", err)

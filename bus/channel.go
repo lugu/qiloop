@@ -11,10 +11,11 @@ import (
 type Channel interface {
 	Cap() CapabilityMap
 	EndPoint() net.EndPoint
-	Authenticated() bool
 	Send(msg *net.Message) error
 	SendError(msg *net.Message, err error) error
 	SendReply(msg *net.Message, response []byte) error
+	Authenticate() error
+	Authenticated() bool
 	SetAuthenticated()
 }
 
@@ -25,11 +26,19 @@ type channel struct {
 	endpoint   net.EndPoint
 }
 
+// NewChannel retuns a channel
+func NewChannel(e net.EndPoint, c CapabilityMap) Channel {
+	return &channel{
+		endpoint:   e,
+		capability: c,
+	}
+}
+
 // NewContext retuns a non authenticate context.
 func NewContext(e net.EndPoint) Channel {
 	return &channel{
 		endpoint:   e,
-		capability: PreferedCap("", ""),
+		capability: DefaultCap(),
 	}
 }
 
@@ -59,6 +68,11 @@ func (c *channel) SendReply(msg *net.Message, response []byte) error {
 // Send send a reply message in response to msg.
 func (c *channel) Send(msg *net.Message) error {
 	return c.endpoint.Send(*msg)
+}
+
+// Authenticate runs the authenticate procedure
+func (c *channel) Authenticate() error {
+	return Authentication(c.endpoint, c.capability)
 }
 
 // Authenticated returns true if the connection is authenticated.

@@ -8,6 +8,7 @@ import (
 
 	"github.com/lugu/qiloop/bus/net"
 	"github.com/lugu/qiloop/type/value"
+	secret "github.com/lugu/qiloop/bus/session/token"
 )
 
 type client struct {
@@ -16,7 +17,7 @@ type client struct {
 	messageIDMutex sync.Mutex
 	state          map[string]int
 	stateMutex     sync.Mutex
-	permission     map[string]string
+	capability     CapabilityMap
 }
 
 func (c *client) nextMessageID() uint32 {
@@ -207,18 +208,17 @@ func (c *client) State(signal string, add int) int {
 	return next
 }
 
-func (c *client) Permission() map[string]string {
-	return c.permission
+func (c *client) Channel() Channel {
+	return NewChannel(c.endpoint, c.capability)
 }
 
 // NewClient returns a new client.
-// TODO: pass permission by argument
-func NewClient(endpoint net.EndPoint) Client {
+func NewClient(channel Channel) Client {
 	return &client{
-		endpoint:  endpoint,
+		endpoint:  channel.EndPoint(),
 		messageID: 1,
 		state:     map[string]int{},
-		permission: make(map[string]string),
+		capability: channel.Cap(),
 	}
 }
 
@@ -227,7 +227,7 @@ func NewClient(endpoint net.EndPoint) Client {
 // invalid IP addresses such as test ranges (198.18.0.x).
 // User and token are user during Authentication. If user and token
 // are empty, the file .qiloop-auth.conf is read.
-func SelectEndPoint(addrs []string, user, token string) (addr string, endpoint net.EndPoint, err error) {
+func SelectEndPoint(addrs []string, user, token string) (addr string, channel Channel, err error) {
 	if len(addrs) == 0 {
 		return "", nil, fmt.Errorf("empty address list")
 	}
@@ -239,20 +239,24 @@ func SelectEndPoint(addrs []string, user, token string) (addr string, endpoint n
 		if strings.Contains(addr, "198.18.0") {
 			continue
 		}
+		var endpoint net.EndPoint
 		endpoint, err = net.DialEndPoint(addr)
 		if err != nil {
 			continue
 		}
+
 		if user == "" && token == "" {
-			err = Authenticate(endpoint)
-		} else {
-			err = AuthenticateUser(endpoint, user, token)
+			user, token = secret.GetUserToken()
 		}
+
+		capability := ClientCap(user, token)
+		channel := NewChannel(endpoint, capability)
+		err = channel.Authenticate()
 		if err != nil {
 			return "", nil, fmt.Errorf("authentication error: %s",
 				err)
 		}
-		return addr, endpoint, nil
+		return addr, channel, nil
 	}
 	return "", nil, err
 }
