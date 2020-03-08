@@ -8,7 +8,6 @@ import (
 
 	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/basic"
-	"github.com/lugu/qiloop/type/encoding"
 )
 
 const (
@@ -32,11 +31,6 @@ var (
 type Value interface {
 	Signature() string
 	Write(w io.Writer) error
-}
-
-// TODO: replace Value.Write
-func Write2(v Value, e encoding.Encoder) error {
-	return fmt.Errorf("Not yet implemented")
 }
 
 // Bytes returns the content of the value (i.e. without the

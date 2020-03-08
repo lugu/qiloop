@@ -664,56 +664,11 @@ func (p *proxyServiceZero) Proxy() Proxy {
 func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
 	var err error
 	var ret map[string]value.Value
-	var buf bytes.Buffer
-	if err = func() error {
-		err := basic.WriteUint32(uint32(len(capability)), &buf)
-		if err != nil {
-			return fmt.Errorf("write map size: %s", err)
-		}
-		for k, v := range capability {
-			err = basic.WriteString(k, &buf)
-			if err != nil {
-				return fmt.Errorf("write map key: %s", err)
-			}
-			err = v.Write(&buf)
-			if err != nil {
-				return fmt.Errorf("write map value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return ret, fmt.Errorf("serialize capability: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("authenticate", "({sm})")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("({sm})", capability)
+	resp := NewResponse("{sm}", &ret)
+	err = p.Proxy().Call2("authenticate", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call authenticate failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (m map[string]value.Value, err error) {
-		size, err := basic.ReadUint32(resp)
-		if err != nil {
-			return m, fmt.Errorf("read map size: %s", err)
-		}
-		m = make(map[string]value.Value, size)
-		for i := 0; i < int(size); i++ {
-			k, err := basic.ReadString(resp)
-			if err != nil {
-				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
-			}
-			v, err := value.NewValue(resp)
-			if err != nil {
-				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
-			}
-			m[k] = v
-		}
-		return m, nil
-	}()
-	if err != nil {
-		return ret, fmt.Errorf("parse authenticate response: %s", err)
 	}
 	return ret, nil
 }

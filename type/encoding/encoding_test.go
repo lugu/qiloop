@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/lugu/qiloop/type/encoding"
+	"github.com/lugu/qiloop/type/value"
 )
 
 type InfoReflect struct {
@@ -253,6 +254,54 @@ func TestEncode(t *testing.T) {
 			t.Errorf("%s:\nhave %#v\nwant %#v\n%#v",
 				name, val, test, buf.Bytes())
 		}
+	}
+}
+
+func TestMapValue(t *testing.T) {
+	test := map[string]value.Value{
+		"a": value.Bool(true),
+		"b": value.Int(12),
+		"c": value.String("oups"),
+	}
+	var buf bytes.Buffer
+	permission := encoding.DefaultCap()
+	encoder := encoding.NewEncoder(permission, &buf)
+	err := encoder.Encode(test)
+	if err != nil {
+		t.Errorf("Encode failed: %v", err)
+	}
+	decoder := encoding.NewDecoder(permission, &buf)
+	val := map[string]value.Value{}
+	err = decoder.Decode(&val)
+	if err != nil {
+		t.Errorf("Decode failed: %v", err)
+	}
+	if !reflect.DeepEqual(val, test) {
+		t.Errorf("Not the same: %#v vs %#v", val, test)
+	}
+}
+
+func TestSliceValue(t *testing.T) {
+	test := []value.Value{
+		value.Bool(true),
+		value.Int(12),
+		value.String("oups"),
+	}
+	var buf bytes.Buffer
+	permission := encoding.DefaultCap()
+	encoder := encoding.NewEncoder(permission, &buf)
+	err := encoder.Encode(test)
+	if err != nil {
+		t.Errorf("Encode failed: %v", err)
+	}
+	decoder := encoding.NewDecoder(permission, &buf)
+	val := []value.Value{}
+	err = decoder.Decode(&val)
+	if err != nil {
+		t.Errorf("Decode failed: %v", err)
+	}
+	if !reflect.DeepEqual(val, test) {
+		t.Errorf("Not the same: %#v vs %#v", val, test)
 	}
 }
 

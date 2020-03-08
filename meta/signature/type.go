@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"reflect"
 
 	"github.com/dave/jennifer/jen"
 )
@@ -410,6 +411,20 @@ func NewObjectType() Type {
 		},
 		reader: reader,
 	}
+}
+
+func TypeIsObjectReference(t Type) bool {
+	if t.Signature() != "o" {
+		return false
+	}
+	name := t.TypeName()
+	if reflect.DeepEqual(name,
+		jen.Qual("github.com/lugu/qiloop/type/object",
+		"ObjectReference"),
+	) {
+		return true
+	}
+	return false
 }
 
 // NewUnknownType is a contructor for an unknown type.

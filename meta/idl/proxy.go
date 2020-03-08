@@ -356,7 +356,7 @@ func generateProxyMethod(file *jen.File, serviceName string,
 		returnType = signature.NewMetaObjectType()
 	}
 
-	body, err := methodBodyBlock(method, paramType, returnType)
+	body, err := methodBodyBlock2(method, paramType, returnType)
 	if err != nil {
 		return fmt.Errorf("generate body: %s", err)
 	}
@@ -416,7 +416,8 @@ func generateSubscribe(file *jen.File, serviceName, actionName, methodName strin
 					close(ch)
 					return
 				}`),
-			jen.Id("buf := bytes.NewBuffer(payload)"),
+			jen.Id("buf").Op(":=").Qual("bytes", "NewBuffer").
+				Call(jen.Id("payload")),
 			jen.Id("_ = buf // discard unused variable error"),
 			jen.List(jen.Id("e"),
 				jen.Err()).Op(":=").Add(actionType.Unmarshal("buf")),
@@ -536,6 +537,7 @@ func generatePropertySet(file *jen.File, serviceName string,
 	return nil
 }
 
+// TODO: delete me
 func methodBodyBlock(method Method, params *signature.TupleType,
 	ret signature.Type) (*Statement, error) {
 	writing := make([]jen.Code, 0)
@@ -581,6 +583,83 @@ func methodBodyBlock(method Method, params *signature.TupleType,
 		writing = append(writing, jen.Return(jen.Nil()))
 	}
 
+	return jen.Block(
+		writing...,
+	), nil
+}
+
+func methodBodyBlock2(method Method, params *signature.TupleType,
+	ret signature.Type) (*Statement, error) {
+	writing := []jen.Code{}
+	if ret.Signature() == "v" {
+		writing = append(writing, jen.Var().Id("ret").Struct())
+	} else {
+		writing = append(writing, jen.Var().Id("ret").Add(ret.TypeName()))
+	}
+	args := []jen.Code{
+		jen.Lit(params.Signature()),
+	}
+	for _, v := range params.Members {
+		if v.Type.Signature() == "o" {
+			args = append(args,
+			jen.Qual( "github.com/lugu/qiloop/bus",
+			"ObjectReference").Call(
+				jen.Id(v.Name).Op(".").Id("Proxy").Call(),
+			))
+		} else {
+			args = append(args, jen.Id(v.Name))
+		}
+	}
+	writing = append(writing, jen.Id("args").Op(":=").Qual(
+		"github.com/lugu/qiloop/bus", "NewParams",
+	).Call(args...))
+
+	if ret.Signature() == "o" && !signature.TypeIsObjectReference(ret) {
+		writing = append(writing, jen.Var().Id("retRef").Qual(
+			"github.com/lugu/qiloop/type/object", "ObjectReference",
+		))
+		writing = append(writing, jen.Id("resp").Op(":=").Qual(
+			"github.com/lugu/qiloop/bus", "NewResponse",
+		).Call( jen.Lit(ret.Signature()), jen.Op("&").Id("retRef")))
+	} else {
+		writing = append(writing, jen.Id("resp").Op(":=").Qual(
+			"github.com/lugu/qiloop/bus", "NewResponse",
+		).Call( jen.Lit(ret.Signature()), jen.Op("&").Id("ret")))
+	}
+	writing = append(writing, jen.Id("err").Op(":=").Id("p").Op(".").
+		Id("Proxy").Call().Op(".").Id("Call2").Call(
+			jen.Lit(method.Name), jen.Id("args"), jen.Id("resp"),
+		),
+	)
+	if ret.Signature() == "v" {
+		writing = append(writing, jen.Id(`if err != nil {
+		return fmt.Errorf("call ` + method.Name + ` failed: %s", err)
+		}
+		return nil`))
+	} else {
+		writing = append(writing, jen.Id(
+		`if err != nil {
+			return ret, fmt.Errorf("call ` + method.Name + ` failed: %s", err)
+		}`))
+		if ret.Signature() == "o" &&
+			!signature.TypeIsObjectReference(ret) {
+
+			var name string
+			switch v := ret.(type) {
+			case *RefType:
+				name = v.Name
+			case *InterfaceType:
+				name = v.Name
+			}
+			writing = append(writing, jen.Id(
+			`proxy, err := p.session.Object(retRef)
+			if err != nil {
+				return nil, fmt.Errorf("proxy: %s", err)
+			}
+			ret = Make` + name + `(p.session, proxy)`))
+		}
+		writing = append(writing, jen.Id(`return ret, nil`))
+	}
 	return jen.Block(
 		writing...,
 	), nil

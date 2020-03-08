@@ -6,11 +6,16 @@ import (
 	"reflect"
 
 	"github.com/lugu/qiloop/type/basic"
+	"github.com/lugu/qiloop/type/value"
 )
 
 const (
 	listValueMaxSize = 4096
 )
+
+type Writer interface {
+	Write(w io.Writer) error
+}
 
 type Encoder interface {
 	Encode(interface{}) error
@@ -20,12 +25,20 @@ type Decoder interface {
 	Decode(interface{}) error
 }
 
-type BinaryEncoder interface {
+type CustomEncoder interface {
 	Encode(Encoder) error
 }
 
-type BinaryDecoder interface {
+type CustomDecoder interface {
 	Decode(Decoder) error
+}
+
+type BinaryEncoder interface {
+	Write(io.Writer) error
+}
+
+type BinaryDecoder interface {
+	Read(io.Reader) error
 }
 
 func NewEncoder(c Capability, w io.Writer) Encoder {
@@ -42,6 +55,17 @@ type qiEncoder struct {
 
 func (q qiEncoder) value(v reflect.Value) error {
 	switch v.Kind() {
+	case reflect.Interface:
+		i := v.Interface()
+		w, ok := i.(BinaryEncoder)
+		if ok {
+			return w.Write(q.w)
+		}
+		e, ok := i.(CustomEncoder)
+		if ok {
+			return e.Encode(q)
+		}
+		return fmt.Errorf("cannot encode interface")
 	case reflect.Ptr:
 		return q.value(v.Elem())
 	case reflect.Bool:
@@ -111,6 +135,10 @@ func (q qiEncoder) value(v reflect.Value) error {
 
 func (q qiEncoder) Encode(x interface{}) error {
 	switch v := x.(type) {
+	case BinaryEncoder:
+		return v.Write(q.w)
+	case CustomEncoder:
+		return v.Encode(q)
 	case string:
 		return basic.WriteString(v, q.w)
 	case bool:
@@ -135,8 +163,6 @@ func (q qiEncoder) Encode(x interface{}) error {
 		return basic.WriteFloat32(v, q.w)
 	case float64:
 		return basic.WriteFloat64(v, q.w)
-	case BinaryEncoder:
-		return v.Encode(q)
 	}
 
 	v := reflect.ValueOf(x)
@@ -145,6 +171,7 @@ func (q qiEncoder) Encode(x interface{}) error {
 	case reflect.Slice: // ok
 	case reflect.Map: // ok
 	case reflect.Struct: // ok
+	case reflect.String: // ok
 	default:
 		return fmt.Errorf("can only read from pointer, map or slice, not kind: %d", v.Kind())
 	}
@@ -187,9 +214,36 @@ func (q qiDecoder) sliceValue(v reflect.Value) error {
 	}
 	v.SetLen(l)
 	for i := 0; i < l; i++ {
-		q.value(v.Index(i))
+		m, err := q.readValue(v.Type().Elem())
+		if err != nil {
+			return fmt.Errorf("failed to read value: %w", err)
+		}
+		v.Index(i).Set(m)
 	}
 	return nil
+}
+
+func (q qiDecoder) readValue(typ reflect.Type) (v reflect.Value, err error) {
+	if typ.Kind() == reflect.Interface {
+		// not much we can do here. let's handle the
+		// special case of value.Value
+		if typ.Name() == "Value" {
+			m, err := value.NewValue(q.r)
+			if err != nil {
+				return v, fmt.Errorf("value.Value: %w", err)
+			}
+			return reflect.ValueOf(m), nil
+		} else {
+			return v, fmt.Errorf("cannot read interfacee: %v",
+				typ.Name())
+		}
+	}
+	el := reflect.New(typ)
+	err = q.value(el)
+	if err != nil {
+		return v, fmt.Errorf("read %v: %w", typ.Name(), err)
+	}
+	return el.Elem(), nil
 }
 
 func (q qiDecoder) mapValue(v reflect.Value) error {
@@ -218,29 +272,56 @@ func (q qiDecoder) mapValue(v reflect.Value) error {
 		v.Set(reflect.MakeMapWithSize(v.Type(), l))
 	}
 	for i := 0; i < l; i++ {
-		key := reflect.New(v.Type().Key())
-		err := q.value(key)
+		keyEl, err := q.readValue(v.Type().Key())
 		if err != nil {
-			return fmt.Errorf("read map key failed: %w", err)
+			return fmt.Errorf("key: %w", err)
 		}
-		el := reflect.New(v.Type().Elem())
-		err = q.value(el)
+		valEl, err := q.readValue(v.Type().Elem())
 		if err != nil {
-			return fmt.Errorf("read map element failed: %w", err)
+			return fmt.Errorf("value: %w", err)
 		}
-		v.SetMapIndex(key.Elem(), el.Elem())
+		v.SetMapIndex(keyEl, valEl)
 	}
 	return nil
 }
 
 func (q qiDecoder) value(v reflect.Value) error {
 	switch v.Kind() {
+	case reflect.Interface:
+		i := v.Interface()
+		b, ok := i.(BinaryDecoder)
+		if ok {
+			return b.Read(q.r)
+		}
+		e, ok := i.(CustomDecoder)
+		if ok {
+			return e.Decode(q)
+		}
+		_, ok = i.(value.Value)
+		if ok {
+			m, err := value.NewValue(q.r)
+			if err != nil {
+				return err
+			}
+			v.Set(reflect.ValueOf(m))
+			return nil
+		}
+		return fmt.Errorf("cannot decode interface: %v of %v (%v of %v)",
+			v, v.Type(), i, reflect.ValueOf(i))
 	case reflect.Ptr:
 		v = v.Elem()
 		if v.Kind() == reflect.Slice {
 			return q.sliceValue(v)
 		} else if v.Kind() == reflect.Map {
 			return q.mapValue(v)
+		} else if v.Kind() == reflect.Interface && v.IsNil() {
+			el, err := q.readValue(v.Type())
+			if err != nil {
+				return fmt.Errorf("read %v: %w",
+					v.Type().Name(), err)
+			}
+			v.Set(el)
+			return nil
 		}
 		return q.value(v)
 	case reflect.Struct:
@@ -326,6 +407,10 @@ func (q qiDecoder) value(v reflect.Value) error {
 
 func (q qiDecoder) Decode(x interface{}) (err error) {
 	switch v := x.(type) {
+	case CustomDecoder:
+		return v.Decode(q)
+	case BinaryDecoder:
+		return v.Read(q.r)
 	case *string:
 		*v, err = basic.ReadString(q.r)
 		return err
@@ -366,8 +451,6 @@ func (q qiDecoder) Decode(x interface{}) (err error) {
 	case *float64:
 		*v, err = basic.ReadFloat64(q.r)
 		return err
-	case BinaryDecoder:
-		return v.Decode(q)
 	}
 
 	v := reflect.ValueOf(x)

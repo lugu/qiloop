@@ -158,8 +158,9 @@ func methodBodyBlock(itf *idl.InterfaceType, method idl.Method,
 	}
 	if callErr != nil {
 		return c.SendError(msg, callErr)
-	}
-	var out bytes.Buffer`)
+	} `)
+	writing = append(writing, code)
+	code = jen.Var().Id("out").Qual("bytes", "Buffer")
 	writing = append(writing, code)
 	if ret.Signature() != "v" {
 		code = jen.Id("errOut").Op(":=").Add(ret.Marshal("ret", "&out"))

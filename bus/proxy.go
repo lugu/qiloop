@@ -21,6 +21,14 @@ type proxy struct {
 	object  uint32
 }
 
+func ObjectReference(p Proxy) object.ObjectReference {
+	return object.ObjectReference {
+		MetaObject: *p.MetaObject(),
+		ServiceID: p.ServiceID(),
+		ObjectID: p.ObjectID(),
+	}
+}
+
 // CallID construct a call message and send it to the client endpoint.
 func (p proxy) CallID(actionID uint32, payload []byte) ([]byte, error) {
 	return p.client.Call(p.ctx.Done(), p.service, p.object, actionID, payload)
@@ -52,7 +60,7 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 	permission := p.client.Channel().Cap()
 	var e = encoding.NewEncoder(permission, &buf)
 	if err := args.Write(e); err != nil {
-		return err
+		return fmt.Errorf("encode param: %w", err)
 	}
 	res, err := p.CallID(methodID, buf.Bytes())
 	if err != nil {
@@ -62,7 +70,7 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 	dec := encoding.NewDecoder(permission, buf2)
 	err = ret.Read(dec)
 	if err != nil {
-		return err
+		return fmt.Errorf("decode result: %w", err)
 	}
 	return nil
 }
