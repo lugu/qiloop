@@ -76,10 +76,6 @@ func TestParseBasics(t *testing.T) {
 	testUtil(t, "X", NewUnknownType())
 }
 
-func TestParseMultipleString(t *testing.T) {
-	testUtil(t, "ss", NewStringType())
-}
-
 func TestParseEmpty(t *testing.T) {
 	t.SkipNow()
 	testUtil(t, "", nil)
@@ -223,6 +219,7 @@ func TestParseError(t *testing.T) {
 	check("[")
 	check("[]")
 	check("[sb]")
+	check("delay")
 }
 
 func TestInternalFunc(t *testing.T) {

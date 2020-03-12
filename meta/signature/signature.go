@@ -281,9 +281,12 @@ func init() {
 func Parse(input string) (Type, error) {
 	text := []byte(input)
 
-	root, _ := typeSignature(parsec.NewScanner(text))
+	root, rest := typeSignature(parsec.NewScanner(text))
 	if root == nil {
 		return nil, fmt.Errorf("parse signature: %s", input)
+	}
+	if !rest.Endof() {
+		return nil, fmt.Errorf("Signature not completely parsed: %s", text)
 	}
 	types, ok := root.([]Node)
 	if !ok {
