@@ -885,16 +885,10 @@ func (p *proxyLogProvider) WithContext(ctx context.Context) LogProviderProxy {
 
 // SetVerbosity calls the remote procedure
 func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
-	var err error
-	var buf bytes.Buffer
-	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("setVerbosity", "((i)<LogLevel,level>)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("((i)<LogLevel,level>)", level)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("setVerbosity", args, resp)
 	if err != nil {
 		return fmt.Errorf("call setVerbosity failed: %s", err)
 	}
@@ -903,19 +897,10 @@ func (p *proxyLogProvider) SetVerbosity(level LogLevel) error {
 
 // SetCategory calls the remote procedure
 func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteString(category, &buf); err != nil {
-		return fmt.Errorf("serialize category: %s", err)
-	}
-	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("setCategory", "(s(i)<LogLevel,level>)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("(s(i)<LogLevel,level>)", category, level)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("setCategory", args, resp)
 	if err != nil {
 		return fmt.Errorf("call setCategory failed: %s", err)
 	}
@@ -924,32 +909,10 @@ func (p *proxyLogProvider) SetCategory(category string, level LogLevel) error {
 
 // ClearAndSet calls the remote procedure
 func (p *proxyLogProvider) ClearAndSet(filters map[string]LogLevel) error {
-	var err error
-	var buf bytes.Buffer
-	if err = func() error {
-		err := basic.WriteUint32(uint32(len(filters)), &buf)
-		if err != nil {
-			return fmt.Errorf("write map size: %s", err)
-		}
-		for k, v := range filters {
-			err = basic.WriteString(k, &buf)
-			if err != nil {
-				return fmt.Errorf("write map key: %s", err)
-			}
-			err = writeLogLevel(v, &buf)
-			if err != nil {
-				return fmt.Errorf("write map value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("serialize filters: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("clearAndSet", "({s(i)<LogLevel,level>})")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("({s(i)<LogLevel,level>})", filters)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("clearAndSet", args, resp)
 	if err != nil {
 		return fmt.Errorf("call clearAndSet failed: %s", err)
 	}
@@ -1000,16 +963,10 @@ func (p *proxyLogListener) WithContext(ctx context.Context) LogListenerProxy {
 
 // SetLevel calls the remote procedure
 func (p *proxyLogListener) SetLevel(level LogLevel) error {
-	var err error
-	var buf bytes.Buffer
-	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("setLevel", "((i)<LogLevel,level>)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("((i)<LogLevel,level>)", level)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("setLevel", args, resp)
 	if err != nil {
 		return fmt.Errorf("call setLevel failed: %s", err)
 	}
@@ -1018,19 +975,10 @@ func (p *proxyLogListener) SetLevel(level LogLevel) error {
 
 // AddFilter calls the remote procedure
 func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteString(category, &buf); err != nil {
-		return fmt.Errorf("serialize category: %s", err)
-	}
-	if err = writeLogLevel(level, &buf); err != nil {
-		return fmt.Errorf("serialize level: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("addFilter", "(s(i)<LogLevel,level>)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("(s(i)<LogLevel,level>)", category, level)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("addFilter", args, resp)
 	if err != nil {
 		return fmt.Errorf("call addFilter failed: %s", err)
 	}
@@ -1039,13 +987,10 @@ func (p *proxyLogListener) AddFilter(category string, level LogLevel) error {
 
 // ClearFilters calls the remote procedure
 func (p *proxyLogListener) ClearFilters() error {
-	var err error
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("clearFilters", "()")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("()")
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("clearFilters", args, resp)
 	if err != nil {
 		return fmt.Errorf("call clearFilters failed: %s", err)
 	}
@@ -1284,28 +1229,10 @@ func (p *proxyLogManager) WithContext(ctx context.Context) LogManagerProxy {
 
 // Log calls the remote procedure
 func (p *proxyLogManager) Log(messages []LogMessage) error {
-	var err error
-	var buf bytes.Buffer
-	if err = func() error {
-		err := basic.WriteUint32(uint32(len(messages)), &buf)
-		if err != nil {
-			return fmt.Errorf("write slice size: %s", err)
-		}
-		for _, v := range messages {
-			err = writeLogMessage(v, &buf)
-			if err != nil {
-				return fmt.Errorf("write slice value: %s", err)
-			}
-		}
-		return nil
-	}(); err != nil {
-		return fmt.Errorf("serialize messages: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("log", "([(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>])")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("([(s(i)<LogLevel,level>sssI(L)<TimePoint,ns>(L)<TimePoint,ns>)<LogMessage,source,level,category,location,message,id,date,systemDate>])", messages)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("log", args, resp)
 	if err != nil {
 		return fmt.Errorf("call log failed: %s", err)
 	}
@@ -1314,113 +1241,58 @@ func (p *proxyLogManager) Log(messages []LogMessage) error {
 
 // CreateListener calls the remote procedure
 func (p *proxyLogManager) CreateListener() (LogListenerProxy, error) {
-	var err error
 	var ret LogListenerProxy
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("createListener", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("()")
+	var retRef object.ObjectReference
+	resp := bus.NewResponse("o", &retRef)
+	err := p.Proxy().Call2("createListener", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call createListener failed: %s", err)
 	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (LogListenerProxy, error) {
-		ref, err := object.ReadObjectReference(resp)
-		if err != nil {
-			return nil, fmt.Errorf("get meta: %s", err)
-		}
-		proxy, err := p.session.Object(ref)
-		if err != nil {
-			return nil, fmt.Errorf("get proxy: %s", err)
-		}
-		return MakeLogListener(p.session, proxy), nil
-	}()
+	proxy, err := p.session.Object(retRef)
 	if err != nil {
-		return ret, fmt.Errorf("parse createListener response: %s", err)
+		return nil, fmt.Errorf("proxy: %s", err)
 	}
+	ret = MakeLogListener(p.session, proxy)
 	return ret, nil
 }
 
 // GetListener calls the remote procedure
 func (p *proxyLogManager) GetListener() (LogListenerProxy, error) {
-	var err error
 	var ret LogListenerProxy
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("getListener", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("()")
+	var retRef object.ObjectReference
+	resp := bus.NewResponse("o", &retRef)
+	err := p.Proxy().Call2("getListener", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call getListener failed: %s", err)
 	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (LogListenerProxy, error) {
-		ref, err := object.ReadObjectReference(resp)
-		if err != nil {
-			return nil, fmt.Errorf("get meta: %s", err)
-		}
-		proxy, err := p.session.Object(ref)
-		if err != nil {
-			return nil, fmt.Errorf("get proxy: %s", err)
-		}
-		return MakeLogListener(p.session, proxy), nil
-	}()
+	proxy, err := p.session.Object(retRef)
 	if err != nil {
-		return ret, fmt.Errorf("parse getListener response: %s", err)
+		return nil, fmt.Errorf("proxy: %s", err)
 	}
+	ret = MakeLogListener(p.session, proxy)
 	return ret, nil
 }
 
 // AddProvider calls the remote procedure
 func (p *proxyLogManager) AddProvider(source LogProviderProxy) (int32, error) {
-	var err error
 	var ret int32
-	var buf bytes.Buffer
-	if err = func() error {
-		meta, err := source.MetaObject(source.Proxy().ObjectID())
-		if err != nil {
-			return fmt.Errorf("get meta: %s", err)
-		}
-		ref := object.ObjectReference{
-			MetaObject: meta,
-			ServiceID:  source.Proxy().ServiceID(),
-			ObjectID:   source.Proxy().ObjectID(),
-		}
-		return object.WriteObjectReference(ref, &buf)
-	}(); err != nil {
-		return ret, fmt.Errorf("serialize source: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("addProvider", "(o)")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("(o)", bus.ObjectReference(source.Proxy()))
+	resp := bus.NewResponse("i", &ret)
+	err := p.Proxy().Call2("addProvider", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call addProvider failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = basic.ReadInt32(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse addProvider response: %s", err)
 	}
 	return ret, nil
 }
 
 // RemoveProvider calls the remote procedure
 func (p *proxyLogManager) RemoveProvider(sourceID int32) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteInt32(sourceID, &buf); err != nil {
-		return fmt.Errorf("serialize sourceID: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("removeProvider", "(i)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("(i)", sourceID)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("removeProvider", args, resp)
 	if err != nil {
 		return fmt.Errorf("call removeProvider failed: %s", err)
 	}

@@ -4,11 +4,9 @@
 package proxy
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
-	basic "github.com/lugu/qiloop/type/basic"
 )
 
 // ALMotionProxy represents a proxy object to the service
@@ -51,13 +49,10 @@ func (p *proxyALMotion) WithContext(ctx context.Context) ALMotionProxy {
 
 // WakeUp calls the remote procedure
 func (p *proxyALMotion) WakeUp() error {
-	var err error
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("wakeUp", "()")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("()")
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("wakeUp", args, resp)
 	if err != nil {
 		return fmt.Errorf("call wakeUp failed: %s", err)
 	}
@@ -66,13 +61,10 @@ func (p *proxyALMotion) WakeUp() error {
 
 // Rest calls the remote procedure
 func (p *proxyALMotion) Rest() error {
-	var err error
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("rest", "()")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("()")
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("rest", args, resp)
 	if err != nil {
 		return fmt.Errorf("call rest failed: %s", err)
 	}
@@ -81,13 +73,10 @@ func (p *proxyALMotion) Rest() error {
 
 // MoveInit calls the remote procedure
 func (p *proxyALMotion) MoveInit() error {
-	var err error
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("moveInit", "()")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("()")
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("moveInit", args, resp)
 	if err != nil {
 		return fmt.Errorf("call moveInit failed: %s", err)
 	}
@@ -96,22 +85,10 @@ func (p *proxyALMotion) MoveInit() error {
 
 // MoveTo calls the remote procedure
 func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteFloat32(x, &buf); err != nil {
-		return fmt.Errorf("serialize x: %s", err)
-	}
-	if err = basic.WriteFloat32(y, &buf); err != nil {
-		return fmt.Errorf("serialize y: %s", err)
-	}
-	if err = basic.WriteFloat32(theta, &buf); err != nil {
-		return fmt.Errorf("serialize theta: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("moveTo", "(fff)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("(fff)", x, y, theta)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("moveTo", args, resp)
 	if err != nil {
 		return fmt.Errorf("call moveTo failed: %s", err)
 	}
@@ -120,13 +97,10 @@ func (p *proxyALMotion) MoveTo(x float32, y float32, theta float32) error {
 
 // WaitUntilMoveIsFinished calls the remote procedure
 func (p *proxyALMotion) WaitUntilMoveIsFinished() error {
-	var err error
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("waitUntilMoveIsFinished", "()")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("()")
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("waitUntilMoveIsFinished", args, resp)
 	if err != nil {
 		return fmt.Errorf("call waitUntilMoveIsFinished failed: %s", err)
 	}

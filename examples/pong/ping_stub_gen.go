@@ -206,40 +206,22 @@ func (p *proxyPingPong) WithContext(ctx context.Context) PingPongProxy {
 
 // Hello calls the remote procedure
 func (p *proxyPingPong) Hello(a string) (string, error) {
-	var err error
 	var ret string
-	var buf bytes.Buffer
-	if err = basic.WriteString(a, &buf); err != nil {
-		return ret, fmt.Errorf("serialize a: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("hello", "(s)")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("(s)", a)
+	resp := bus.NewResponse("s", &ret)
+	err := p.Proxy().Call2("hello", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call hello failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = basic.ReadString(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse hello response: %s", err)
 	}
 	return ret, nil
 }
 
 // Ping calls the remote procedure
 func (p *proxyPingPong) Ping(a string) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteString(a, &buf); err != nil {
-		return fmt.Errorf("serialize a: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("ping", "(s)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("(s)", a)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("ping", args, resp)
 	if err != nil {
 		return fmt.Errorf("call ping failed: %s", err)
 	}

@@ -475,58 +475,28 @@ func (p *proxySpacecraft) WithContext(ctx context.Context) SpacecraftProxy {
 
 // Shoot calls the remote procedure
 func (p *proxySpacecraft) Shoot() (BombProxy, error) {
-	var err error
 	var ret BombProxy
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("shoot", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("()")
+	var retRef object.ObjectReference
+	resp := bus.NewResponse("o", &retRef)
+	err := p.Proxy().Call2("shoot", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call shoot failed: %s", err)
 	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (BombProxy, error) {
-		ref, err := object.ReadObjectReference(resp)
-		if err != nil {
-			return nil, fmt.Errorf("get meta: %s", err)
-		}
-		proxy, err := p.session.Object(ref)
-		if err != nil {
-			return nil, fmt.Errorf("get proxy: %s", err)
-		}
-		return MakeBomb(p.session, proxy), nil
-	}()
+	proxy, err := p.session.Object(retRef)
 	if err != nil {
-		return ret, fmt.Errorf("parse shoot response: %s", err)
+		return nil, fmt.Errorf("proxy: %s", err)
 	}
+	ret = MakeBomb(p.session, proxy)
 	return ret, nil
 }
 
 // Ammo calls the remote procedure
 func (p *proxySpacecraft) Ammo(ammo BombProxy) error {
-	var err error
-	var buf bytes.Buffer
-	if err = func() error {
-		meta, err := ammo.MetaObject(ammo.Proxy().ObjectID())
-		if err != nil {
-			return fmt.Errorf("get meta: %s", err)
-		}
-		ref := object.ObjectReference{
-			MetaObject: meta,
-			ServiceID:  ammo.Proxy().ServiceID(),
-			ObjectID:   ammo.Proxy().ObjectID(),
-		}
-		return object.WriteObjectReference(ref, &buf)
-	}(); err != nil {
-		return fmt.Errorf("serialize ammo: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("ammo", "(o)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("(o)", bus.ObjectReference(ammo.Proxy()))
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("ammo", args, resp)
 	if err != nil {
 		return fmt.Errorf("call ammo failed: %s", err)
 	}

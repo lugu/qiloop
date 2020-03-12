@@ -662,11 +662,10 @@ func (p *proxyServiceZero) Proxy() Proxy {
 
 // Authenticate calls the remote procedure
 func (p *proxyServiceZero) Authenticate(capability map[string]value.Value) (map[string]value.Value, error) {
-	var err error
 	var ret map[string]value.Value
 	args := NewParams("({sm})", capability)
 	resp := NewResponse("{sm}", &ret)
-	err = p.Proxy().Call2("authenticate", args, resp)
+	err := p.Proxy().Call2("authenticate", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call authenticate failed: %s", err)
 	}
@@ -708,52 +707,22 @@ func (p *proxyObject) Proxy() Proxy {
 
 // RegisterEvent calls the remote procedure
 func (p *proxyObject) RegisterEvent(objectID uint32, actionID uint32, handler uint64) (uint64, error) {
-	var err error
 	var ret uint64
-	var buf bytes.Buffer
-	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return ret, fmt.Errorf("serialize objectID: %s", err)
-	}
-	if err = basic.WriteUint32(actionID, &buf); err != nil {
-		return ret, fmt.Errorf("serialize actionID: %s", err)
-	}
-	if err = basic.WriteUint64(handler, &buf); err != nil {
-		return ret, fmt.Errorf("serialize handler: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("registerEvent", "(IIL)")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("(IIL)", objectID, actionID, handler)
+	resp := NewResponse("L", &ret)
+	err := p.Proxy().Call2("registerEvent", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call registerEvent failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = basic.ReadUint64(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse registerEvent response: %s", err)
 	}
 	return ret, nil
 }
 
 // UnregisterEvent calls the remote procedure
 func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler uint64) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return fmt.Errorf("serialize objectID: %s", err)
-	}
-	if err = basic.WriteUint32(actionID, &buf); err != nil {
-		return fmt.Errorf("serialize actionID: %s", err)
-	}
-	if err = basic.WriteUint64(handler, &buf); err != nil {
-		return fmt.Errorf("serialize handler: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("unregisterEvent", "(IIL)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := NewParams("(IIL)", objectID, actionID, handler)
+	resp := NewResponse("v", &ret)
+	err := p.Proxy().Call2("unregisterEvent", args, resp)
 	if err != nil {
 		return fmt.Errorf("call unregisterEvent failed: %s", err)
 	}
@@ -762,40 +731,22 @@ func (p *proxyObject) UnregisterEvent(objectID uint32, actionID uint32, handler 
 
 // MetaObject calls the remote procedure
 func (p *proxyObject) MetaObject(objectID uint32) (object.MetaObject, error) {
-	var err error
 	var ret object.MetaObject
-	var buf bytes.Buffer
-	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return ret, fmt.Errorf("serialize objectID: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("metaObject", "(I)")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("(I)", objectID)
+	resp := NewResponse("({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>", &ret)
+	err := p.Proxy().Call2("metaObject", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call metaObject failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = object.ReadMetaObject(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse metaObject response: %s", err)
 	}
 	return ret, nil
 }
 
 // Terminate calls the remote procedure
 func (p *proxyObject) Terminate(objectID uint32) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return fmt.Errorf("serialize objectID: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("terminate", "(I)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := NewParams("(I)", objectID)
+	resp := NewResponse("v", &ret)
+	err := p.Proxy().Call2("terminate", args, resp)
 	if err != nil {
 		return fmt.Errorf("call terminate failed: %s", err)
 	}
@@ -804,43 +755,22 @@ func (p *proxyObject) Terminate(objectID uint32) error {
 
 // Property calls the remote procedure
 func (p *proxyObject) Property(name value.Value) (value.Value, error) {
-	var err error
 	var ret value.Value
-	var buf bytes.Buffer
-	if err = name.Write(&buf); err != nil {
-		return ret, fmt.Errorf("serialize name: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("property", "(m)")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("(m)", name)
+	resp := NewResponse("m", &ret)
+	err := p.Proxy().Call2("property", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call property failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = value.NewValue(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse property response: %s", err)
 	}
 	return ret, nil
 }
 
 // SetProperty calls the remote procedure
 func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
-	var err error
-	var buf bytes.Buffer
-	if err = name.Write(&buf); err != nil {
-		return fmt.Errorf("serialize name: %s", err)
-	}
-	if err = value.Write(&buf); err != nil {
-		return fmt.Errorf("serialize value: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("setProperty", "(mm)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := NewParams("(mm)", name, value)
+	resp := NewResponse("v", &ret)
+	err := p.Proxy().Call2("setProperty", args, resp)
 	if err != nil {
 		return fmt.Errorf("call setProperty failed: %s", err)
 	}
@@ -849,104 +779,46 @@ func (p *proxyObject) SetProperty(name value.Value, value value.Value) error {
 
 // Properties calls the remote procedure
 func (p *proxyObject) Properties() ([]string, error) {
-	var err error
 	var ret []string
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("properties", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("()")
+	resp := NewResponse("[s]", &ret)
+	err := p.Proxy().Call2("properties", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call properties failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (b []string, err error) {
-		size, err := basic.ReadUint32(resp)
-		if err != nil {
-			return b, fmt.Errorf("read slice size: %s", err)
-		}
-		b = make([]string, size)
-		for i := 0; i < int(size); i++ {
-			b[i], err = basic.ReadString(resp)
-			if err != nil {
-				return b, fmt.Errorf("read slice value: %s", err)
-			}
-		}
-		return b, nil
-	}()
-	if err != nil {
-		return ret, fmt.Errorf("parse properties response: %s", err)
 	}
 	return ret, nil
 }
 
 // RegisterEventWithSignature calls the remote procedure
 func (p *proxyObject) RegisterEventWithSignature(objectID uint32, actionID uint32, handler uint64, P3 string) (uint64, error) {
-	var err error
 	var ret uint64
-	var buf bytes.Buffer
-	if err = basic.WriteUint32(objectID, &buf); err != nil {
-		return ret, fmt.Errorf("serialize objectID: %s", err)
-	}
-	if err = basic.WriteUint32(actionID, &buf); err != nil {
-		return ret, fmt.Errorf("serialize actionID: %s", err)
-	}
-	if err = basic.WriteUint64(handler, &buf); err != nil {
-		return ret, fmt.Errorf("serialize handler: %s", err)
-	}
-	if err = basic.WriteString(P3, &buf); err != nil {
-		return ret, fmt.Errorf("serialize P3: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("registerEventWithSignature", "(IILs)")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("(IILs)", objectID, actionID, handler, P3)
+	resp := NewResponse("L", &ret)
+	err := p.Proxy().Call2("registerEventWithSignature", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call registerEventWithSignature failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = basic.ReadUint64(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse registerEventWithSignature response: %s", err)
 	}
 	return ret, nil
 }
 
 // IsStatsEnabled calls the remote procedure
 func (p *proxyObject) IsStatsEnabled() (bool, error) {
-	var err error
 	var ret bool
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("isStatsEnabled", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("()")
+	resp := NewResponse("b", &ret)
+	err := p.Proxy().Call2("isStatsEnabled", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call isStatsEnabled failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = basic.ReadBool(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse isStatsEnabled response: %s", err)
 	}
 	return ret, nil
 }
 
 // EnableStats calls the remote procedure
 func (p *proxyObject) EnableStats(enabled bool) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteBool(enabled, &buf); err != nil {
-		return fmt.Errorf("serialize enabled: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("enableStats", "(b)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := NewParams("(b)", enabled)
+	resp := NewResponse("v", &ret)
+	err := p.Proxy().Call2("enableStats", args, resp)
 	if err != nil {
 		return fmt.Errorf("call enableStats failed: %s", err)
 	}
@@ -955,52 +827,22 @@ func (p *proxyObject) EnableStats(enabled bool) error {
 
 // Stats calls the remote procedure
 func (p *proxyObject) Stats() (map[uint32]MethodStatistics, error) {
-	var err error
 	var ret map[uint32]MethodStatistics
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("stats", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("()")
+	resp := NewResponse("{I(I(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>(fff)<MinMaxSum,minValue,maxValue,cumulatedValue>)<MethodStatistics,count,wall,user,system>}", &ret)
+	err := p.Proxy().Call2("stats", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call stats failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (m map[uint32]MethodStatistics, err error) {
-		size, err := basic.ReadUint32(resp)
-		if err != nil {
-			return m, fmt.Errorf("read map size: %s", err)
-		}
-		m = make(map[uint32]MethodStatistics, size)
-		for i := 0; i < int(size); i++ {
-			k, err := basic.ReadUint32(resp)
-			if err != nil {
-				return m, fmt.Errorf("read map key (%d/%d): %s", i+1, size, err)
-			}
-			v, err := readMethodStatistics(resp)
-			if err != nil {
-				return m, fmt.Errorf("read map value (%d/%d): %s", i+1, size, err)
-			}
-			m[k] = v
-		}
-		return m, nil
-	}()
-	if err != nil {
-		return ret, fmt.Errorf("parse stats response: %s", err)
 	}
 	return ret, nil
 }
 
 // ClearStats calls the remote procedure
 func (p *proxyObject) ClearStats() error {
-	var err error
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("clearStats", "()")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := NewParams("()")
+	resp := NewResponse("v", &ret)
+	err := p.Proxy().Call2("clearStats", args, resp)
 	if err != nil {
 		return fmt.Errorf("call clearStats failed: %s", err)
 	}
@@ -1009,37 +851,22 @@ func (p *proxyObject) ClearStats() error {
 
 // IsTraceEnabled calls the remote procedure
 func (p *proxyObject) IsTraceEnabled() (bool, error) {
-	var err error
 	var ret bool
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("isTraceEnabled", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := NewParams("()")
+	resp := NewResponse("b", &ret)
+	err := p.Proxy().Call2("isTraceEnabled", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call isTraceEnabled failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = basic.ReadBool(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse isTraceEnabled response: %s", err)
 	}
 	return ret, nil
 }
 
 // EnableTrace calls the remote procedure
 func (p *proxyObject) EnableTrace(traced bool) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteBool(traced, &buf); err != nil {
-		return fmt.Errorf("serialize traced: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("enableTrace", "(b)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := NewParams("(b)", traced)
+	resp := NewResponse("v", &ret)
+	err := p.Proxy().Call2("enableTrace", args, resp)
 	if err != nil {
 		return fmt.Errorf("call enableTrace failed: %s", err)
 	}

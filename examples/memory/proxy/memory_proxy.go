@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	bus "github.com/lugu/qiloop/bus"
-	basic "github.com/lugu/qiloop/type/basic"
 	object "github.com/lugu/qiloop/type/object"
 	value "github.com/lugu/qiloop/type/value"
 	"log"
@@ -50,16 +49,10 @@ func (p *proxyALTextToSpeech) WithContext(ctx context.Context) ALTextToSpeechPro
 
 // Say calls the remote procedure
 func (p *proxyALTextToSpeech) Say(stringToSay string) error {
-	var err error
-	var buf bytes.Buffer
-	if err = basic.WriteString(stringToSay, &buf); err != nil {
-		return fmt.Errorf("serialize stringToSay: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("say", "(s)")
-	if err != nil {
-		return err
-	}
-	_, err = p.Proxy().CallID(methodID, buf.Bytes())
+	var ret struct{}
+	args := bus.NewParams("(s)", stringToSay)
+	resp := bus.NewResponse("v", &ret)
+	err := p.Proxy().Call2("say", args, resp)
 	if err != nil {
 		return fmt.Errorf("call say failed: %s", err)
 	}
@@ -103,69 +96,31 @@ func (p *proxyALMemory) WithContext(ctx context.Context) ALMemoryProxy {
 
 // GetEventList calls the remote procedure
 func (p *proxyALMemory) GetEventList() ([]string, error) {
-	var err error
 	var ret []string
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("getEventList", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("()")
+	resp := bus.NewResponse("[s]", &ret)
+	err := p.Proxy().Call2("getEventList", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call getEventList failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (b []string, err error) {
-		size, err := basic.ReadUint32(resp)
-		if err != nil {
-			return b, fmt.Errorf("read slice size: %s", err)
-		}
-		b = make([]string, size)
-		for i := 0; i < int(size); i++ {
-			b[i], err = basic.ReadString(resp)
-			if err != nil {
-				return b, fmt.Errorf("read slice value: %s", err)
-			}
-		}
-		return b, nil
-	}()
-	if err != nil {
-		return ret, fmt.Errorf("parse getEventList response: %s", err)
 	}
 	return ret, nil
 }
 
 // Subscriber calls the remote procedure
 func (p *proxyALMemory) Subscriber(eventName string) (SubscriberProxy, error) {
-	var err error
 	var ret SubscriberProxy
-	var buf bytes.Buffer
-	if err = basic.WriteString(eventName, &buf); err != nil {
-		return ret, fmt.Errorf("serialize eventName: %s", err)
-	}
-	methodID, _, err := p.Proxy().MetaObject().MethodID("subscriber", "(s)")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("(s)", eventName)
+	var retRef object.ObjectReference
+	resp := bus.NewResponse("o", &retRef)
+	err := p.Proxy().Call2("subscriber", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call subscriber failed: %s", err)
 	}
-	resp := bytes.NewBuffer(response)
-	ret, err = func() (SubscriberProxy, error) {
-		ref, err := object.ReadObjectReference(resp)
-		if err != nil {
-			return nil, fmt.Errorf("get meta: %s", err)
-		}
-		proxy, err := p.session.Object(ref)
-		if err != nil {
-			return nil, fmt.Errorf("get proxy: %s", err)
-		}
-		return MakeSubscriber(p.session, proxy), nil
-	}()
+	proxy, err := p.session.Object(retRef)
 	if err != nil {
-		return ret, fmt.Errorf("parse subscriber response: %s", err)
+		return nil, fmt.Errorf("proxy: %s", err)
 	}
+	ret = MakeSubscriber(p.session, proxy)
 	return ret, nil
 }
 

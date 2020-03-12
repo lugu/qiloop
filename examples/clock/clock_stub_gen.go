@@ -151,21 +151,12 @@ func (p *proxyTimestamp) WithContext(ctx context.Context) TimestampProxy {
 
 // Nanoseconds calls the remote procedure
 func (p *proxyTimestamp) Nanoseconds() (int64, error) {
-	var err error
 	var ret int64
-	var buf bytes.Buffer
-	methodID, _, err := p.Proxy().MetaObject().MethodID("nanoseconds", "()")
-	if err != nil {
-		return ret, err
-	}
-	response, err := p.Proxy().CallID(methodID, buf.Bytes())
+	args := bus.NewParams("()")
+	resp := bus.NewResponse("l", &ret)
+	err := p.Proxy().Call2("nanoseconds", args, resp)
 	if err != nil {
 		return ret, fmt.Errorf("call nanoseconds failed: %s", err)
-	}
-	resp := bytes.NewBuffer(response)
-	ret, err = basic.ReadInt64(resp)
-	if err != nil {
-		return ret, fmt.Errorf("parse nanoseconds response: %s", err)
 	}
 	return ret, nil
 }
