@@ -19,6 +19,7 @@ type Session struct {
 	serviceListMutex sync.Mutex
 	Directory        services.ServiceDirectoryProxy
 	cancel           func()
+	cancelMutex	 sync.Mutex
 	added            chan services.ServiceAdded
 	removed          chan services.ServiceRemoved
 	userName         string
@@ -213,8 +214,14 @@ func (s *Session) updateServiceList() {
 
 // Terminate close the session.
 func (s *Session) Terminate() error {
-	s.cancel()
-	return fmt.Errorf("Session.Terminate: Not yet implemented")
+	// prevent Terminate being called twice
+	s.cancelMutex.Lock()
+	if s.cancel != nil {
+		s.cancel()
+		s.cancel = nil
+	}
+	s.cancelMutex.Unlock()
+	return nil
 }
 
 func (s *Session) updateLoop() {
