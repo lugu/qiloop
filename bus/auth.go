@@ -132,8 +132,6 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 	m, err := service0.Authenticate(permissions)
 	if err == nil {
 	    return m, nil
-	} else {
-		return m, err
 	}
 
 	// 3. on error, send the capability map
