@@ -437,3 +437,31 @@ func TestLoadCertificateError(t *testing.T) {
 	}
 	defer listener.Close()
 }
+
+func TestConsumerLocked(t *testing.T) {
+	a, b := gonet.Pipe()
+	defer a.Close()
+
+	filter := func(hrd *net.Header) (bool, bool) {
+		return true, true
+	}
+	blocker := make(chan *net.Message)
+	finalizer := func(e net.EndPoint) {
+		e.MakeHandler(filter, blocker, nil)
+	}
+	endpoint := net.EndPointFinalizer(net.ConnStream(b), finalizer)
+	defer endpoint.Close()
+
+	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
+	err := msg.Write(a)
+	if err != nil {
+		t.Error(err)
+	}
+	err = msg.Read(a)
+	if err != nil {
+		t.Error(err)
+	}
+	if msg.Header.Type != net.Error {
+		t.Errorf("unexpected type: %v", msg.Header)
+	}
+}

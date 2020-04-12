@@ -5,12 +5,15 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"bytes"
 	"log"
 	gonet "net"
 	"net/url"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/lugu/qiloop/type/value"
 
 	"github.com/ftrvxmtrx/fd"
 	quic "github.com/lucas-clemente/quic-go"
@@ -350,6 +353,17 @@ func (e *endPoint) dispatch(msg *Message) error {
 				}
 			default:
 				ret = ErrConsumerBlocked
+				if msg.Header.Type == Call {
+					hdr := NewHeader(Error,
+						msg.Header.Service,
+						msg.Header.Object,
+						msg.Header.Action,
+						msg.Header.ID)
+					var buf bytes.Buffer
+					val := value.String(ret.Error())
+					val.Write(&buf)
+					e.Send(NewMessage(hdr, buf.Bytes()))
+				}
 			}
 		}
 		if !keep {
