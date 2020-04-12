@@ -17,6 +17,7 @@ type signalUser struct {
 	messageID uint32
 	clientID  uint64
 	context   Channel
+	contextID int
 }
 
 // signalHandler implements the Actor interface. It implements the
@@ -64,7 +65,20 @@ func (o *signalHandler) addSignalUser(signalID, messageID uint32,
 		messageID,
 		clientID,
 		from,
+		0,
 	}
+
+	// unregister client on disconnection
+	e := from.EndPoint()
+	f := func(hdr *net.Header) (bool, bool) {
+		return false, true
+	}
+	q := make(chan<- *net.Message)
+	cl := func(err error) {
+		o.removeSignalUser(clientID)
+	}
+	newUser.contextID = e.MakeHandler(f, q, cl)
+
 	o.signalsMutex.Lock()
 	_, ok := o.signals[clientID]
 	if !ok {
@@ -73,6 +87,9 @@ func (o *signalHandler) addSignalUser(signalID, messageID uint32,
 		return clientID
 	}
 	o.signalsMutex.Unlock()
+
+	close(q) // disconnect contextID
+
 	// pick another random number
 	return o.addSignalUser(signalID, messageID, from)
 }
@@ -80,8 +97,12 @@ func (o *signalHandler) addSignalUser(signalID, messageID uint32,
 // removeSignalUser unregister the given contex to events.
 func (o *signalHandler) removeSignalUser(clientID uint64) error {
 	o.signalsMutex.Lock()
-	delete(o.signals, clientID)
-	defer o.signalsMutex.Unlock()
+	client, ok := o.signals[clientID]
+	if ok {
+		client.context.EndPoint().RemoveHandler(client.contextID)
+		delete(o.signals, clientID)
+	}
+	o.signalsMutex.Unlock()
 	return nil
 }
 
