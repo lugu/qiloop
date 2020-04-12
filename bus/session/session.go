@@ -221,6 +221,11 @@ func (s *Session) Terminate() error {
 		s.cancel = nil
 	}
 	s.cancelMutex.Unlock()
+	s.pollMutex.Lock()
+	for _, client := range s.poll {
+		client.Channel().EndPoint().Close()
+	}
+	s.pollMutex.Unlock()
 	return nil
 }
 
