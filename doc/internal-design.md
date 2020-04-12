@@ -8,16 +8,16 @@ receive messages.
 
     type EndPoint interface {
     	Send(m Message) error
-    	AddHandler(f Filter, c Consumer, cl Closer) int
+    	MakeHandler(f Filter, q chan<-Message, cl Closer) int
     	RemoveHandler(id int) error
     	[...]
     }
 
-Sending a message is done using the synchronous method `Send`. In order to
-receive a message one needs to register an handler composed of 3 methods:
+Sending a message is done by writing to a channel. In order to receive
+a message one needs to provide an handler composed of 3 elements:
 
 -   a `Filter` method to select the messages.
--   a `Queue` of messages to be processed.
+-   a `Queue` to receive incomming messages.
 -   a `Closer` method to be notified when the connection closes.
 
 The messages selected by Filter are sent to the queue. Writing to the
