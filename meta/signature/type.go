@@ -81,6 +81,7 @@ type Type interface {
 	Marshal(id string, writer string) *Statement // returns an error
 	Unmarshal(reader string) *Statement          // returns (type, err)
 	Reader() TypeReader
+	Type() reflect.Type
 }
 
 type typeConstructor struct {
@@ -90,6 +91,7 @@ type typeConstructor struct {
 	marshal      func(id string, writer string) *Statement // returns an error
 	unmarshal    func(reader string) *Statement            // returns (type, err)
 	reader       TypeReader
+	typ	     reflect.Type
 }
 
 func (t *typeConstructor) Signature() string {
@@ -116,6 +118,9 @@ func (t *typeConstructor) Unmarshal(reader string) *Statement {
 func (t *typeConstructor) Reader() TypeReader {
 	return t.reader
 }
+func (t *typeConstructor) Type() reflect.Type {
+	return t.typ
+}
 
 // Print render the type into a string. It is only used for testing.
 func Print(v Type) string {
@@ -139,6 +144,7 @@ func NewInt8Type() Type {
 				"ReadInt8").Call(jen.Id(reader))
 		},
 		reader: constReader(1),
+		typ: reflect.TypeOf((int8)(0)),
 	}
 }
 
@@ -157,6 +163,7 @@ func NewUint8Type() Type {
 				"ReadUint8").Call(jen.Id(reader))
 		},
 		reader: constReader(1),
+		typ: reflect.TypeOf((uint8)(0)),
 	}
 }
 
@@ -175,6 +182,7 @@ func NewInt16Type() Type {
 				"ReadInt16").Call(jen.Id(reader))
 		},
 		reader: constReader(2),
+		typ: reflect.TypeOf((int16)(0)),
 	}
 }
 
@@ -193,6 +201,7 @@ func NewUint16Type() Type {
 				"ReadUint16").Call(jen.Id(reader))
 		},
 		reader: constReader(2),
+		typ: reflect.TypeOf((uint16)(0)),
 	}
 }
 
@@ -211,6 +220,7 @@ func NewIntType() Type {
 				"ReadInt32").Call(jen.Id(reader))
 		},
 		reader: constReader(4),
+		typ: reflect.TypeOf((int32)(0)),
 	}
 }
 
@@ -229,6 +239,7 @@ func NewUintType() Type {
 				"ReadUint32").Call(jen.Id(reader))
 		},
 		reader: constReader(4),
+		typ: reflect.TypeOf((uint32)(0)),
 	}
 }
 
@@ -247,6 +258,7 @@ func NewLongType() Type {
 				"ReadInt64").Call(jen.Id(reader))
 		},
 		reader: constReader(8),
+		typ: reflect.TypeOf((int64)(0)),
 	}
 }
 
@@ -265,6 +277,7 @@ func NewULongType() Type {
 				"ReadUint64").Call(jen.Id(reader))
 		},
 		reader: constReader(8),
+		typ: reflect.TypeOf((uint64)(0)),
 	}
 }
 
@@ -283,6 +296,7 @@ func NewFloatType() Type {
 				"ReadFloat32").Call(jen.Id(reader))
 		},
 		reader: constReader(4),
+		typ: reflect.TypeOf((float32)(0)),
 	}
 }
 
@@ -301,6 +315,7 @@ func NewDoubleType() Type {
 				"ReadFloat64").Call(jen.Id(reader))
 		},
 		reader: constReader(8),
+		typ: reflect.TypeOf((float64)(0)),
 	}
 }
 
@@ -319,6 +334,7 @@ func NewStringType() Type {
 				"ReadString").Call(jen.Id(reader))
 		},
 		reader: stringReader{},
+		typ: reflect.TypeOf(string("")),
 	}
 }
 
@@ -337,6 +353,7 @@ func NewVoidType() Type {
 			return jen.Empty()
 		},
 		reader: constReader(0),
+		typ: reflect.TypeOf(struct{}{}),
 	}
 }
 
@@ -353,6 +370,7 @@ func NewValueType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/value", "NewValue").Call(jen.Id(reader))
 		},
 		reader: valueReader{},
+		typ: reflect.TypeOf((*interface{})(nil)),
 	}
 }
 
@@ -369,12 +387,14 @@ func NewBoolType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadBool").Call(jen.Id(reader))
 		},
 		reader: constReader(1),
+		typ: reflect.TypeOf((bool)(true)),
 	}
 }
 
 // NewMetaObjectType is a contructor for the representation of an
 // object.
 func NewMetaObjectType() Type {
+	typ, _ := Parse(MetaObjectSignature)
 	reader, err := MakeReader(MetaObjectSignature)
 	if err != nil {
 		panic(fmt.Errorf("invalid MetaObjectSignature: %s",
@@ -391,12 +411,14 @@ func NewMetaObjectType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadMetaObject").Call(jen.Id(reader))
 		},
 		reader: reader,
+		typ: typ.Type(),
 	}
 }
 
 // NewObjectType is a contructor for the representation of a Value.
 func NewObjectType() Type {
 	sig := "(({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,parametersSignature,description,parameters,returnDescription>}{I(Iss)<MetaSignal,uid,name,signature>}{I(Iss)<MetaProperty,uid,name,signature>}s)<MetaObject,methods,signals,properties,description>II)<ObjectReference,metaObject,serviceID,objectID>"
+	typ, _ := Parse(sig)
 
 	reader, _ := MakeReader(sig)
 	return &typeConstructor{
@@ -410,6 +432,7 @@ func NewObjectType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadObjectReference").Call(jen.Id(reader))
 		},
 		reader: reader,
+		typ: typ.Type(),
 	}
 }
 
@@ -448,6 +471,7 @@ func NewUnknownType() Type {
 			)
 		},
 		reader: UnknownReader("X"),
+		typ: reflect.TypeOf((*error)(nil)),
 	}
 }
 
@@ -542,6 +566,11 @@ func (l *ListType) Reader() TypeReader {
 	return varReader{
 		reader: l.value.Reader(),
 	}
+}
+
+// Type returns the Go representation of the type.
+func (l *ListType) Type() reflect.Type {
+	return reflect.SliceOf(l.value.Type())
 }
 
 // NewMapType is a contructor for the representation of a map.
@@ -656,6 +685,11 @@ func (m *MapType) Unmarshal(reader string) *Statement {
 		),
 		jen.Return(jen.Id("m"), jen.Nil()),
 	).Call()
+}
+
+// Type returns the Go representation of the type.
+func (m *MapType) Type() reflect.Type {
+	return reflect.MapOf(m.key.Type(), m.value.Type())
 }
 
 // NewMemberType is a contructor for the representation of a field in
@@ -815,6 +849,25 @@ func (t *TupleType) Reader() TypeReader {
 	return tupleReader(readers)
 }
 
+// Type returns the Go representation of the type.
+func (t *TupleType) Type() reflect.Type {
+	fields := make([]reflect.StructField, len(t.Members))
+	var offset uintptr = 0
+	for i, m := range t.Members {
+		typ := m.Type.Type()
+		fields[i] = reflect.StructField {
+			Name: m.Name,
+			PkgPath: typ.PkgPath(),
+			Type: typ,
+			Index: []int{i},
+			Offset: offset,
+			Anonymous: false,
+		}
+		offset += typ.Size()
+	}
+	return reflect.StructOf(fields)
+}
+
 // ConvertMetaObjects replace any element type which has the same
 // signature as MetaObject with an element of the type
 // object.MetaObject. This is required to generate proxy services
@@ -959,6 +1012,25 @@ func (s *StructType) Reader() TypeReader {
 	return tupleReader(readers)
 }
 
+// Type returns the Go representation of the type.
+func (s *StructType) Type() reflect.Type {
+	fields := make([]reflect.StructField, len(s.Members))
+	var offset uintptr = 0
+	for i, m := range s.Members {
+		typ := m.Type.Type()
+		fields[i] = reflect.StructField {
+			Name: m.Name,
+			PkgPath: typ.PkgPath(),
+			Type: typ,
+			Index: []int{i},
+			Offset: offset,
+			Anonymous: false,
+		}
+		offset += typ.Size()
+	}
+	return reflect.StructOf(fields)
+}
+
 // EnumType represents a const.
 type EnumType struct {
 	Name   string
@@ -1042,4 +1114,9 @@ func (e *EnumType) Unmarshal(reader string) *Statement {
 // Reader returns an enum TypeReader.
 func (e *EnumType) Reader() TypeReader {
 	return constReader(4)
+}
+
+// Type returns the Go representation of the type.
+func (e *EnumType) Type() reflect.Type {
+	return reflect.TypeOf((int)(0))
 }

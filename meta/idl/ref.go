@@ -2,6 +2,7 @@ package idl
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/signature"
@@ -109,4 +110,12 @@ func (r *RefType) Reader() signature.TypeReader {
 		return reader
 	}
 	return t.Reader()
+}
+
+func (r *RefType) Type() reflect.Type {
+	t, err := r.Scope.Search(r.Name)
+	if err == nil {
+		return t.Type()
+	}
+	return reflect.TypeOf((*error)(nil))
 }

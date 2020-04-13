@@ -2,6 +2,7 @@ package idl
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/dave/jennifer/jen"
 	"github.com/lugu/qiloop/meta/signature"
@@ -310,6 +311,10 @@ func (s *InterfaceType) Unmarshal(reader string) *jen.Statement {
 
 // Reader returns a TypeReader for object references
 func (s *InterfaceType) Reader() signature.TypeReader {
+	panic("not yet implemented")
+}
+
+func (s *InterfaceType) Type() reflect.Type {
 	panic("not yet implemented")
 }
 
