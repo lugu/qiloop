@@ -277,7 +277,7 @@ type Tracer interface {
 	Trace(msg *net.Message, id uint32)
 }
 
-func signature(msg *net.Message, meta *object.MetaObject) string {
+func findSignature(msg *net.Message, meta *object.MetaObject) string {
 	if msg.Header.Type == net.Call ||
 		msg.Header.Type == net.Post ||
 		msg.Header.Type == net.Reply {
@@ -310,7 +310,7 @@ func (o *objectImpl) Trace(msg *net.Message, id uint32) {
 	}
 
 	now := time.Now()
-	arguments := value.Opaque(signature(msg, &o.meta), msg.Payload)
+	arguments := value.Opaque(findSignature(msg, &o.meta), msg.Payload)
 	timeval := Timeval{
 		Tv_sec:  int64(now.Second()),
 		Tv_usec: int64(now.Nanosecond() / 1000),

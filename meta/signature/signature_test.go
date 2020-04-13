@@ -137,6 +137,7 @@ func TestParseMapMap(t *testing.T) {
 
 func TestParseDefinitionSignature(t *testing.T) {
 	testSignature(t, "(s)<test,a>")
+	testSignature(t, "(o)<test,a>")
 	testSignature(t, "(si)<test,a,b>")
 	testSignature(t, "(iii)<test,a,b,c>")
 	testSignature(t, "(s{ii})<test,a,b>")
@@ -144,6 +145,7 @@ func TestParseDefinitionSignature(t *testing.T) {
 }
 
 func TestParseEmbeddedDefinitionSignature(t *testing.T) {
+	testSignature(t, "((s)<test1,a>)<test2,a>")
 	testSignature(t, "([(s)<test2,b>])<test,a>")
 	testSignature(t, "(s[(s)<test2,b>])<test,a,b>")
 	testSignature(t, "([(s)<test2,b>]s)<test,a,b>")

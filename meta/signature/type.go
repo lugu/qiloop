@@ -856,7 +856,7 @@ func (t *TupleType) Type() reflect.Type {
 	for i, m := range t.Members {
 		typ := m.Type.Type()
 		fields[i] = reflect.StructField {
-			Name: m.Name,
+			Name: CleanName(m.Name),
 			PkgPath: typ.PkgPath(),
 			Type: typ,
 			Index: []int{i},
@@ -1019,7 +1019,7 @@ func (s *StructType) Type() reflect.Type {
 	for i, m := range s.Members {
 		typ := m.Type.Type()
 		fields[i] = reflect.StructField {
-			Name: m.Name,
+			Name: CleanName(m.Name),
 			PkgPath: typ.PkgPath(),
 			Type: typ,
 			Index: []int{i},

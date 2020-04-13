@@ -7,7 +7,9 @@ import (
 	"bytes"
 
 	"github.com/lugu/qiloop/type/object"
+	"github.com/lugu/qiloop/meta/signature"
 	"github.com/lugu/qiloop/type/encoding"
+	"github.com/lugu/qiloop/type/conversion"
 )
 
 // proxy is the parent strucuture for Service. It wraps Client and
@@ -51,11 +53,6 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 	if err != nil {
 		return err
 	}
-	if sig != ret.Signature() {
-		// TODO: type conversion
-		return fmt.Errorf("%s: Unexpected result %s, expecting %s",
-			method, sig, ret.Signature())
-	}
 	var buf bytes.Buffer
 	permission := p.client.Channel().Cap()
 	var e = encoding.NewEncoder(permission, &buf)
@@ -68,9 +65,21 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 	}
 	buf2 := bytes.NewBuffer(res)
 	dec := encoding.NewDecoder(permission, buf2)
-	err = ret.Read(dec)
-	if err != nil {
-		return fmt.Errorf("decode result: %w", err)
+	if sig == ret.Signature() {
+		err = ret.Read(dec)
+		if err != nil {
+			return fmt.Errorf("decode result: %w", err)
+		}
+	} else {
+		typ, err := signature.Parse(ret.Signature())
+		if err != nil {
+			return fmt.Errorf("failed to parse return signature: %w", err)
+		}
+		err = conversion.DecodeFrom(dec, ret.resp, typ.Type())
+		if err != nil {
+			return fmt.Errorf("failed to convert %s into %s: %w", sig,
+			ret.Signature(), err)
+		}
 	}
 	return nil
 }
