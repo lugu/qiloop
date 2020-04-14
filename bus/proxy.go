@@ -71,7 +71,7 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 			return fmt.Errorf("decode result: %w", err)
 		}
 	} else {
-		typ, err := signature.Parse(ret.Signature())
+		typ, err := signature.Parse(sig)
 		if err != nil {
 			return fmt.Errorf("failed to parse return signature: %w", err)
 		}
