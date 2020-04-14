@@ -1,11 +1,11 @@
 package net
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"bytes"
 	"log"
 	gonet "net"
 	"net/url"

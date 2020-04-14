@@ -1,11 +1,11 @@
 package util
 
 import (
-	"os"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"os"
 
 	"github.com/denisbrodbeck/machineid"
 )

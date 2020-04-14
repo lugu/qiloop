@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/lugu/qiloop/bus/net"
-	"github.com/lugu/qiloop/type/value"
 	secret "github.com/lugu/qiloop/bus/session/token"
+	"github.com/lugu/qiloop/type/value"
 )
 
 type client struct {
@@ -68,9 +68,9 @@ func (c *client) Call(cancel <-chan struct{}, serviceID, objectID, actionID uint
 	}
 
 	closer := func(err error) {
-	    if err != nil {
-		errors <- err
-	    }
+		if err != nil {
+			errors <- err
+		}
 	}
 
 	// 1. starts listening for an answer.
@@ -215,9 +215,9 @@ func (c *client) Channel() Channel {
 // NewClient returns a new client.
 func NewClient(channel Channel) Client {
 	return &client{
-		endpoint:  channel.EndPoint(),
-		messageID: 1,
-		state:     map[string]int{},
+		endpoint:   channel.EndPoint(),
+		messageID:  1,
+		state:      map[string]int{},
 		capability: channel.Cap(),
 	}
 }

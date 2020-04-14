@@ -602,10 +602,10 @@ func methodBodyBlock2(method Method, params *signature.TupleType,
 	for _, v := range params.Members {
 		if v.Type.Signature() == "o" {
 			args = append(args,
-			jen.Qual( "github.com/lugu/qiloop/bus",
-			"ObjectReference").Call(
-				jen.Id(v.Name).Op(".").Id("Proxy").Call(),
-			))
+				jen.Qual("github.com/lugu/qiloop/bus",
+					"ObjectReference").Call(
+					jen.Id(v.Name).Op(".").Id("Proxy").Call(),
+				))
 		} else {
 			args = append(args, jen.Id(v.Name))
 		}
@@ -620,26 +620,26 @@ func methodBodyBlock2(method Method, params *signature.TupleType,
 		))
 		writing = append(writing, jen.Id("resp").Op(":=").Qual(
 			"github.com/lugu/qiloop/bus", "NewResponse",
-		).Call( jen.Lit(ret.Signature()), jen.Op("&").Id("retRef")))
+		).Call(jen.Lit(ret.Signature()), jen.Op("&").Id("retRef")))
 	} else {
 		writing = append(writing, jen.Id("resp").Op(":=").Qual(
 			"github.com/lugu/qiloop/bus", "NewResponse",
-		).Call( jen.Lit(ret.Signature()), jen.Op("&").Id("ret")))
+		).Call(jen.Lit(ret.Signature()), jen.Op("&").Id("ret")))
 	}
 	writing = append(writing, jen.Id("err").Op(":=").Id("p").Op(".").
 		Id("Proxy").Call().Op(".").Id("Call2").Call(
-			jen.Lit(method.Name), jen.Id("args"), jen.Id("resp"),
-		),
+		jen.Lit(method.Name), jen.Id("args"), jen.Id("resp"),
+	),
 	)
 	if ret.Signature() == "v" {
 		writing = append(writing, jen.Id(`if err != nil {
-		return fmt.Errorf("call ` + method.Name + ` failed: %s", err)
+		return fmt.Errorf("call `+method.Name+` failed: %s", err)
 		}
 		return nil`))
 	} else {
 		writing = append(writing, jen.Id(
-		`if err != nil {
-			return ret, fmt.Errorf("call ` + method.Name + ` failed: %s", err)
+			`if err != nil {
+			return ret, fmt.Errorf("call `+method.Name+` failed: %s", err)
 		}`))
 		if ret.Signature() == "o" &&
 			!signature.TypeIsObjectReference(ret) {
@@ -652,11 +652,11 @@ func methodBodyBlock2(method Method, params *signature.TupleType,
 				name = v.Name
 			}
 			writing = append(writing, jen.Id(
-			`proxy, err := p.session.Object(retRef)
+				`proxy, err := p.session.Object(retRef)
 			if err != nil {
 				return nil, fmt.Errorf("proxy: %s", err)
 			}
-			ret = Make` + name + `(p.session, proxy)`))
+			ret = Make`+name+`(p.session, proxy)`))
 		}
 		writing = append(writing, jen.Id(`return ret, nil`))
 	}

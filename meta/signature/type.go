@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strings"
 	"reflect"
+	"strings"
 
 	"github.com/dave/jennifer/jen"
 )
@@ -91,7 +91,7 @@ type typeConstructor struct {
 	marshal      func(id string, writer string) *Statement // returns an error
 	unmarshal    func(reader string) *Statement            // returns (type, err)
 	reader       TypeReader
-	typ	     reflect.Type
+	typ          reflect.Type
 }
 
 func (t *typeConstructor) Signature() string {
@@ -144,7 +144,7 @@ func NewInt8Type() Type {
 				"ReadInt8").Call(jen.Id(reader))
 		},
 		reader: constReader(1),
-		typ: reflect.TypeOf((int8)(0)),
+		typ:    reflect.TypeOf((int8)(0)),
 	}
 }
 
@@ -163,7 +163,7 @@ func NewUint8Type() Type {
 				"ReadUint8").Call(jen.Id(reader))
 		},
 		reader: constReader(1),
-		typ: reflect.TypeOf((uint8)(0)),
+		typ:    reflect.TypeOf((uint8)(0)),
 	}
 }
 
@@ -182,7 +182,7 @@ func NewInt16Type() Type {
 				"ReadInt16").Call(jen.Id(reader))
 		},
 		reader: constReader(2),
-		typ: reflect.TypeOf((int16)(0)),
+		typ:    reflect.TypeOf((int16)(0)),
 	}
 }
 
@@ -201,7 +201,7 @@ func NewUint16Type() Type {
 				"ReadUint16").Call(jen.Id(reader))
 		},
 		reader: constReader(2),
-		typ: reflect.TypeOf((uint16)(0)),
+		typ:    reflect.TypeOf((uint16)(0)),
 	}
 }
 
@@ -220,7 +220,7 @@ func NewIntType() Type {
 				"ReadInt32").Call(jen.Id(reader))
 		},
 		reader: constReader(4),
-		typ: reflect.TypeOf((int32)(0)),
+		typ:    reflect.TypeOf((int32)(0)),
 	}
 }
 
@@ -239,7 +239,7 @@ func NewUintType() Type {
 				"ReadUint32").Call(jen.Id(reader))
 		},
 		reader: constReader(4),
-		typ: reflect.TypeOf((uint32)(0)),
+		typ:    reflect.TypeOf((uint32)(0)),
 	}
 }
 
@@ -258,7 +258,7 @@ func NewLongType() Type {
 				"ReadInt64").Call(jen.Id(reader))
 		},
 		reader: constReader(8),
-		typ: reflect.TypeOf((int64)(0)),
+		typ:    reflect.TypeOf((int64)(0)),
 	}
 }
 
@@ -277,7 +277,7 @@ func NewULongType() Type {
 				"ReadUint64").Call(jen.Id(reader))
 		},
 		reader: constReader(8),
-		typ: reflect.TypeOf((uint64)(0)),
+		typ:    reflect.TypeOf((uint64)(0)),
 	}
 }
 
@@ -296,7 +296,7 @@ func NewFloatType() Type {
 				"ReadFloat32").Call(jen.Id(reader))
 		},
 		reader: constReader(4),
-		typ: reflect.TypeOf((float32)(0)),
+		typ:    reflect.TypeOf((float32)(0)),
 	}
 }
 
@@ -315,7 +315,7 @@ func NewDoubleType() Type {
 				"ReadFloat64").Call(jen.Id(reader))
 		},
 		reader: constReader(8),
-		typ: reflect.TypeOf((float64)(0)),
+		typ:    reflect.TypeOf((float64)(0)),
 	}
 }
 
@@ -334,7 +334,7 @@ func NewStringType() Type {
 				"ReadString").Call(jen.Id(reader))
 		},
 		reader: stringReader{},
-		typ: reflect.TypeOf(string("")),
+		typ:    reflect.TypeOf(string("")),
 	}
 }
 
@@ -353,7 +353,7 @@ func NewVoidType() Type {
 			return jen.Empty()
 		},
 		reader: constReader(0),
-		typ: reflect.TypeOf(struct{}{}),
+		typ:    reflect.TypeOf(struct{}{}),
 	}
 }
 
@@ -370,7 +370,7 @@ func NewValueType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/value", "NewValue").Call(jen.Id(reader))
 		},
 		reader: valueReader{},
-		typ: reflect.TypeOf((*interface{})(nil)),
+		typ:    reflect.TypeOf((*interface{})(nil)),
 	}
 }
 
@@ -387,7 +387,7 @@ func NewBoolType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/basic", "ReadBool").Call(jen.Id(reader))
 		},
 		reader: constReader(1),
-		typ: reflect.TypeOf((bool)(true)),
+		typ:    reflect.TypeOf((bool)(true)),
 	}
 }
 
@@ -411,7 +411,7 @@ func NewMetaObjectType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadMetaObject").Call(jen.Id(reader))
 		},
 		reader: reader,
-		typ: typ.Type(),
+		typ:    typ.Type(),
 	}
 }
 
@@ -432,7 +432,7 @@ func NewObjectType() Type {
 			return jen.Qual("github.com/lugu/qiloop/type/object", "ReadObjectReference").Call(jen.Id(reader))
 		},
 		reader: reader,
-		typ: typ.Type(),
+		typ:    typ.Type(),
 	}
 }
 
@@ -443,7 +443,7 @@ func TypeIsObjectReference(t Type) bool {
 	name := t.TypeName()
 	if reflect.DeepEqual(name,
 		jen.Qual("github.com/lugu/qiloop/type/object",
-		"ObjectReference"),
+			"ObjectReference"),
 	) {
 		return true
 	}
@@ -471,7 +471,7 @@ func NewUnknownType() Type {
 			)
 		},
 		reader: UnknownReader("X"),
-		typ: reflect.TypeOf((*error)(nil)),
+		typ:    reflect.TypeOf((*error)(nil)),
 	}
 }
 
@@ -855,12 +855,12 @@ func (t *TupleType) Type() reflect.Type {
 	var offset uintptr = 0
 	for i, m := range t.Members {
 		typ := m.Type.Type()
-		fields[i] = reflect.StructField {
-			Name: CleanName(m.Name),
-			PkgPath: typ.PkgPath(),
-			Type: typ,
-			Index: []int{i},
-			Offset: offset,
+		fields[i] = reflect.StructField{
+			Name:      CleanName(m.Name),
+			PkgPath:   typ.PkgPath(),
+			Type:      typ,
+			Index:     []int{i},
+			Offset:    offset,
 			Anonymous: false,
 		}
 		offset += typ.Size()
@@ -1018,12 +1018,12 @@ func (s *StructType) Type() reflect.Type {
 	var offset uintptr = 0
 	for i, m := range s.Members {
 		typ := m.Type.Type()
-		fields[i] = reflect.StructField {
-			Name: CleanName(m.Name),
-			PkgPath: typ.PkgPath(),
-			Type: typ,
-			Index: []int{i},
-			Offset: offset,
+		fields[i] = reflect.StructField{
+			Name:      CleanName(m.Name),
+			PkgPath:   typ.PkgPath(),
+			Type:      typ,
+			Index:     []int{i},
+			Offset:    offset,
 			Anonymous: false,
 		}
 		offset += typ.Size()

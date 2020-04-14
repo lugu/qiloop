@@ -105,7 +105,6 @@ func ClientCap(user, token string) CapabilityMap {
 	return permissions
 }
 
-
 func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (CapabilityMap, error) {
 
 	// 1. prepare to receive a capability message
@@ -118,9 +117,9 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 	reply := make(chan *net.Message, 1)
 	errors := make(chan error, 1)
 	closer := func(err error) {
-	    if err != nil {
-		errors <- err
-	    }
+		if err != nil {
+			errors <- err
+		}
 	}
 	id := endpoint.MakeHandler(filter, reply, closer)
 	defer endpoint.RemoveHandler(id)
@@ -131,7 +130,7 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 	service0, err := ServiceServer(cache)
 	m, err := service0.Authenticate(permissions)
 	if err == nil {
-	    return m, nil
+		return m, nil
 	}
 
 	// 3. on error, send the capability map
@@ -155,12 +154,12 @@ func authenticateCall(endpoint net.EndPoint, permissions CapabilityMap) (Capabil
 		return m, err
 	case msg, ok := <-reply:
 		if !ok {
-		    return m, fmt.Errorf("Remote connection closed")
+			return m, fmt.Errorf("Remote connection closed")
 		}
 		buf := bytes.NewBuffer(msg.Payload)
 		m, err := ReadCapabilityMap(buf)
 		if err != nil {
-		    return m, err
+			return m, err
 		}
 		m[KeyState] = value.Uint(StateDone)
 		return m, nil

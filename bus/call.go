@@ -4,7 +4,6 @@ import (
 	"github.com/lugu/qiloop/type/encoding"
 )
 
-
 // Params represents a tuple of values to be sent
 type Params struct {
 	sig  string
@@ -12,9 +11,9 @@ type Params struct {
 }
 
 // NewParams returns a
-func NewParams(sig string, args... interface{}) Params {
+func NewParams(sig string, args ...interface{}) Params {
 	return Params{
-		sig: sig,
+		sig:  sig,
 		args: args,
 	}
 }
@@ -39,7 +38,7 @@ type Response struct {
 
 func NewResponse(signature string, instance interface{}) Response {
 	return Response{
-		sig: signature,
+		sig:  signature,
 		resp: instance,
 	}
 }

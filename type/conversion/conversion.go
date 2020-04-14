@@ -1,9 +1,9 @@
 package conversion
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
-	"fmt"
 
 	"github.com/lugu/qiloop/type/encoding"
 )
@@ -113,7 +113,7 @@ func convertStruct(v, w reflect.Value) error {
 		name := strings.ToLower(v.Type().Field(i).Name)
 		for j := 0; j < w.NumField(); j++ {
 			if name == strings.ToLower(w.Type().Field(j).Name) {
-				err := convertFrom( v.Field(i), w.Field(j))
+				err := convertFrom(v.Field(i), w.Field(j))
 				if err != nil {
 					return fmt.Errorf("failed to convert filed %s of %v: %w",
 						name, v.Type(), err)
@@ -190,7 +190,7 @@ func convertFrom(v, w reflect.Value) error {
 // ConvertFrom applies QiMessaging compatibility rules to convert
 // `you` into `me`. Me can be populated with default values.
 func ConvertFrom(me, you interface{}) error {
-	return convertFrom(reflect.ValueOf(me),reflect.ValueOf(you))
+	return convertFrom(reflect.ValueOf(me), reflect.ValueOf(you))
 }
 
 // DecodeFrom decodes x from an encoded value of tye `typ`.

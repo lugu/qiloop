@@ -1,15 +1,15 @@
 package bus
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math/rand"
-	"bytes"
 
-	"github.com/lugu/qiloop/type/object"
 	"github.com/lugu/qiloop/meta/signature"
-	"github.com/lugu/qiloop/type/encoding"
 	"github.com/lugu/qiloop/type/conversion"
+	"github.com/lugu/qiloop/type/encoding"
+	"github.com/lugu/qiloop/type/object"
 )
 
 // proxy is the parent strucuture for Service. It wraps Client and
@@ -24,10 +24,10 @@ type proxy struct {
 }
 
 func ObjectReference(p Proxy) object.ObjectReference {
-	return object.ObjectReference {
+	return object.ObjectReference{
 		MetaObject: *p.MetaObject(),
-		ServiceID: p.ServiceID(),
-		ObjectID: p.ObjectID(),
+		ServiceID:  p.ServiceID(),
+		ObjectID:   p.ObjectID(),
 	}
 }
 
@@ -78,7 +78,7 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 		err = conversion.DecodeFrom(dec, ret.resp, typ.Type())
 		if err != nil {
 			return fmt.Errorf("failed to convert %s into %s: %w", sig,
-			ret.Signature(), err)
+				ret.Signature(), err)
 		}
 	}
 	return nil

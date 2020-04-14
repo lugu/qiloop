@@ -1,8 +1,8 @@
 package conversion_test
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 
 	"github.com/lugu/qiloop/type/conversion"
 )
@@ -14,13 +14,13 @@ func newFloat32(f float32) *float32 { return &f }
 func newFloat64(f float64) *float64 { return &f }
 
 func newUint(n uint) *uint       { return &n }
-func newUint8(n uint8) *uint8 { return &n }
+func newUint8(n uint8) *uint8    { return &n }
 func newUint16(n uint16) *uint16 { return &n }
 func newUint32(n uint32) *uint32 { return &n }
 func newUint64(n uint64) *uint64 { return &n }
 
 func newInt(n int) *int       { return &n }
-func newInt8(n int8) *int8 { return &n }
+func newInt8(n int8) *int8    { return &n }
 func newInt16(n int16) *int16 { return &n }
 func newInt32(n int32) *int32 { return &n }
 func newInt64(n int64) *int64 { return &n }
@@ -46,7 +46,7 @@ func helpTestConvertInt2(t *testing.T, a interface{}, b interface{}, i int64) {
 
 func helpTestConvertInt(t *testing.T, a interface{}) {
 
-	values := []int64 {
+	values := []int64{
 		0, 1, 11, 111, 127,
 	}
 	for _, v := range values {
@@ -169,7 +169,7 @@ func TestSlice(t *testing.T) {
 func TestMap(t *testing.T) {
 	from := make(map[int8]int16, 5)
 	to := map[int32]int64{
-		1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, 10:10,
+		1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
 	}
 	err := conversion.ConvertFrom(&from, to)
 	if err != nil {
@@ -200,7 +200,7 @@ func TestStruct(t *testing.T) {
 	from := &StructFrom{
 		A: 22,
 	}
-	to := StructTo {
+	to := StructTo{
 		D: 1.2,
 		e: true,
 		B: 15,
@@ -220,7 +220,7 @@ func TestStruct(t *testing.T) {
 	if from.C != to.C {
 		t.Errorf("C not the same: %#v", from)
 	}
-	if float64(from.D) < to.D - 0.1 || float64(from.D) > to.D + 0.1 {
+	if float64(from.D) < to.D-0.1 || float64(from.D) > to.D+0.1 {
 		t.Errorf("D not in range: %#v", from)
 	}
 	if from.E != to.e {
@@ -230,14 +230,14 @@ func TestStruct(t *testing.T) {
 
 func TestStructSlice(t *testing.T) {
 	from := make([]StructFrom, 2)
-	to := []StructTo {
-		StructTo {
+	to := []StructTo{
+		StructTo{
 			D: 1.2,
 			e: true,
 			B: 15,
 			C: "boom",
 			F: true,
-		}, StructTo {
+		}, StructTo{
 			D: 1.2,
 			e: true,
 			B: 15,
@@ -245,7 +245,6 @@ func TestStructSlice(t *testing.T) {
 			F: true,
 		},
 	}
-
 
 	err := conversion.ConvertFrom(&from, to)
 	if err != nil {

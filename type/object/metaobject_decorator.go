@@ -32,7 +32,7 @@ func (m *MetaObject) ActionName(id uint32) (string, error) {
 
 // MethodID returns the ID of a method given its name, the parameters
 // signature and the returned value signature.
-func (m *MetaObject) MethodID(name, signature string ) (uint32, string, error) {
+func (m *MetaObject) MethodID(name, signature string) (uint32, string, error) {
 	for k, method := range m.Methods {
 		if method.Name == name &&
 			method.ParametersSignature == signature {

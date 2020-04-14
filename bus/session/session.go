@@ -19,7 +19,7 @@ type Session struct {
 	serviceListMutex sync.Mutex
 	Directory        services.ServiceDirectoryProxy
 	cancel           func()
-	cancelMutex	 sync.Mutex
+	cancelMutex      sync.Mutex
 	added            chan services.ServiceAdded
 	removed          chan services.ServiceRemoved
 	userName         string

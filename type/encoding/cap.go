@@ -18,4 +18,3 @@ func (d defaultCap) ObjectPtrUID() bool {
 func DefaultCap() Capability {
 	return defaultCap{}
 }
-

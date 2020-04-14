@@ -3,10 +3,10 @@ package bus_test
 import (
 	"testing"
 
+	"github.com/lugu/qiloop/bus/directory"
 	sess "github.com/lugu/qiloop/bus/session"
 	"github.com/lugu/qiloop/bus/util"
 	"github.com/lugu/qiloop/examples/pong"
-	"github.com/lugu/qiloop/bus/directory"
 )
 
 func helpConnectClient(t *testing.T, addr string) {
@@ -51,7 +51,6 @@ func TestServerConnection(t *testing.T) {
 	}
 	defer server.Terminate()
 
-
 	// the bus.Actor object used by the server.
 	actor := pong.PingPongObject(pong.PingPongImpl())
 	service, err := server.NewService("PingPong", actor)
@@ -62,4 +61,3 @@ func TestServerConnection(t *testing.T) {
 	helpConnectClient(t, addr)
 	helpConnectClient(t, addr)
 }
-
