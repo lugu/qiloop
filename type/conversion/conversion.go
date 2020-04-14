@@ -199,7 +199,7 @@ func DecodeFrom(d encoding.Decoder, x interface{}, typ reflect.Type) error {
 	if err := d.Decode(from.Interface()); err != nil {
 		return err
 	}
-	return ConvertFrom(x, from)
+	return convertFrom(reflect.ValueOf(x), from)
 }
 
 // EncodeInto encodes x as if it was of type `typ`.
