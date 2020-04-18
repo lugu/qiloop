@@ -157,7 +157,7 @@ func (c *client) Subscribe(serviceID, objectID, actionID uint32) (
 		}
 		return false, true
 	}
-	queue := make(chan *net.Message, 10)
+	queue := make(chan *net.Message, 100)
 
 	go func(id int) {
 		for {
