@@ -97,12 +97,14 @@ func (o *signalHandler) addSignalUser(signalID, messageID uint32,
 // removeSignalUser unregister the given contex to events.
 func (o *signalHandler) removeSignalUser(clientID uint64) error {
 	o.signalsMutex.Lock()
+	defer o.signalsMutex.Unlock()
 	client, ok := o.signals[clientID]
 	if ok {
 		client.context.EndPoint().RemoveHandler(client.contextID)
 		delete(o.signals, clientID)
+	} else {
+		return fmt.Errorf("unknown signal user %d", clientID)
 	}
-	o.signalsMutex.Unlock()
 	return nil
 }
 
@@ -189,7 +191,10 @@ func (o *signalHandler) UpdateSignal(id uint32, data []byte) error {
 	for _, client := range signals {
 		err := o.replyEvent(&client, id, data)
 		if err == io.EOF {
-			o.removeSignalUser(client.clientID)
+			err := o.removeSignalUser(client.clientID)
+			if err != nil && ret == nil {
+				ret = err
+			}
 		} else if err != nil {
 			ret = err
 		}

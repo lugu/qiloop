@@ -67,16 +67,20 @@ func TestProxySubscribe(t *testing.T) {
 	if signalID != 106 {
 		t.Fatalf("wrong signal id")
 	}
-	cancel, _, err := dir.Proxy().SubscribeID(signalID)
+	cancel, addChan, err := dir.Proxy().SubscribeID(signalID)
 	if err != nil {
 		t.Error(err)
 	}
 	cancel()
-	signalID, err = dir.Proxy().MetaObject().SignalID("serviceAdded",
-		"(Is)<serviceAdded,serviceID,name>")
-	if err != nil {
-		t.Error(err)
+	select {
+	case _, ok := <-addChan:
+		if ok {
+			t.Error("unexpected event")
+		}
+	default:
+		t.Error("expecting a close event")
 	}
+
 	cancel, _, err = dir.Proxy().SubscribeID(signalID)
 	if err != nil {
 		t.Error(err)

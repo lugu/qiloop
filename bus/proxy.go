@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 
 	"github.com/lugu/qiloop/meta/signature"
@@ -108,7 +109,10 @@ func (p proxy) SubscribeID(action uint32) (func(), chan []byte, error) {
 			handler := p.client.State(fmt.Sprintf("%d.%d.%d.handler", p.service, p.object, action), 0)
 			p.client.State(fmt.Sprintf("%d.%d.%d.handler", p.service, p.object, action), -handler)
 			obj := proxyObject{p}
-			obj.UnregisterEvent(p.object, action, uint64(handler))
+			err := obj.UnregisterEvent(p.object, action, uint64(handler))
+			if err != nil {
+				log.Printf("failed to unregister event action %d: %s", action, err)
+			}
 		}
 		cancel()
 	}, bytes, nil
