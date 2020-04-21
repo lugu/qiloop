@@ -88,6 +88,13 @@ func (p proxy) Call2(method string, args Params, ret Response) error {
 // SubscribeID returns a channel with the values of a signal or a
 // property.
 func (p proxy) SubscribeID(action uint32) (func(), chan []byte, error) {
+	_, ok := p.meta.Signals[action]
+	if !ok {
+		_, ok := p.meta.Properties[action]
+		if !ok {
+			return nil, nil, fmt.Errorf("unknown signal: %d", action)
+		}
+	}
 	cancel, bytes, err := p.client.Subscribe(p.service, p.object, action)
 	if err != nil {
 		return nil, nil, err

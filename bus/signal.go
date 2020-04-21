@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"math/rand"
 	"sync"
 
 	"github.com/lugu/qiloop/bus/net"
@@ -15,7 +14,7 @@ import (
 type signalUser struct {
 	signalID  uint32
 	messageID uint32
-	clientID  uint64
+	userID    uint64
 	context   Channel
 	contextID int
 }
@@ -24,7 +23,7 @@ type signalUser struct {
 // registerEvent and unregisterEvent methods and provides a means to
 // update a signal.
 type signalHandler struct {
-	signals      map[uint64]signalUser
+	signals      []signalUser
 	signalsMutex sync.RWMutex
 	serviceID    uint32
 	objectID     uint32
@@ -49,63 +48,67 @@ type BasicObject interface {
 // newSignalHandler returns a helper to deal with signals.
 func newSignalHandler() *signalHandler {
 	return &signalHandler{
-		signals: make(map[uint64]signalUser),
+		signals: make([]signalUser, 0, 10),
 		tracer:  nil,
 	}
 }
 
-// addSignalUser register the context as a client of event signalID.
+// addSignalUser register the context as a user of event signalID.
 // TODO: check if the signalID is valid
-func (o *signalHandler) addSignalUser(signalID, messageID uint32,
-	from Channel) uint64 {
+func (o *signalHandler) addSignalUser(userID uint64, signalID, messageID uint32,
+	from Channel) error {
 
-	clientID := rand.Uint64()
 	newUser := signalUser{
-		signalID,
-		messageID,
-		clientID,
-		from,
-		0,
+		signalID:  signalID,
+		messageID: messageID,
+		userID:    userID,
+		context:   from,
+		contextID: 0,
 	}
 
-	// unregister client on disconnection
 	e := from.EndPoint()
 	f := func(hdr *net.Header) (bool, bool) {
 		return false, true
 	}
 	q := make(chan<- *net.Message)
 	cl := func(err error) {
-		o.removeSignalUser(clientID)
+		// unregister user on disconnection
+		o.removeSignalUser(userID, from)
 	}
 	newUser.contextID = e.MakeHandler(f, q, cl)
 
 	o.signalsMutex.Lock()
-	_, ok := o.signals[clientID]
-	if !ok {
-		o.signals[clientID] = newUser
-		o.signalsMutex.Unlock()
-		return clientID
+
+	for _, user := range o.signals {
+		if user.userID == userID {
+			o.signalsMutex.Unlock()
+			user.context.EndPoint().RemoveHandler(user.contextID)
+			return fmt.Errorf("user %d already exists", userID)
+		}
 	}
+	o.signals = append(o.signals, newUser)
 	o.signalsMutex.Unlock()
+	return nil
 
-	close(q) // disconnect contextID
-
-	// pick another random number
-	return o.addSignalUser(signalID, messageID, from)
 }
 
 // removeSignalUser unregister the given contex to events.
-func (o *signalHandler) removeSignalUser(clientID uint64) error {
+func (o *signalHandler) removeSignalUser(userID uint64, from Channel) error {
 	o.signalsMutex.Lock()
-	defer o.signalsMutex.Unlock()
-	client, ok := o.signals[clientID]
-	if ok {
-		client.context.EndPoint().RemoveHandler(client.contextID)
-		delete(o.signals, clientID)
-	} else {
-		return fmt.Errorf("unknown signal user %d", clientID)
+
+	for i, user := range o.signals {
+		if user.userID == userID {
+			if from.EndPoint() == user.context.EndPoint() {
+				o.signals[i] = o.signals[len(o.signals)-1]
+				o.signals = o.signals[:len(o.signals)-1]
+				o.signalsMutex.Unlock()
+				user.context.EndPoint().RemoveHandler(user.contextID)
+				return nil
+			}
+		}
 	}
-	return nil
+	o.signalsMutex.Unlock()
+	return fmt.Errorf("unknown user id %d", userID)
 }
 
 func (o *signalHandler) RegisterEvent(msg *net.Message, from Channel) error {
@@ -127,17 +130,22 @@ func (o *signalHandler) RegisterEvent(msg *net.Message, from Channel) error {
 		err = fmt.Errorf("cannot read signal uid: %s", err)
 		return from.SendError(msg, err)
 	}
-	_, err = basic.ReadUint64(buf)
+	userID, err := basic.ReadUint64(buf)
 	if err != nil {
-		err = fmt.Errorf("cannot read client uid: %s", err)
+		err = fmt.Errorf("cannot read user uid: %s", err)
 		return from.SendError(msg, err)
 	}
 	messageID := msg.Header.ID
-	clientID := o.addSignalUser(signalID, messageID, from)
-	var out bytes.Buffer
-	err = basic.WriteUint64(clientID, &out)
+	err = o.addSignalUser(userID, signalID, messageID, from)
 	if err != nil {
-		err = fmt.Errorf("cannot write client uid: %s", err)
+		err = fmt.Errorf("cannot register user uid %d: %s",
+			userID, err)
+		return from.SendError(msg, err)
+	}
+	var out bytes.Buffer
+	err = basic.WriteUint64(userID, &out)
+	if err != nil {
+		err = fmt.Errorf("cannot write user uid: %s", err)
 		return from.SendError(msg, err)
 	}
 	return from.SendReply(msg, out.Bytes())
@@ -162,12 +170,12 @@ func (o *signalHandler) UnregisterEvent(msg *net.Message, from Channel) error {
 		err = fmt.Errorf("cannot read action uid: %s", err)
 		return from.SendError(msg, err)
 	}
-	clientID, err := basic.ReadUint64(buf)
+	userID, err := basic.ReadUint64(buf)
 	if err != nil {
-		err = fmt.Errorf("cannot read client uid: %s", err)
+		err = fmt.Errorf("cannot read user uid: %s", err)
 		return from.SendError(msg, err)
 	}
-	err = o.removeSignalUser(clientID)
+	err = o.removeSignalUser(userID, from)
 	if err != nil {
 		return from.SendError(msg, err)
 	}
@@ -176,22 +184,22 @@ func (o *signalHandler) UnregisterEvent(msg *net.Message, from Channel) error {
 }
 
 // UpdateSignal informs the registered clients of the new state.
-func (o *signalHandler) UpdateSignal(id uint32, data []byte) error {
+func (o *signalHandler) UpdateSignal(signalID uint32, data []byte) error {
 	var ret error
 	signals := make([]signalUser, 0)
 
 	o.signalsMutex.RLock()
-	for _, client := range o.signals {
-		if client.signalID == id {
-			signals = append(signals, client)
+	for _, user := range o.signals {
+		if user.signalID == signalID {
+			signals = append(signals, user)
 		}
 	}
 	o.signalsMutex.RUnlock()
 
-	for _, client := range signals {
-		err := o.replyEvent(&client, id, data)
+	for _, user := range signals {
+		err := o.replyEvent(&user, signalID, data)
 		if err == io.EOF {
-			err := o.removeSignalUser(client.clientID)
+			err := o.removeSignalUser(user.userID, user.context)
 			if err != nil && ret == nil {
 				ret = err
 			}
@@ -213,34 +221,36 @@ func (o *signalHandler) trace(msg *net.Message) {
 	}
 }
 
-func (o *signalHandler) replyEvent(client *signalUser, signal uint32,
+func (o *signalHandler) replyEvent(user *signalUser, signal uint32,
 	value []byte) error {
 
-	hdr := o.newHeader(net.Event, signal, client.messageID)
+	hdr := o.newHeader(net.Event, signal, user.messageID)
 	msg := net.NewMessage(hdr, value)
 	o.trace(&msg)
-	return client.context.Send(&msg)
+	return user.context.Send(&msg)
 }
 
-func (o *signalHandler) sendTerminate(client *signalUser, signal uint32) error {
+func (o *signalHandler) sendTerminate(user *signalUser, signal uint32) error {
 	var buf bytes.Buffer
 	val := value.String(ErrTerminate.Error())
 	val.Write(&buf)
-	hdr := o.newHeader(net.Error, client.signalID, client.messageID)
+	hdr := o.newHeader(net.Error, user.signalID, user.messageID)
 	msg := net.NewMessage(hdr, buf.Bytes())
 
 	o.trace(&msg)
-	return client.context.Send(&msg)
+	return user.context.Send(&msg)
 }
 
 func (o *signalHandler) OnTerminate() {
 	// close all subscribers
 	o.signalsMutex.Lock()
-	for _, client := range o.signals {
-		o.sendTerminate(&client, client.signalID)
-		delete(o.signals, client.clientID)
-	}
+	signals := o.signals
+	o.signals = []signalUser{}
 	o.signalsMutex.Unlock()
+	for _, user := range signals {
+		o.sendTerminate(&user, user.signalID)
+		user.context.EndPoint().RemoveHandler(user.contextID)
+	}
 }
 
 func (o *signalHandler) newHeader(typ uint8, action, id uint32) net.Header {

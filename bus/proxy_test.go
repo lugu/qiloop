@@ -72,13 +72,9 @@ func TestProxySubscribe(t *testing.T) {
 		t.Error(err)
 	}
 	cancel()
-	select {
-	case _, ok := <-addChan:
-		if ok {
-			t.Error("unexpected event")
-		}
-	default:
-		t.Error("expecting a close event")
+	_, ok := <-addChan
+	if ok {
+		t.Error("unexpected event")
 	}
 
 	cancel, _, err = dir.Proxy().SubscribeID(signalID)
@@ -88,7 +84,7 @@ func TestProxySubscribe(t *testing.T) {
 	cancel()
 	_, _, err = dir.Proxy().SubscribeID(12345)
 	if err == nil {
-		// TODO
+		t.Error("unexpected success")
 	}
 }
 
