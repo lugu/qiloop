@@ -7,12 +7,13 @@ require (
 	github.com/ftrvxmtrx/fd v0.0.0-20150925145434-c6d800382fff
 	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/integrii/flaggy v1.3.0
-	github.com/lucas-clemente/quic-go v0.15.3
+	github.com/lucas-clemente/quic-go v0.15.4
+	github.com/marten-seemann/qtls v0.9.1 // indirect
 	github.com/mattes/go-asciibot v0.0.0-20190603170252-3fa6d766c482
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
-	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
+	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
-	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
+	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
