@@ -1,7 +1,6 @@
 package net_test
 
 import (
-	"io"
 	"io/ioutil"
 	gonet "net"
 	"os"
@@ -290,76 +289,6 @@ func TestEndPoint_DialTLS(t *testing.T) {
 	defer endpoint.Close()
 
 	addr = "tcps://localhost"
-	_, err = net.Listen(addr)
-	if err == nil {
-		panic("shall fail")
-	}
-
-	_, err = net.DialEndPoint(addr)
-	if err == nil {
-		panic("shall fail")
-	}
-}
-
-func TestEndPoint_DialQUIC(t *testing.T) {
-	addr := "quic://localhost:54322"
-	listener, err := net.Listen(addr)
-	if err != nil {
-		panic(err)
-	}
-	defer listener.Close()
-	go func() {
-		conn, err := listener.Accept()
-		if err == io.EOF {
-			panic("unexpected closed listener")
-		}
-		if err != nil {
-			panic(err)
-		}
-
-		finalizer := func(e net.EndPoint) {
-			filter := func(hrd *net.Header) (bool, bool) {
-				return true, false
-			}
-			consumer := func(msg *net.Message) error {
-				err = e.Send(*msg)
-				if err != nil {
-					panic(err)
-				}
-				return nil
-			}
-			closer := func(err error) {
-			}
-			e.AddHandler(filter, consumer, closer)
-		}
-
-		net.EndPointFinalizer(conn, finalizer)
-
-	}()
-	endpoint, err := net.DialEndPoint(addr)
-	if err != nil {
-		panic(err)
-	}
-	defer endpoint.Close()
-
-	response, err := endpoint.ReceiveAny()
-	if err != nil {
-		panic(err)
-	}
-
-	msg := net.NewMessage(net.NewHeader(net.Call, 1, 1, 1, 1), make([]byte, 0))
-	endpoint.Send(msg)
-
-	msg2, ok := <-response
-	if !ok {
-		panic("receive message")
-	}
-
-	if msg.Header != msg2.Header {
-		panic("different messages")
-	}
-
-	addr = "quic://localhost"
 	_, err = net.Listen(addr)
 	if err == nil {
 		panic("shall fail")

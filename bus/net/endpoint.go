@@ -2,7 +2,6 @@ package net
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -16,7 +15,6 @@ import (
 	"github.com/lugu/qiloop/type/value"
 
 	"github.com/ftrvxmtrx/fd"
-	quic "github.com/lucas-clemente/quic-go"
 )
 
 // Filter returns true if given message shall be processed by a
@@ -205,25 +203,6 @@ const (
 	ListenAddress
 )
 
-// dialQUIC connects regardless of the certificate.
-// TOOD: does not multiplex sessions
-func dialQUIC(addr string) (EndPoint, error) {
-	conf := &tls.Config{
-		InsecureSkipVerify: true,
-		NextProtos:         []string{"qi-messaging"},
-	}
-	session, err := quic.DialAddr(addr, conf, nil)
-	if err != nil {
-		return nil, err
-	}
-	ctx := context.WithValue(context.TODO(), DialAddress, addr)
-	stream, err := session.OpenStreamSync(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return NewEndPoint(newQuicStream(stream)), nil
-}
-
 // DialEndPoint construct an endpoint by contacting a given address.
 func DialEndPoint(addr string) (EndPoint, error) {
 	u, err := url.Parse(addr)
@@ -235,8 +214,6 @@ func DialEndPoint(addr string) (EndPoint, error) {
 		return dialTCP(u.Host)
 	case "tcps":
 		return dialTLS(u.Host)
-	case "quic":
-		return dialQUIC(u.Host)
 	case "unix":
 		return dialUNIX(strings.TrimPrefix(addr, "unix://"))
 	case "pipe":
