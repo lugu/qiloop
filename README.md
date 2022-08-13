@@ -41,6 +41,9 @@ libqi is the implementation of QiMessaging used in Pepper and NAO.
 It is open-source and developped here:
 <https://github.com/aldebaran/libqi>.
 
+For an in-depth overview of the protocol, visit this [description of QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/about-qimessaging.md).
+
+
 QiLoop is another implementation of QiMessaging. It has two main goals:
 
 -   being compatible with libqi
@@ -82,9 +85,7 @@ Features:
 QiMessaging exposes a software bus to interract with services. Services have
 methods (to be called), signals (to be watched) and properties (signals with
 state). A naming service (the service directory) is used to discover and
-register services. For a detailed description of the protocol, please visit
-this [analysis of
-QiMessaging](https://github.com/lugu/qiloop/blob/master/doc/about-qimessaging.md).
+register services.
 
 To connect to a service, a Session object is required: it represents the
 connection to the service directory. Several transport protocols are supported
