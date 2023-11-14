@@ -70,7 +70,7 @@ Features:
 
 -   cancel: client support only (see motion example)
 
--   transport: TCP, TLS, UNIX socket and QUIC (experimental)
+-   transport: TCP, TLS, UNIX socket
 
 -   authentication: read the credentials from `$HOME/.qiloop-auth.conf`
 

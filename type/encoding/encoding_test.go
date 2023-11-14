@@ -37,9 +37,11 @@ type Info struct {
 	J float64
 }
 
-var info = Info{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
-var base = InfoBaseLine{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
-var ref = InfoReflect{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
+var (
+	info = Info{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
+	base = InfoBaseLine{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
+	ref  = InfoReflect{1, 2, 3, 1, 2, 3, "hello", true, 1.5, 3.0}
+)
 
 func (i *Info) Encode(e encoding.Encoder) error {
 	if err := e.Encode(i.A); err != nil {
@@ -223,7 +225,7 @@ var testData = map[string]interface{}{
 	"list of struct": &[]Info{info},
 	"map of int16":   &map[int16]int16{1: 2, 3: 4},
 	"map of struct": &map[Info][]int16{
-		info: []int16{4, 5, 6, 7},
+		info: {4, 5, 6, 7},
 	},
 }
 
@@ -535,7 +537,7 @@ func helpJSONSerialization(t *testing.T, name string, in interface{}) {
 	encoder := encoding.NewJSONEncoder(&buf)
 	err := encoder.Encode(in)
 	if err != nil {
-		t.Errorf("%s: encode error: %w", name, err)
+		t.Errorf("%s: encode error: %s", name, err)
 		return
 	}
 	decoder := encoding.NewJSONDecoder(buf.Bytes())
@@ -565,7 +567,7 @@ func helpGobSerialization(t *testing.T, name string, in interface{}) {
 	encoder := encoding.NewGobEncoder(&buf)
 	err := encoder.Encode(in)
 	if err != nil {
-		t.Errorf("%s: encode error: %w", name, err)
+		t.Errorf("%s: encode error: %s", name, err)
 		return
 	}
 	decoder := encoding.NewGobDecoder(&buf)
