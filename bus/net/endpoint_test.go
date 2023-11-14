@@ -1,7 +1,6 @@
 package net_test
 
 import (
-	"io/ioutil"
 	gonet "net"
 	"os"
 	"reflect"
@@ -13,7 +12,7 @@ import (
 )
 
 func TestConnectUnix(t *testing.T) {
-	f, err := ioutil.TempFile("", "go-net-test")
+	f, err := os.CreateTemp("", "go-net-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +95,6 @@ func TestReceiveOne(t *testing.T) {
 }
 
 func TestPingPong(t *testing.T) {
-
 	server, client := net.Pipe()
 	defer server.Close()
 	defer client.Close()
@@ -109,11 +107,11 @@ func TestPingPong(t *testing.T) {
 	go func() {
 		m, ok := <-srvChan
 		if !ok {
-			t.Fatalf("receive meesage")
+			panic("receive meesage")
 		}
 		err = server.Send(*m)
 		if err != nil {
-			t.Errorf("send meesage: %s", err)
+			panic(err)
 		}
 		wait.Done()
 	}()

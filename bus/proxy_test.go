@@ -12,7 +12,6 @@ import (
 )
 
 func TestProxyCall(t *testing.T) {
-
 	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer serviceEndpoint.Close()
 	defer clientEndpoint.Close()
@@ -26,12 +25,12 @@ func TestProxyCall(t *testing.T) {
 	go func() {
 		m, ok := <-msgChan
 		if !ok {
-			t.Fatalf("connection closed")
+			panic("connection closed")
 		}
 		m.Header.Type = net.Reply
 		err := serviceEndpoint.Send(*m)
 		if err != nil {
-			t.Errorf("send meesage: %s", err)
+			panic(err)
 		}
 	}()
 
@@ -45,7 +44,6 @@ func TestProxyCall(t *testing.T) {
 }
 
 func TestProxySubscribe(t *testing.T) {
-
 	addr := util.NewUnixAddr()
 
 	server, err := directory.NewServer(addr, nil)

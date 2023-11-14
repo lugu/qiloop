@@ -9,7 +9,6 @@ import (
 )
 
 func TestCancelledProxyCall(t *testing.T) {
-
 	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer serviceEndpoint.Close()
 	defer clientEndpoint.Close()
@@ -22,14 +21,14 @@ func TestCancelledProxyCall(t *testing.T) {
 	go func() {
 		m, ok := <-msgChan
 		if !ok {
-			t.Fatalf("connection closed")
+			panic("closed channel")
 		}
 		m.Header.Type = net.Cancelled
 		m.Header.Size = 0
 		m.Payload = []byte{}
 		err := serviceEndpoint.Send(*m)
 		if err != nil {
-			t.Errorf("send meesage: %s", err)
+			panic(err)
 		}
 	}()
 

@@ -28,28 +28,28 @@ func TestPingPong(t *testing.T) {
 	service := pong.PingPongObject(pong.PingPongImpl())
 	_, err = server.NewService("PingPong", service)
 	if err != nil {
-		panic(err)
+		t.Fatalf("%s", err)
 	}
 
 	session, err := sess.NewSession(addr)
 	if err != nil {
-		panic(err)
+		t.Fatalf("%s", err)
 	}
 	defer session.Terminate()
 	client, err := pong.PingPong(session)
 	if err != nil {
-		panic(err)
+		t.Fatalf("%s", err)
 	}
 
 	cancel, pong, err := client.SubscribePong()
 	if err != nil {
-		panic(err)
+		t.Fatalf("%s", err)
 	}
 	defer cancel()
 
 	response, err := client.Hello("hello")
 	if err != nil {
-		panic(err)
+		t.Fatalf("%s", err)
 	}
 	if response != "Hello, World!" {
 		t.Errorf("wrong reply: %s", response)
@@ -58,7 +58,7 @@ func TestPingPong(t *testing.T) {
 	answer := <-pong
 
 	if answer != "hello" {
-		panic(err)
+		t.Errorf("wrong answer: %s", answer)
 	}
 }
 
@@ -74,7 +74,7 @@ func testRemoteAddr(b *testing.B, addr string) {
 	go func() {
 		select {
 		case err := <-serverErr:
-			b.Fatal(err)
+			panic(err)
 		case <-quit:
 		}
 	}()
@@ -137,7 +137,6 @@ func BenchmarkPingPongQUIC(b *testing.B) {
 }
 
 func BenchmarkPingPongLocal(b *testing.B) {
-
 	addr := util.NewUnixAddr()
 	server, err := dir.NewServer(addr, nil)
 	if err != nil {
@@ -156,9 +155,6 @@ func BenchmarkPingPongLocal(b *testing.B) {
 	}
 
 	session := server.Session()
-	if err != nil {
-		panic(err)
-	}
 	client, err := pong.PingPong(session)
 	if err != nil {
 		panic(err)
@@ -219,7 +215,6 @@ func proxyHello(P0 string) (string, error) {
 }
 
 func BenchmarkSerialization(b *testing.B) {
-
 	for i := 0; i < b.N; i++ {
 		reply, err := proxyHello("hello")
 		if err != nil {
@@ -232,7 +227,6 @@ func BenchmarkSerialization(b *testing.B) {
 }
 
 func BenchmarkImplementation(b *testing.B) {
-
 	for i := 0; i < b.N; i++ {
 		reply, err := implHello("hello")
 		if err != nil {

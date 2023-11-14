@@ -11,7 +11,6 @@ import (
 )
 
 func TestClientCall(t *testing.T) {
-
 	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer serviceEndpoint.Close()
 	defer clientEndpoint.Close()
@@ -25,12 +24,12 @@ func TestClientCall(t *testing.T) {
 	go func() {
 		m, ok := <-msgChan
 		if !ok {
-			t.Fatalf("connection closed")
+			panic("Channel closed")
 		}
 		m.Header.Type = net.Reply
 		err := serviceEndpoint.Send(*m)
 		if err != nil {
-			t.Errorf("send meesage: %s", err)
+			panic(err)
 		}
 	}()
 
@@ -43,7 +42,6 @@ func TestClientCall(t *testing.T) {
 }
 
 func TestClientAlreadyCancelled(t *testing.T) {
-
 	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer serviceEndpoint.Close()
 	defer clientEndpoint.Close()
@@ -58,7 +56,6 @@ func TestClientAlreadyCancelled(t *testing.T) {
 }
 
 func TestClientCancel(t *testing.T) {
-
 	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer serviceEndpoint.Close()
 	defer clientEndpoint.Close()
@@ -75,22 +72,22 @@ func TestClientCancel(t *testing.T) {
 	go func() {
 		m, ok := <-msgChan
 		if !ok {
-			t.Fatalf("connection closed")
+			panic("connection closed")
 		}
 		if m.Header.Type != net.Call {
-			t.Errorf("not a call")
+			panic("not a call")
 		}
 		msgChan, err = serviceEndpoint.ReceiveAny()
 		if err != nil {
-			t.Error(err)
+			panic(err)
 		}
 		close(testSync)
 		m, ok = <-msgChan
 		if !ok {
-			t.Fatalf("connection closed")
+			panic("connection closed")
 		}
 		if m.Header.Type != net.Cancel {
-			t.Errorf("not a cancel")
+			panic("not a cancel")
 		}
 		m.Header.Type = net.Cancelled
 		serviceEndpoint.Send(net.NewMessage(m.Header, []byte{}))
@@ -162,7 +159,6 @@ func TestSelectEndPoint(t *testing.T) {
 }
 
 func TestClientDisconnectionError(t *testing.T) {
-
 	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer clientEndpoint.Close()
 
@@ -187,7 +183,6 @@ func TestClientDisconnectionError(t *testing.T) {
 }
 
 func TestClientState(t *testing.T) {
-
 	_, clientEndpoint := net.Pipe()
 	defer clientEndpoint.Close()
 
@@ -216,7 +211,6 @@ func TestClientState(t *testing.T) {
 }
 
 func TestClientDisconnectionSuccess(t *testing.T) {
-
 	serviceEndpoint, clientEndpoint := net.Pipe()
 	defer serviceEndpoint.Close()
 
