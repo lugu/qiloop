@@ -9,16 +9,7 @@ require (
 	github.com/integrii/flaggy v1.5.2
 	github.com/mattes/go-asciibot v0.0.0-20190603170252-3fa6d766c482
 	github.com/prataprc/goparsec v0.0.0-20211219142520-daac0e635e7e
-	github.com/yuin/goldmark v1.6.0 // indirect
 	golang.org/x/crypto v0.15.0
-	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.18.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.14.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.15.0 // indirect
-	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 )
 
 go 1.13
