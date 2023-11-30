@@ -6,6 +6,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/ftrvxmtrx/fd v0.0.0-20150925145434-c6d800382fff
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/hashicorp/mdns v1.0.5 // indirect
 	github.com/integrii/flaggy v1.5.2
 	github.com/mattes/go-asciibot v0.0.0-20190603170252-3fa6d766c482
 	github.com/prataprc/goparsec v0.0.0-20211219142520-daac0e635e7e

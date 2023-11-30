@@ -2,9 +2,11 @@ package main
 
 import (
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 
+	"github.com/hashicorp/mdns"
 	"github.com/lugu/qiloop/bus"
 	dir "github.com/lugu/qiloop/bus/directory"
 	qilog "github.com/lugu/qiloop/bus/logger"
@@ -31,6 +33,21 @@ func server(serverURL string) {
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
+
+	url, err := url.Parse(serverURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	info := []string{"RobotType=NAO", "Protocol=tcp"}
+	service, err := mdns.NewMDNSService(url.Hostname(), "_naoqi._tcp", "", "", 9559, nil, info)
+	if err != nil {
+		log.Fatalf("MDNS Server: %s", err)
+	}
+	mdnsServer, err := mdns.NewServer(&mdns.Config{Zone: service})
+	if err != nil {
+		log.Fatalf("MDNS Server: %s", err)
+	}
+	defer mdnsServer.Shutdown()
 
 	select {
 	case err = <-server.WaitTerminate():
